@@ -1,0 +1,61 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.4.0.RELEASE'
+        classpath 'io.spring.gradle:dependency-management-plugin:0.6.0.RELEASE'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'spring-boot'
+apply plugin: 'application'
+
+project.version = '2.0.0-SNAPSHOT'
+project.buildDir = 'target'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Brixton.SR4'
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:1.4.0.RELEASE'
+    }
+}
+
+dependencies {
+    compile 'org.springframework.boot:spring-boot-starter-actuator'
+    compile 'org.springframework.cloud:spring-cloud-starter-eureka'
+    compile 'org.springframework.cloud:spring-cloud-starter-config'
+
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
+}
+
+applicationDefaultJvmArgs = [
+        "-Xms128m",
+        "-Xmx512m"
+]
+
+springBoot {
+    layout = 'JAR'
+    classifier = 'exec'
+    embeddedLaunchScript = file('launch.script')
+    embeddedLaunchScriptProperties = ['jvm_options': applicationDefaultJvmArgs.join(' ')]
+}
+
+bootRun {
+    systemProperties = System.properties
+}
+
