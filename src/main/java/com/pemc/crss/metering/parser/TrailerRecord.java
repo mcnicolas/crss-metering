@@ -3,7 +3,7 @@ package com.pemc.crss.metering.parser;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
-public class Trailer {
+public class TrailerRecord {
 
     String rLen;
     String rCode;

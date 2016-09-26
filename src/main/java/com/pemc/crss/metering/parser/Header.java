@@ -7,8 +7,10 @@ public class Header {
 
     private long mdefMeterHeaderId;
     private Long uploadGenInfoId;
+
     private String rLen;
     private String rCode;
+
     private String cmCustid;
     private String cmName;
     private String cmAddr1;

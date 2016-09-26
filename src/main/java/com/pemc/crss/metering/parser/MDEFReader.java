@@ -292,13 +292,13 @@ public class MDEFReader {
     }
 
 
-    public Trailer readMtTrailer(byte[] record) {
-        Trailer trailer  = new Trailer();
-        trailer.setrLen(transformByte(0, 1, 'i', record));
-        trailer.setrCode(transformByte(2, 3, 'i', record));
-        trailer.setTotRec(transformByte(34, 43, 'c', record));
-        trailer.setXsTstamp(transformByte(204, 215, 'c', record));
-        return trailer;
+    public TrailerRecord readMtTrailer(byte[] record) {
+        TrailerRecord trailerRecord = new TrailerRecord();
+        trailerRecord.setrLen(transformByte(0, 1, 'i', record));
+        trailerRecord.setrCode(transformByte(2, 3, 'i', record));
+        trailerRecord.setTotRec(transformByte(34, 43, 'c', record));
+        trailerRecord.setXsTstamp(transformByte(204, 215, 'c', record));
+        return trailerRecord;
     }
 
     public MeterData readMdef(File file) throws Exception {
@@ -335,8 +335,8 @@ public class MDEFReader {
 
                 } else if (dataRcode.equals("9999")) {
 
-                    Trailer t = readMtTrailer(b);
-                    meterData.setTrailer(t);
+                    TrailerRecord t = readMtTrailer(b);
+                    meterData.setTrailerRecord(t);
 
                 } else if (dataRcode.equals("10")) {
 

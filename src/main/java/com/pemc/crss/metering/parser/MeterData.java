@@ -6,7 +6,7 @@ import java.util.List;
 public class MeterData {
 
     private List<Header> headers = new ArrayList<>();
-    private Trailer trailer;
+    private TrailerRecord trailerRecord;
     private String error;
 
     public List<Header> getHeaders() {
@@ -17,12 +17,12 @@ public class MeterData {
         this.headers = headers;
     }
 
-    public Trailer getTrailer() {
-        return trailer;
+    public TrailerRecord getTrailerRecord() {
+        return trailerRecord;
     }
 
-    public void setTrailer(Trailer trailer) {
-        this.trailer = trailer;
+    public void setTrailerRecord(TrailerRecord trailerRecord) {
+        this.trailerRecord = trailerRecord;
     }
 
     public String getError() {
