@@ -1,38 +1,35 @@
 package com.pemc.crss.metering.parser;
 
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-
 public class TrailerRecord {
 
-    String rLen;
-    String rCode;
-    String totRec;
-    String reserved1;
-    String  xsTstamp;
+    private String recordLength;
+    private String recordCode;
+    private String totalRecordCount;
+    private String reserved1;
+    private String timestamp;
 
-    public String getrLen() {
-        return rLen;
+    public String getRecordLength() {
+        return recordLength;
     }
 
-    public void setrLen(String rLen) {
-        this.rLen = rLen;
+    public void setRecordLength(String recordLength) {
+        this.recordLength = recordLength;
     }
 
-    public String getrCode() {
-        return rCode;
+    public String getRecordCode() {
+        return recordCode;
     }
 
-    public void setrCode(String rCode) {
-        this.rCode = rCode;
+    public void setRecordCode(String recordCode) {
+        this.recordCode = recordCode;
     }
 
-    public String getTotRec() {
-        return totRec;
+    public String getTotalRecordCount() {
+        return totalRecordCount;
     }
 
-    public void setTotRec(String totRec) {
-        this.totRec = totRec;
+    public void setTotalRecordCount(String totalRecordCount) {
+        this.totalRecordCount = totalRecordCount;
     }
 
     public String getReserved1() {
@@ -43,16 +40,11 @@ public class TrailerRecord {
         this.reserved1 = reserved1;
     }
 
-    public String getXsTstamp() {
-        return xsTstamp;
+    public String getTimestamp() {
+        return timestamp;
     }
 
-    public void setXsTstamp(String xsTstamp) {
-        this.xsTstamp = xsTstamp;
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
     }
-
-    public String toString() {
-        return ReflectionToStringBuilder.toString(this, ToStringStyle.MULTI_LINE_STYLE);
-    }
-
 }

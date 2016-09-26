@@ -2,44 +2,41 @@ package com.pemc.crss.metering.parser;
 
 import java.util.List;
 
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
-
 public class IntervalData {
 
-    String rLen;
-    String rCode;
-    String cmCustId;
-    List<String> uomFlow;
-    List<String> reading;
-    List<String> channelStatus;
-    List<String> channelStatusDesc;
-    List<String> intervalStatus;
-    List<String> intervalStatusDesc;
-    List<String> readingDate;
+    private String recordLength;
+    private String recordCode;
+    private String customerID;
+    private List<String> uomFlow;
+    private List<String> reading;
+    private List<String> channelStatus;
+    private List<String> channelStatusDesc;
+    private List<String> intervalStatus;
+    private List<String> intervalStatusDesc;
+    private List<String> readingDate;
 
-    public String getrLen() {
-        return rLen;
+    public String getRecordLength() {
+        return recordLength;
     }
 
-    public void setrLen(String rLen) {
-        this.rLen = rLen;
+    public void setRecordLength(String recordLength) {
+        this.recordLength = recordLength;
     }
 
-    public String getrCode() {
-        return rCode;
+    public String getRecordCode() {
+        return recordCode;
     }
 
-    public void setrCode(String rCode) {
-        this.rCode = rCode;
+    public void setRecordCode(String recordCode) {
+        this.recordCode = recordCode;
     }
 
-    public String getCmCustId() {
-        return cmCustId;
+    public String getCustomerID() {
+        return customerID;
     }
 
-    public void setCmCustId(String cmCustId) {
-        this.cmCustId = cmCustId;
+    public void setCustomerID(String customerID) {
+        this.customerID = customerID;
     }
 
     public List<String> getUomFlow() {

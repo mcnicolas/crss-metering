@@ -10,37 +10,36 @@ public class ChannelHeader {
 
     private Long mdefMeterHeaderId;
 
-    private String rLen;
+    private String recordLength;
+    private String recordCode;
 
-    private String rCode;
-
-    private String dcCustid;
-    private String dcRecid;
+    private String customerID;
+    private String recorderID;
     private String reserved1;
-    private String dcMeterid;
-    private String taStart;
-    private String taStop;
+    private String meterNo;
+    private String startTime;
+    private String stopTime;
     private String reserved2;
     private String reserved3;
-    private String dcPyschan;
-    private String dcLogchan;
-    private String dcUmcode;
-    private String chanStat;
-    private String intstat;
-    private String strtmtr;
-    private String stopmtr;
+    private String meterChannelNo;
+    private String customerChannelNo;
+    private String uomCode;
+    private String channelStatusPresent;
+    private String intervalStatusPresent;
+    private String startMeterReading;
+    private String stopMeterReading;
     private String reserved4;
-    private String dcMmult;
+    private String meterDialMultiplier;
     private String reserved5;
-    private String dcServerType;
+    private String serverType;
     private String reserved6;
-    private String drInphr;
+    private String intervalPerHour;
     private String reserved7;
-    private String tdStatus;
+    private String validationResults;
     private String reserved8;
-    private String dcFlow;
-    private String dcKvaset;
-    private String tdOrigin;
+    private String powerFlowDirection;
+    private String kvaSet;
+    private String dataOrigin;
     private String reserved9;
 
     List<IntervalData> intervals = new ArrayList<IntervalData>();
@@ -61,36 +60,36 @@ public class ChannelHeader {
         this.mdefMeterHeaderId = mdefMeterHeaderId;
     }
 
-    public String getrLen() {
-        return rLen;
+    public String getRecordLength() {
+        return recordLength;
     }
 
-    public void setrLen(String rLen) {
-        this.rLen = rLen;
+    public void setRecordLength(String recordLength) {
+        this.recordLength = recordLength;
     }
 
-    public String getrCode() {
-        return rCode;
+    public String getRecordCode() {
+        return recordCode;
     }
 
-    public void setrCode(String rCode) {
-        this.rCode = rCode;
+    public void setRecordCode(String recordCode) {
+        this.recordCode = recordCode;
     }
 
-    public String getDcCustid() {
-        return dcCustid;
+    public String getCustomerID() {
+        return customerID;
     }
 
-    public void setDcCustid(String dcCustid) {
-        this.dcCustid = dcCustid;
+    public void setCustomerID(String customerID) {
+        this.customerID = customerID;
     }
 
-    public String getDcRecid() {
-        return dcRecid;
+    public String getRecorderID() {
+        return recorderID;
     }
 
-    public void setDcRecid(String dcRecid) {
-        this.dcRecid = dcRecid;
+    public void setRecorderID(String recorderID) {
+        this.recorderID = recorderID;
     }
 
     public String getReserved1() {
@@ -101,28 +100,28 @@ public class ChannelHeader {
         this.reserved1 = reserved1;
     }
 
-    public String getDcMeterid() {
-        return dcMeterid;
+    public String getMeterNo() {
+        return meterNo;
     }
 
-    public void setDcMeterid(String dcMeterid) {
-        this.dcMeterid = dcMeterid;
+    public void setMeterNo(String meterNo) {
+        this.meterNo = meterNo;
     }
 
-    public String getTaStart() {
-        return taStart;
+    public String getStartTime() {
+        return startTime;
     }
 
-    public void setTaStart(String taStart) {
-        this.taStart = taStart;
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
     }
 
-    public String getTaStop() {
-        return taStop;
+    public String getStopTime() {
+        return stopTime;
     }
 
-    public void setTaStop(String taStop) {
-        this.taStop = taStop;
+    public void setStopTime(String stopTime) {
+        this.stopTime = stopTime;
     }
 
     public String getReserved2() {
@@ -141,60 +140,60 @@ public class ChannelHeader {
         this.reserved3 = reserved3;
     }
 
-    public String getDcPyschan() {
-        return dcPyschan;
+    public String getMeterChannelNo() {
+        return meterChannelNo;
     }
 
-    public void setDcPyschan(String dcPyschan) {
-        this.dcPyschan = dcPyschan;
+    public void setMeterChannelNo(String meterChannelNo) {
+        this.meterChannelNo = meterChannelNo;
     }
 
-    public String getDcLogchan() {
-        return dcLogchan;
+    public String getCustomerChannelNo() {
+        return customerChannelNo;
     }
 
-    public void setDcLogchan(String dcLogchan) {
-        this.dcLogchan = dcLogchan;
+    public void setCustomerChannelNo(String customerChannelNo) {
+        this.customerChannelNo = customerChannelNo;
     }
 
-    public String getDcUmcode() {
-        return dcUmcode;
+    public String getUomCode() {
+        return uomCode;
     }
 
-    public void setDcUmcode(String dcUmcode) {
-        this.dcUmcode = dcUmcode;
+    public void setUomCode(String uomCode) {
+        this.uomCode = uomCode;
     }
 
-    public String getChanStat() {
-        return chanStat;
+    public String getChannelStatusPresent() {
+        return channelStatusPresent;
     }
 
-    public void setChanStat(String chanStat) {
-        this.chanStat = chanStat;
+    public void setChannelStatusPresent(String channelStatusPresent) {
+        this.channelStatusPresent = channelStatusPresent;
     }
 
-    public String getIntstat() {
-        return intstat;
+    public String getIntervalStatusPresent() {
+        return intervalStatusPresent;
     }
 
-    public void setIntstat(String intstat) {
-        this.intstat = intstat;
+    public void setIntervalStatusPresent(String intervalStatusPresent) {
+        this.intervalStatusPresent = intervalStatusPresent;
     }
 
-    public String getStrtmtr() {
-        return strtmtr;
+    public String getStartMeterReading() {
+        return startMeterReading;
     }
 
-    public void setStrtmtr(String strtmtr) {
-        this.strtmtr = strtmtr;
+    public void setStartMeterReading(String startMeterReading) {
+        this.startMeterReading = startMeterReading;
     }
 
-    public String getStopmtr() {
-        return stopmtr;
+    public String getStopMeterReading() {
+        return stopMeterReading;
     }
 
-    public void setStopmtr(String stopmtr) {
-        this.stopmtr = stopmtr;
+    public void setStopMeterReading(String stopMeterReading) {
+        this.stopMeterReading = stopMeterReading;
     }
 
     public String getReserved4() {
@@ -205,12 +204,12 @@ public class ChannelHeader {
         this.reserved4 = reserved4;
     }
 
-    public String getDcMmult() {
-        return dcMmult;
+    public String getMeterDialMultiplier() {
+        return meterDialMultiplier;
     }
 
-    public void setDcMmult(String dcMmult) {
-        this.dcMmult = dcMmult;
+    public void setMeterDialMultiplier(String meterDialMultiplier) {
+        this.meterDialMultiplier = meterDialMultiplier;
     }
 
     public String getReserved5() {
@@ -221,12 +220,12 @@ public class ChannelHeader {
         this.reserved5 = reserved5;
     }
 
-    public String getDcServerType() {
-        return dcServerType;
+    public String getServerType() {
+        return serverType;
     }
 
-    public void setDcServerType(String dcServerType) {
-        this.dcServerType = dcServerType;
+    public void setServerType(String serverType) {
+        this.serverType = serverType;
     }
 
     public String getReserved6() {
@@ -237,12 +236,12 @@ public class ChannelHeader {
         this.reserved6 = reserved6;
     }
 
-    public String getDrInphr() {
-        return drInphr;
+    public String getIntervalPerHour() {
+        return intervalPerHour;
     }
 
-    public void setDrInphr(String drInphr) {
-        this.drInphr = drInphr;
+    public void setIntervalPerHour(String intervalPerHour) {
+        this.intervalPerHour = intervalPerHour;
     }
 
     public String getReserved7() {
@@ -253,12 +252,12 @@ public class ChannelHeader {
         this.reserved7 = reserved7;
     }
 
-    public String getTdStatus() {
-        return tdStatus;
+    public String getValidationResults() {
+        return validationResults;
     }
 
-    public void setTdStatus(String tdStatus) {
-        this.tdStatus = tdStatus;
+    public void setValidationResults(String validationResults) {
+        this.validationResults = validationResults;
     }
 
     public String getReserved8() {
@@ -269,28 +268,28 @@ public class ChannelHeader {
         this.reserved8 = reserved8;
     }
 
-    public String getDcFlow() {
-        return dcFlow;
+    public String getPowerFlowDirection() {
+        return powerFlowDirection;
     }
 
-    public void setDcFlow(String dcFlow) {
-        this.dcFlow = dcFlow;
+    public void setPowerFlowDirection(String powerFlowDirection) {
+        this.powerFlowDirection = powerFlowDirection;
     }
 
-    public String getDcKvaset() {
-        return dcKvaset;
+    public String getKvaSet() {
+        return kvaSet;
     }
 
-    public void setDcKvaset(String dcKvaset) {
-        this.dcKvaset = dcKvaset;
+    public void setKvaSet(String kvaSet) {
+        this.kvaSet = kvaSet;
     }
 
-    public String getTdOrigin() {
-        return tdOrigin;
+    public String getDataOrigin() {
+        return dataOrigin;
     }
 
-    public void setTdOrigin(String tdOrigin) {
-        this.tdOrigin = tdOrigin;
+    public void setDataOrigin(String dataOrigin) {
+        this.dataOrigin = dataOrigin;
     }
 
     public String getReserved9() {
