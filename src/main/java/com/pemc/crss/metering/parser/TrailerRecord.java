@@ -5,7 +5,6 @@ public class TrailerRecord {
     private String recordLength;
     private String recordCode;
     private String totalRecordCount;
-    private String reserved1;
     private String timestamp;
 
     public String getRecordLength() {
@@ -32,14 +31,6 @@ public class TrailerRecord {
         this.totalRecordCount = totalRecordCount;
     }
 
-    public String getReserved1() {
-        return reserved1;
-    }
-
-    public void setReserved1(String reserved1) {
-        this.reserved1 = reserved1;
-    }
-
     public String getTimestamp() {
         return timestamp;
     }
@@ -47,4 +38,5 @@ public class TrailerRecord {
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
+
 }

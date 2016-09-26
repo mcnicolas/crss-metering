@@ -5,16 +5,17 @@ import java.util.List;
 
 public class MeterData {
 
-    private List<MeterHeader> meterHeaders = new ArrayList<>();
+    private Header header;
     private TrailerRecord trailerRecord;
     private String error;
+    private List<ChannelHeader> channels = new ArrayList<>();
 
-    public List<MeterHeader> getMeterHeaders() {
-        return meterHeaders;
+    public Header getHeader() {
+        return header;
     }
 
-    public void setMeterHeaders(List<MeterHeader> meterHeaders) {
-        this.meterHeaders = meterHeaders;
+    public void setHeader(Header header) {
+        this.header = header;
     }
 
     public TrailerRecord getTrailerRecord() {
@@ -33,8 +34,16 @@ public class MeterData {
         this.error = error;
     }
 
-    private void addMeterHeader(MeterHeader meterHeader) {
-        meterHeaders.add(meterHeader);
+    public List<ChannelHeader> getChannels() {
+        return channels;
+    }
+
+    public void setChannels(List<ChannelHeader> channels) {
+        this.channels = channels;
+    }
+
+    public void addChannel(ChannelHeader channelHeader) {
+        channels.add(channelHeader);
     }
 
 }
