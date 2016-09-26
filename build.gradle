@@ -1,11 +1,17 @@
 buildscript {
     repositories {
-        mavenCentral()
+        maven {
+            url "http://nexus.exist.com:8082/repository/maven-exist/"
+            credentials {
+                username "${mavenUser}"
+                password "${mavenPassword}"
+            }
+        }
     }
 
     dependencies {
-        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.4.0.RELEASE'
-        classpath 'io.spring.gradle:dependency-management-plugin:0.6.0.RELEASE'
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.4.1.RELEASE'
+        classpath 'io.spring.gradle:dependency-management-plugin:0.6.1.RELEASE'
     }
 }
 
@@ -21,17 +27,19 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 repositories {
-    mavenLocal()
-    mavenCentral()
     maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots"
+        url "http://nexus.exist.com:8082/repository/maven-exist/"
+        credentials {
+            username "${mavenUser}"
+            password "${mavenPassword}"
+        }
     }
 }
 
 dependencyManagement {
     imports {
         mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Brixton.SR4'
-        mavenBom 'org.springframework.boot:spring-boot-dependencies:1.4.0.RELEASE'
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:1.4.1.RELEASE'
     }
 }
 
@@ -58,4 +66,3 @@ springBoot {
 bootRun {
     systemProperties = System.properties
 }
-
