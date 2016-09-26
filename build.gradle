@@ -18,7 +18,6 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'spring-boot'
-apply plugin: 'application'
 
 project.version = '2.0.0-SNAPSHOT'
 project.buildDir = 'target'
@@ -55,18 +54,6 @@ dependencies {
     compile 'org.springframework.cloud:spring-cloud-starter-config'
 
     testCompile 'org.springframework.boot:spring-boot-starter-test'
-}
-
-applicationDefaultJvmArgs = [
-        "-Xms128m",
-        "-Xmx512m"
-]
-
-springBoot {
-    layout = 'JAR'
-    classifier = 'exec'
-    embeddedLaunchScript = file('launch.script')
-    embeddedLaunchScriptProperties = ['jvm_options': applicationDefaultJvmArgs.join(' ')]
 }
 
 bootRun {
