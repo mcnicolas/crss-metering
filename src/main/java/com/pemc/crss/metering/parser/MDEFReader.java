@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -30,11 +29,11 @@ class MDEFReader {
     private int minuteInterval = 15;
     private static final int MINUTES_IN_HOUR = 60;
 
-    MeterData readMDEF(File file) throws Exception {
+    MeterData readMDEF(FileInputStream inputStream) throws Exception {
 
         MeterData meterData = new MeterData();
 
-        try (InputStream data = new BufferedInputStream(new FileInputStream(file))) {
+        try (InputStream data = new BufferedInputStream(inputStream)) {
             byte[] buffer = new byte[RECORD_BLOCK_SIZE];
 
             String channelHeaderTaStop = "";
