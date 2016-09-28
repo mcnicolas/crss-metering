@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
@@ -29,7 +28,7 @@ class MDEFReader {
     private int minuteInterval = 15;
     private static final int MINUTES_IN_HOUR = 60;
 
-    MeterData readMDEF(FileInputStream inputStream) throws Exception {
+    MeterData readMDEF(InputStream inputStream) throws Exception {
 
         MeterData meterData = new MeterData();
 
