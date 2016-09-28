@@ -5,8 +5,8 @@ import java.util.List;
 
 public class ChannelHeader {
 
-    private String recordLength;
-    private String recordCode;
+    private int recordLength;
+    private int recordCode;
 
     private String customerID;
     private String recorderID;
@@ -14,7 +14,7 @@ public class ChannelHeader {
     private String startTime;
     private String stopTime;
     private String meterChannelNo;
-    private String customerChannelNo;
+    private int customerChannelNo;
     private String uomCode;
     private String channelStatusPresent;
     private String intervalStatusPresent;
@@ -25,24 +25,24 @@ public class ChannelHeader {
     private String intervalPerHour;
     private String validationResults;
     private String powerFlowDirection;
-    private String kvaSet;
+    private int kvaSet;
     private String dataOrigin;
 
     private List<IntervalData> intervals = new ArrayList<>();
 
-    public String getRecordLength() {
+    public int getRecordLength() {
         return recordLength;
     }
 
-    public void setRecordLength(String recordLength) {
+    public void setRecordLength(int recordLength) {
         this.recordLength = recordLength;
     }
 
-    public String getRecordCode() {
+    public int getRecordCode() {
         return recordCode;
     }
 
-    public void setRecordCode(String recordCode) {
+    public void setRecordCode(int recordCode) {
         this.recordCode = recordCode;
     }
 
@@ -94,11 +94,11 @@ public class ChannelHeader {
         this.meterChannelNo = meterChannelNo;
     }
 
-    public String getCustomerChannelNo() {
+    public int getCustomerChannelNo() {
         return customerChannelNo;
     }
 
-    public void setCustomerChannelNo(String customerChannelNo) {
+    public void setCustomerChannelNo(int customerChannelNo) {
         this.customerChannelNo = customerChannelNo;
     }
 
@@ -182,11 +182,11 @@ public class ChannelHeader {
         this.powerFlowDirection = powerFlowDirection;
     }
 
-    public String getKvaSet() {
+    public int getKvaSet() {
         return kvaSet;
     }
 
-    public void setKvaSet(String kvaSet) {
+    public void setKvaSet(int kvaSet) {
         this.kvaSet = kvaSet;
     }
 
@@ -204,6 +204,10 @@ public class ChannelHeader {
 
     public void setIntervals(List<IntervalData> intervals) {
         this.intervals = intervals;
+    }
+
+    public void addInterval(IntervalData intervalData) {
+        intervals.add(intervalData);
     }
 
 }

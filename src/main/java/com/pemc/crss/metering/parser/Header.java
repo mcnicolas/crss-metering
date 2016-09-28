@@ -2,8 +2,8 @@ package com.pemc.crss.metering.parser;
 
 public class Header {
 
-    private String recordLength;
-    private String recordCode;
+    private int recordLength;
+    private int recordCode;
 
     private String customerID;
     private String customerName;
@@ -15,19 +15,19 @@ public class Header {
     private String stopTime;
     private String dstFlag;
 
-    public String getRecordLength() {
+    public int getRecordLength() {
         return recordLength;
     }
 
-    public void setRecordLength(String recordLength) {
+    public void setRecordLength(int recordLength) {
         this.recordLength = recordLength;
     }
 
-    public String getRecordCode() {
+    public int getRecordCode() {
         return recordCode;
     }
 
-    public void setRecordCode(String recordCode) {
+    public void setRecordCode(int recordCode) {
         this.recordCode = recordCode;
     }
 

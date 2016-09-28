@@ -4,30 +4,27 @@ import java.util.List;
 
 public class IntervalData {
 
-    private String recordLength;
-    private String recordCode;
+    private int recordLength;
+    private int recordCode;
     private String customerID;
-    private List<String> uomFlow;
-    private List<String> reading;
+    private List<Float> meterReading;
     private List<String> channelStatus;
-    private List<String> channelStatusDesc;
     private List<String> intervalStatus;
-    private List<String> intervalStatusDesc;
     private List<String> readingDate;
 
-    public String getRecordLength() {
+    public int getRecordLength() {
         return recordLength;
     }
 
-    public void setRecordLength(String recordLength) {
+    public void setRecordLength(int recordLength) {
         this.recordLength = recordLength;
     }
 
-    public String getRecordCode() {
+    public int getRecordCode() {
         return recordCode;
     }
 
-    public void setRecordCode(String recordCode) {
+    public void setRecordCode(int recordCode) {
         this.recordCode = recordCode;
     }
 
@@ -39,20 +36,12 @@ public class IntervalData {
         this.customerID = customerID;
     }
 
-    public List<String> getUomFlow() {
-        return uomFlow;
+    public List<Float> getMeterReading() {
+        return meterReading;
     }
 
-    public void setUomFlow(List<String> uomFlow) {
-        this.uomFlow = uomFlow;
-    }
-
-    public List<String> getReading() {
-        return reading;
-    }
-
-    public void setReading(List<String> reading) {
-        this.reading = reading;
+    public void setMeterReading(List<Float> meterReading) {
+        this.meterReading = meterReading;
     }
 
     public List<String> getChannelStatus() {
@@ -63,28 +52,12 @@ public class IntervalData {
         this.channelStatus = channelStatus;
     }
 
-    public List<String> getChannelStatusDesc() {
-        return channelStatusDesc;
-    }
-
-    public void setChannelStatusDesc(List<String> channelStatusDesc) {
-        this.channelStatusDesc = channelStatusDesc;
-    }
-
     public List<String> getIntervalStatus() {
         return intervalStatus;
     }
 
     public void setIntervalStatus(List<String> intervalStatus) {
         this.intervalStatus = intervalStatus;
-    }
-
-    public List<String> getIntervalStatusDesc() {
-        return intervalStatusDesc;
-    }
-
-    public void setIntervalStatusDesc(List<String> intervalStatusDesc) {
-        this.intervalStatusDesc = intervalStatusDesc;
     }
 
     public List<String> getReadingDate() {
