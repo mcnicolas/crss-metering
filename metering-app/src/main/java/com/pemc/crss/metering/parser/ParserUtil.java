@@ -9,7 +9,6 @@ public class ParserUtil {
     private ParserUtil() {
     }
 
-    @Deprecated
     // TODO: Check if it is better to return an int
     public static String parseInt(int start, int end, byte[] buffer) {
         char c = (char) ((buffer[start] & 0x00FF) | Character.reverseBytes((char) buffer[end]));
