@@ -1,9 +1,47 @@
+buildscript {
+    repositories {
+        maven {
+            url "http://nexus.exist.com:8082/repository/maven-exist/"
+            credentials {
+                username "${mavenUser}"
+                password "${mavenPassword}"
+            }
+        }
+    }
+
+    dependencies {
+        classpath 'gradle.plugin.org.liquibase:liquibase-gradle-plugin:1.2.1'
+        classpath 'org.postgresql:postgresql:9.4.1211'
+        classpath  'com.oracle:ojdbc6:11.2.0.3'
+    }
+}
+
+apply plugin: 'org.liquibase.gradle'
+
+apply from: 'liquibase.gradle'
+
 dependencies {
     compile 'org.springframework.boot:spring-boot-starter-undertow'
 
     compile 'org.springframework.boot:spring-boot-starter-actuator'
     compile 'org.springframework.cloud:spring-cloud-starter-eureka'
-    compile 'org.springframework.cloud:spring-cloud-starter-config'
+
+    compile 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    runtime 'com.zaxxer:HikariCP'
+    runtime 'org.postgresql:postgresql'
+    runtime 'com.oracle:ojdbc6'
 
     testCompile 'org.springframework.boot:spring-boot-starter-test'
+}
+
+liquibase {
+    activities {
+        validate {
+            changeLogFile "${project.file('src/main')}/liquibase/changelog-main.groovy"
+            url "${dbUrl}"
+            username "${dbUser}"
+            password "${dbPassword}"
+        }
+    }
 }

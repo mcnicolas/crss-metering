@@ -15,6 +15,10 @@ buildscript {
     }
 }
 
+ext {
+    springBootVersion = '1.4.1.RELEASE'
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'io.spring.dependency-management'
@@ -43,17 +47,18 @@ subprojects {
     dependencyManagement {
         imports {
             mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Brixton.SR6'
-            mavenBom 'org.springframework.boot:spring-boot-dependencies:1.4.1.RELEASE'
+            mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+        }
+
+        dependencies {
+            dependency ("org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion") {
+                exclude 'org.apache.tomcat:tomcat-jdbc'
+            }
+
+            dependency 'com.zaxxer:HikariCP:2.5.1'
+            dependency 'org.postgresql:postgresql:9.4.1211'
+            dependency 'com.oracle:ojdbc6:11.2.0.3'
         }
     }
 
-    dependencies {
-        compile 'org.springframework.boot:spring-boot-starter-undertow'
-
-        compile 'org.springframework.boot:spring-boot-starter-actuator'
-        compile 'org.springframework.cloud:spring-cloud-starter-eureka'
-        compile 'org.springframework.cloud:spring-cloud-starter-config'
-
-        testCompile 'org.springframework.boot:spring-boot-starter-test'
-    }
 }

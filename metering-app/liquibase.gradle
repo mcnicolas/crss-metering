@@ -1,0 +1,38 @@
+def allowableProfiles = ['staging', 'uat']
+
+if (project.hasProperty('env') && !allowableProfiles.contains(project.env)) {
+    throw new IllegalArgumentException("Unknown environment supplied: ${project.env}")
+}
+
+def profile  = project.hasProperty('env') ? project.getProperty('env') : 'dev'
+
+ext {
+    switch (profile) {
+        case 'staging':
+            dbEnv = "staging"
+            dbUrl = "jdbc:oracle:thin:@192.168.241.62:1521:ORCL"
+            dbDriver = "oracle.jdbc.OracleDriver"
+            dbUser = "crss_metering"
+            dbPassword = "crss_metering"
+            dbDialect = "org.hibernate.dialect.Oracle10gDialect"
+
+            break
+        case 'uat':
+            dbEnv = "uat"
+            dbUrl = "jdbc:oracle:thin:@192.168.241.62:1521:ORCL"
+            dbDriver = "oracle.jdbc.OracleDriver"
+            dbUser = "crss_metering_uat"
+            dbPassword = "crss_metering_uat"
+            dbDialect = "org.hibernate.dialect.Oracle10gDialect"
+
+            break
+        default:
+            dbEnv = "local"
+            dbUrl = "jdbc:postgresql://localhost:5432/crss_metering"
+            dbDriver = "org.postgresql.Driver"
+            dbUser = "crss_metering"
+            dbPassword = "crss_metering"
+            dbDialect = "org.hibernate.dialect.PostgreSQL9Dialect"
+    }
+
+}
