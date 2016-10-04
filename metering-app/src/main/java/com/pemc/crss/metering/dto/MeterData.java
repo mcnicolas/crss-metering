@@ -1,4 +1,6 @@
-package com.pemc.crss.metering.parser;
+package com.pemc.crss.metering.dto;
+
+import com.pemc.crss.metering.parser.TrailerRecord;
 
 import java.util.ArrayList;
 import java.util.List;

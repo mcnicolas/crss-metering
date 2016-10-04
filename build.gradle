@@ -55,6 +55,8 @@ subprojects {
                 exclude 'org.apache.tomcat:tomcat-jdbc'
             }
 
+            dependency 'org.projectlombok:lombok:1.16.10'
+
             dependency 'com.zaxxer:HikariCP:2.5.1'
             dependency 'org.postgresql:postgresql:9.4.1211'
             dependency 'com.oracle:ojdbc6:11.2.0.3'

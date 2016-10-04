@@ -1,4 +1,4 @@
-package com.pemc.crss.metering.parser;
+package com.pemc.crss.metering.dto;
 
 import java.util.List;
 

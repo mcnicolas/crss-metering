@@ -1,5 +1,9 @@
 package com.pemc.crss.metering.parser;
 
+import com.pemc.crss.metering.dto.ChannelHeader;
+import com.pemc.crss.metering.dto.Header;
+import com.pemc.crss.metering.dto.IntervalData;
+import com.pemc.crss.metering.dto.MeterData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +21,7 @@ import static com.pemc.crss.metering.parser.ParserUtil.parseText;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static java.util.Calendar.MINUTE;
 
-class MDEFReader {
+public class MDEFReader {
 
     private static final Logger LOG = LoggerFactory.getLogger(MDEFReader.class);
 
@@ -28,7 +32,7 @@ class MDEFReader {
     private int minuteInterval = 15;
     private static final int MINUTES_IN_HOUR = 60;
 
-    MeterData readMDEF(InputStream inputStream) throws Exception {
+    public MeterData readMDEF(InputStream inputStream) throws Exception {
 
         MeterData meterData = new MeterData();
 
@@ -131,7 +135,7 @@ class MDEFReader {
         retVal.setMeterMultiplier(parseText(buffer, 1, 10));
         retVal.setServerType(parseText(buffer, 30, 1));
 
-        retVal.setIntervalPerHour(parseText(buffer, 10, 2));
+        retVal.setIntervalPerHour(Integer.parseInt(parseText(buffer, 10, 2)));
         retVal.setValidationResults(parseText(buffer, 14, 2));
         retVal.setPowerFlowDirection(parseText(buffer, 15, 1));
         retVal.setKvaSet(buffer.getShort());

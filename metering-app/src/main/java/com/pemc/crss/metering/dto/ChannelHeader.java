@@ -1,4 +1,4 @@
-package com.pemc.crss.metering.parser;
+package com.pemc.crss.metering.dto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ public class ChannelHeader {
     private String stopMeterReading;
     private String meterMultiplier;
     private String serverType;
-    private String intervalPerHour;
+    private int intervalPerHour;
     private String validationResults;
     private String powerFlowDirection;
     private int kvaSet;
@@ -158,11 +158,11 @@ public class ChannelHeader {
         this.serverType = serverType;
     }
 
-    public String getIntervalPerHour() {
+    public int getIntervalPerHour() {
         return intervalPerHour;
     }
 
-    public void setIntervalPerHour(String intervalPerHour) {
+    public void setIntervalPerHour(int intervalPerHour) {
         this.intervalPerHour = intervalPerHour;
     }
 
