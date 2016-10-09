@@ -108,15 +108,16 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
         comment 'Initial XLS tables'
 
         createTable(tableName: 'txn_meter_data_xls', remarks: 'Create XLS meter data table') {
-            column(name: 'meter_data_id',           type: 'BIGINT') { constraints(primaryKey: true, nullable: false) }
-            column(name: 'file_id',                 type: 'BIGINT')
-            column(name: 'customer_id',             type: 'VARCHAR(20)')
-            column(name: 'reading_datetime',        type: 'TIMESTAMP')
-            column(name: 'meter_no',                type: 'VARCHAR(12)')
-            column(name: 'channel_status',          type: 'CHAR(16)')
-            column(name: 'channel_status_desc',     type: 'CHAR(50)')
-            column(name: 'interval_status',         type: 'CHAR(16)')
-            column(name: 'interval_status_desc',    type: 'CHAR(50)')
+            column(name: 'meter_data_id',    type: 'BIGINT') { constraints(primaryKey: true, nullable: false) }
+            column(name: 'file_id',          type: 'BIGINT')
+            column(name: 'sein',             type: 'VARCHAR(20)')
+            column(name: 'reading_datetime', type: 'TIMESTAMP')
+            column(name: 'kwd',              type: 'DOUBLE')
+            column(name: 'kwhd',             type: 'DOUBLE')
+            column(name: 'kvarhd',           type: 'DOUBLE')
+            column(name: 'kwr',              type: 'DOUBLE')
+            column(name: 'kwhr',             type: 'DOUBLE')
+            column(name: 'kvarhr',           type: 'DOUBLE')
         }
     }
 

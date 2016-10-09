@@ -1,9 +1,11 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.metering.dto.MeterData;
+import com.pemc.crss.metering.dto.MeterDataXLS;
 import com.pemc.crss.metering.dto.MeterUploadMDEF;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
-import com.pemc.crss.metering.dto.MeterUploadXLS;
+
+import java.util.List;
 
 public interface MeteringDao {
 
@@ -13,5 +15,5 @@ public interface MeteringDao {
 
     void saveMeterUploadMDEF(long fileID, MeterData meterData);
 
-    void saveMeterUploadXLS(long transactionID, MeterUploadXLS meterUploadXLS);
+    void saveMeterUploadXLS(long transactionID, List<MeterDataXLS> meterDataList);
 }

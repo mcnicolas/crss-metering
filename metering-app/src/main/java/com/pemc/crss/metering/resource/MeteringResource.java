@@ -2,22 +2,60 @@ package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.metering.dao.MeteringDao;
 import com.pemc.crss.metering.dto.MeterData;
+import com.pemc.crss.metering.dto.MeterDataXLS;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
 import com.pemc.crss.metering.dto.MeterUploadMDEF;
+import com.pemc.crss.metering.parser.ExcelReader;
 import com.pemc.crss.metering.parser.MDEFReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.List;
 
 @RestController
 public class MeteringResource {
 
     @Autowired
     private MeteringDao meteringDao;
+
+    @RequestMapping("/xls")
+    @Transactional
+    public long xls() throws IOException {
+        ExcelReader reader = new ExcelReader();
+
+        String[] files = new String[]{
+                "MET_CEDCMSP_R3MEXCEDC01TNSC01_20161003.xls",
+                "MF3MABAMSUZ01.xls",
+                "MF3MMEXRASL02.xls",
+                "R3MEXCEDC01TNSC01.xls",
+                "R3MEXSFEL01SMC401.xls",
+                "R3MEXSFEL02PCBC01.xls",
+                "R3MEXSFEL02SMCB01.xls"
+        };
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        for (String file : files) {
+            System.out.println("File:" + file);
+            List<MeterDataXLS> meterDataList = reader.readExcel(
+                    new FileInputStream(
+                            new File(MeteringResource.class.getClassLoader().getResource(file).getFile())));
+
+            meteringDao.saveMeterUploadXLS(1, meterDataList);
+        }
+
+        stopWatch.stop();
+        System.out.println(stopWatch.prettyPrint());
+
+        return 0;
+    }
 
     @RequestMapping("/hello")
     @Transactional
@@ -33,12 +71,28 @@ public class MeteringResource {
         file.setStatus("Accepted");
         long fileID = meteringDao.saveMeterUploadFile(i, file);
 
-        MDEFReader reader = new MDEFReader();
-        MeterData meterData = reader.readMDEF(
-                new FileInputStream(
-                        new File(MeteringResource.class.getClassLoader().getResource("DT005958.MDE").getFile())));
+        String[] files = new String[]{
+                "DT005958.MDE",
+                "DT023122.MDE",
+                "DT023693.MDE",
+                "DT024256.MDE",
+                "DT030188.MDE",
+                "DT031131.MDE"
+        };
 
-        meteringDao.saveMeterUploadMDEF(fileID, meterData);
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        for (String mdefFile : files) {
+            System.out.println("Processing:" + mdefFile);
+            MDEFReader reader = new MDEFReader();
+            MeterData meterData = reader.readMDEF(
+                    new FileInputStream(
+                            new File(MeteringResource.class.getClassLoader().getResource(mdefFile).getFile())));
+
+            meteringDao.saveMeterUploadMDEF(fileID, meterData);
+        }
+        stopWatch.stop();
+        System.out.println("Total time:" + stopWatch.getTotalTimeSeconds());
 
 /*
 

@@ -21,6 +21,8 @@ apply plugin: 'org.liquibase.gradle'
 apply from: 'liquibase.gradle'
 
 dependencies {
+    compile 'org.apache.poi:poi'
+
     compile 'org.projectlombok:lombok'
 
     compile 'org.springframework.boot:spring-boot-starter-undertow'

@@ -4,9 +4,9 @@ import com.pemc.crss.metering.dto.ChannelHeader;
 import com.pemc.crss.metering.dto.Header;
 import com.pemc.crss.metering.dto.IntervalData;
 import com.pemc.crss.metering.dto.MeterData;
+import com.pemc.crss.metering.dto.MeterDataXLS;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
 import com.pemc.crss.metering.dto.MeterUploadMDEF;
-import com.pemc.crss.metering.dto.MeterUploadXLS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -175,27 +175,30 @@ public class JdbcMeteringDao implements MeteringDao {
     }
 
     @Override
-    public void saveMeterUploadXLS(long transactionID, MeterUploadXLS meterUploadXLS) {
+    public void saveMeterUploadXLS(long transactionID, List<MeterDataXLS> meterDataList) {
         // TODO: Transfer SQL scripts to resource file
-        String INSERT_SQL = "INSERT INTO TXN_METER_DATA_XLS (METER_DATA_ID, FILE_ID, CUSTOMER_ID, READING_DATETIME,"
-                + " METER_NO, CHANNEL_STATUS,"
-                + " CHANNEL_STATUS_DESC, INTERVAL_STATUS, INTERVAL_STATUS_DESC)"
-                + " VALUES(NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?)";
+        String INSERT_SQL = "INSERT INTO TXN_METER_DATA_XLS (METER_DATA_ID, FILE_ID, SEIN, READING_DATETIME,"
+                + " KWD, KWHD, KVARHD, KWR, KWHR, KVARHR)"
+                + " VALUES(NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        jdbcTemplate.update(
-                connection -> {
-                    PreparedStatement ps = connection.prepareStatement(INSERT_SQL);
-                    ps.setLong(1, meterUploadXLS.getFileID());
-                    ps.setString(2, meterUploadXLS.getCustomerID());
-                    ps.setTimestamp(3, new Timestamp(new Date().getTime()));
-                    ps.setString(4, meterUploadXLS.getMeterNo());
-                    ps.setString(5, meterUploadXLS.getChannelStatus());
-                    ps.setString(6, meterUploadXLS.getChannelStatusDesc());
-                    ps.setString(7, meterUploadXLS.getIntervalStatus());
-                    ps.setString(8, meterUploadXLS.getIntervalStatusDesc());
+        // TODO: Use batch update
+        for (MeterDataXLS meterDataXLS : meterDataList) {
+            jdbcTemplate.update(
+                    connection -> {
+                        PreparedStatement ps = connection.prepareStatement(INSERT_SQL);
+                        ps.setLong(1, transactionID);
+                        ps.setString(2, meterDataXLS.getSein());
+                        ps.setTimestamp(3, new Timestamp(meterDataXLS.getReadingDateTime().getTime()));
+                        ps.setDouble(4, meterDataXLS.getKwd());
+                        ps.setDouble(5, meterDataXLS.getKwhd());
+                        ps.setDouble(6, meterDataXLS.getKvarhd());
+                        ps.setDouble(7, meterDataXLS.getKwr());
+                        ps.setDouble(8, meterDataXLS.getKwhr());
+                        ps.setDouble(9, meterDataXLS.getKvarhr());
 
-                    return ps;
-                });
+                        return ps;
+                    });
+        }
     }
 
 }
