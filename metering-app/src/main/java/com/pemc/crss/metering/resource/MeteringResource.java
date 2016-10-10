@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.resource;
 
+import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dao.MeteringDao;
 import com.pemc.crss.metering.dto.MeterData;
 import com.pemc.crss.metering.dto.MeterDataXLS;
@@ -8,10 +9,15 @@ import com.pemc.crss.metering.dto.MeterUploadMDEF;
 import com.pemc.crss.metering.parser.ExcelReader;
 import com.pemc.crss.metering.parser.MDEFReader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -155,6 +161,12 @@ public class MeteringResource {
 */
 
         return i;
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<String> testUpload(@RequestParam("file") MultipartFile file, @RequestParam("uploadType") UploadType uploadType) {
+        System.out.println(file.getOriginalFilename() + " - " + uploadType);
+        return new ResponseEntity<>("Successfully parsed", HttpStatus.OK);
     }
 
 }
