@@ -53,8 +53,8 @@ public class JdbcMeteringDao implements MeteringDao {
     @Override
     public long saveMeterUploadFile(long transactionID, MeterUploadMDEF meterUploadMDEF) {
         // TODO: Transfer SQL scripts to resource file
-        String INSERT_SQL = "INSERT INTO TXN_METER_UPLOAD_FILE (FILE_ID, TRANSACTION_ID, FILENAME, FILETYPE, FILESIZE, CHECKSUM, STATUS)" +
-                " VALUES(NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?)";
+        String INSERT_SQL = "INSERT INTO TXN_METER_UPLOAD_FILE (FILE_ID, TRANSACTION_ID, FILENAME, FILETYPE, FILESIZE, STATUS)" +
+                " VALUES(NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?)";
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
@@ -64,8 +64,7 @@ public class JdbcMeteringDao implements MeteringDao {
                     ps.setString(2, meterUploadMDEF.getFileName());
                     ps.setString(3, meterUploadMDEF.getFileType());
                     ps.setLong(4, meterUploadMDEF.getFileSize());
-                    ps.setString(5, meterUploadMDEF.getChecksum());
-                    ps.setString(6, meterUploadMDEF.getStatus());
+                    ps.setString(5, meterUploadMDEF.getStatus());
 
                     return ps;
                 },

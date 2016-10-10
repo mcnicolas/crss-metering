@@ -29,7 +29,6 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'filename',        type: 'VARCHAR(50)')
             column(name: 'filetype',        type: 'VARCHAR(5)', remarks: 'Possible values: XLS, MDEF')
             column(name: 'filesize',        type: 'BIGINT')
-            column(name: 'checksum',        type: 'VARCHAR(50)', remarks: 'MD5 checksum of the uploaded file')
             column(name: 'status',          type: 'VARCHAR(10)', remarks: 'Possible values: ACCEPTED, REJECTED')
         }
 

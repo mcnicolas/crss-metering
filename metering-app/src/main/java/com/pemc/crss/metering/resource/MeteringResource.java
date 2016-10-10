@@ -73,7 +73,6 @@ public class MeteringResource {
         file.setFileName("test_file.mdef");
         file.setFileType("MDEF");
         file.setFileSize(123L);
-        file.setChecksum("asdf");
         file.setStatus("Accepted");
         long fileID = meteringDao.saveMeterUploadFile(i, file);
 

@@ -10,7 +10,6 @@ public class MeterUploadMDEF {
     private String fileName;
     private String fileType;
     private long fileSize;
-    private String checksum;
     private String status;
 
 }
