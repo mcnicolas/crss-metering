@@ -18,11 +18,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class MeteringResource {
@@ -163,8 +165,13 @@ public class MeteringResource {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> testUpload(@RequestParam("file") MultipartFile file, @RequestParam("uploadType") UploadType uploadType) {
-        System.out.println(file.getOriginalFilename() + " - " + uploadType);
+    public ResponseEntity<String> testUpload(MultipartHttpServletRequest request, @RequestParam("uploadType") UploadType uploadType) {
+        Map<String, MultipartFile> fileMap = request.getFileMap();
+
+        for(MultipartFile file : fileMap.values()) {
+            System.out.println(file.getOriginalFilename());
+        }
+        System.out.println(uploadType);
         return new ResponseEntity<>("Successfully parsed", HttpStatus.OK);
     }
 
