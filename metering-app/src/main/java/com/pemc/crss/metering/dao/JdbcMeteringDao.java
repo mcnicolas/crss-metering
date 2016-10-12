@@ -5,8 +5,8 @@ import com.pemc.crss.metering.dto.Header;
 import com.pemc.crss.metering.dto.IntervalData;
 import com.pemc.crss.metering.dto.MeterData;
 import com.pemc.crss.metering.dto.MeterDataXLS;
+import com.pemc.crss.metering.dto.MeterUploadFile;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
-import com.pemc.crss.metering.dto.MeterUploadMDEF;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -38,9 +38,7 @@ public class JdbcMeteringDao implements MeteringDao {
                     ps.setLong(1, meterUploadHeader.getMspID());
                     ps.setString(2, meterUploadHeader.getCategory());
                     ps.setString(3, meterUploadHeader.getUploadedBy());
-
-                    // TODO: Change to propert date/time
-                    ps.setTimestamp(4, new Timestamp(new Date().getTime()));
+                    ps.setTimestamp(4, new Timestamp(meterUploadHeader.getUploadedDateTime().getTime()));
                     ps.setInt(5, meterUploadHeader.getVersion());
 
                     return ps;
@@ -51,7 +49,7 @@ public class JdbcMeteringDao implements MeteringDao {
     }
 
     @Override
-    public long saveMeterUploadFile(long transactionID, MeterUploadMDEF meterUploadMDEF) {
+    public long saveMeterUploadFile(long transactionID, MeterUploadFile meterUploadFile) {
         // TODO: Transfer SQL scripts to resource file
         String INSERT_SQL = "INSERT INTO TXN_METER_UPLOAD_FILE (FILE_ID, TRANSACTION_ID, FILENAME, FILETYPE, FILESIZE, STATUS)" +
                 " VALUES(NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?)";
@@ -61,10 +59,10 @@ public class JdbcMeteringDao implements MeteringDao {
                 connection -> {
                     PreparedStatement ps = connection.prepareStatement(INSERT_SQL, new String[]{"file_id"});
                     ps.setLong(1, transactionID);
-                    ps.setString(2, meterUploadMDEF.getFileName());
-                    ps.setString(3, meterUploadMDEF.getFileType());
-                    ps.setLong(4, meterUploadMDEF.getFileSize());
-                    ps.setString(5, meterUploadMDEF.getStatus());
+                    ps.setString(2, meterUploadFile.getFileName());
+                    ps.setString(3, meterUploadFile.getFileType().toString());
+                    ps.setLong(4, meterUploadFile.getFileSize());
+                    ps.setString(5, meterUploadFile.getStatus().toString());
 
                     return ps;
                 },

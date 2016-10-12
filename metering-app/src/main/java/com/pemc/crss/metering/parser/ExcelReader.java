@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,10 +23,13 @@ import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
 import static org.apache.poi.ss.usermodel.DateUtil.getJavaCalendar;
 
+@Component
+// TODO: Use factory
 public class ExcelReader {
 
     // TODO: Use poi eventmodel for faster processing
     public List<MeterDataXLS> readExcel(InputStream inputStream) throws IOException {
+        // TODO: Add checking for xls and xlsx
         Workbook workbook = new HSSFWorkbook(inputStream);
         Sheet sheet = workbook.getSheetAt(0);
 

@@ -15,7 +15,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
         createTable(tableName: 'txn_meter_upload_header', remarks: 'Create metering metadata header table') {
             column(name: 'transaction_id',        type: 'BIGINT') { constraints(primaryKey: true, nullable: false)}
             column(name: 'msp_id',                type: 'BIGINT', remarks: 'MSP Registration ID')
-            column(name: 'category',              type: 'VARCHAR(10)', remarks: 'Possible values: Daily, Monthly')
+            column(name: 'category',              type: 'VARCHAR(20)', remarks: 'Possible values: DAILY, MONTHLY, CORRECTED_METER_DATA')
             column(name: 'notification_sent',     type: 'CHAR(1)', remarks: 'Possible values: Y/N')
             column(name: 'notification_datetime', type: 'TIMESTAMP')
             column(name: 'upload_by',             type: 'VARCHAR(100)')

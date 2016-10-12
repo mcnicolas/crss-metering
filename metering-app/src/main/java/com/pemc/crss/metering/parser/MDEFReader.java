@@ -4,13 +4,17 @@ import com.pemc.crss.metering.dto.ChannelHeader;
 import com.pemc.crss.metering.dto.Header;
 import com.pemc.crss.metering.dto.IntervalData;
 import com.pemc.crss.metering.dto.MeterData;
+import com.pemc.crss.metering.dto.TrailerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -21,6 +25,8 @@ import static com.pemc.crss.metering.parser.ParserUtil.parseText;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static java.util.Calendar.MINUTE;
 
+@Component
+// TODO: Use factory
 public class MDEFReader {
 
     private static final Logger LOG = LoggerFactory.getLogger(MDEFReader.class);
@@ -32,7 +38,7 @@ public class MDEFReader {
     private int minuteInterval = 15;
     private static final int MINUTES_IN_HOUR = 60;
 
-    public MeterData readMDEF(InputStream inputStream) throws Exception {
+    public MeterData readMDEF(InputStream inputStream) throws IOException {
 
         MeterData meterData = new MeterData();
 
@@ -61,7 +67,7 @@ public class MDEFReader {
 
                         intervalStartDateForChannel = channelHeader.getStartTime();
                         channelHeaderTaStop = channelHeader.getStopTime();
-                        int channelIntervalPerHour = Integer.valueOf(channelHeader.getIntervalPerHour());
+                        int channelIntervalPerHour = channelHeader.getIntervalPerHour();
 
                         minuteInterval = MINUTES_IN_HOUR / channelIntervalPerHour;
 
@@ -79,13 +85,13 @@ public class MDEFReader {
                         meterData.setTrailerRecord(readTrailer(buffer));
                 }
             }
-        } catch (Exception e) {
+
+            return meterData;
+        } catch (IOException e) {
             LOG.error(e.getMessage(), e);
 
             throw e;
         }
-
-        return meterData;
     }
 
     private Header readMeterHeader(byte[] record) {
@@ -145,7 +151,7 @@ public class MDEFReader {
     }
 
     // TODO: Use of intervalStartDateForChannel has a side-effect. Need to refactor
-    private IntervalData readIntervalData(byte[] buffer, String intervalStartDate, String channelHeaderTaStop) throws Exception {
+    private IntervalData readIntervalData(byte[] buffer, String intervalStartDate, String channelHeaderTaStop) {
         IntervalData retVal = new IntervalData();
 
         List<Float> meterReadings = new ArrayList<>();
@@ -160,7 +166,13 @@ public class MDEFReader {
         String intervalStatus;
 
         // TODO: Need to inspect this
-        format.parse(intervalStartDate);
+        try {
+            format.parse(intervalStartDate);
+        } catch (ParseException e) {
+            // TODO: Set value to a special field like -999?
+            LOG.warn(e.getMessage(), e);
+        }
+
         Calendar cal = format.getCalendar();
 
         //round-up to the next quarter
@@ -206,7 +218,12 @@ public class MDEFReader {
 
         //next reading start date for next retVal
         if (readingDates.size() != 0) {
-            format.parse(readingDates.get(readingDates.size() - 1));
+            try {
+                format.parse(readingDates.get(readingDates.size() - 1));
+            } catch (ParseException e) {
+                LOG.warn(e.getMessage(), e);
+            }
+
             cal = format.getCalendar();
             cal.add(MINUTE, minuteInterval);
             intervalStartDateForChannel = format.format(cal.getTime());

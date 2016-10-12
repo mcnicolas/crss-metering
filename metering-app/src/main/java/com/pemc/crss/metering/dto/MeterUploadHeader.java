@@ -2,6 +2,8 @@ package com.pemc.crss.metering.dto;
 
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 public class MeterUploadHeader {
 
@@ -11,7 +13,7 @@ public class MeterUploadHeader {
     private String notificationSent;
     private String notificationDateTime;
     private String uploadedBy;
-    private String uploadedDateTime;
+    private Date uploadedDateTime;
     private int version;
 
 }

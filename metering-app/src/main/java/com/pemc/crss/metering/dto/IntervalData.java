@@ -7,10 +7,15 @@ public class IntervalData {
     private int recordLength;
     private int recordCode;
     private String customerID;
+
+    // TODO: Refactor. Each bean will contain a single record
     private List<Float> meterReading;
     private List<String> channelStatus;
     private List<String> intervalStatus;
     private List<String> readingDate;
+
+    // TODO: Add version field
+    // Version to increment when there is an existing customerID and readingDate
 
     public int getRecordLength() {
         return recordLength;
