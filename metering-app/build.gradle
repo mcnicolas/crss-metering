@@ -22,6 +22,7 @@ apply from: 'liquibase.gradle'
 
 dependencies {
     compile 'org.apache.poi:poi'
+    compile 'org.apache.poi:poi-ooxml'
 
     compile 'org.projectlombok:lombok'
 

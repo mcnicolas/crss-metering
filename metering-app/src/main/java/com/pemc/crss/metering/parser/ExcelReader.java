@@ -1,12 +1,13 @@
 package com.pemc.crss.metering.parser;
 
 import com.pemc.crss.metering.dto.MeterDataXLS;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -29,8 +30,13 @@ public class ExcelReader {
 
     // TODO: Use poi eventmodel for faster processing
     public List<MeterDataXLS> readExcel(InputStream inputStream) throws IOException {
-        // TODO: Add checking for xls and xlsx
-        Workbook workbook = new HSSFWorkbook(inputStream);
+        Workbook workbook;
+        try {
+            workbook = WorkbookFactory.create(inputStream);
+        } catch (InvalidFormatException e) {
+            throw new IOException(e);
+        }
+
         Sheet sheet = workbook.getSheetAt(0);
 
         List<MeterDataXLS> meterDataList = new ArrayList<>();
