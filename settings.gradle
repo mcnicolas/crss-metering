@@ -1,2 +1,3 @@
+include 'commons-web'
 include 'metering-app'
 include 'metering-generator'

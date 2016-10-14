@@ -22,7 +22,6 @@ ext {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'io.spring.dependency-management'
-    apply plugin: 'spring-boot'
 
     project.version = '2.0.0-SNAPSHOT'
     project.buildDir = 'target'
@@ -68,4 +67,8 @@ subprojects {
         }
     }
 
+}
+
+configure(subprojects - project(':commons-web')) {
+    apply plugin: 'spring-boot'
 }

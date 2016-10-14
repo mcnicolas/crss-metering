@@ -12,7 +12,8 @@ buildscript {
     dependencies {
         classpath 'gradle.plugin.org.liquibase:liquibase-gradle-plugin:1.2.1'
         classpath 'org.postgresql:postgresql:9.4.1211'
-        classpath  'com.oracle:ojdbc6:11.2.0.3'
+        classpath 'com.oracle:ojdbc6:11.2.0.3'
+
     }
 }
 
@@ -38,6 +39,8 @@ dependencies {
     runtime 'com.oracle:ojdbc6'
 
     testCompile 'org.springframework.boot:spring-boot-starter-test'
+
+    compile project(':commons-web')
 }
 
 liquibase {
