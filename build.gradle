@@ -59,6 +59,8 @@ subprojects {
                 entry 'poi-ooxml'
             }
 
+            dependency 'net.sf.supercsv:super-csv-java8:2.4.0'
+
             dependency 'org.projectlombok:lombok:1.16.10'
 
             dependency 'com.zaxxer:HikariCP:2.5.1'

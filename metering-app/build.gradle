@@ -24,6 +24,7 @@ apply from: 'liquibase.gradle'
 dependencies {
     compile 'org.apache.poi:poi'
     compile 'org.apache.poi:poi-ooxml'
+    compile 'net.sf.supercsv:super-csv-java8'
 
     compile 'org.projectlombok:lombok'
 
