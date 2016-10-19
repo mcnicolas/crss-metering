@@ -57,16 +57,10 @@ public class TablePanel extends JPanel {
         tableModel.setFileList(selectedFiles);
     }
 
-    public void getSelectedFiles() {
+    public List<FileBean> getSelectedFiles() {
         FileTableModel tableModel = (FileTableModel) fileTable.getModel();
 
-        List<FileBean> fileBean = tableModel.getFileList();
-
-        // TODO: Upload files
-        // 0. Generate uuid
-        // 1. send header
-        // 2. loop through the files and send each file individually
-        // 3. send trailer
+        return tableModel.getFileList();
     }
 
     /**

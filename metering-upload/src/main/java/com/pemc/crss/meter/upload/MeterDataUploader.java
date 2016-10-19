@@ -1,5 +1,7 @@
 package com.pemc.crss.meter.upload;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -13,10 +15,13 @@ import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.util.List;
+import java.util.UUID;
 
+@Slf4j
 public class MeterDataUploader extends JFrame {
 
     private String token;
+    private String username;
 
     public MeterDataUploader() {
         initComponents();
@@ -36,19 +41,43 @@ public class MeterDataUploader extends JFrame {
         tablePanel.updateTableDisplay(selectedFiles);
     }
 
-    public void uploadData() {
-        tablePanel.getSelectedFiles();
+    // TODO:
+    // 1. Handle disabling of upload button when not logged in
+    // 2. Display progress bar
+    public void uploadData(String category, int mspID) {
+        String transactionID = UUID.randomUUID().toString();
+
+        List<FileBean> selectedFiles = tablePanel.getSelectedFiles();
+
+        if (token != null) {
+            RestUtil.sendHeader(transactionID, username, selectedFiles.size(), category, mspID, token);
+        }
+
+        for (FileBean selectedFile : selectedFiles) {
+            RestUtil.sendFile(transactionID, selectedFile, token);
+
+            log.debug("Uploading file:{}", selectedFile.getPath().getFileName().toString());
+        }
+
+        RestUtil.sendTrailer(transactionID, token);
+
+        // TODO: Upload files
+        // 0. Generate uuid
+        // 1. send header
+        // 2. loop through the files and send each file individually
+        // 3. send trailer
     }
 
     public void login(String username, String password) {
         try {
             token = RestUtil.login(username, password);
-            System.out.println("Token:" + token);
+            this.username = username;
 
-            RestUtil.sendHeader(token);
+            log.debug("Logged in with token: {}", token);
         } catch (LoginException e) {
-            // TODO: Display login errors
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
+
+            // TODO: Handle error
         }
     }
 

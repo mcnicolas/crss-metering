@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import static java.util.logging.Level.SEVERE;
 
+// TODO: Convert to spring boot
 public class ApplicationLoader {
 
     public static void main(String[] args) {

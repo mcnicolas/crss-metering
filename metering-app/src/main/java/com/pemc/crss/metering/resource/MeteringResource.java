@@ -7,8 +7,6 @@ import com.pemc.crss.metering.dto.MeterDataListWebDto;
 import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -19,7 +17,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -62,8 +59,47 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
     }
 
     @PostMapping("/uploadheader")
-    public void sendHeader(@RequestParam("transactionID")  String transactionID) {
+    public void sendHeader(@RequestParam("transactionID") String transactionID,
+                           @RequestParam("mspID") long mspID,
+                           @RequestParam("fileCount") int fileCount,
+                           @RequestParam("category") String category,
+                           @RequestParam("username") String username) {
+        // TODO: Should the file manifest be initialized?
+
         log.debug("Transaction ID:{}", transactionID);
+
+        // TODO: Return headerID
+        long headerID = meterService.saveHeader(transactionID, mspID, fileCount, category, username);
+    }
+
+    @PostMapping("/uploadfile")
+    public void sendFile(MultipartHttpServletRequest request,
+                         @RequestParam("headerID") int headerID,
+                         @RequestParam("transactionID") String transactionID,
+                         @RequestParam("fileName") String fileName,
+                         @RequestParam("fileType") String fileType,
+                         @RequestParam("fileSize") long fileSize,
+                         @RequestParam("checksum") String checksum) {
+
+        // TODO:
+        // 1. Save file manifest to db
+        meterService.saveFileManifest(headerID, transactionID, fileName, fileType, fileSize, checksum);
+
+        // 2. Send file content to rabbitmq
+
+        Map<String, MultipartFile> fileMap = request.getFileMap();
+
+        // NOTE: Expect a single file only
+        for(MultipartFile file : fileMap.values()) {
+            log.debug("File received:{}", file.getOriginalFilename());
+        }
+    }
+
+    @PostMapping("/uploadtrailer")
+    public void sendHeader(@RequestParam("transactionID") String transactionID) {
+        log.debug("Transaction ID:{}", transactionID);
+
+        meterService.saveTrailer(transactionID);
     }
 
     @PostMapping("/upload")

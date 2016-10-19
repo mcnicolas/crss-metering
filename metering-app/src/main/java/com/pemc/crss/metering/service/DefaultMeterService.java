@@ -31,6 +31,24 @@ public class DefaultMeterService implements MeterService {
 
     @Override
     @Transactional
+    public long saveHeader(String transactionID, long mspID, int fileCount, String category, String username) {
+        return meteringDao.saveHeader(transactionID, mspID, fileCount, category, username);
+    }
+
+    @Override
+    @Transactional
+    public void saveTrailer(String transactionID) {
+        meteringDao.saveTrailer(transactionID);
+    }
+
+    @Override
+    @Transactional
+    public void saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize, String checksum) {
+        meteringDao.saveFileManifest(headerID, transactionID, fileName, fileType, fileSize, checksum);
+    }
+
+    @Override
+    @Transactional
     public void saveMeterData(Collection<MultipartFile> multipartFiles, UploadType uploadType) throws IOException {
         MeterUploadHeader meterUploadHeader = new MeterUploadHeader();
 

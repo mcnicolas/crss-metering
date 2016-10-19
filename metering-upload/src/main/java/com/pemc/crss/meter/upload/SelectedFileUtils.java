@@ -1,6 +1,10 @@
 package com.pemc.crss.meter.upload;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,43 +14,40 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileTime;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static java.nio.file.Files.isReadable;
 import static java.nio.file.Files.isSymbolicLink;
 import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 
-// TODO: rename class
-public class FileUtils {
+@Slf4j
+public class SelectedFileUtils {
 
-    public static List<FileBean> retrieveFileListing(File[] selectedFiles) {
+    public static List<FileBean> retrieveFileListing(File[] selectedFiles, String[] fileExtensions) {
         List<FileBean> retVal = new ArrayList<>();
 
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
 
+            // TODO: Use Java 8 Stream Parallel instead
+            // https://github.com/brettryan/io-recurse-tests
             Files.walkFileTree(selectedFiles[0].toPath(), new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
-                    if (isReadable(file) && !isSymbolicLink(file)) {
-                        // TODO: Apply file filter
+                    if (isReadable(file) && !isSymbolicLink(file)
+                            && isValidFileExtension(file.toString(), fileExtensions)) {
 
-                        System.out.println("Processing file:" + file.toString());
+                        log.debug("Processing file:{}", file.toString());
+
                         try (InputStream source = new DigestInputStream(Files.newInputStream(file), md)) {
 
                             IOUtils.copy(source, NULL_OUTPUT_STREAM);
 
                             String hash = bytesToHex(md.digest());
-
-                            System.out.println("File: " + file.getFileName().toString() + " MD5:" + hash);
 
                             FileBean fileBean = new FileBean();
                             fileBean.setPath(file);
@@ -65,6 +66,20 @@ public class FileUtils {
             });
         } catch (IOException | NoSuchAlgorithmException e) {
             e.printStackTrace();
+        }
+
+        return retVal;
+    }
+
+    private static boolean isValidFileExtension(String filename, String[] allowedExtensions) {
+        boolean retVal = false;
+
+        String fileExtension = FilenameUtils.getExtension(filename);
+        for (String allowedExtension : allowedExtensions) {
+            if (StringUtils.equalsIgnoreCase(fileExtension, allowedExtension)) {
+                retVal = true;
+                break;
+            }
         }
 
         return retVal;

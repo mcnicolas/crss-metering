@@ -25,6 +25,67 @@ public class JdbcMeteringDao implements MeteringDao {
     private JdbcTemplate jdbcTemplate;
 
     @Override
+    public long saveHeader(String transactionID, long mspID, int fileCount, String category, String username) {
+        // TODO: Transfer SQL scripts to resource file
+        String INSERT_SQL = "INSERT INTO TXN_MANIFEST_HEADER (header_id, transaction_id, msp_id, file_count, category," +
+                " upload_by, upload_datetime)" +
+                " VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?)";
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(
+                connection -> {
+                    PreparedStatement ps = connection.prepareStatement(INSERT_SQL, new String[]{"header_id"});
+                    ps.setString(1, transactionID);
+                    ps.setLong(2, mspID);
+                    ps.setInt(3, fileCount);
+                    ps.setString(4, category);
+                    ps.setString(5, username);
+                    ps.setTimestamp(6, new Timestamp(new Date().getTime()));
+
+                    return ps;
+                },
+                keyHolder);
+
+        return keyHolder.getKey().longValue();
+    }
+
+    @Override
+    public void saveTrailer(String transactionID) {
+        // TODO: Transfer SQL scripts to resource file
+        String UPDATE_SQL = "UPDATE TXN_MANIFEST_HEADER SET tail_received = 'Y' WHERE transaction_id = ?";
+
+        jdbcTemplate.update(
+                connection -> {
+                    PreparedStatement ps = connection.prepareStatement(UPDATE_SQL);
+                    ps.setString(1, transactionID);
+
+                    return ps;
+                });
+    }
+
+    @Override
+    public void saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize,
+                                 String checksum) {
+        // TODO: Transfer SQL scripts to resource file
+        String INSERT_SQL = "INSERT INTO TXN_MANIFEST_FILE (file_id, header_id, transaction_id, filename, filetype," +
+                " filesize, checksum)" +
+                " VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?)";
+
+        jdbcTemplate.update(
+                connection -> {
+                    PreparedStatement ps = connection.prepareStatement(INSERT_SQL);
+                    ps.setLong(1, headerID);
+                    ps.setString(2, transactionID);
+                    ps.setString(3, fileName);
+                    ps.setString(4, fileType);
+                    ps.setLong(5, fileSize);
+                    ps.setString(6, checksum);
+
+                    return ps;
+                });
+    }
+
+    @Override
     public long saveMeterUploadHeader(MeterUploadHeader meterUploadHeader) {
         // TODO: Transfer SQL scripts to resource file
         String INSERT_SQL = "INSERT INTO TXN_METER_UPLOAD_HEADER (transaction_id, msp_id, category, upload_by," +

@@ -19,7 +19,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
-import static com.pemc.crss.meter.upload.FileUtils.retrieveFileListing;
+import static com.pemc.crss.meter.upload.SelectedFileUtils.retrieveFileListing;
 import static javax.swing.JFileChooser.APPROVE_OPTION;
 import static javax.swing.JFileChooser.FILES_AND_DIRECTORIES;
 
@@ -192,16 +192,22 @@ public class HeaderPanel extends JPanel {
         int action = fileChooser.showOpenDialog(this);
 
         if (action == APPROVE_OPTION) {
-            List<FileBean> selectedFiles = retrieveFileListing(fileChooser.getSelectedFiles());
+            FileNameExtensionFilter fileFilter = (FileNameExtensionFilter) fileChooser.getFileFilter();
+
+            List<FileBean> selectedFiles = retrieveFileListing(fileChooser.getSelectedFiles(), fileFilter.getExtensions());
             parent.updateTableDisplay(selectedFiles);
         }
     }//GEN-LAST:event_selectFilesActionPerformed
 
     private void uploadActionPerformed(ActionEvent evt) {//GEN-FIRST:event_uploadActionPerformed
-        parent.uploadData();
         // TODO:
-        // 1. Display a progress bar
-        // 2. Send files to the server
+        // 1. Create custom model for MSP
+        // 2. Populate MSP combo box from rest call to registration module
+        // 3. If user is an MSP, set the default combo box selection to the currently logged in user and
+        //    disable the combo box
+
+        // NOTE: selectedItem and selectedIndex are just temporary code
+        parent.uploadData((String) cboCategory.getSelectedItem(), cboMSP.getSelectedIndex());
     }//GEN-LAST:event_uploadActionPerformed
 
     private void settingsActionPerformed(ActionEvent evt) {//GEN-FIRST:event_settingsActionPerformed

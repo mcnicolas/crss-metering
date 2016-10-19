@@ -63,7 +63,13 @@ subprojects {
             dependency 'net.sf.supercsv:super-csv-java8:2.4.0'
 
             dependency 'commons-io:commons-io:2.5'
-            dependency 'org.apache.httpcomponents:httpclient:4.5.2'
+            dependency 'org.apache.commons:commons-lang3:3.5'
+
+            dependencySet(group:'org.apache.httpcomponents', version:'4.5.2') {
+                entry 'httpclient'
+                entry 'httpmime'
+            }
+
             dependency 'org.json:json:20160810'
 
             dependency 'org.projectlombok:lombok:1.16.10'

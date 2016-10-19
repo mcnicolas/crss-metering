@@ -76,11 +76,9 @@ public class LoginDialog extends JDialog {
 
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Login");
-        setAlwaysOnTop(true);
         setMinimumSize(new Dimension(400, 200));
         setPreferredSize(new Dimension(400, 200));
         setResizable(false);
-        setType(Type.POPUP);
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent evt) {
                 closeDialog(evt);
@@ -91,7 +89,8 @@ public class LoginDialog extends JDialog {
         fieldPanel.setLayout(new GridBagLayout());
 
         errorMessage.setForeground(Color.red);
-        errorMessage.setText("Unauthorized User");
+        errorMessage.setMinimumSize(new Dimension(30, 16));
+        errorMessage.setPreferredSize(new Dimension(30, 16));
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
