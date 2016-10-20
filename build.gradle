@@ -17,6 +17,7 @@ buildscript {
 
 ext {
     springBootVersion = '1.4.1.RELEASE'
+    springAmqpVersion = '1.6.3.RELEASE'
 }
 
 subprojects {
@@ -66,6 +67,9 @@ subprojects {
             dependency 'com.zaxxer:HikariCP:2.5.1'
             dependency 'org.postgresql:postgresql:9.4.1211'
             dependency 'com.oracle:ojdbc6:11.2.0.3'
+
+            dependency "org.springframework.amqp:spring-amqp:$springAmqpVersion"
+            dependency "org.springframework.amqp:spring-rabbit:$springAmqpVersion"
         }
     }
 
