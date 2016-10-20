@@ -6,6 +6,11 @@ import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.MeterDataListWebDto;
 import com.pemc.crss.metering.service.MeterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -13,20 +18,27 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
 public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(MeteringResource.class);
+
     @Autowired
     private MeterService meterService;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     private List<MeterDataListWebDto> meterDataList;
 
@@ -38,11 +50,37 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadMeterData(MultipartHttpServletRequest request,
-                                                  @RequestParam("uploadType") UploadType uploadType) throws IOException {
+                                                  @RequestParam("uploadType") String uploadType,
+                                                  @RequestParam("noOfUploadedFiles") int noOfUploadedFiles) throws IOException {
 
-        meterService.saveMeterData(request.getFileMap().values(), uploadType);
+        int noOfSuccessfullyUploadedFiles = 0;
+
+        header(noOfUploadedFiles);
+
+        Map<String, MultipartFile> fileMap = request.getFileMap();
+
+        for(MultipartFile file : fileMap.values()) {
+            LOG.debug("RABBIT - Send file: " + file.getOriginalFilename());
+
+            Message message = MessageBuilder.withBody(file.getBytes())
+                    .setHeader("File name", file.getOriginalFilename())
+                    .setHeader("Content type", file.getContentType()).build();
+
+            rabbitTemplate.send(message);
+            noOfSuccessfullyUploadedFiles ++;
+        }
+
+        trailer(noOfSuccessfullyUploadedFiles);
 
         return new ResponseEntity<>("Successfully parsed", OK);
+    }
+
+    private void header(int noOfUploadedFiles) {
+        LOG.debug("HEADER - Number of uploaded files: " + noOfUploadedFiles);
+    }
+
+    private void trailer(int noOfSuccessfullyUploadedFiles) {
+        LOG.debug("TRAILER - Number of successfully uploaded files: " + noOfSuccessfullyUploadedFiles);
     }
 
     @Override

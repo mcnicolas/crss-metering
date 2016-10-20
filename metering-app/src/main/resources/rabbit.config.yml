@@ -1,0 +1,5 @@
+metering:
+  hostname: "localhost"
+  username: "guest"
+  password: "guest"
+  queuename: "meter.quantity"
