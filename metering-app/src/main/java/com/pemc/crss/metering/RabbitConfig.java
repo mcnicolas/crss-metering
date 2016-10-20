@@ -10,32 +10,33 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@EnableConfigurationProperties(RabbitConfigProperties.class)
+@Configuration
 public class RabbitConfig {
 
     private static final Logger LOG = LoggerFactory.getLogger(RabbitConfig.class);
 
-    @Autowired
-    private RabbitConfigProperties configProperties;
+    private static final String HOST_NAME = "localhost";
+    private static final String USERNAME = "guest";
+    private static final String PASSWORD = "guest";
+    private static final String QUEUE_NAME = "meter.quantity";
 
     @Bean
     public SimpleMessageListenerContainer messageListenerContainer() {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory());
-        container.setQueueNames(configProperties.getQueueName());
+        container.setQueueNames(QUEUE_NAME);
         container.setMessageListener(listener());
         return container;
     }
 
     @Bean
     public ConnectionFactory connectionFactory() {
-        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(configProperties.getHostname());
-        connectionFactory.setUsername(configProperties.getUsername());
-        connectionFactory.setPassword(configProperties.getPassword());
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(HOST_NAME);
+        connectionFactory.setUsername(USERNAME);
+        connectionFactory.setPassword(PASSWORD);
         return connectionFactory;
     }
 
@@ -47,8 +48,8 @@ public class RabbitConfig {
     @Bean
     public RabbitTemplate rabbitTemplate() {
         RabbitTemplate template = new RabbitTemplate(connectionFactory());
-        template.setRoutingKey(configProperties.getQueueName());
-        template.setQueue(configProperties.getQueueName());
+        template.setRoutingKey(QUEUE_NAME);
+        template.setQueue(QUEUE_NAME);
         return template;
     }
 
@@ -60,6 +61,6 @@ public class RabbitConfig {
 
     @Bean
     public Queue queue() {
-        return new Queue(configProperties.getQueueName());
+        return new Queue(QUEUE_NAME);
     }
 }
