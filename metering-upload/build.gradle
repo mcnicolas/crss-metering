@@ -1,2 +1,5 @@
 dependencies {
+    compile 'commons-io:commons-io'
+    compile 'org.apache.httpcomponents:httpclient'
+    compile 'org.json:json'
 }

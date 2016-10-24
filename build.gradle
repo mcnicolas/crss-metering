@@ -62,6 +62,10 @@ subprojects {
 
             dependency 'net.sf.supercsv:super-csv-java8:2.4.0'
 
+            dependency 'commons-io:commons-io:2.5'
+            dependency 'org.apache.httpcomponents:httpclient:4.5.2'
+            dependency 'org.json:json:20160810'
+
             dependency 'org.projectlombok:lombok:1.16.10'
 
             dependency 'com.zaxxer:HikariCP:2.5.1'
