@@ -3,7 +3,6 @@ package com.pemc.crss.metering.resource;
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.commons.web.resource.BaseListResource;
-import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.MeterDataListWebDto;
 import com.pemc.crss.metering.service.MeterService;
 import org.slf4j.Logger;
@@ -15,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,6 +46,11 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
         long sampleSize = 25L;
 
         meterDataList = generateSampleMeterDataList(sampleSize);
+    }
+
+    @GetMapping("/sample")
+    public String sample() {
+        return "Success";
     }
 
     @PostMapping("/upload")
