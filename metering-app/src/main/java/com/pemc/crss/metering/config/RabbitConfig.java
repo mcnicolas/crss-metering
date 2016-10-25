@@ -1,4 +1,4 @@
-package com.pemc.crss.metering;
+package com.pemc.crss.metering.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
