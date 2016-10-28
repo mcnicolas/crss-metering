@@ -4,6 +4,7 @@ import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.dto.MeterDataListWebDto;
+import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.service.MeterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +42,9 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     private List<MeterDataListWebDto> meterDataList;
 
@@ -58,7 +64,10 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
                                                   @RequestParam("uploadType") String uploadType,
                                                   @RequestParam("noOfUploadedFiles") int noOfUploadedFiles) throws IOException {
 
-        int noOfSuccessfullyUploadedFiles = 0;
+        Map<String, Object> messagePayload = new HashMap<>();
+        List<String> uploadedFiles = new ArrayList<>();
+
+        messagePayload.put("noOfUploadedFiles", noOfUploadedFiles);
 
         header(noOfUploadedFiles);
 
@@ -72,10 +81,13 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
                     .setHeader("Content type", file.getContentType()).build();
 
             rabbitTemplate.send(message);
-            noOfSuccessfullyUploadedFiles ++;
+
+            uploadedFiles.add(file.getOriginalFilename());
         }
 
-        trailer(noOfSuccessfullyUploadedFiles);
+        messagePayload.put("uploadedFiles", uploadedFiles);
+
+        trailer(messagePayload);
 
         return new ResponseEntity<>("Successfully parsed", OK);
     }
@@ -84,8 +96,8 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
         LOG.debug("HEADER - Number of uploaded files: " + noOfUploadedFiles);
     }
 
-    private void trailer(int noOfSuccessfullyUploadedFiles) {
-        LOG.debug("TRAILER - Number of successfully uploaded files: " + noOfSuccessfullyUploadedFiles);
+    private void trailer(Map<String, Object> messagePayload) {
+        eventPublisher.publishEvent(new MeterUploadEvent(messagePayload));
     }
 
     @Override

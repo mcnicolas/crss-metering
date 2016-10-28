@@ -1,6 +1,6 @@
+include 'commons-service'
 include 'commons-web'
 include 'metering-app'
 include 'metering-generator'
 include 'metering-upload'
 include 'sample'
-
