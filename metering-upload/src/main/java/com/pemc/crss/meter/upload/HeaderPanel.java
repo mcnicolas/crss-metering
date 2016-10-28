@@ -44,28 +44,30 @@ public class HeaderPanel extends JPanel {
         GridBagConstraints gridBagConstraints;
 
         categoryComboBoxModel = new DefaultComboBoxModel<>(
-                new String[]{
-                        "Daily", "Monthly", "Corrected Meter Data"
-                }
+            new String[]{
+                "Daily", "Monthly", "Corrected Meter Data"
+            }
         );
         mspComboBoxModel = new DefaultComboBoxModel<>(
-                new String[]{
-                        "Manila Electric Company",
-                        "Ibaan Electric and Engineering Corporation",
-                        "National Grid Corporation of the Phils",
-                        "Peninsula Electric Cooperative",
-                        "Exemplar Enterprise Inc. (Puyat Flooring Products Inc.)"
-                }
+            new String[]{
+                "Manila Electric Company",
+                "Ibaan Electric and Engineering Corporation",
+                "National Grid Corporation of the Phils",
+                "Peninsula Electric Cooperative",
+                "Exemplar Enterprise Inc. (Puyat Flooring Products Inc.)"
+            }
         );
         filetypeComboBoxModel = new DefaultComboBoxModel<>(
-                new String[]{
-                        "XLS, XLSX", "CSV", "MDEF"
-                }
+            new String[]{
+                "XLS, XLSX", "CSV", "MDEF"
+            }
         );
         toolbarPanel = new JPanel();
         btnSelectFiles = new JButton();
+        btnClearTable = new JButton();
         btnUpload = new JButton();
         btnSettings = new JButton();
+        btnSettings2 = new JButton();
         fieldPanel = new JPanel();
         lblCategory = new JLabel();
         cboCategory = new JComboBox<>();
@@ -86,6 +88,17 @@ public class HeaderPanel extends JPanel {
             }
         });
         toolbarPanel.add(btnSelectFiles);
+
+        btnClearTable.setIcon(new ImageIcon(getClass().getResource("/images/Erase-50.png"))); // NOI18N
+        btnClearTable.setToolTipText("Clear Selection");
+        btnClearTable.setFocusable(false);
+        btnClearTable.setHorizontalTextPosition(SwingConstants.CENTER);
+        btnClearTable.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                clearSelectionActionPerformed(evt);
+            }
+        });
+        toolbarPanel.add(btnClearTable);
 
         btnUpload.setIcon(new ImageIcon(getClass().getResource("/images/Upload to the Cloud-50.png"))); // NOI18N
         btnUpload.setToolTipText("Upload Files");
@@ -108,6 +121,17 @@ public class HeaderPanel extends JPanel {
             }
         });
         toolbarPanel.add(btnSettings);
+
+        btnSettings2.setIcon(new ImageIcon(getClass().getResource("/images/Export-50.png"))); // NOI18N
+        btnSettings2.setToolTipText("Logout");
+        btnSettings2.setFocusable(false);
+        btnSettings2.setHorizontalTextPosition(SwingConstants.CENTER);
+        btnSettings2.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                logoutActionPerformed(evt);
+            }
+        });
+        toolbarPanel.add(btnSettings2);
 
         add(toolbarPanel, BorderLayout.WEST);
 
@@ -184,9 +208,20 @@ public class HeaderPanel extends JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_settingsActionPerformed
 
+    private void clearSelectionActionPerformed(ActionEvent evt) {//GEN-FIRST:event_clearSelectionActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_clearSelectionActionPerformed
+
+    private void logoutActionPerformed(ActionEvent evt) {//GEN-FIRST:event_logoutActionPerformed
+        // TODO: Logout from oauth
+        System.exit(0);
+    }//GEN-LAST:event_logoutActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private JButton btnClearTable;
     private JButton btnSelectFiles;
     private JButton btnSettings;
+    private JButton btnSettings2;
     private JButton btnUpload;
     private DefaultComboBoxModel categoryComboBoxModel;
     private JComboBox<String> cboCategory;

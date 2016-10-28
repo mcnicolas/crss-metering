@@ -6,6 +6,7 @@ import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.dto.MeterDataListWebDto;
 import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.service.MeterService;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,10 +34,9 @@ import java.util.Map;
 
 import static org.springframework.http.HttpStatus.OK;
 
+@Slf4j
 @RestController
 public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(MeteringResource.class);
 
     @Autowired
     private MeterService meterService;
@@ -54,9 +55,15 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
         meterDataList = generateSampleMeterDataList(sampleSize);
     }
 
+    @Deprecated
     @GetMapping("/sample")
     public String sample() {
         return "Success";
+    }
+
+    @PostMapping("/uploadheader")
+    public void sendHeader(@RequestParam("transactionID")  String transactionID) {
+        log.debug("Transaction ID:{}", transactionID);
     }
 
     @PostMapping("/upload")
@@ -74,7 +81,7 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
         Map<String, MultipartFile> fileMap = request.getFileMap();
 
         for(MultipartFile file : fileMap.values()) {
-            LOG.debug("RABBIT - Send file: " + file.getOriginalFilename());
+            log.debug("RABBIT - Send file: " + file.getOriginalFilename());
 
             Message message = MessageBuilder.withBody(file.getBytes())
                     .setHeader("File name", file.getOriginalFilename())
@@ -93,7 +100,7 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
     }
 
     private void header(int noOfUploadedFiles) {
-        LOG.debug("HEADER - Number of uploaded files: " + noOfUploadedFiles);
+        log.debug("HEADER - Number of uploaded files: " + noOfUploadedFiles);
     }
 
     private void trailer(Map<String, Object> messagePayload) {

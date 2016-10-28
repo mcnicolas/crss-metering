@@ -2,4 +2,9 @@ dependencies {
     compile 'commons-io:commons-io'
     compile 'org.apache.httpcomponents:httpclient'
     compile 'org.json:json'
+
+    compile 'org.slf4j:slf4j-api'
+    compile 'org.slf4j:jcl-over-slf4j'
+    compile 'ch.qos.logback:logback-core'
+    compile 'ch.qos.logback:logback-classic'
 }

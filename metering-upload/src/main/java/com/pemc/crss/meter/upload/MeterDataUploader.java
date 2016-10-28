@@ -4,7 +4,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
@@ -16,6 +15,8 @@ import java.awt.GraphicsEnvironment;
 import java.util.List;
 
 public class MeterDataUploader extends JFrame {
+
+    private String token;
 
     public MeterDataUploader() {
         initComponents();
@@ -41,10 +42,12 @@ public class MeterDataUploader extends JFrame {
 
     public void login(String username, String password) {
         try {
-            // TODO: Store token
-            String token = LoginUtil.login(username, password);
+            token = RestUtil.login(username, password);
             System.out.println("Token:" + token);
+
+            RestUtil.sendHeader(token);
         } catch (LoginException e) {
+            // TODO: Display login errors
             e.printStackTrace();
         }
     }
@@ -73,9 +76,6 @@ public class MeterDataUploader extends JFrame {
         headerPanel = new HeaderPanel();
         tablePanel = new TablePanel();
         statusBarPanel = new JPanel();
-        temporaryOAuthPanel = new JPanel();
-        lblOAuth = new JLabel();
-        txtOAuth = new JTextField();
         uploadStatusPanel = new JPanel();
         lblUploadStatus = new JLabel();
         uploadProgress = new JProgressBar();
@@ -89,14 +89,6 @@ public class MeterDataUploader extends JFrame {
         getContentPane().add(tablePanel, BorderLayout.CENTER);
 
         statusBarPanel.setLayout(new BorderLayout());
-
-        lblOAuth.setText("OAuth Token:");
-        temporaryOAuthPanel.add(lblOAuth);
-
-        txtOAuth.setPreferredSize(new Dimension(400, 26));
-        temporaryOAuthPanel.add(txtOAuth);
-
-        statusBarPanel.add(temporaryOAuthPanel, BorderLayout.CENTER);
 
         uploadStatusPanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED));
         uploadStatusPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
@@ -117,12 +109,9 @@ public class MeterDataUploader extends JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private HeaderPanel headerPanel;
-    private JLabel lblOAuth;
     private JLabel lblUploadStatus;
     private JPanel statusBarPanel;
     private TablePanel tablePanel;
-    private JPanel temporaryOAuthPanel;
-    private JTextField txtOAuth;
     private JProgressBar uploadProgress;
     private JPanel uploadStatusPanel;
     // End of variables declaration//GEN-END:variables

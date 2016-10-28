@@ -2,20 +2,19 @@ package com.pemc.crss.meter.upload;
 
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
+import javax.swing.BorderFactory;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
-import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.WindowConstants;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -25,15 +24,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.logging.Logger;
 
 import static java.awt.event.KeyEvent.VK_ESCAPE;
-import static java.util.logging.Level.SEVERE;
-import javax.swing.BorderFactory;
 import static javax.swing.JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT;
-import javax.swing.JPasswordField;
-import javax.swing.WindowConstants;
 
+// TODO: Add security icon
 public class LoginDialog extends JDialog {
 
     public static final int RET_CANCEL = 0;
@@ -70,6 +65,7 @@ public class LoginDialog extends JDialog {
         GridBagConstraints gridBagConstraints;
 
         fieldPanel = new JPanel();
+        errorMessage = new JLabel();
         lblUsername = new JLabel();
         txtUsername = new JTextField();
         lblPassword = new JLabel();
@@ -81,6 +77,8 @@ public class LoginDialog extends JDialog {
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Login");
         setAlwaysOnTop(true);
+        setMinimumSize(new Dimension(400, 200));
+        setPreferredSize(new Dimension(400, 200));
         setResizable(false);
         setType(Type.POPUP);
         addWindowListener(new WindowAdapter() {
@@ -92,10 +90,20 @@ public class LoginDialog extends JDialog {
         fieldPanel.setBorder(BorderFactory.createEtchedBorder());
         fieldPanel.setLayout(new GridBagLayout());
 
-        lblUsername.setText("Username:");
+        errorMessage.setForeground(Color.red);
+        errorMessage.setText("Unauthorized User");
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridwidth = 2;
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.insets = new Insets(5, 5, 5, 5);
+        fieldPanel.add(errorMessage, gridBagConstraints);
+
+        lblUsername.setText("Username:");
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
         gridBagConstraints.insets = new Insets(5, 5, 5, 5);
         fieldPanel.add(lblUsername, gridBagConstraints);
@@ -104,7 +112,7 @@ public class LoginDialog extends JDialog {
         txtUsername.setPreferredSize(new Dimension(200, 26));
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridy = 1;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
         gridBagConstraints.insets = new Insets(5, 5, 5, 5);
         fieldPanel.add(txtUsername, gridBagConstraints);
@@ -112,17 +120,16 @@ public class LoginDialog extends JDialog {
         lblPassword.setText("Password:");
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridy = 2;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
         gridBagConstraints.insets = new Insets(5, 5, 5, 5);
         fieldPanel.add(lblPassword, gridBagConstraints);
 
-        txtPassword.setText("jPasswordField1");
         txtPassword.setMinimumSize(new Dimension(200, 26));
         txtPassword.setPreferredSize(new Dimension(200, 26));
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridy = 2;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
         gridBagConstraints.insets = new Insets(5, 5, 5, 5);
         fieldPanel.add(txtPassword, gridBagConstraints);
@@ -180,6 +187,7 @@ public class LoginDialog extends JDialog {
     private JButton btnCancel;
     private JButton btnOK;
     private JPanel buttonPanel;
+    private JLabel errorMessage;
     private JPanel fieldPanel;
     private JLabel lblPassword;
     private JLabel lblUsername;
