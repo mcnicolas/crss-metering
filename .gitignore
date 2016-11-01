@@ -31,3 +31,4 @@ dist/
 # File Upload Directory
 modules/registration/api/applicant/
 .docker
+/.nb-gradle/
