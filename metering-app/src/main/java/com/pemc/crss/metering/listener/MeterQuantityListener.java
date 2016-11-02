@@ -27,6 +27,7 @@ public class MeterQuantityListener {
                                          @Payload byte[] fileContent) {
         meterService.saveFileManifest(headerID, transactionID, fileName, fileType, fileSize, checksum);
 
+
         // TODO: Parse the file
         log.debug("Message received...");
     }

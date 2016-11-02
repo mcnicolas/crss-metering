@@ -5,8 +5,7 @@ import com.pemc.crss.metering.dto.Header;
 import com.pemc.crss.metering.dto.IntervalData;
 import com.pemc.crss.metering.dto.MeterData;
 import com.pemc.crss.metering.dto.TrailerRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedInputStream;
@@ -25,11 +24,10 @@ import static com.pemc.crss.metering.parser.ParserUtil.parseText;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static java.util.Calendar.MINUTE;
 
+@Slf4j
 @Component
 // TODO: Use factory
 public class MDEFReader {
-
-    private static final Logger LOG = LoggerFactory.getLogger(MDEFReader.class);
 
     private static final int RECORD_BLOCK_SIZE = 216;
 
@@ -88,7 +86,7 @@ public class MDEFReader {
 
             return meterData;
         } catch (IOException e) {
-            LOG.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
 
             throw e;
         }
@@ -170,7 +168,7 @@ public class MDEFReader {
             format.parse(intervalStartDate);
         } catch (ParseException e) {
             // TODO: Set value to a special field like -999?
-            LOG.warn(e.getMessage(), e);
+            log.warn(e.getMessage(), e);
         }
 
         Calendar cal = format.getCalendar();
@@ -221,7 +219,7 @@ public class MDEFReader {
             try {
                 format.parse(readingDates.get(readingDates.size() - 1));
             } catch (ParseException e) {
-                LOG.warn(e.getMessage(), e);
+                log.warn(e.getMessage(), e);
             }
 
             cal = format.getCalendar();

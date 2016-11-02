@@ -6,11 +6,13 @@ import com.pemc.crss.metering.dto.MeterData;
 import com.pemc.crss.metering.dto.MeterUploadFile;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
 import com.pemc.crss.metering.parser.MDEFReader;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
@@ -20,14 +22,12 @@ import static com.pemc.crss.metering.constants.FileType.XLS;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static org.apache.commons.lang.StringUtils.equalsIgnoreCase;
 
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Service
 public class DefaultMeterService implements MeterService {
 
-    @Autowired
-    private MeteringDao meteringDao;
-
-    @Autowired
-    private MDEFReader mdefReader;
+    private final MeteringDao meteringDao;
+    private final MDEFReader mdefReader;
 
     @Override
     @Transactional
