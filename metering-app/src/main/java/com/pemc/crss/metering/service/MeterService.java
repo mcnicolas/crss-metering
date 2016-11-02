@@ -12,7 +12,9 @@ public interface MeterService {
 
     void saveTrailer(String transactionID);
 
-    void saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize, String checksum);
+    long saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize, String checksum);
+
+    void saveMeterData(long fileID, String fileType, byte[] fileContent, String category);
 
     void saveMeterData(Collection<MultipartFile> values, UploadType uploadType) throws IOException;
 

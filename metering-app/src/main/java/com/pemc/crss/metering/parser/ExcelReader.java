@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.parser;
 
-import com.pemc.crss.metering.dto.MeterDataXLS;
+import com.pemc.crss.metering.dto.MeterData2;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -24,12 +25,12 @@ import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
 import static org.apache.poi.ss.usermodel.DateUtil.getJavaCalendar;
 
-@Component
-// TODO: Use factory
-public class ExcelReader {
+@Slf4j
+public class ExcelReader implements MeterQuantityReader {
 
-    // TODO: Use poi eventmodel for faster processing
-    public List<MeterDataXLS> readExcel(InputStream inputStream) throws IOException {
+    @Override
+    public List<MeterData2> readData(InputStream inputStream) throws IOException {
+        // TODO: Use poi eventmodel for faster processing
         Workbook workbook;
         try {
             workbook = WorkbookFactory.create(inputStream);
@@ -39,7 +40,7 @@ public class ExcelReader {
 
         Sheet sheet = workbook.getSheetAt(0);
 
-        List<MeterDataXLS> meterDataList = new ArrayList<>();
+        List<MeterData2> meterDataList = new ArrayList<>();
 
         Iterator<Row> rowIterator = sheet.rowIterator();
 
@@ -53,7 +54,7 @@ public class ExcelReader {
                 continue;
             }
 
-            MeterDataXLS meterData = new MeterDataXLS();
+            MeterData2 meterData = new MeterData2();
             meterData.setSein(row.getCell(0).getStringCellValue());
 
             Calendar readingDateTime = getDateValue(row.getCell(1));
@@ -70,6 +71,7 @@ public class ExcelReader {
             meterData.setKwr(getNumericValue(row.getCell(6)));
             meterData.setKwhr(getNumericValue(row.getCell(7)));
             meterData.setKvarhr(getNumericValue(row.getCell(8)));
+            meterData.setEstimationFlag(row.getCell(9).getStringCellValue());
 
             meterDataList.add(meterData);
         }

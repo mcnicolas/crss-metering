@@ -4,9 +4,9 @@ import com.pemc.crss.metering.dto.ChannelHeader;
 import com.pemc.crss.metering.dto.Header;
 import com.pemc.crss.metering.dto.IntervalData;
 import com.pemc.crss.metering.dto.MeterData;
+import com.pemc.crss.metering.dto.MeterData2;
 import com.pemc.crss.metering.dto.TrailerRecord;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -25,9 +25,7 @@ import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static java.util.Calendar.MINUTE;
 
 @Slf4j
-@Component
-// TODO: Use factory
-public class MDEFReader {
+public class MDEFReader implements MeterQuantityReader {
 
     private static final int RECORD_BLOCK_SIZE = 216;
 
@@ -35,6 +33,11 @@ public class MDEFReader {
 
     private int minuteInterval = 15;
     private static final int MINUTES_IN_HOUR = 60;
+
+    @Override
+    public List<MeterData2> readData(InputStream inputStream) {
+        return null;
+    }
 
     public MeterData readMDEF(InputStream inputStream) throws IOException {
 

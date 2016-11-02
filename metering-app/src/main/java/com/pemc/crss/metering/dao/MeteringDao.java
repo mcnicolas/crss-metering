@@ -1,7 +1,7 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.metering.dto.MeterData;
-import com.pemc.crss.metering.dto.MeterDataXLS;
+import com.pemc.crss.metering.dto.MeterData2;
 import com.pemc.crss.metering.dto.MeterUploadFile;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
 
@@ -13,7 +13,7 @@ public interface MeteringDao {
 
     void saveTrailer(String transactionID);
 
-    void saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize,
+    long saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize,
                           String checksum);
 
     long saveMeterUploadHeader(MeterUploadHeader meterUploadHeader);
@@ -22,6 +22,6 @@ public interface MeteringDao {
 
     void saveMeterUploadMDEF(long fileID, MeterData meterData);
 
-    void saveMeterUploadXLS(long transactionID, List<MeterDataXLS> meterDataList);
+    void saveDailyMeterData(long fileID, List<MeterData2> meterDataList);
 
 }

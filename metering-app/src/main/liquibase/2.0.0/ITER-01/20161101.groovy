@@ -28,7 +28,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'filetype',        type: 'VARCHAR(5)', remarks: 'Possible values: XLS, MDEF, CSV')
             column(name: 'filesize',        type: 'BIGINT')
             column(name: 'checksum',        type: 'VARCHAR(36)')
-            // TODO: Do we need to have a process_flag to indicate that the file was received from rabbitmq and was not stuck somewhere?
+            column(name: 'process_flag',    type: 'CHAR(1)')
             column(name: 'status',          type: 'VARCHAR(10)', remarks: 'Possible values: ACCEPTED, REJECTED')
             column(name: 'error_details',   type: 'VARCHAR(250)', remarks: 'Contains any validation errors messages if there are any')
         }

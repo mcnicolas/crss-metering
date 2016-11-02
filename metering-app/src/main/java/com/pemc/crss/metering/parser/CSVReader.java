@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.parser;
 
-import com.pemc.crss.metering.dto.MeterDataCSV;
+import com.pemc.crss.metering.dto.MeterData2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.supercsv.cellprocessor.ParseDouble;
 import org.supercsv.cellprocessor.Trim;
@@ -20,13 +21,14 @@ import java.util.List;
 
 import static org.supercsv.prefs.CsvPreference.EXCEL_PREFERENCE;
 
-@Component
-public class CSVReader {
+@Slf4j
+public class CSVReader implements MeterQuantityReader {
 
     private final MethodCache cache = new MethodCache();
 
-    public List<MeterDataCSV> readCSV(InputStream inputStream) throws IOException {
-        List<MeterDataCSV> meterData = new ArrayList<>();
+    @Override
+    public List<MeterData2> readData(InputStream inputStream) throws IOException {
+        List<MeterData2> meterData = new ArrayList<>();
 
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), EXCEL_PREFERENCE)) {
 
@@ -43,8 +45,8 @@ public class CSVReader {
         return meterData;
     }
 
-    private MeterDataCSV populateBean(String[] headers, CellProcessor[] processors, int rowNumber, int lineNumber, List<String> row) {
-        MeterDataCSV retVal = instantiateBean(MeterDataCSV.class);
+    private MeterData2 populateBean(String[] headers, CellProcessor[] processors, int rowNumber, int lineNumber, List<String> row) {
+        MeterData2 retVal = instantiateBean(MeterData2.class);
 
         for (int i = 0; i < headers.length; i++) {
             CsvContext context = new CsvContext(lineNumber, rowNumber, i);

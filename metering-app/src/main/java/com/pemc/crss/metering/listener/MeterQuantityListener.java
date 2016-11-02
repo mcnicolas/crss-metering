@@ -1,20 +1,25 @@
 package com.pemc.crss.metering.listener;
 
 import com.pemc.crss.metering.service.MeterService;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import javax.inject.Inject;
+
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Component
 public class MeterQuantityListener {
 
-    @Autowired
-    private MeterService meterService;
+    @NonNull
+    private final MeterService meterService;
 
     @Async
     @RabbitListener(queues = "meter.quantity")
@@ -24,12 +29,19 @@ public class MeterQuantityListener {
                                          @Header String fileType,
                                          @Header long fileSize,
                                          @Header String checksum,
+                                         @Header String category,
                                          @Payload byte[] fileContent) {
-        meterService.saveFileManifest(headerID, transactionID, fileName, fileType, fileSize, checksum);
 
+        try {
+            long fileID = meterService.saveFileManifest(headerID, transactionID, fileName, fileType, fileSize, checksum);
 
-        // TODO: Parse the file
-        log.debug("Message received...");
+            meterService.saveMeterData(fileID, fileType, fileContent, category);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+
+            // TODO: Explore using DLX/DLQ
+            throw new AmqpRejectAndDontRequeueException(e.getMessage(), e);
+        }
     }
 
 }

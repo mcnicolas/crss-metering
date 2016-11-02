@@ -1,7 +1,8 @@
 package com.pemc.crss.meter.upload;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -11,26 +12,24 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.security.DigestInputStream;
+import java.nio.file.Path;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.http.Consts.UTF_8;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpStatus.SC_OK;
@@ -165,7 +164,7 @@ public class RestUtil {
         }
     }
 
-    public static void sendFile(String transactionID, FileBean file, String token) {
+    public static void sendFile(String transactionID, FileBean file, String category, String token) {
         log.debug("Transaction ID: {}", transactionID);
 
         // TODO: Retrieve URL from configuration
@@ -187,9 +186,10 @@ public class RestUtil {
                     .addTextBody("headerID", "1") // TODO: Send actual header_id
                     .addTextBody("transactionID", transactionID)
                     .addTextBody("fileName", file.getPath().getFileName().toString())
-                    .addTextBody("fileType", "xxx") // TODO: determine actual file type
+                    .addTextBody("fileType", getFileType(file.getPath()))
                     .addTextBody("fileSize", String.valueOf(file.getSize()))
                     .addTextBody("checksum", file.getChecksum())
+                    .addTextBody("category", category)
                     .addPart("file", fileContent)
                     .build();
 
@@ -277,6 +277,23 @@ public class RestUtil {
         }
 
         return category;
+    }
+
+    private static String getFileType(Path path) {
+        String retVal = "";
+
+        String fileExt = FilenameUtils.getExtension(path.getFileName().toString());
+        // TODO: determine actual file type XLS, MDEF, CSV
+
+        if (equalsIgnoreCase(fileExt, "XLS") || equalsIgnoreCase(fileExt, "XLSX")) {
+            retVal = "XLS";
+        } else if (equalsIgnoreCase(fileExt, "MDE") || equalsIgnoreCase(fileExt, "MDEF")) {
+            retVal = "MDEF";
+        } else if (equalsIgnoreCase(fileExt, "CSV")) {
+            retVal = "CSV";
+        }
+
+        return retVal;
     }
 
 }

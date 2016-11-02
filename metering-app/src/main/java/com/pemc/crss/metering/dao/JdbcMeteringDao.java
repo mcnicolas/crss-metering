@@ -4,25 +4,28 @@ import com.pemc.crss.metering.dto.ChannelHeader;
 import com.pemc.crss.metering.dto.Header;
 import com.pemc.crss.metering.dto.IntervalData;
 import com.pemc.crss.metering.dto.MeterData;
-import com.pemc.crss.metering.dto.MeterDataXLS;
+import com.pemc.crss.metering.dto.MeterData2;
 import com.pemc.crss.metering.dto.MeterUploadFile;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import javax.inject.Inject;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Repository
 public class JdbcMeteringDao implements MeteringDao {
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @NonNull
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public long saveHeader(String transactionID, long mspID, int fileCount, String category, String username) {
@@ -64,16 +67,17 @@ public class JdbcMeteringDao implements MeteringDao {
     }
 
     @Override
-    public void saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize,
+    public long saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize,
                                  String checksum) {
         // TODO: Transfer SQL scripts to resource file
         String INSERT_SQL = "INSERT INTO TXN_MANIFEST_FILE (file_id, header_id, transaction_id, filename, filetype," +
                 " filesize, checksum)" +
                 " VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?)";
 
+        KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
-                    PreparedStatement ps = connection.prepareStatement(INSERT_SQL);
+                    PreparedStatement ps = connection.prepareStatement(INSERT_SQL, new String[]{"file_id"});
                     ps.setLong(1, headerID);
                     ps.setString(2, transactionID);
                     ps.setString(3, fileName);
@@ -82,7 +86,10 @@ public class JdbcMeteringDao implements MeteringDao {
                     ps.setString(6, checksum);
 
                     return ps;
-                });
+                },
+                keyHolder);
+
+        return keyHolder.getKey().longValue();
     }
 
     @Override
@@ -233,26 +240,37 @@ public class JdbcMeteringDao implements MeteringDao {
     }
 
     @Override
-    public void saveMeterUploadXLS(long transactionID, List<MeterDataXLS> meterDataList) {
+    public void saveDailyMeterData(long fileID, List<MeterData2> meterDataList) {
         // TODO: Transfer SQL scripts to resource file
-        String INSERT_SQL = "INSERT INTO TXN_METER_DATA_XLS (METER_DATA_ID, FILE_ID, SEIN, READING_DATETIME,"
-                + " KWD, KWHD, KVARHD, KWR, KWHR, KVARHR)"
-                + " VALUES(NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        // TODO: Include channel and interval status
+        String INSERT_SQL = "INSERT INTO TXN_METER_DATA_DAILY (METER_DATA_ID, FILE_ID, SEIN, READING_DATETIME,"
+                + " KWD, KWHD, KVARHD, KWR, KWHR, KVARHR, VAN, VBN, VCN, IAN, IBN, ICN, PF, ESTIMATION_FLAG, VERSION)"
+                + " VALUES(NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         // TODO: Use batch update
-        for (MeterDataXLS meterDataXLS : meterDataList) {
+        for (MeterData2 meterData : meterDataList) {
             jdbcTemplate.update(
                     connection -> {
                         PreparedStatement ps = connection.prepareStatement(INSERT_SQL);
-                        ps.setLong(1, transactionID);
-                        ps.setString(2, meterDataXLS.getSein());
-                        ps.setTimestamp(3, new Timestamp(meterDataXLS.getReadingDateTime().getTime()));
-                        ps.setDouble(4, meterDataXLS.getKwd());
-                        ps.setDouble(5, meterDataXLS.getKwhd());
-                        ps.setDouble(6, meterDataXLS.getKvarhd());
-                        ps.setDouble(7, meterDataXLS.getKwr());
-                        ps.setDouble(8, meterDataXLS.getKwhr());
-                        ps.setDouble(9, meterDataXLS.getKvarhr());
+                        ps.setLong(1, fileID);
+                        ps.setString(2, meterData.getSein());
+                        ps.setTimestamp(3, new Timestamp(meterData.getReadingDateTime().getTime()));
+                        ps.setDouble(4, meterData.getKwd());
+                        ps.setDouble(5, meterData.getKwhd());
+                        ps.setDouble(6, meterData.getKvarhd());
+                        ps.setDouble(7, meterData.getKwr());
+                        ps.setDouble(8, meterData.getKwhr());
+                        ps.setDouble(9, meterData.getKvarhr());
+                        ps.setDouble(10, meterData.getVan());
+                        ps.setDouble(11, meterData.getVbn());
+                        ps.setDouble(12, meterData.getVcn());
+                        ps.setDouble(13, meterData.getIan());
+                        ps.setDouble(14, meterData.getIbn());
+                        ps.setDouble(15, meterData.getIcn());
+                        ps.setDouble(16, meterData.getPf());
+                        ps.setString(17, meterData.getEstimationFlag());
+                        ps.setInt(18, 1);
 
                         return ps;
                     });

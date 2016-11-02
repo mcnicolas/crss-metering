@@ -6,6 +6,7 @@ import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.dto.MeterDataListWebDto;
 import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.service.MeterService;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -39,8 +40,13 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
 
     public static final String ROUTING_KEY = "meter.quantity";
 
+    @NonNull
     private final MeterService meterService;
+
+    @NonNull
     private final RabbitTemplate rabbitTemplate;
+
+    @NonNull
     private final ApplicationEventPublisher eventPublisher;
 
     private List<MeterDataListWebDto> meterDataList;
@@ -78,7 +84,8 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
                          @RequestParam("fileName") String fileName,
                          @RequestParam("fileType") String fileType,
                          @RequestParam("fileSize") long fileSize,
-                         @RequestParam("checksum") String checksum) throws IOException {
+                         @RequestParam("checksum") String checksum,
+                         @RequestParam("category") String category) throws IOException {
 
         MultipartFile file = request.getFile("file");
 
@@ -89,6 +96,7 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
                 .setHeader("fileType", fileType)
                 .setHeader("fileSize", fileSize)
                 .setHeader("checksum", checksum)
+                .setHeader("category", category)
                 .setHeaderIfAbsent("Content type", file.getContentType())
                 .build();
         rabbitTemplate.send(ROUTING_KEY, message);

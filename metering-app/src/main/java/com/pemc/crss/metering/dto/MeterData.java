@@ -3,6 +3,7 @@ package com.pemc.crss.metering.dto;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated // Change in impl
 public class MeterData {
 
     private Header header;

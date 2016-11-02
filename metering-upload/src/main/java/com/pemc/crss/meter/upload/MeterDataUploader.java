@@ -55,7 +55,7 @@ public class MeterDataUploader extends JFrame {
         }
 
         for (FileBean selectedFile : selectedFiles) {
-            RestUtil.sendFile(transactionID, selectedFile, token);
+            RestUtil.sendFile(transactionID, selectedFile, category, token);
 
             log.debug("Uploading file:{}", selectedFile.getPath().getFileName().toString());
         }

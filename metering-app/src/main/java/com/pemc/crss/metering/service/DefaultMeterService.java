@@ -3,31 +3,41 @@ package com.pemc.crss.metering.service;
 import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dao.MeteringDao;
 import com.pemc.crss.metering.dto.MeterData;
+import com.pemc.crss.metering.dto.MeterData2;
 import com.pemc.crss.metering.dto.MeterUploadFile;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
 import com.pemc.crss.metering.parser.MDEFReader;
+import com.pemc.crss.metering.parser.MeterQuantityReader;
+import com.pemc.crss.metering.parser.MeterQuantityReaderFactory;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.inject.Inject;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import static com.pemc.crss.metering.constants.FileType.MDEF;
 import static com.pemc.crss.metering.constants.FileType.XLS;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static org.apache.commons.lang.StringUtils.equalsIgnoreCase;
 
+@Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Service
 public class DefaultMeterService implements MeterService {
 
+    @NonNull
     private final MeteringDao meteringDao;
-    private final MDEFReader mdefReader;
+
+    @NonNull
+    private final MeterQuantityReaderFactory readerFactory;
 
     @Override
     @Transactional
@@ -43,10 +53,27 @@ public class DefaultMeterService implements MeterService {
 
     @Override
     @Transactional
-    public void saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize, String checksum) {
-        meteringDao.saveFileManifest(headerID, transactionID, fileName, fileType, fileSize, checksum);
+    public long saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize,
+                                 String checksum) {
+        return meteringDao.saveFileManifest(headerID, transactionID, fileName, fileType, fileSize, checksum);
     }
 
+    @Override
+    @Transactional
+    public void saveMeterData(long fileID, String fileType, byte[] fileContent, String category) {
+        try {
+            MeterQuantityReader reader = readerFactory.getMeterQuantityReader(fileType);
+            List<MeterData2> meterData = reader.readData(new ByteArrayInputStream(fileContent));
+
+            meteringDao.saveDailyMeterData(fileID, meterData);
+            log.debug("after saving file:{}", fileID);
+
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    @Deprecated // Change in impl
     @Override
     @Transactional
     public void saveMeterData(Collection<MultipartFile> multipartFiles, UploadType uploadType) throws IOException {
@@ -88,8 +115,8 @@ public class DefaultMeterService implements MeterService {
             long fileID = meteringDao.saveMeterUploadFile(transactionID, meterUploadFile);
 
             // Parse
-            MeterData meterData = mdefReader.readMDEF(file.getInputStream());
-            meteringDao.saveMeterUploadMDEF(fileID, meterData);
+//            MeterData meterData = mdefReader.readMDEF(file.getInputStream());
+//            meteringDao.saveMeterUploadMDEF(fileID, meterData);
         }
     }
 

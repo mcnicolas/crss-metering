@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.util.Date;
 
+@Deprecated // Use common MeterData2
 @Data
 public class MeterDataXLS {
 
