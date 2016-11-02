@@ -41,8 +41,7 @@ dependencies {
     compile 'org.springframework.boot:spring-boot-starter-jdbc'
     optional 'org.springframework.boot:spring-boot-configuration-processor'
 
-    compile 'org.springframework.amqp:spring-amqp'
-    compile 'org.springframework.amqp:spring-rabbit'
+    compile 'org.springframework.boot:spring-boot-starter-amqp'
 
     compile 'org.springframework.security.oauth:spring-security-oauth2'
 

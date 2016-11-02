@@ -1,28 +1,23 @@
 package com.pemc.crss.metering.listener;
 
 import com.pemc.crss.commons.notification.dto.NotificationDTO;
-import com.pemc.crss.metering.dto.MeterUploadHeader;
 import com.pemc.crss.metering.event.MeterUploadEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.util.SerializationUtils;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 public class MeterUploadEventListener implements ApplicationListener<MeterUploadEvent> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MeterUploadEventListener.class);
     private static final String EXCHANGE_TOPIC = "crss.notification";
     private static final String RK_METERING = "crss.notification.metering";
     private static final String NOTIF_CODE = "NTF_MTR_UPLOAD";
@@ -34,17 +29,25 @@ public class MeterUploadEventListener implements ApplicationListener<MeterUpload
         this.rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
     }
 
+    // TODO: Verify if uploaded file is received here...
     @Override
     public final void onApplicationEvent(MeterUploadEvent event) {
-        LOG.debug("Event received: type={}", event.getClass());
+        // TODO:
+        // 1. Determine file type
+        // 2. Determine category
+        // 3. Parse the file based on type
+        // 4. Save file content to the database
+
+        log.debug("Event received: type={}", event.getClass());
         NotificationDTO notificationDTO = generateNotification(event);
-        LOG.debug("generated notification {}", notificationDTO);
+
+        log.debug("generated notification {}", notificationDTO);
         sendNotification(notificationDTO);
     }
 
     @Async
     protected void sendNotification(NotificationDTO notification) {
-        LOG.debug("NOTIFICATION SENT = {}", notification);
+        log.debug("NOTIFICATION SENT = {}", notification);
         if (notification != null && StringUtils.isNotBlank(notification.getCode())) {
             rabbitTemplate.convertAndSend(EXCHANGE_TOPIC, RK_METERING, notification);
         }
@@ -70,7 +73,7 @@ public class MeterUploadEventListener implements ApplicationListener<MeterUpload
         notificationDTO.setPayload(payload);
         notificationDTO.setRecipientDeptCode("MSP");
 
-        LOG.debug("PAYLOAD = {}", notificationDTO.getPayload().toString());
+        log.debug("PAYLOAD = {}", notificationDTO.getPayload().toString());
 
         return notificationDTO;
     }

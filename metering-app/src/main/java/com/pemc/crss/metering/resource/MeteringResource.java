@@ -6,11 +6,11 @@ import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.dto.MeterDataListWebDto;
 import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.service.MeterService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -32,25 +33,23 @@ import java.util.Map;
 import static org.springframework.http.HttpStatus.OK;
 
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
 @RestController
 public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
 
-    @Autowired
-    private MeterService meterService;
+    public static final String ROUTING_KEY = "meter.quantity";
 
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
-
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
+    private final MeterService meterService;
+    private final RabbitTemplate rabbitTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     private List<MeterDataListWebDto> meterDataList;
 
-    public MeteringResource() {
-        long sampleSize = 25L;
-
-        meterDataList = generateSampleMeterDataList(sampleSize);
-    }
+//    public MeteringResource() {
+//        long sampleSize = 25L;
+//
+//        meterDataList = generateSampleMeterDataList(sampleSize);
+//    }
 
     @Deprecated
     @GetMapping("/sample")
@@ -79,27 +78,30 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
                          @RequestParam("fileName") String fileName,
                          @RequestParam("fileType") String fileType,
                          @RequestParam("fileSize") long fileSize,
-                         @RequestParam("checksum") String checksum) {
+                         @RequestParam("checksum") String checksum) throws IOException {
 
-        // TODO:
-        // 1. Save file manifest to db
-        meterService.saveFileManifest(headerID, transactionID, fileName, fileType, fileSize, checksum);
+        MultipartFile file = request.getFile("file");
 
-        // 2. Send file content to rabbitmq
-
-        Map<String, MultipartFile> fileMap = request.getFileMap();
-
-        // NOTE: Expect a single file only
-        for(MultipartFile file : fileMap.values()) {
-            log.debug("File received:{}", file.getOriginalFilename());
-        }
+        Message message = MessageBuilder.withBody(file.getBytes())
+                .setHeader("headerID", headerID)
+                .setHeader("transactionID", transactionID)
+                .setHeader("fileName", fileName)
+                .setHeader("fileType", fileType)
+                .setHeader("fileSize", fileSize)
+                .setHeader("checksum", checksum)
+                .setHeaderIfAbsent("Content type", file.getContentType())
+                .build();
+        rabbitTemplate.send(ROUTING_KEY, message);
     }
 
     @PostMapping("/uploadtrailer")
-    public void sendHeader(@RequestParam("transactionID") String transactionID) {
+    public void sendTrailer(@RequestParam("transactionID") String transactionID) {
         log.debug("Transaction ID:{}", transactionID);
 
         meterService.saveTrailer(transactionID);
+
+        // TODO: Trigger notification event to list down accepted and rejected files based on validation
+//        eventPublisher.publishEvent(new MeterUploadEvent(messagePayload));
     }
 
     @PostMapping("/upload")
@@ -116,7 +118,7 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
 
         Map<String, MultipartFile> fileMap = request.getFileMap();
 
-        for(MultipartFile file : fileMap.values()) {
+        for (MultipartFile file : fileMap.values()) {
             log.debug("RABBIT - Send file: " + file.getOriginalFilename());
 
             Message message = MessageBuilder.withBody(file.getBytes())
@@ -170,7 +172,7 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
     private List<MeterDataListWebDto> generateSampleMeterDataList(Long total) {
         List<MeterDataListWebDto> meterDataList = new ArrayList<>();
 
-        for(long i = 1; i <= total; i ++) {
+        for (long i = 1; i <= total; i++) {
             MeterDataListWebDto meterData = new MeterDataListWebDto();
             meterData.setId(i);
             meterData.setSein("sein" + i);

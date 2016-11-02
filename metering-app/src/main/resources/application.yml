@@ -7,6 +7,10 @@ spring:
     hikari:
       connectionTimeout: 10000
       maximumPoolSize: 20
+  rabbitmq:
+#    TODO: Need to finalize username/password
+    username: guest
+    password: guest
 
 server:
   port: 8084
@@ -47,5 +51,5 @@ security:
 logging:
   level:
     com.pemc: DEBUG
-    com.netflix: DEBUG
-    org.springframework.cloud: DEBUG
+    com.netflix: WARN
+    org.springframework.cloud: WARN

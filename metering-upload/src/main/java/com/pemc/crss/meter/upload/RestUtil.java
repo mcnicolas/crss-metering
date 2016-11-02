@@ -177,7 +177,7 @@ public class RestUtil {
                     .addTextBody("headerID", "1") // TODO: Send actual header_id
                     .addTextBody("transactionID", transactionID)
                     .addTextBody("fileName", file.getPath().getFileName().toString())
-                    .addTextBody("fileType", "xxx")
+                    .addTextBody("fileType", "xxx") // TODO: determine actual file type
                     .addTextBody("fileSize", String.valueOf(file.getSize()))
                     .addTextBody("checksum", file.getChecksum())
                     .addPart("file", fileContent)
