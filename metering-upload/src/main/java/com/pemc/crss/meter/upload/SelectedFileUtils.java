@@ -35,35 +35,37 @@ public class SelectedFileUtils {
 
             // TODO: Use Java 8 Stream Parallel instead
             // https://github.com/brettryan/io-recurse-tests
-            Files.walkFileTree(selectedFiles[0].toPath(), new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
-                    if (isReadable(file) && !isSymbolicLink(file)
-                            && isValidFileExtension(file.toString(), fileExtensions)) {
+            for (File selectedFile : selectedFiles) {
+                Files.walkFileTree(selectedFile.toPath(), new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+                        if (isReadable(file) && !isSymbolicLink(file)
+                                && isValidFileExtension(file.toString(), fileExtensions)) {
 
-                        log.debug("Processing file:{}", file.toString());
+                            log.debug("Processing file:{}", file.toString());
 
-                        try (InputStream source = new DigestInputStream(Files.newInputStream(file), md)) {
+                            try (InputStream source = new DigestInputStream(Files.newInputStream(file), md)) {
 
-                            IOUtils.copy(source, NULL_OUTPUT_STREAM);
+                                IOUtils.copy(source, NULL_OUTPUT_STREAM);
 
-                            String hash = bytesToHex(md.digest());
+                                String hash = bytesToHex(md.digest());
 
-                            FileBean fileBean = new FileBean();
-                            fileBean.setPath(file);
+                                FileBean fileBean = new FileBean();
+                                fileBean.setPath(file);
 
-                            BasicFileAttributes fileAttributes = Files.readAttributes(file, BasicFileAttributes.class);
-                            fileBean.setLastModified(fileAttributes.lastModifiedTime());
-                            fileBean.setSize(fileAttributes.size());
-                            fileBean.setChecksum(hash);
+                                BasicFileAttributes fileAttributes = Files.readAttributes(file, BasicFileAttributes.class);
+                                fileBean.setLastModified(fileAttributes.lastModifiedTime());
+                                fileBean.setSize(fileAttributes.size());
+                                fileBean.setChecksum(hash);
 
-                            retVal.add(fileBean);
+                                retVal.add(fileBean);
+                            }
                         }
-                    }
 
-                    return super.visitFile(file, attributes);
-                }
-            });
+                        return super.visitFile(file, attributes);
+                    }
+                });
+            }
         } catch (IOException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
