@@ -22,6 +22,7 @@ public class MeterDataUploader extends JFrame {
 
     private String token;
     private String username;
+    private String userType;
 
     public MeterDataUploader() {
         initComponents();
@@ -71,9 +72,11 @@ public class MeterDataUploader extends JFrame {
     public void login(String username, String password) {
         try {
             token = RestUtil.login(username, password);
+            userType = RestUtil.getUserType(token);
             this.username = username;
 
             log.debug("Logged in with token: {}", token);
+            log.debug("User type: {}", userType);
         } catch (LoginException e) {
             log.error(e.getMessage(), e);
 

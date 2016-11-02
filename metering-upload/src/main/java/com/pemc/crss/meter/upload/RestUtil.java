@@ -8,6 +8,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
@@ -39,7 +40,9 @@ import static org.apache.http.entity.ContentType.MULTIPART_FORM_DATA;
 public class RestUtil {
 
     // TODO: Make URL configurable with a default value
-    private static final String TOKEN_URI = "http://localhost:8080/admin/oauth/token";
+    private static final String TOKEN_URL = "http://localhost:8080/admin/oauth/token";
+    private static final String USER_URL = "http://localhost:8080/admin/user";
+    private static final String PARTICIPANT_CATEGORY_URL = "http://localhost:8080/reg/participants/current/category";
     private static final String UPLOAD_HEADER = "http://localhost:8080/metering/uploadheader";
     private static final String UPLOAD_FILE = "http://localhost:8080/metering/uploadfile";
     private static final String UPLOAD_TRAILER = "http://localhost:8080/metering/uploadtrailer";
@@ -51,11 +54,18 @@ public class RestUtil {
     private static final String CLIENT = CLIENT_ID + ":" + CLIENT_SECRET;
     private static final String CONTENT_TYPE = "application/x-www-form-urlencoded";
 
+    private static final String PEMC_USERTYPE = "PEMC";
+    private static final String MSP_USERTYPE = "MSP";
+
+    private static final String BILLING_DEPARTMENT = "BILLING";
+    private static final String METERING_DEPARTMENT = "METERING";
+    private static final String MSP_CATEGORY = "MSP";
+
     public static String login(String username, String password) throws LoginException {
         String retVal = null;
 
         try {
-            URIBuilder builder = new URIBuilder(TOKEN_URI);
+            URIBuilder builder = new URIBuilder(TOKEN_URL);
 
             String encodedClient = new String(Base64.getEncoder().encode(CLIENT.getBytes()));
 
@@ -197,6 +207,76 @@ public class RestUtil {
         } catch (URISyntaxException | IOException e) {
             log.error(e.getMessage(), e);
         }
+    }
+
+    public static String getUserType(String token) {
+        String userType = null;
+        boolean isPemcUser;
+
+        try {
+            URIBuilder builder = new URIBuilder(USER_URL);
+
+            HttpClient httpClient = HttpClientBuilder.create().build();
+            HttpGet httpGet = new HttpGet(builder.build());
+            httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", token));
+
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+            StatusLine statusLine = httpResponse.getStatusLine();
+
+            if (statusLine.getStatusCode() == SC_OK) {
+                String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+                JSONObject obj = new JSONObject(content);
+
+                userType = obj.getJSONObject("principal").get("department").toString();
+                isPemcUser = Boolean.valueOf(obj.getJSONObject("principal").get("pemcUser").toString());
+
+                if(isPemcUser) {
+                    if(userType.equalsIgnoreCase(BILLING_DEPARTMENT) || userType.equalsIgnoreCase(METERING_DEPARTMENT)) {
+                        userType = PEMC_USERTYPE;
+                    } else {
+                        userType = null;
+                    }
+                } else {
+                    userType = getCategory(token);
+                }
+            }
+        } catch (URISyntaxException | IOException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        return userType;
+    }
+
+    private static String getCategory(String token) {
+        String category = null;
+
+        try {
+            URIBuilder builder = new URIBuilder(PARTICIPANT_CATEGORY_URL);
+
+            HttpClient httpClient = HttpClientBuilder.create().build();
+            HttpGet httpGet = new HttpGet(builder.build());
+            httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", token));
+
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+            StatusLine statusLine = httpResponse.getStatusLine();
+
+            if (statusLine.getStatusCode() == SC_OK) {
+                String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+                JSONObject obj = new JSONObject(content);
+
+                category = obj.get("category").toString();
+
+                if(category.equalsIgnoreCase(MSP_CATEGORY)) {
+                    category = MSP_USERTYPE;
+                } else {
+                    category = null;
+                }
+            }
+        } catch (URISyntaxException | IOException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        return category;
     }
 
 }
