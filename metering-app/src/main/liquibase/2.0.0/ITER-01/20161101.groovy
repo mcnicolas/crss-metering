@@ -37,7 +37,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'meter_data_id',           type: 'BIGINT') { constraints(primaryKey: true, nullable: false) }
             column(name: 'file_id',                 type: 'BIGINT')
             column(name: 'sein',                    type: 'VARCHAR(20)') { constraints(nullable: false) }
-            column(name: 'reading_datetime',        type: 'TIMESTAMP') { constraints(nullable: false) }
+            column(name: 'reading_datetime',        type: 'TIMESTAMP')
 
             // NOTE: Should be able to save variable decimal places. Maximum of 10
             column(name: 'kwd',                     type: 'DOUBLE PRECISION')
@@ -79,7 +79,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'pf',                      type: 'DOUBLE PRECISION')
             column(name: 'pf_channel_status',       type: 'INT')
             column(name: 'pf_interval_status',      type: 'INT')
-            column(name: 'estimation_flag',         type: 'VARCHAR(15)') { constraints(nullable: true) }
+            column(name: 'estimation_flag',         type: 'VARCHAR(15)')
             column(name: 'version',                 type: 'INT')
         }
 
@@ -87,7 +87,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'meter_data_id',           type: 'BIGINT') { constraints(primaryKey: true, nullable: false) }
             column(name: 'file_id',                 type: 'BIGINT')
             column(name: 'sein',                    type: 'VARCHAR(20)') { constraints(nullable: false) }
-            column(name: 'reading_datetime',        type: 'TIMESTAMP') { constraints(nullable: false) }
+            column(name: 'reading_datetime',        type: 'TIMESTAMP')
 
             // NOTE: Should be able to save variable decimal places. Maximum of 10
             column(name: 'kwd',                     type: 'DOUBLE PRECISION')
@@ -129,7 +129,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'pf',                      type: 'DOUBLE PRECISION')
             column(name: 'pf_channel_status',       type: 'INT')
             column(name: 'pf_interval_status',      type: 'INT')
-            column(name: 'estimation_flag',         type: 'VARCHAR(15)') { constraints(nullable: true) }
+            column(name: 'estimation_flag',         type: 'VARCHAR(15)')
             column(name: 'version',                 type: 'INT')
         }
 
