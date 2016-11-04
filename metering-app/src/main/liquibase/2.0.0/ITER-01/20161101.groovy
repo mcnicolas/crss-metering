@@ -1,13 +1,13 @@
 REL  = "2.0.0"
 ITER = "ITER-01"
-FILE = "20161019"
+FILE = "20161101"
 
 databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
 
     changeSet(id: "${REL}_${ITER}_${FILE}_01", author: 'clim', failOnError: true) {
         comment 'Manifest header'
 
-        createTable(tableName: 'txn_manifest_header', remarks: 'Meter data manifest header') {
+        createTable(tableName: 'txn_mq_manifest_header', remarks: 'Meter data manifest header') {
             column(name: 'header_id',             type: 'BIGINT') { constraints(primaryKey: true, nullable: false) }
             column(name: 'transaction_id',        type: 'VARCHAR(36)') { constraints(nullable: false, unique: true) }
             column(name: 'msp_id',                type: 'BIGINT', remarks: 'MSP Registration ID')
@@ -20,7 +20,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'upload_datetime',       type: 'TIMESTAMP')
         }
 
-        createTable(tableName: 'txn_manifest_file', remarks: 'Meter data manifest for each file') {
+        createTable(tableName: 'txn_mq_manifest_file', remarks: 'Meter data manifest for each file') {
             column(name: 'file_id',         type: 'BIGINT')  { constraints(primaryKey: true, nullable: false) }
             column(name: 'header_id',       type: 'BIGINT')
             column(name: 'transaction_id',  type: 'VARCHAR(36)')
@@ -134,19 +134,19 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
         }
 
         addForeignKeyConstraint(
-                baseColumnNames: 'header_id', baseTableName: 'txn_manifest_file', constraintName: 'FK_METER_MANIFEST_FILE',
+                baseColumnNames: 'header_id', baseTableName: 'txn_mq_manifest_file', constraintName: 'FK_METER_MANIFEST_FILE',
                 deferrable: false, initiallyDeferred: false,
-                referencedColumnNames: 'header_id', referencedTableName: 'txn_manifest_header')
+                referencedColumnNames: 'header_id', referencedTableName: 'txn_mq_manifest_header')
 
         addForeignKeyConstraint(
                 baseColumnNames: 'file_id', baseTableName: 'txn_meter_data_daily', constraintName: 'FK_METER_DAILY',
                 deferrable: false, initiallyDeferred: false,
-                referencedColumnNames: 'file_id', referencedTableName: 'txn_manifest_file')
+                referencedColumnNames: 'file_id', referencedTableName: 'txn_mq_manifest_file')
 
         addForeignKeyConstraint(
                 baseColumnNames: 'file_id', baseTableName: 'txn_meter_data_monthly', constraintName: 'FK_METER_MONTHLY',
                 deferrable: false, initiallyDeferred: false,
-                referencedColumnNames: 'file_id', referencedTableName: 'txn_manifest_file')
+                referencedColumnNames: 'file_id', referencedTableName: 'txn_mq_manifest_file')
     }
 
 }
