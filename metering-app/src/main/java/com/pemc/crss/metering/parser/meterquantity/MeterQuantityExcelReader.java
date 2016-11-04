@@ -1,6 +1,7 @@
-package com.pemc.crss.metering.parser;
+package com.pemc.crss.metering.parser.meterquantity;
 
 import com.pemc.crss.metering.dto.MeterData2;
+import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
@@ -26,7 +27,7 @@ import static java.util.Calendar.MINUTE;
 import static org.apache.poi.ss.usermodel.DateUtil.getJavaCalendar;
 
 @Slf4j
-public class ExcelReader implements MeterQuantityReader {
+public class MeterQuantityExcelReader implements QuantityReader<MeterData2> {
 
     @Override
     public List<MeterData2> readData(InputStream inputStream) throws IOException {

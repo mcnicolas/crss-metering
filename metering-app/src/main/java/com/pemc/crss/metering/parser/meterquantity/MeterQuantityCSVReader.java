@@ -1,6 +1,7 @@
-package com.pemc.crss.metering.parser;
+package com.pemc.crss.metering.parser.meterquantity;
 
 import com.pemc.crss.metering.dto.MeterData2;
+import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.supercsv.io.CsvListReader;
@@ -19,7 +20,7 @@ import java.util.List;
 import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 
 @Slf4j
-public class CSVReader implements MeterQuantityReader {
+public class MeterQuantityCSVReader implements QuantityReader<MeterData2> {
 
     private DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 

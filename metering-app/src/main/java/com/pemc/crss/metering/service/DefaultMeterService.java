@@ -5,8 +5,8 @@ import com.pemc.crss.metering.dao.MeteringDao;
 import com.pemc.crss.metering.dto.MeterData2;
 import com.pemc.crss.metering.dto.MeterUploadFile;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
-import com.pemc.crss.metering.parser.MeterQuantityReader;
-import com.pemc.crss.metering.parser.MeterQuantityReaderFactory;
+import com.pemc.crss.metering.parser.QuantityReader;
+import com.pemc.crss.metering.parser.meterquantity.MeterQuantityReaderFactory;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +60,7 @@ public class DefaultMeterService implements MeterService {
     @Transactional
     public void saveMeterData(long fileID, String fileType, byte[] fileContent, String category) {
         try {
-            MeterQuantityReader reader = readerFactory.getMeterQuantityReader(fileType);
+            QuantityReader<MeterData2> reader = readerFactory.getMeterQuantityReader(fileType);
             List<MeterData2> meterData = reader.readData(new ByteArrayInputStream(fileContent));
 
             meteringDao.saveMeterData(fileID, meterData, category);

@@ -1,7 +1,7 @@
 package com.pemc.crss.metering.dto;
 
-import com.pemc.crss.metering.parser.ChannelStatus;
-import com.pemc.crss.metering.parser.IntervalStatus;
+import com.pemc.crss.metering.parser.meterquantity.ChannelStatus;
+import com.pemc.crss.metering.parser.meterquantity.IntervalStatus;
 import lombok.Data;
 
 import java.util.Date;

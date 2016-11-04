@@ -1,4 +1,4 @@
-package com.pemc.crss.metering.parser;
+package com.pemc.crss.metering.parser.meterquantity;
 
 import com.pemc.crss.metering.dto.ChannelHeader;
 import com.pemc.crss.metering.dto.Header;
@@ -6,6 +6,8 @@ import com.pemc.crss.metering.dto.IntervalData;
 import com.pemc.crss.metering.dto.MeterData;
 import com.pemc.crss.metering.dto.MeterData2;
 import com.pemc.crss.metering.dto.TrailerRecord;
+import com.pemc.crss.metering.parser.QuantityReader;
+import com.pemc.crss.metering.parser.RecordCode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedInputStream;
@@ -25,7 +27,7 @@ import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static java.util.Calendar.MINUTE;
 
 @Slf4j
-public class MDEFReader implements MeterQuantityReader {
+public class MeterQuantityMDEFReader implements QuantityReader<MeterData2> {
 
     private static final int RECORD_BLOCK_SIZE = 216;
 

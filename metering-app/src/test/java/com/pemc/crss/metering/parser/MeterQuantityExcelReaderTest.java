@@ -1,13 +1,11 @@
 package com.pemc.crss.metering.parser;
 
 import com.pemc.crss.metering.dto.MeterData2;
-import com.pemc.crss.metering.dto.MeterDataCSV;
-import com.pemc.crss.metering.dto.MeterDataXLS;
+import com.pemc.crss.metering.parser.meterquantity.MeterQuantityExcelReader;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -16,13 +14,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 // TODO: Convert to spock
-public class ExcelReaderTest {
+public class MeterQuantityExcelReaderTest {
 
     @Test
     public void shouldParseXLS() throws IOException {
-        MeterQuantityReader reader = new ExcelReader();
+        QuantityReader<MeterData2> reader = new MeterQuantityExcelReader();
         List<MeterData2> meterData = reader.readData(new FileInputStream(
-                new File(ExcelReaderTest.class.getClassLoader().getResource(
+                new File(MeterQuantityExcelReaderTest.class.getClassLoader().getResource(
                         "meterdata/xls/MF3MABAMSUZ01.xls").getFile())));
 
         assertThat(meterData.size(), is(equalTo(2976)));
@@ -30,9 +28,9 @@ public class ExcelReaderTest {
 
     @Test
     public void shouldParseXLSX() throws IOException {
-        MeterQuantityReader reader = new ExcelReader();
+        QuantityReader<MeterData2> reader = new MeterQuantityExcelReader();
         List<MeterData2> meterData = reader.readData(new FileInputStream(
-                new File(ExcelReaderTest.class.getClassLoader().getResource(
+                new File(MeterQuantityExcelReaderTest.class.getClassLoader().getResource(
                         "meterdata/xls/MF3MABAMSUZ01.xls").getFile())));
 
         assertThat(meterData.size(), is(equalTo(2976)));

@@ -1,4 +1,4 @@
-package com.pemc.crss.metering.parser;
+package com.pemc.crss.metering.parser.meterquantity;
 
 import java.util.HashMap;
 import java.util.Map;
