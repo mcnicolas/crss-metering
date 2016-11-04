@@ -37,6 +37,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'meter_data_id',           type: 'BIGINT') { constraints(primaryKey: true, nullable: false) }
             column(name: 'file_id',                 type: 'BIGINT')
             column(name: 'sein',                    type: 'VARCHAR(20)') { constraints(nullable: false) }
+            column(name: 'interval',                type: 'INT')
             column(name: 'reading_datetime',        type: 'TIMESTAMP')
 
             // NOTE: Should be able to save variable decimal places. Maximum of 10
@@ -87,6 +88,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'meter_data_id',           type: 'BIGINT') { constraints(primaryKey: true, nullable: false) }
             column(name: 'file_id',                 type: 'BIGINT')
             column(name: 'sein',                    type: 'VARCHAR(20)') { constraints(nullable: false) }
+            column(name: 'interval',                type: 'INT')
             column(name: 'reading_datetime',        type: 'TIMESTAMP')
 
             // NOTE: Should be able to save variable decimal places. Maximum of 10
