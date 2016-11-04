@@ -7,7 +7,6 @@ import com.pemc.crss.metering.dto.MeterData;
 import com.pemc.crss.metering.dto.MeterData2;
 import com.pemc.crss.metering.dto.TrailerRecord;
 import com.pemc.crss.metering.parser.QuantityReader;
-import com.pemc.crss.metering.parser.RecordCode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedInputStream;
