@@ -19,7 +19,7 @@ public class CSVReaderTest {
     public void parseCSVWithMissingColumns() throws IOException {
         MeterQuantityReader reader = new CSVReader();
         List<MeterData2> meterData = reader.readData(new FileInputStream(
-                new File(MDEFReaderTest2.class.getClassLoader().getResource(
+                new File(CSVReaderTest.class.getClassLoader().getResource(
                         "meterdata/csv/MF3MABAMSUZ01.csv").getFile())));
 
         assertThat(meterData.size(), is(equalTo(2976)));
@@ -29,7 +29,7 @@ public class CSVReaderTest {
     public void parseCSVWithExtraColumns() throws IOException {
         MeterQuantityReader reader = new CSVReader();
         List<MeterData2> meterData = reader.readData(new FileInputStream(
-                new File(MDEFReaderTest2.class.getClassLoader().getResource(
+                new File(CSVReaderTest.class.getClassLoader().getResource(
                         "meterdata/csv/MET_CEDCMSP_R3MEXCEDC01TNSC01_20161003.csv").getFile())));
 
         assertThat(meterData.size(), is(equalTo(96)));

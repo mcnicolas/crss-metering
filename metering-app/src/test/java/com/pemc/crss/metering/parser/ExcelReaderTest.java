@@ -22,7 +22,7 @@ public class ExcelReaderTest {
     public void shouldParseXLS() throws IOException {
         MeterQuantityReader reader = new ExcelReader();
         List<MeterData2> meterData = reader.readData(new FileInputStream(
-                new File(MDEFReaderTest2.class.getClassLoader().getResource(
+                new File(ExcelReaderTest.class.getClassLoader().getResource(
                         "meterdata/xls/MF3MABAMSUZ01.xls").getFile())));
 
         assertThat(meterData.size(), is(equalTo(2976)));
@@ -32,7 +32,7 @@ public class ExcelReaderTest {
     public void shouldParseXLSX() throws IOException {
         MeterQuantityReader reader = new ExcelReader();
         List<MeterData2> meterData = reader.readData(new FileInputStream(
-                new File(MDEFReaderTest2.class.getClassLoader().getResource(
+                new File(ExcelReaderTest.class.getClassLoader().getResource(
                         "meterdata/xls/MF3MABAMSUZ01.xls").getFile())));
 
         assertThat(meterData.size(), is(equalTo(2976)));
