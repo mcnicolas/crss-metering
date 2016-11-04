@@ -71,12 +71,20 @@ public class ExcelReader implements MeterQuantityReader {
             meterData.setKwr(getNumericValue(row.getCell(6)));
             meterData.setKwhr(getNumericValue(row.getCell(7)));
             meterData.setKvarhr(getNumericValue(row.getCell(8)));
-            meterData.setEstimationFlag(row.getCell(9).getStringCellValue());
+            meterData.setEstimationFlag(getStringValue(row.getCell(9)));
 
             meterDataList.add(meterData);
         }
 
         return meterDataList;
+    }
+
+    private String getStringValue(Cell cell) {
+        if (cell != null) {
+            return cell.getStringCellValue();
+        } else {
+            return null;
+        }
     }
 
     private Calendar getDateValue(Cell cell) {
