@@ -22,6 +22,6 @@ public interface MeteringDao {
 
     void saveMeterUploadMDEF(long fileID, MeterData meterData);
 
-    void saveDailyMeterData(long fileID, List<MeterData2> meterDataList);
+    void saveMeterData(long fileID, List<MeterData2> meterDataList, String category);
 
 }

@@ -2,11 +2,9 @@ package com.pemc.crss.metering.service;
 
 import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dao.MeteringDao;
-import com.pemc.crss.metering.dto.MeterData;
 import com.pemc.crss.metering.dto.MeterData2;
 import com.pemc.crss.metering.dto.MeterUploadFile;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
-import com.pemc.crss.metering.parser.MDEFReader;
 import com.pemc.crss.metering.parser.MeterQuantityReader;
 import com.pemc.crss.metering.parser.MeterQuantityReaderFactory;
 import lombok.NonNull;
@@ -65,9 +63,7 @@ public class DefaultMeterService implements MeterService {
             MeterQuantityReader reader = readerFactory.getMeterQuantityReader(fileType);
             List<MeterData2> meterData = reader.readData(new ByteArrayInputStream(fileContent));
 
-            meteringDao.saveDailyMeterData(fileID, meterData);
-            log.debug("after saving file:{}", fileID);
-
+            meteringDao.saveMeterData(fileID, meterData, category);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
