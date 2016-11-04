@@ -29,7 +29,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
         addForeignKeyConstraint(
                 baseColumnNames: 'file_id', baseTableName: 'txn_bcq_data', constraintName: 'FK_BCQ_DATA',
                 deferrable: false, initiallyDeferred: false,
-                referencedColumnNames: 'file_id', referencedTableName: 'txn_bcq_manifest_file')
+                referencedColumnNames: 'file_id', referencedTableName: 'txn_bcq_upload_file')
     }
 
 }
