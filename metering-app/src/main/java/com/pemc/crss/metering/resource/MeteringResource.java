@@ -49,14 +49,6 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
     @NonNull
     private final ApplicationEventPublisher eventPublisher;
 
-    private List<MeterDataListWebDto> meterDataList;
-
-//    public MeteringResource() {
-//        long sampleSize = 25L;
-//
-//        meterDataList = generateSampleMeterDataList(sampleSize);
-//    }
-
     @Deprecated
     @GetMapping("/sample")
     public String sample() {
@@ -155,19 +147,32 @@ public class MeteringResource extends BaseListResource<MeterDataListWebDto> {
 
     @Override
     public DataTableResponse<MeterDataListWebDto> executeSearch(PageableRequest request) {
+        List<MeterDataListWebDto> meterDataList = generateSampleMeterDataList(25L);
+
         int pageNo = request.getPageNo();
         int pageSize = request.getPageSize();
+
         int remainingElement = (meterDataList.size() > pageSize * (pageNo + 1)) ?
-                meterDataList.size() : pageSize * (pageNo + 1) - meterDataList.size();
+                meterDataList.size() :
+                pageSize * (pageNo + 1) - meterDataList.size();
 
         Page<MeterDataListWebDto> page = new PageImpl<>(
-                getMeterDataListByPage(meterDataList, request.getPageNo(), request.getPageSize()),
+                getMeterDataListByPage(meterDataList, pageNo, pageSize),
                 request.getPageable(), remainingElement);
+
+        log.debug("Upload type: {}, Date: {}",
+                request.getMapParams().get("uploadType"),
+                request.getMapParams().get("date"));
 
         return new DataTableResponse<MeterDataListWebDto>()
                 .withData(page.getContent())
                 .withRecordsTotal(page.getTotalElements());
     }
+
+
+    /*****************************************
+     * Sample meter data list generator
+     *****************************************/
 
     private List<MeterDataListWebDto> getMeterDataListByPage(List<MeterDataListWebDto> meterDataList, int pageNo, int pageSize) {
         int toIndex = (meterDataList.size() < pageSize * (pageNo + 1)) ? meterDataList.size() : pageSize * (pageNo + 1);

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 public abstract class BaseListResource<T> {
 
-    @PostMapping(value = "/list/v2")
+    @PostMapping(value = "/list")
     @ResponseBody
     @Transactional
     public ResponseEntity listJson(@RequestBody final PageableRequest request) {
