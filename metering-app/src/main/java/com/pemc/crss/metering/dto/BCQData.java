@@ -2,7 +2,7 @@ package com.pemc.crss.metering.dto;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 public class BCQData {
@@ -13,8 +13,8 @@ public class BCQData {
     private String sellingMTN;
     private long buyingParticipantId;
     private String referenceMTN;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private Date startTime;
+    private Date endTime;
     private double bcq;
 
 }
