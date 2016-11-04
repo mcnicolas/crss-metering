@@ -46,22 +46,21 @@ public class JdbcBCQDao implements BCQDao {
 
     @Override
     public void saveBCQData(long fileID, List<BCQData> bcqDataList) {
-        String INSERT_SQL = "INSERT INTO TXN_BCQ_DATA (BCQ_DATA_ID, FILE_ID, SELLING_PARTICIPANT_NAME," +
-                " SELLING_MTN, BUYING_PARTICIPANT_ID, REFERENCE_MTN, START_TIME, END_TIME, BCQ)" +
-                " VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?)";
+        String INSERT_SQL = "INSERT INTO TXN_BCQ_DATA (BCQ_DATA_ID, FILE_ID, SELLING_MTN," +
+                " BUYING_PARTICIPANT_ID, REFERENCE_MTN, START_TIME, END_TIME, BCQ)" +
+                " VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?)";
 
         jdbcTemplate.batchUpdate(INSERT_SQL, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 BCQData bcqData = bcqDataList.get(i);
                 ps.setLong(1, fileID);
-                ps.setString(2, bcqData.getSellingParticipantName());
-                ps.setString(3, bcqData.getSellingMTN());
-                ps.setLong(4, bcqData.getBuyingParticipantId());
-                ps.setString(5, bcqData.getReferenceMTN());
-                ps.setTimestamp(6, new Timestamp(bcqData.getStartTime().getTime()));
-                ps.setTimestamp(7, new Timestamp(bcqData.getEndTime().getTime()));
-                ps.setDouble(8, bcqData.getBcq());
+                ps.setString(2, bcqData.getSellingMTN());
+                ps.setLong(3, bcqData.getBuyingParticipantId());
+                ps.setString(4, bcqData.getReferenceMTN());
+                ps.setTimestamp(5, new Timestamp(bcqData.getStartTime().getTime()));
+                ps.setTimestamp(6, new Timestamp(bcqData.getEndTime().getTime()));
+                ps.setDouble(7, bcqData.getBcq());
             }
 
             @Override
