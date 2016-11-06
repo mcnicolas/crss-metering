@@ -15,14 +15,14 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
         }
 
         createTable(tableName: 'txn_bcq_data', remarks: 'BCQ data') {
-            column(name: 'bcq_data_id',               type: 'BIGINT') { constraints(primaryKey: true, nullable: false) }
-            column(name: 'file_id',                   type: 'BIGINT') { constraints(nullable: false) }
-            column(name: 'selling_mtn',               type: 'VARCHAR(255)') { constraints(nullable: false) }
-            column(name: 'buying_participant_id',     type: 'BIGINT') { constraints(nullable: false) }
-            column(name: 'reference_mtn',             type: 'VARCHAR(255)') { constraints(nullable: false) }
-            column(name: 'start_time',                type: 'TIMESTAMP') { constraints(nullable: false) }
-            column(name: 'end_time',                  type: 'TIMESTAMP') { constraints(nullable: false) }
-            column(name: 'bcq',                       type: 'NUMERIC(19,2)') { constraints(nullable: false) }
+            column(name: 'bcq_data_id',         type: 'BIGINT') { constraints(primaryKey: true, nullable: false) }
+            column(name: 'file_id',             type: 'BIGINT') { constraints(nullable: false) }
+            column(name: 'selling_mtn',         type: 'VARCHAR(255)') { constraints(nullable: false) }
+            column(name: 'buying_participant',  type: 'VARCHAR(255) remarks: Participant short name') { constraints(nullable: false) }
+            column(name: 'reference_mtn',       type: 'VARCHAR(255)') { constraints(nullable: false) }
+            column(name: 'start_time',          type: 'TIMESTAMP') { constraints(nullable: false) }
+            column(name: 'end_time',            type: 'TIMESTAMP') { constraints(nullable: false) }
+            column(name: 'bcq',                 type: 'NUMERIC(19,2)') { constraints(nullable: false) }
         }
 
         addForeignKeyConstraint(

@@ -10,7 +10,7 @@ public class BCQData {
     private long bcqDataId;
     private long fileId;
     private String sellingMTN;
-    private long buyingParticipantId;
+    private String buyingParticipant;
     private String referenceMTN;
     private Date startTime;
     private Date endTime;

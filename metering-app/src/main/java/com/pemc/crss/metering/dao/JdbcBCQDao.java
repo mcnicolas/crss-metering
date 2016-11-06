@@ -56,7 +56,7 @@ public class JdbcBCQDao implements BCQDao {
                 BCQData bcqData = bcqDataList.get(i);
                 ps.setLong(1, fileID);
                 ps.setString(2, bcqData.getSellingMTN());
-                ps.setLong(3, bcqData.getBuyingParticipantId());
+                ps.setString(3, bcqData.getBuyingParticipant());
                 ps.setString(4, bcqData.getReferenceMTN());
                 ps.setTimestamp(5, new Timestamp(bcqData.getStartTime().getTime()));
                 ps.setTimestamp(6, new Timestamp(bcqData.getEndTime().getTime()));
