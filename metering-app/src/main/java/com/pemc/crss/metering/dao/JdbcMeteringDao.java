@@ -10,6 +10,7 @@ import com.pemc.crss.metering.dto.MeterUploadHeader;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -27,20 +28,30 @@ import static java.sql.Types.DOUBLE;
 @Repository
 public class JdbcMeteringDao implements MeteringDao {
 
+    @Value("${mq.manifest.header}")
+    private String insertHeaderManifest;
+
+    @Value("${mq.manifest.trailer}")
+    private String addTrailerManifest;
+
+    @Value("${mq.manifest.file}")
+    private String insertFileManifest;
+
+    @Value("${mq.meter.daily}")
+    private String insertDailyMQ;
+
+    @Value("${mq.meter.monthly}")
+    private String insertMonthlyMQ;
+
     @NonNull
     private final JdbcTemplate jdbcTemplate;
 
     @Override
     public long saveHeader(String transactionID, long mspID, int fileCount, String category, String username) {
-        // TODO: Transfer SQL scripts to resource file
-        String INSERT_SQL = "INSERT INTO TXN_MQ_MANIFEST_HEADER (header_id, transaction_id, msp_id, file_count, category," +
-                " upload_by, upload_datetime)" +
-                " VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?)";
-
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
-                    PreparedStatement ps = connection.prepareStatement(INSERT_SQL, new String[]{"header_id"});
+                    PreparedStatement ps = connection.prepareStatement(insertHeaderManifest, new String[]{"header_id"});
                     ps.setString(1, transactionID);
                     ps.setLong(2, mspID);
                     ps.setInt(3, fileCount);
@@ -57,12 +68,9 @@ public class JdbcMeteringDao implements MeteringDao {
 
     @Override
     public void saveTrailer(String transactionID) {
-        // TODO: Transfer SQL scripts to resource file
-        String UPDATE_SQL = "UPDATE TXN_MQ_MANIFEST_HEADER SET tail_received = 'Y' WHERE transaction_id = ?";
-
         jdbcTemplate.update(
                 connection -> {
-                    PreparedStatement ps = connection.prepareStatement(UPDATE_SQL);
+                    PreparedStatement ps = connection.prepareStatement(addTrailerManifest);
                     ps.setString(1, transactionID);
 
                     return ps;
@@ -72,15 +80,10 @@ public class JdbcMeteringDao implements MeteringDao {
     @Override
     public long saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize,
                                  String checksum) {
-        // TODO: Transfer SQL scripts to resource file
-        String INSERT_SQL = "INSERT INTO TXN_MQ_MANIFEST_FILE (file_id, header_id, transaction_id, filename, filetype," +
-                " filesize, checksum)" +
-                " VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?)";
-
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
-                    PreparedStatement ps = connection.prepareStatement(INSERT_SQL, new String[]{"file_id"});
+                    PreparedStatement ps = connection.prepareStatement(insertFileManifest, new String[]{"file_id"});
                     ps.setLong(1, headerID);
                     ps.setString(2, transactionID);
                     ps.setString(3, fileName);
@@ -95,6 +98,82 @@ public class JdbcMeteringDao implements MeteringDao {
         return keyHolder.getKey().longValue();
     }
 
+    // TODO: Dirty code. Revise
+    @Override
+    public void saveMeterData(long fileID, List<MeterData2> meterDataList, String category) {
+        String insertSQL;
+        if (StringUtils.equalsIgnoreCase(category, "Monthly")) {
+            insertSQL = insertMonthlyMQ;
+        } else {
+            insertSQL = insertDailyMQ;
+        }
+
+        // TODO: Use batch update
+        for (MeterData2 meterData : meterDataList) {
+            jdbcTemplate.update(
+                    connection -> {
+                        PreparedStatement ps = connection.prepareStatement(insertSQL);
+                        ps.setLong(1, fileID);
+                        ps.setString(2, meterData.getSein());
+                        ps.setTimestamp(3, new Timestamp(meterData.getReadingDateTime().getTime()));
+                        ps.setDouble(4, meterData.getKwd());
+                        ps.setDouble(5, meterData.getKwhd());
+                        ps.setDouble(6, meterData.getKvarhd());
+                        ps.setDouble(7, meterData.getKwr());
+                        ps.setDouble(8, meterData.getKwhr());
+                        ps.setDouble(9, meterData.getKvarhr());
+
+                        if (meterData.getVan() != null) {
+                            ps.setDouble(10, meterData.getVan());
+                        } else {
+                            ps.setNull(10, DOUBLE);
+                        }
+
+                        if (meterData.getVbn() != null) {
+                            ps.setDouble(11, meterData.getVbn());
+                        } else {
+                            ps.setNull(11, DOUBLE);
+                        }
+
+                        if (meterData.getVcn() != null) {
+                            ps.setDouble(12, meterData.getVcn());
+                        } else {
+                            ps.setNull(12, DOUBLE);
+                        }
+
+                        if (meterData.getIan() != null) {
+                            ps.setDouble(13, meterData.getIan());
+                        } else {
+                            ps.setNull(13, DOUBLE);
+                        }
+
+                        if (meterData.getIbn() != null) {
+                            ps.setDouble(14, meterData.getIbn());
+                        } else {
+                            ps.setNull(14, DOUBLE);
+                        }
+
+                        if (meterData.getIcn() != null) {
+                            ps.setDouble(15, meterData.getIcn());
+                        } else {
+                            ps.setNull(15, DOUBLE);
+                        }
+
+                        if (meterData.getPf() != null) {
+                            ps.setDouble(16, meterData.getPf());
+                        } else {
+                            ps.setNull(16, DOUBLE);
+                        }
+
+                        ps.setString(17, meterData.getEstimationFlag());
+                        ps.setInt(18, 1);
+
+                        return ps;
+                    });
+        }
+    }
+
+    @Deprecated
     @Override
     public long saveMeterUploadHeader(MeterUploadHeader meterUploadHeader) {
         // TODO: Transfer SQL scripts to resource file
@@ -241,88 +320,6 @@ public class JdbcMeteringDao implements MeteringDao {
                             });
                 }
             }
-        }
-    }
-
-    // TODO: Dirty code. Revise
-    @Override
-    public void saveMeterData(long fileID, List<MeterData2> meterDataList, String category) {
-        // TODO: Transfer SQL scripts to resource file
-
-        // TODO: Include channel and interval status
-        String INSERT_SQL = "INSERT INTO TXN_METER_DATA_DAILY (METER_DATA_ID, FILE_ID, SEIN, READING_DATETIME,"
-                + " KWD, KWHD, KVARHD, KWR, KWHR, KVARHR, VAN, VBN, VCN, IAN, IBN, ICN, PF, ESTIMATION_FLAG, VERSION)"
-                + " VALUES(NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        if (StringUtils.equalsIgnoreCase(category, "Monthly")) {
-            INSERT_SQL = "INSERT INTO TXN_METER_DATA_MONTHLY (METER_DATA_ID, FILE_ID, SEIN, READING_DATETIME,"
-                    + " KWD, KWHD, KVARHD, KWR, KWHR, KVARHR, VAN, VBN, VCN, IAN, IBN, ICN, PF, ESTIMATION_FLAG, VERSION)"
-                    + " VALUES(NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        }
-
-        // TODO: Use batch update
-        for (MeterData2 meterData : meterDataList) {
-            String finalINSERT_SQL = INSERT_SQL;
-            jdbcTemplate.update(
-                    connection -> {
-                        PreparedStatement ps = connection.prepareStatement(finalINSERT_SQL);
-                        ps.setLong(1, fileID);
-                        ps.setString(2, meterData.getSein());
-                        ps.setTimestamp(3, new Timestamp(meterData.getReadingDateTime().getTime()));
-                        ps.setDouble(4, meterData.getKwd());
-                        ps.setDouble(5, meterData.getKwhd());
-                        ps.setDouble(6, meterData.getKvarhd());
-                        ps.setDouble(7, meterData.getKwr());
-                        ps.setDouble(8, meterData.getKwhr());
-                        ps.setDouble(9, meterData.getKvarhr());
-
-                        if (meterData.getVan() != null) {
-                            ps.setDouble(10, meterData.getVan());
-                        } else {
-                            ps.setNull(10, DOUBLE);
-                        }
-
-                        if (meterData.getVbn() != null) {
-                            ps.setDouble(11, meterData.getVbn());
-                        } else {
-                            ps.setNull(11, DOUBLE);
-                        }
-
-                        if (meterData.getVcn() != null) {
-                            ps.setDouble(12, meterData.getVcn());
-                        } else {
-                            ps.setNull(12, DOUBLE);
-                        }
-
-                        if (meterData.getIan() != null) {
-                            ps.setDouble(13, meterData.getIan());
-                        } else {
-                            ps.setNull(13, DOUBLE);
-                        }
-
-                        if (meterData.getIbn() != null) {
-                            ps.setDouble(14, meterData.getIbn());
-                        } else {
-                            ps.setNull(14, DOUBLE);
-                        }
-
-                        if (meterData.getIcn() != null) {
-                            ps.setDouble(15, meterData.getIcn());
-                        } else {
-                            ps.setNull(15, DOUBLE);
-                        }
-
-                        if (meterData.getPf() != null) {
-                            ps.setDouble(16, meterData.getPf());
-                        } else {
-                            ps.setNull(16, DOUBLE);
-                        }
-
-                        ps.setString(17, meterData.getEstimationFlag());
-                        ps.setInt(18, 1);
-
-                        return ps;
-                    });
         }
     }
 

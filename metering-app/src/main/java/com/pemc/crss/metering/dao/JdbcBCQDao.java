@@ -4,6 +4,7 @@ import com.pemc.crss.metering.dto.BCQData;
 import com.pemc.crss.metering.dto.BCQUploadFile;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -20,18 +21,21 @@ import java.util.List;
 @Repository
 public class JdbcBCQDao implements BCQDao {
 
+    @Value("${bcq.manifest}")
+    private String insertManifest;
+
+    @Value("${bcq.data}")
+    private String insertData;
+
     @NonNull
     private final JdbcTemplate jdbcTemplate;
 
     @Override
     public long saveBCQUploadFile(String transactionID, BCQUploadFile bcqUploadFile) {
-        String INSERT_SQL = "INSERT INTO TXN_BCQ_UPLOAD_FILE (FILE_ID, TRANSACTION_ID, FILE_NAME, FILE_SIZE, STATUS)" +
-                " VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?)";
-
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
-                    PreparedStatement ps = connection.prepareStatement(INSERT_SQL);
+                    PreparedStatement ps = connection.prepareStatement(insertManifest);
                     ps.setString(1, transactionID);
                     ps.setString(2, bcqUploadFile.getFileName());
                     ps.setLong(3, bcqUploadFile.getFileSize());
@@ -46,11 +50,7 @@ public class JdbcBCQDao implements BCQDao {
 
     @Override
     public void saveBCQData(long fileID, List<BCQData> bcqDataList) {
-        String INSERT_SQL = "INSERT INTO TXN_BCQ_DATA (BCQ_DATA_ID, FILE_ID, SELLING_MTN," +
-                " BUYING_PARTICIPANT_ID, REFERENCE_MTN, START_TIME, END_TIME, BCQ)" +
-                " VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?)";
-
-        jdbcTemplate.batchUpdate(INSERT_SQL, new BatchPreparedStatementSetter() {
+        jdbcTemplate.batchUpdate(insertData, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 BCQData bcqData = bcqDataList.get(i);
