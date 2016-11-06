@@ -71,13 +71,13 @@ mq:
       filesize, checksum) VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?)
   meter:
     daily: >
-      INSERT INTO TXN_METER_DATA_DAILY (METER_DATA_ID, FILE_ID, SEIN, READING_DATETIME,
-      KWD, KWHD, KVARHD, KWR, KWHR, KVARHR, VAN, VBN, VCN, IAN, IBN, ICN, PF, ESTIMATION_FLAG, VERSION)
-      VALUES(NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO TXN_METER_DATA_DAILY VALUES(
+      NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     monthly: >
-      INSERT INTO TXN_METER_DATA_MONTHLY (METER_DATA_ID, FILE_ID, SEIN, READING_DATETIME,
-      KWD, KWHD, KVARHD, KWR, KWHR, KVARHR, VAN, VBN, VCN, IAN, IBN, ICN, PF, ESTIMATION_FLAG, VERSION)
-      VALUES(NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO TXN_METER_DATA_MONTHLY VALUES(
+      NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 bcq:
   manifest: >
     INSERT INTO TXN_BCQ_UPLOAD_FILE (FILE_ID, TRANSACTION_ID, FILE_NAME, FILE_SIZE, STATUS, SUBMITTED_DATE)
@@ -101,15 +101,15 @@ mq:
       INSERT INTO TXN_MQ_MANIFEST_FILE (file_id, header_id, transaction_id, filename, filetype,
       filesize, checksum) VALUES (HIBERNATE_SEQUENCE.NEXTVAL, ?, ?, ?, ?, ?, ?)
   meter:
-    # TODO: Include channel and interval status
+    # TODO: Reduce redundant codes
     daily: >
-      INSERT INTO TXN_METER_DATA_DAILY (METER_DATA_ID, FILE_ID, SEIN, READING_DATETIME,
-      KWD, KWHD, KVARHD, KWR, KWHR, KVARHR, VAN, VBN, VCN, IAN, IBN, ICN, PF, ESTIMATION_FLAG, VERSION)
-      VALUES(HIBERNATE_SEQUENCE.NEXTVAL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO TXN_METER_DATA_DAILY VALUES(
+      HIBERNATE_SEQUENCE.NEXTVAL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     monthly: >
-      INSERT INTO TXN_METER_DATA_MONTHLY (METER_DATA_ID, FILE_ID, SEIN, READING_DATETIME,
-      KWD, KWHD, KVARHD, KWR, KWHR, KVARHR, VAN, VBN, VCN, IAN, IBN, ICN, PF, ESTIMATION_FLAG, VERSION)
-      VALUES(HIBERNATE_SEQUENCE.NEXTVAL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO TXN_METER_DATA_MONTHLY VALUES(
+      HIBERNATE_SEQUENCE.NEXTVAL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 bcq:
   manifest: >
     INSERT INTO TXN_BCQ_UPLOAD_FILE (FILE_ID, TRANSACTION_ID, FILE_NAME, FILE_SIZE, STATUS, SUBMITTED_DATE)

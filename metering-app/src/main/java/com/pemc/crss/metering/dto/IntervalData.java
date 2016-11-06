@@ -10,8 +10,8 @@ public class IntervalData {
 
     // TODO: Refactor. Each bean will contain a single record
     private List<Float> meterReading;
-    private List<String> channelStatus;
-    private List<String> intervalStatus;
+    private List<Integer> channelStatus;
+    private List<Integer> intervalStatus;
     private List<String> readingDate;
 
     // TODO: Add version field
@@ -49,19 +49,19 @@ public class IntervalData {
         this.meterReading = meterReading;
     }
 
-    public List<String> getChannelStatus() {
+    public List<Integer> getChannelStatus() {
         return channelStatus;
     }
 
-    public void setChannelStatus(List<String> channelStatus) {
+    public void setChannelStatus(List<Integer> channelStatus) {
         this.channelStatus = channelStatus;
     }
 
-    public List<String> getIntervalStatus() {
+    public List<Integer> getIntervalStatus() {
         return intervalStatus;
     }
 
-    public void setIntervalStatus(List<String> intervalStatus) {
+    public void setIntervalStatus(List<Integer> intervalStatus) {
         this.intervalStatus = intervalStatus;
     }
 

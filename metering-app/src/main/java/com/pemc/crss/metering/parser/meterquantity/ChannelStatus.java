@@ -4,17 +4,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum ChannelStatus {
-    UPD(0, "UPD", "Retransmitted / Updated Data"),
-    AD(1, "AD", "Added Interval (Data Correction)"),
-    RE(2, "RE", "Replaced Interval (Data Correction)"),
-    ES(3, "ES", "Estimated Interval (Data Correction)"),
-    POV(4, "POV", "Pulse Overflow"),
-    DOV(5, "DOV", "Data Out Of Limits"),
-    ED(6, "ED", "Excluded Data"),
-    PE(7, "PE", "Parity"),
-    ETC(8, "ETC", "Energy Type (Register Changed)"),
-    LR(9, "LR", "Alarm"),
-    HD(10, "HD", "Harmonic Distortion");
+    NORMAL(0, "NORMAL", "Normal"),
+    UPD(1, "UPD", "Retransmitted / Updated Data"),
+    AD(2, "AD", "Added Interval (Data Correction)"),
+    RE(3, "RE", "Replaced Interval (Data Correction)"),
+    ES(4, "ES", "Estimated Interval (Data Correction)"),
+    POV(5, "POV", "Pulse Overflow"),
+    DOV(6, "DOV", "Data Out Of Limits"),
+    ED(7, "ED", "Excluded Data"),
+    PE(8, "PE", "Parity"),
+    ETC(9, "ETC", "Energy Type (Register Changed)"),
+    LR(10, "LR", "Alarm"),
+    HD(11, "HD", "Harmonic Distortion");
 
     private final int code;
     private final String shortName;
@@ -34,10 +35,12 @@ public enum ChannelStatus {
         this.description = description;
     }
 
-    public static String getShortName(int code) {
-        ChannelStatus channelStatus = STATUS_MAP.get(code);
+    public static ChannelStatus fromCode(int code) {
+        return STATUS_MAP.get(code);
+    }
 
-        return channelStatus == null ? "" : STATUS_MAP.get(code).shortName;
+    public int getCode() {
+        return code;
     }
 
 }

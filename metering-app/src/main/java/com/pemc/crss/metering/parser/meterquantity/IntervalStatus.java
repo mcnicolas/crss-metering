@@ -4,19 +4,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum IntervalStatus {
-    PO(0, "PO", "Power Outage"),
-    SI(1, "SI", "Short Interval"),
-    LI(2, "LI", "Long Interval"),
-    CR(3, "CR", "CRC Error"),
-    RA(4, "RA", "RAM Checksum Error"),
-    RO(5, "RO", "ROM Checksum Error"),
-    LA(6, "LA", "Data Missing"),
-    CL(7, "CL", "Clock Error"),
-    BR(8, "BR", "Reset Occurred"),
-    WD(9, "WD", "Watchdog Time-out"),
-    TR(10, "TR", "Time Reset Occurred"),
-    TM(11, "TM", "Test Mode"),
-    LC(12, "LC", "Load Control");
+    NORMAL(0, "NORMAL", "Normal"),
+    PO(1, "PO", "Power Outage"),
+    SI(2, "SI", "Short Interval"),
+    LI(3, "LI", "Long Interval"),
+    CR(4, "CR", "CRC Error"),
+    RA(5, "RA", "RAM Checksum Error"),
+    RO(6, "RO", "ROM Checksum Error"),
+    LA(7, "LA", "Data Missing"),
+    CL(8, "CL", "Clock Error"),
+    BR(9, "BR", "Reset Occurred"),
+    WD(10, "WD", "Watchdog Time-out"),
+    TR(11, "TR", "Time Reset Occurred"),
+    TM(12, "TM", "Test Mode"),
+    LC(13, "LC", "Load Control");
 
     private final int code;
     private final String shortName;
@@ -36,10 +37,12 @@ public enum IntervalStatus {
         this.description = description;
     }
 
-    public static String getShortName(int code) {
-        IntervalStatus intervalStatus = STATUS_MAP.get(code);
+    public static IntervalStatus fromCode(int code) {
+        return STATUS_MAP.get(code);
+    }
 
-        return intervalStatus == null ? "" : STATUS_MAP.get(code).shortName;
+    public int getCode() {
+        return code;
     }
 
 }

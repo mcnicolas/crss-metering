@@ -5,27 +5,67 @@ import java.util.List;
 
 public class ChannelHeader {
 
+    // RLEN 2 bytes
     private int recordLength;
+
+    // RCODE 2 bytes
     private int recordCode;
 
+    // DC_CUSTID 20 bytes
     private String customerID;
+
+    // DC_RECID 14 bytes
     private String recorderID;
+
+    // DC_METERID 12 bytes
     private String meterNo;
+
+    // TA_START 12 bytes
     private String startTime;
+
+    // TA_STOP 12 bytes
     private String stopTime;
+
+    // DC_PYSCHAN 2 bytes
     private String meterChannelNo;
+
+    // DC_LOGCHAN 2 bytes
     private int customerChannelNo;
+
+    // DC_UMCODE 2 bytes
     private String uomCode;
-    private String channelStatusPresent;
-    private String intervalStatusPresent;
+
+    // CHANSTAT 1 byte
+    private boolean channelStatusPresent;
+
+    // INTSTAT 1 byte
+    private boolean intervalStatusPresent;
+
+    // STRTMTR 12 bytes
     private String startMeterReading;
+
+    // STOPMTR 12 bytes
     private String stopMeterReading;
+
+    // DC_MMULT 10 bytes
     private String meterMultiplier;
+
+    // DC_SERVTYPE 1 byte
     private String serverType;
+
+    // DR_INPHR 2 bytes
     private int intervalPerHour;
+
+    // TD_STATUS 2 bytes
     private String validationResults;
+
+    // DC_FLOW 1 byte
     private String powerFlowDirection;
+
+    // DC_KVASET 2 bytes
     private int kvaSet;
+
+    // TD_ORIGIN 1 byte
     private String dataOrigin;
 
     private List<IntervalData> intervals = new ArrayList<>();
@@ -110,19 +150,19 @@ public class ChannelHeader {
         this.uomCode = uomCode;
     }
 
-    public String getChannelStatusPresent() {
+    public boolean isChannelStatusPresent() {
         return channelStatusPresent;
     }
 
-    public void setChannelStatusPresent(String channelStatusPresent) {
+    public void setChannelStatusPresent(boolean channelStatusPresent) {
         this.channelStatusPresent = channelStatusPresent;
     }
 
-    public String getIntervalStatusPresent() {
+    public boolean isIntervalStatusPresent() {
         return intervalStatusPresent;
     }
 
-    public void setIntervalStatusPresent(String intervalStatusPresent) {
+    public void setIntervalStatusPresent(boolean intervalStatusPresent) {
         this.intervalStatusPresent = intervalStatusPresent;
     }
 

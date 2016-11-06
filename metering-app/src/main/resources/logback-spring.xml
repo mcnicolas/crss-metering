@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+
+  <!-- property configs -->
+  <springProperty name="APP_NAME" source="spring.application.name"/>
+
+  <!-- appender configs -->
+  <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE" />
+  </root>
+
+  <!-- library log levels -->
+  <logger name="org.springframework" level="WARN"/>
+  <logger name="org.hibernate" level="WARN"/>
+
+  <!-- application log levels -->
+  <logger name="com.pemc.crss" level="DEBUG"/>
+
+</configuration>

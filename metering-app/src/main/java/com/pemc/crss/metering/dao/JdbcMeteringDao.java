@@ -98,7 +98,7 @@ public class JdbcMeteringDao implements MeteringDao {
         return keyHolder.getKey().longValue();
     }
 
-    // TODO: Dirty code. Revise
+    // TODO: Dirty code. Revise!
     @Override
     public void saveMeterData(long fileID, List<MeterData2> meterDataList, String category) {
         String insertSQL;
@@ -113,60 +113,131 @@ public class JdbcMeteringDao implements MeteringDao {
             jdbcTemplate.update(
                     connection -> {
                         PreparedStatement ps = connection.prepareStatement(insertSQL);
+
                         ps.setLong(1, fileID);
                         ps.setString(2, meterData.getSein());
-                        ps.setTimestamp(3, new Timestamp(meterData.getReadingDateTime().getTime()));
-                        ps.setDouble(4, meterData.getKwd());
-                        ps.setDouble(5, meterData.getKwhd());
-                        ps.setDouble(6, meterData.getKvarhd());
-                        ps.setDouble(7, meterData.getKwr());
-                        ps.setDouble(8, meterData.getKwhr());
-                        ps.setDouble(9, meterData.getKvarhr());
+                        ps.setInt(3, meterData.getInterval());
+                        ps.setTimestamp(4, new Timestamp(meterData.getReadingDateTime().getTime()));
 
-                        if (meterData.getVan() != null) {
-                            ps.setDouble(10, meterData.getVan());
+                        if (meterData.getKwd() != null) {
+                            ps.setDouble(5, meterData.getKwd());
                         } else {
-                            ps.setNull(10, DOUBLE);
+                            ps.setNull(5, DOUBLE);
                         }
 
-                        if (meterData.getVbn() != null) {
-                            ps.setDouble(11, meterData.getVbn());
+                        ps.setInt(6, meterData.getKwdChannelStatus());
+                        ps.setInt(7, meterData.getKwdIntervalStatus());
+
+                        if (meterData.getKwhd() != null) {
+                            ps.setDouble(8, meterData.getKwhd());
+                        } else {
+                            ps.setNull(8, DOUBLE);
+                        }
+
+                        ps.setInt(9, meterData.getKwhdChannelStatus());
+                        ps.setInt(10, meterData.getKwhdIntervalStatus());
+
+                        if (meterData.getKvarhd() != null) {
+                            ps.setDouble(11, meterData.getKvarhd());
                         } else {
                             ps.setNull(11, DOUBLE);
                         }
 
-                        if (meterData.getVcn() != null) {
-                            ps.setDouble(12, meterData.getVcn());
-                        } else {
-                            ps.setNull(12, DOUBLE);
-                        }
+                        ps.setInt(12, meterData.getKvarhdChannelStatus());
+                        ps.setInt(13, meterData.getKvarhdIntervalStatus());
 
-                        if (meterData.getIan() != null) {
-                            ps.setDouble(13, meterData.getIan());
-                        } else {
-                            ps.setNull(13, DOUBLE);
-                        }
-
-                        if (meterData.getIbn() != null) {
-                            ps.setDouble(14, meterData.getIbn());
+                        if (meterData.getKwr() != null) {
+                            ps.setDouble(14, meterData.getKwr());
                         } else {
                             ps.setNull(14, DOUBLE);
                         }
 
-                        if (meterData.getIcn() != null) {
-                            ps.setDouble(15, meterData.getIcn());
+                        ps.setInt(15, meterData.getKwrChannelStatus());
+                        ps.setInt(16, meterData.getKwrIntervalStatus());
+
+                        if (meterData.getKwhr() != null) {
+                            ps.setDouble(17, meterData.getKwhr());
                         } else {
-                            ps.setNull(15, DOUBLE);
+                            ps.setNull(17, DOUBLE);
                         }
+
+                        ps.setInt(18, meterData.getKwhrChannelStatus());
+                        ps.setInt(19, meterData.getKwhrIntervalStatus());
+
+                        if (meterData.getKvarhr() != null) {
+                            ps.setDouble(20, meterData.getKvarhr());
+                        } else {
+                            ps.setNull(20, DOUBLE);
+                        }
+
+                        ps.setInt(21, meterData.getKvarhrChannelStatus());
+                        ps.setInt(22, meterData.getKvarhrIntervalStatus());
+
+                        if (meterData.getVan() != null) {
+                            ps.setDouble(23, meterData.getVan());
+                        } else {
+                            ps.setNull(23, DOUBLE);
+                        }
+
+                        ps.setInt(24, meterData.getVanChannelStatus());
+                        ps.setInt(25, meterData.getVanIntervalStatus());
+
+                        if (meterData.getVbn() != null) {
+                            ps.setDouble(26, meterData.getVbn());
+                        } else {
+                            ps.setNull(26, DOUBLE);
+                        }
+
+                        ps.setInt(27, meterData.getVbnChannelStatus());
+                        ps.setInt(28, meterData.getVbnIntervalStatus());
+
+                        if (meterData.getVcn() != null) {
+                            ps.setDouble(29, meterData.getVcn());
+                        } else {
+                            ps.setNull(29, DOUBLE);
+                        }
+
+                        ps.setInt(30, meterData.getVcnChannelStatus());
+                        ps.setInt(31, meterData.getVcnIntervalStatus());
+
+                        if (meterData.getIan() != null) {
+                            ps.setDouble(32, meterData.getIan());
+                        } else {
+                            ps.setNull(32, DOUBLE);
+                        }
+
+                        ps.setInt(33, meterData.getIanChannelStatus());
+                        ps.setInt(34, meterData.getIanIntervalStatus());
+
+                        if (meterData.getIbn() != null) {
+                            ps.setDouble(35, meterData.getIbn());
+                        } else {
+                            ps.setNull(35, DOUBLE);
+                        }
+
+                        ps.setInt(36, meterData.getIbnChannelStatus());
+                        ps.setInt(37, meterData.getIbnIntervalStatus());
+
+                        if (meterData.getIcn() != null) {
+                            ps.setDouble(38, meterData.getIcn());
+                        } else {
+                            ps.setNull(38, DOUBLE);
+                        }
+
+                        ps.setInt(39, meterData.getIcnChannelStatus());
+                        ps.setInt(40, meterData.getIcnIntervalStatus());
 
                         if (meterData.getPf() != null) {
-                            ps.setDouble(16, meterData.getPf());
+                            ps.setDouble(41, meterData.getPf());
                         } else {
-                            ps.setNull(16, DOUBLE);
+                            ps.setNull(41, DOUBLE);
                         }
 
-                        ps.setString(17, meterData.getEstimationFlag());
-                        ps.setInt(18, 1);
+                        ps.setInt(42, meterData.getPfChannelStatus());
+                        ps.setInt(43, meterData.getPfIntervalStatus());
+
+                        ps.setString(44, meterData.getEstimationFlag());
+                        ps.setInt(45, 1);
 
                         return ps;
                     });
@@ -274,8 +345,8 @@ public class JdbcMeteringDao implements MeteringDao {
                         ps.setString(6, channelHeader.getMeterChannelNo());
                         ps.setInt(7, channelHeader.getCustomerChannelNo());
                         ps.setString(8, channelHeader.getUomCode());
-                        ps.setString(9, channelHeader.getChannelStatusPresent());
-                        ps.setString(10, channelHeader.getIntervalStatusPresent());
+                        ps.setBoolean(9, channelHeader.isChannelStatusPresent());
+                        ps.setBoolean(10, channelHeader.isIntervalStatusPresent());
                         ps.setString(11, channelHeader.getStartMeterReading());
                         ps.setString(12, channelHeader.getStopMeterReading());
                         ps.setString(13, channelHeader.getMeterMultiplier());
@@ -301,8 +372,8 @@ public class JdbcMeteringDao implements MeteringDao {
 
             for (IntervalData intervalData : intervalList) {
                 List<Float> meterReading = intervalData.getMeterReading();
-                List<String> channelStatus = intervalData.getChannelStatus();
-                List<String> intervalStatus = intervalData.getIntervalStatus();
+                List<Integer> channelStatus = intervalData.getChannelStatus();
+                List<Integer> intervalStatus = intervalData.getIntervalStatus();
                 List<String> readingDate = intervalData.getReadingDate();
 
                 for (int i = 0; i < intervalData.getMeterReading().size(); i++) {
@@ -312,8 +383,8 @@ public class JdbcMeteringDao implements MeteringDao {
                                 PreparedStatement ps = connection.prepareStatement(INSERT_INTERVAL_SQL);
                                 ps.setLong(1, channelHeaderID);
                                 ps.setDouble(2, meterReading.get(index));
-                                ps.setString(3, channelStatus.get(index));
-                                ps.setString(4, intervalStatus.get(index));
+                                ps.setInt(3, channelStatus.get(index));
+                                ps.setInt(4, intervalStatus.get(index));
                                 ps.setString(5, readingDate.get(index));
 
                                 return ps;

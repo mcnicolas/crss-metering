@@ -283,7 +283,6 @@ public class RestUtil {
         String retVal = "";
 
         String fileExt = FilenameUtils.getExtension(path.getFileName().toString());
-        // TODO: determine actual file type XLS, MDEF, CSV
 
         if (equalsIgnoreCase(fileExt, "XLS") || equalsIgnoreCase(fileExt, "XLSX")) {
             retVal = "XLS";

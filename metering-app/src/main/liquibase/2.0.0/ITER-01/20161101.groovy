@@ -28,7 +28,8 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'filetype',        type: 'VARCHAR(5)', remarks: 'Possible values: XLS, MDEF, CSV')
             column(name: 'filesize',        type: 'BIGINT')
             column(name: 'checksum',        type: 'VARCHAR(36)')
-            column(name: 'process_flag',    type: 'CHAR(1)')
+            column(name: 'upload_datetime', type: 'TIMESTAMP')
+            column(name: 'process_flag',    type: 'CHAR(1)', remarks: 'Indicates that the file was parsed')
             column(name: 'status',          type: 'VARCHAR(10)', remarks: 'Possible values: ACCEPTED, REJECTED')
             column(name: 'error_details',   type: 'VARCHAR(250)', remarks: 'Contains any validation errors messages if there are any')
         }
@@ -37,10 +38,10 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'meter_data_id',           type: 'BIGINT') { constraints(primaryKey: true, nullable: false) }
             column(name: 'file_id',                 type: 'BIGINT')
             column(name: 'sein',                    type: 'VARCHAR(20)') { constraints(nullable: false) }
-            column(name: 'interval',                type: 'INT')
+            column(name: 'interval',                type: 'INT', remarks: 'Minute interval in an hour')
             column(name: 'reading_datetime',        type: 'TIMESTAMP')
 
-            // NOTE: Should be able to save variable decimal places. Maximum of 10
+            // NOTE: Should be able to save variable decimal places. Maximum of 17
             column(name: 'kwd',                     type: 'DOUBLE PRECISION')
             column(name: 'kwd_channel_status',      type: 'INT')
             column(name: 'kwd_interval_status',     type: 'INT')
