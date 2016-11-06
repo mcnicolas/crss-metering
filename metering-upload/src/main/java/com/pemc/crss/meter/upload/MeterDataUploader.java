@@ -10,12 +10,14 @@ import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.util.List;
 import java.util.UUID;
+import javax.swing.BorderFactory;
 
 @Slf4j
 public class MeterDataUploader extends JFrame {
@@ -108,7 +110,29 @@ public class MeterDataUploader extends JFrame {
         headerPanel = new HeaderPanel();
         tablePanel = new TablePanel();
         statusBarPanel = new JPanel();
-        uploadStatusPanel = new JPanel();
+        blankPanel = new JPanel();
+        statusPanel = new JPanel();
+        leftStatusPanel = new JPanel();
+        jLabel1 = new JLabel();
+        jLabel4 = new JLabel();
+        centerStatusPanel = new JPanel();
+        jLabel12 = new JLabel();
+        rightStatusPanel = new JPanel();
+        jLabel2 = new JLabel();
+        jLabel3 = new JLabel();
+        uploadProgressPanel = new JPanel();
+        leftUploadPanel = new JPanel();
+        jLabel7 = new JLabel();
+        jLabel6 = new JLabel();
+        centerUploadPanel = new JPanel();
+        jLabel5 = new JLabel();
+        jProgressBar1 = new JProgressBar();
+        rightUploadPanel = new JPanel();
+        jLabel8 = new JLabel();
+        jLabel9 = new JLabel();
+        jLabel10 = new JLabel();
+        jLabel11 = new JLabel();
+        initializeProgressPanel = new JPanel();
         lblUploadStatus = new JLabel();
         uploadProgress = new JProgressBar();
 
@@ -118,20 +142,94 @@ public class MeterDataUploader extends JFrame {
         setPreferredSize(new Dimension(700, 550));
         setResizable(false);
         getContentPane().add(headerPanel, BorderLayout.NORTH);
+
+        tablePanel.setBorder(BorderFactory.createEmptyBorder(3, 3, 0, 3));
         getContentPane().add(tablePanel, BorderLayout.CENTER);
 
-        statusBarPanel.setLayout(new BorderLayout());
+        statusBarPanel.setLayout(new CardLayout());
 
-        uploadStatusPanel.setBorder(new SoftBevelBorder(BevelBorder.LOWERED));
-        uploadStatusPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
+        blankPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 3, 3), new SoftBevelBorder(BevelBorder.LOWERED)));
+        statusBarPanel.add(blankPanel, "blank");
 
-        lblUploadStatus.setText("Uploading");
-        uploadStatusPanel.add(lblUploadStatus);
+        statusPanel.setLayout(new BorderLayout());
+
+        leftStatusPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
+
+        jLabel1.setText("Total Size:");
+        leftStatusPanel.add(jLabel1);
+
+        jLabel4.setText("10MB");
+        leftStatusPanel.add(jLabel4);
+
+        statusPanel.add(leftStatusPanel, BorderLayout.WEST);
+
+        centerStatusPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
+
+        jLabel12.setText("jLabel12");
+        centerStatusPanel.add(jLabel12);
+
+        statusPanel.add(centerStatusPanel, BorderLayout.CENTER);
+
+        rightStatusPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 3), new SoftBevelBorder(BevelBorder.LOWERED)));
+
+        jLabel2.setText("File Count:");
+        rightStatusPanel.add(jLabel2);
+
+        jLabel3.setText("100");
+        rightStatusPanel.add(jLabel3);
+
+        statusPanel.add(rightStatusPanel, BorderLayout.EAST);
+
+        statusBarPanel.add(statusPanel, "Status");
+
+        uploadProgressPanel.setLayout(new BorderLayout());
+
+        leftUploadPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
+
+        jLabel7.setText("Time:");
+        leftUploadPanel.add(jLabel7);
+
+        jLabel6.setText("5:47");
+        leftUploadPanel.add(jLabel6);
+
+        uploadProgressPanel.add(leftUploadPanel, BorderLayout.WEST);
+
+        centerUploadPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
+
+        jLabel5.setText("Uploading: asdf.xls");
+        centerUploadPanel.add(jLabel5);
+        centerUploadPanel.add(jProgressBar1);
+
+        uploadProgressPanel.add(centerUploadPanel, BorderLayout.CENTER);
+
+        rightUploadPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 3), new SoftBevelBorder(BevelBorder.LOWERED)));
+
+        jLabel8.setText("Upload Speed:");
+        rightUploadPanel.add(jLabel8);
+
+        jLabel9.setText("750 KB/s");
+        rightUploadPanel.add(jLabel9);
+
+        jLabel10.setText("Time Remaining:");
+        rightUploadPanel.add(jLabel10);
+
+        jLabel11.setText("5:34");
+        rightUploadPanel.add(jLabel11);
+
+        uploadProgressPanel.add(rightUploadPanel, BorderLayout.EAST);
+
+        statusBarPanel.add(uploadProgressPanel, "Upload");
+
+        initializeProgressPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 1, 3), new SoftBevelBorder(BevelBorder.LOWERED)));
+        initializeProgressPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
+
+        lblUploadStatus.setText("Loading MSP Data");
+        initializeProgressPanel.add(lblUploadStatus);
 
         uploadProgress.setPreferredSize(new Dimension(300, 20));
-        uploadStatusPanel.add(uploadProgress);
+        initializeProgressPanel.add(uploadProgress);
 
-        statusBarPanel.add(uploadStatusPanel, BorderLayout.SOUTH);
+        statusBarPanel.add(initializeProgressPanel, "Initialize");
 
         getContentPane().add(statusBarPanel, BorderLayout.SOUTH);
 
@@ -140,12 +238,34 @@ public class MeterDataUploader extends JFrame {
     }//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private JPanel blankPanel;
+    private JPanel centerStatusPanel;
+    private JPanel centerUploadPanel;
     private HeaderPanel headerPanel;
+    private JPanel initializeProgressPanel;
+    private JLabel jLabel1;
+    private JLabel jLabel10;
+    private JLabel jLabel11;
+    private JLabel jLabel12;
+    private JLabel jLabel2;
+    private JLabel jLabel3;
+    private JLabel jLabel4;
+    private JLabel jLabel5;
+    private JLabel jLabel6;
+    private JLabel jLabel7;
+    private JLabel jLabel8;
+    private JLabel jLabel9;
+    private JProgressBar jProgressBar1;
     private JLabel lblUploadStatus;
+    private JPanel leftStatusPanel;
+    private JPanel leftUploadPanel;
+    private JPanel rightStatusPanel;
+    private JPanel rightUploadPanel;
     private JPanel statusBarPanel;
+    private JPanel statusPanel;
     private TablePanel tablePanel;
     private JProgressBar uploadProgress;
-    private JPanel uploadStatusPanel;
+    private JPanel uploadProgressPanel;
     // End of variables declaration//GEN-END:variables
 
 }
