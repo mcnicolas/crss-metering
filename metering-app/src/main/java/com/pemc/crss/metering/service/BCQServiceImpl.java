@@ -23,10 +23,12 @@ public class BCQServiceImpl implements BCQService {
     @NonNull
     private final BCQReader reader;
 
+    @Override
     public long saveBCQUploadFile(String transactionID, BCQUploadFile bcqUploadFile) {
         return bcqDao.saveBCQUploadFile(transactionID, bcqUploadFile);
     }
 
+    @Override
     public void saveBCQData(long fileID, byte[] fileContent) throws IOException {
         bcqDao.saveBCQData(fileID, reader.readData(new ByteArrayInputStream(fileContent)));
     }
