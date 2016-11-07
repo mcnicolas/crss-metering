@@ -7,7 +7,7 @@ import lombok.Data;
 public class BCQUploadFile {
 
     private long fileID;
-    private long transactionID;
+    private String transactionID;
     private String fileName;
     private long fileSize;
     private BCQStatus status;

@@ -4,6 +4,7 @@ import com.pemc.crss.metering.dto.BCQData;
 import com.pemc.crss.metering.dto.BCQUploadFile;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Repository
+@Slf4j
 public class JdbcBCQDao implements BCQDao {
 
     @Value("${bcq.manifest}")
@@ -35,7 +37,7 @@ public class JdbcBCQDao implements BCQDao {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
-                    PreparedStatement ps = connection.prepareStatement(insertManifest);
+                    PreparedStatement ps = connection.prepareStatement(insertManifest, new String[]{"file_id"});
                     ps.setString(1, transactionID);
                     ps.setString(2, bcqUploadFile.getFileName());
                     ps.setLong(3, bcqUploadFile.getFileSize());
@@ -49,11 +51,11 @@ public class JdbcBCQDao implements BCQDao {
     }
 
     @Override
-    public void saveBCQData(long fileID, List<BCQData> bcqDataList) {
+    public void saveBCQData(long fileID, List<BCQData> dataList) {
         jdbcTemplate.batchUpdate(insertData, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
-                BCQData bcqData = bcqDataList.get(i);
+                BCQData bcqData = dataList.get(i);
                 ps.setLong(1, fileID);
                 ps.setString(2, bcqData.getSellingMTN());
                 ps.setString(3, bcqData.getBuyingParticipant());
@@ -65,7 +67,7 @@ public class JdbcBCQDao implements BCQDao {
 
             @Override
             public int getBatchSize() {
-                return bcqDataList.size();
+                return dataList.size();
             }
         });
     }

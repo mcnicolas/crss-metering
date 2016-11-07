@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.service;
 
 import com.pemc.crss.metering.dao.BCQDao;
+import com.pemc.crss.metering.dto.BCQData;
 import com.pemc.crss.metering.dto.BCQUploadFile;
 import com.pemc.crss.metering.parser.bcq.BCQReader;
 import lombok.NonNull;
@@ -9,8 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -29,7 +29,7 @@ public class BCQServiceImpl implements BCQService {
     }
 
     @Override
-    public void saveBCQData(long fileID, byte[] fileContent) throws IOException {
-        bcqDao.saveBCQData(fileID, reader.readData(new ByteArrayInputStream(fileContent)));
+    public void saveBCQData(long fileID, List<BCQData> dataList) {
+        bcqDao.saveBCQData(fileID, dataList);
     }
 }
