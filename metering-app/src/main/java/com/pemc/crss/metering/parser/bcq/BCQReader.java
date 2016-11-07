@@ -44,7 +44,7 @@ public class BCQReader implements QuantityReader<BCQData> {
 
             List<String> row;
             while ((row = reader.read()) != null) {
-                int currentLineNo = reader.getLineNumber() - 2;
+                int currentLineNo = reader.getLineNumber();
                 BCQValidator.validateLine(row, currentLineNo);
                 BCQData data = getData(row, interval);
 
