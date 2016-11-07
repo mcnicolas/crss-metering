@@ -26,6 +26,16 @@ public class BCQReaderTest {
     }
 
     @Test
+    public void parseWithHourlyIntervalAndMultipleBuyers() throws IOException {
+        BCQReader reader = new BCQReader();
+        List<BCQData> dataList = reader.readData(new FileInputStream(
+                new File(BCQReaderTest.class.getClassLoader().getResource(
+                        "bcq/sample_bcq_file_hourly_with_multiple_buyers.csv").getFile())));
+
+        assertThat(dataList.size(), is(equalTo(48)));
+    }
+
+    @Test
     public void parseWithQuarterlyInterval() throws IOException {
         BCQReader reader = new BCQReader();
         List<BCQData> dataList = reader.readData(new FileInputStream(

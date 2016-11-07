@@ -6,6 +6,8 @@ import com.pemc.crss.metering.parser.bcq.util.BCQParserUtil;
 import com.pemc.crss.metering.validator.BCQValidator;
 import com.pemc.crss.metering.validator.exception.ValidationException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Component;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.io.ICsvListReader;
@@ -13,10 +15,9 @@ import org.supercsv.io.ICsvListReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 
@@ -30,7 +31,7 @@ public class BCQReader implements QuantityReader<BCQData> {
 
     @Override
     public List<BCQData> readData(InputStream inputStream) throws IOException {
-        List<BCQData> dataList = new ArrayList<>();
+        Map<Pair<String, String>, List<BCQData>> dataListMap = new HashMap<>();
         BCQInterval interval;
 
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
@@ -41,21 +42,35 @@ public class BCQReader implements QuantityReader<BCQData> {
             //skip header
             reader.read();
 
-            int currentRow = 1;
             List<String> row;
             while ((row = reader.read()) != null) {
-                BCQValidator.validateCsvRow(row, currentRow);
+                int currentLineNo = reader.getLineNumber() - 2;
+                BCQValidator.validateLine(row, currentLineNo);
                 BCQData data = getData(row, interval);
-                BCQValidator.validateNextData(dataList, data, interval);
-                dataList.add(data);
-                currentRow ++;
+
+                String sellingMTN = data.getSellingMTN();
+                String buyingParticipant = data.getBuyingParticipant();
+                Pair<String, String> sellerBuyerKey = new ImmutablePair<>(sellingMTN, buyingParticipant);
+
+                if (!dataListMap.containsKey(sellerBuyerKey)) {
+                    dataListMap.put(sellerBuyerKey, new ArrayList<>());
+                }
+
+                BCQValidator.validateNextData(dataListMap.get(sellerBuyerKey), data, interval, currentLineNo);
+
+                dataListMap.get(sellerBuyerKey).add(data);
             }
         } catch(ValidationException e) {
             e.printStackTrace();
             return null;
         }
 
-        return finalizeData(dataList, interval);
+        List<BCQData> mergedDataList = dataListMap.values()
+                .stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        return finalizeData(mergedDataList, interval);
     }
 
     private List<BCQData> finalizeData(List<BCQData> dataList, BCQInterval interval) {
