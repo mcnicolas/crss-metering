@@ -26,6 +26,7 @@ import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 public class BCQReader implements QuantityReader<BCQData> {
 
     private static final long DEFAULT_INTERVAL_CONFIG = TimeUnit.MINUTES.toMillis(5);
+    private static final long DEFAULT_TIMEFRAME_CONFIG = TimeUnit.DAYS.toMillis(1);
     private static final int QUARTERLY_DIVISOR = 3;
     private static final int HOURLY_DIVISOR = 12;
 
@@ -45,7 +46,7 @@ public class BCQReader implements QuantityReader<BCQData> {
             List<String> row;
             while ((row = reader.read()) != null) {
                 int currentLineNo = reader.getLineNumber();
-                BCQValidator.validateLine(row, currentLineNo);
+                BCQValidator.validateLine(row, currentLineNo, DEFAULT_TIMEFRAME_CONFIG);
                 BCQData data = getData(row, interval);
 
                 String sellingMTN = data.getSellingMTN();

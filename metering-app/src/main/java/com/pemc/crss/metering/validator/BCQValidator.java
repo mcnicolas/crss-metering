@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 
 public class BCQValidator {
 
+
+    private static final int TIME_FRAME_CONFIG = 5;
     private static final int NUMBER_OF_COLUMNS = 5;
 
     private BCQValidator() {}
@@ -23,14 +25,15 @@ public class BCQValidator {
         }
     }
 
-    public static void validateLine(List<String> row, int currentLineNo) throws ValidationException {
+    public static void validateLine(List<String> row, int currentLineNo, long timeFrameMillis)
+            throws ValidationException {
         if (row.size() != NUMBER_OF_COLUMNS) {
             throw new ValidationException(String.format("Incorrect number of columns in line %d", currentLineNo));
         } else {
             validateSellingMTN(row.get(0), currentLineNo);
             validateBuyingParticipant(row.get(1), currentLineNo);
             validateReferenceMTN(row.get(2), currentLineNo);
-            validateEndTime(row.get(3), currentLineNo);
+            validateEndTime(row.get(3), currentLineNo, timeFrameMillis);
             validateBCQ(row.get(4), currentLineNo);
         }
     }
@@ -50,7 +53,7 @@ public class BCQValidator {
                     currentLineNo, TimeUnit.MINUTES.convert(interval.getTimeInMillis(), TimeUnit.MILLISECONDS)));
         }
 
-        checkDuplicates(dataList, nextData);
+        checkDuplicates(dataList, nextData, currentLineNo);
     }
 
     private static void validateSellingMTN(String sellingMTN, int currentLineNo) throws ValidationException {
@@ -59,9 +62,11 @@ public class BCQValidator {
         }
     }
 
-    private static void validateBuyingParticipant(String buyingParticipant, int currentLineNo) throws ValidationException {
+    private static void validateBuyingParticipant(String buyingParticipant, int currentLineNo)
+            throws ValidationException {
         if (buyingParticipant == null) {
-            throw new ValidationException(String.format("Buying participant in line %d cannot be null.", currentLineNo));
+            throw new ValidationException(String.format("Buying participant in line %d cannot be null.",
+                    currentLineNo));
         }
     }
 
@@ -71,12 +76,32 @@ public class BCQValidator {
         }
     }
 
-    private static void validateEndTime(String endTime, int currentLineNo) throws ValidationException {
+    private static void validateEndTime(String endTime, int currentLineNo, long timeFrameMillis)
+            throws ValidationException {
         if (endTime == null) {
             throw new ValidationException(String.format("End time in line %d cannot be null.", currentLineNo));
         } else {
-            if (BCQParserUtil.parseDateTime(endTime) == null) {
+            Date parsedDate = BCQParserUtil.parseDateTime(endTime);
+            if (parsedDate == null) {
                 throw new ValidationException(String.format("End time in line %d is not a valid date.", currentLineNo));
+            } else {
+                validateEndTimeWithTimeFrame(parsedDate, currentLineNo, timeFrameMillis);
+            }
+        }
+    }
+
+    private static void validateEndTimeWithTimeFrame(Date endTime, int currentLineNo, long timeFrameMillis)
+            throws ValidationException {
+        Date today = new Date();
+
+        if (removeTime(endTime).getTime() - removeTime(today).getTime() > timeFrameMillis) {
+            throw new ValidationException(String.format("End time in line %d cannot be after the date today.",
+                    currentLineNo));
+        } else {
+            if (removeTime(today).getTime() - removeTime(endTime).getTime() > timeFrameMillis) {
+                throw new ValidationException(
+                        String.format("Difference between today and end time in line %d cannot be greater than 1 day.",
+                                currentLineNo));
             }
         }
     }
@@ -86,24 +111,23 @@ public class BCQValidator {
             throw new ValidationException(String.format("BCQ in line %d cannot be null.", currentLineNo));
         } else {
             if (!NumberUtils.isParsable(bcqString)) {
-                throw new ValidationException(String.format("BCQ in line %d (%s) is not a valid BCQ.", currentLineNo, bcqString));
+                throw new ValidationException(String.format("BCQ in line %d (%s) is not a valid BCQ.",
+                        currentLineNo, bcqString));
             }
         }
     }
 
-    private static void checkDuplicates(List<BCQData> dataList, BCQData dataToAdd) throws ValidationException {
-        int currentLineNo = 1;
-
+    private static void checkDuplicates(List<BCQData> dataList, BCQData dataToAdd, int currentLineNo)
+            throws ValidationException {
         for (BCQData data: dataList) {
             if (data.getSellingMTN().equals(dataToAdd.getSellingMTN())
                     && data.getBuyingParticipant().equals(dataToAdd.getBuyingParticipant())
                     && data.getEndTime().equals(dataToAdd.getEndTime())) {
                 throw new ValidationException(
-                        String.format("Line %d contains duplicate values with line %d",
-                                currentLineNo, dataList.size() + 1));
+                        String.format("Line %d is repeated. " +
+                                "Selling MTN: %s, Buying Participant: %s, End Time: %s",
+                                currentLineNo, data.getSellingMTN(), data.getBuyingParticipant(), data.getEndTime()));
             }
-
-            currentLineNo ++;
         }
     }
 
