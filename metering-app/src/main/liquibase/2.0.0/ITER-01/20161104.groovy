@@ -18,7 +18,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'bcq_data_id',         type: 'BIGINT') { constraints(primaryKey: true, nullable: false) }
             column(name: 'file_id',             type: 'BIGINT') { constraints(nullable: false) }
             column(name: 'selling_mtn',         type: 'VARCHAR(255)') { constraints(nullable: false) }
-            column(name: 'buying_participant',  type: 'VARCHAR(255) remarks: Participant short name') { constraints(nullable: false) }
+            column(name: 'buying_participant',  type: 'VARCHAR(255)', remarks: 'Participant short name') { constraints(nullable: false) }
             column(name: 'reference_mtn',       type: 'VARCHAR(255)') { constraints(nullable: false) }
             column(name: 'start_time',          type: 'TIMESTAMP') { constraints(nullable: false) }
             column(name: 'end_time',            type: 'TIMESTAMP') { constraints(nullable: false) }
