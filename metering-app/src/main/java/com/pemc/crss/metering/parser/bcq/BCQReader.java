@@ -1,7 +1,6 @@
 package com.pemc.crss.metering.parser.bcq;
 
 import com.pemc.crss.metering.dto.BCQData;
-import com.pemc.crss.metering.parser.QuantityReader;
 import com.pemc.crss.metering.parser.bcq.util.BCQParserUtil;
 import com.pemc.crss.metering.validator.BCQValidator;
 import com.pemc.crss.metering.validator.exception.ValidationException;
@@ -23,15 +22,14 @@ import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 
 @Slf4j
 @Component
-public class BCQReader implements QuantityReader<BCQData> {
+public class BCQReader {
 
     private static final long DEFAULT_INTERVAL_CONFIG = TimeUnit.MINUTES.toMillis(5);
     private static final long DEFAULT_TIMEFRAME_CONFIG = TimeUnit.DAYS.toMillis(1);
     private static final int QUARTERLY_DIVISOR = 3;
     private static final int HOURLY_DIVISOR = 12;
 
-    @Override
-    public List<BCQData> readData(InputStream inputStream) throws IOException {
+    public List<BCQData> readData(InputStream inputStream) throws IOException, ValidationException {
         Map<Pair<String, String>, List<BCQData>> dataListMap = new HashMap<>();
         BCQInterval interval;
 
@@ -61,9 +59,6 @@ public class BCQReader implements QuantityReader<BCQData> {
 
                 dataListMap.get(sellerBuyerKey).add(data);
             }
-        } catch(ValidationException e) {
-            e.printStackTrace();
-            return null;
         }
 
         List<BCQData> mergedDataList = dataListMap.values()
@@ -101,6 +96,8 @@ public class BCQReader implements QuantityReader<BCQData> {
         for (int count = 1; count <= divisor; count ++) {
             BCQData partialData = new BCQData();
             partialData.setSellingMTN(data.getSellingMTN());
+            partialData.setBuyingParticipant(data.getBuyingParticipant());
+            partialData.setReferenceMTN(data.getReferenceMTN());
             partialData.setStartTime(currentStartTime);
             partialData.setEndTime(new Date(currentStartTime.getTime() + DEFAULT_INTERVAL_CONFIG));
             partialData.setBcq(currentBCQ / divisor);
