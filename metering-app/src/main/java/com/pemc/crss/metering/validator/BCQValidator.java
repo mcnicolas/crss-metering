@@ -20,8 +20,12 @@ public class BCQValidator {
     private BCQValidator() {}
 
     public static void validateInterval(String intervalString) throws ValidationException {
-        if(BCQInterval.fromDescription(intervalString) == null) {
-            throw new ValidationException("Interval is missing or not valid.");
+        if (intervalString == null) {
+            throw new ValidationException("Interval cannot be null.");
+        } else {
+            if(BCQInterval.fromDescription(intervalString) == null) {
+                throw new ValidationException(String.format("Interval (%s) is not valid.", intervalString));
+            }
         }
     }
 
@@ -49,8 +53,10 @@ public class BCQValidator {
 
         if((nextDataEndTime - prevDataEndTime) != interval.getTimeInMillis()) {
             throw new ValidationException(String.format(
-                    "End time in line %d is not appropriate. Interval must be %s minutes.",
-                    currentLineNo, TimeUnit.MINUTES.convert(interval.getTimeInMillis(), TimeUnit.MILLISECONDS)));
+                    "End time (%d) in line %d is not appropriate. Interval must be %s minutes.",
+                    nextDataEndTime,
+                    currentLineNo,
+                    TimeUnit.MINUTES.convert(interval.getTimeInMillis(), TimeUnit.MILLISECONDS)));
         }
 
         checkDuplicates(dataList, nextData, currentLineNo);
@@ -83,7 +89,8 @@ public class BCQValidator {
         } else {
             Date parsedDate = BCQParserUtil.parseDateTime(endTime);
             if (parsedDate == null) {
-                throw new ValidationException(String.format("End time in line %d is not a valid date.", currentLineNo));
+                throw new ValidationException(String.format("End time (%s) in line %d is not a valid date.",
+                        endTime, currentLineNo));
             } else {
                 validateEndTimeWithTimeFrame(parsedDate, currentLineNo, timeFrameMillis);
             }
@@ -95,13 +102,13 @@ public class BCQValidator {
         Date today = new Date();
 
         if (removeTime(endTime).getTime() - removeTime(today).getTime() > timeFrameMillis) {
-            throw new ValidationException(String.format("End time in line %d cannot be after the date today.",
+            throw new ValidationException(String.format("End time in line %d cannot be later than tomorrow midnight.",
                     currentLineNo));
         } else {
             if (removeTime(today).getTime() - removeTime(endTime).getTime() > timeFrameMillis) {
                 throw new ValidationException(
-                        String.format("Difference between today and end time in line %d cannot be greater than 1 day.",
-                                currentLineNo));
+                        String.format("End time (%d) in line %d cannot be earlier than yesterday midnight.",
+                                endTime, currentLineNo));
             }
         }
     }
