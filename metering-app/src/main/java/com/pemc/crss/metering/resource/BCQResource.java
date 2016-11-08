@@ -34,6 +34,7 @@ public class BCQResource {
         BCQUploadFileInfo fileInfo = new BCQUploadFileInfo();
         fileInfo.setFileName(file.getOriginalFilename());
         fileInfo.setFileSize(file.getSize());
+        fileInfo.setStatus(null);
 
         List<BCQDataInfo> dataInfoList = new ArrayList<>();
 
@@ -56,7 +57,7 @@ public class BCQResource {
         BCQUploadFile uploadFile = new BCQUploadFile();
         uploadFile.setFileName(details.getFileInfo().getFileName());
         uploadFile.setFileSize(details.getFileInfo().getFileSize());
-        uploadFile.setStatus(BCQStatus.NOT_CONFIRMED);
+        uploadFile.setStatus(BCQStatus.fromString(details.getFileInfo().getStatus()));
 
         List<BCQData> dataList = new ArrayList<>();
 
