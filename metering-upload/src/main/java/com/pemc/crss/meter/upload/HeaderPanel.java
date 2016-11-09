@@ -59,7 +59,10 @@ public class HeaderPanel extends JPanel {
 
         categoryComboBoxModel = new DefaultComboBoxModel<>(
             new String[]{
-                "Daily", "Monthly", "Corrected Meter Data"
+                "Daily",
+                "Monthly",
+                "Corrected Meter Data (Daily)",
+                "Corrected Meter Data (Monthly"
             }
         );
         mspComboBoxModel = new DefaultComboBoxModel<>(
@@ -88,7 +91,7 @@ public class HeaderPanel extends JPanel {
         lblMSP = new JLabel();
         cboMSP = new JComboBox<>();
 
-        categoryComboBoxModel.setSelectedItem("Monthly");
+        categoryComboBoxModel.setSelectedItem("Daily");
 
         setLayout(new BorderLayout());
 

@@ -5,11 +5,11 @@
     <Component class="javax.swing.DefaultComboBoxModel" name="categoryComboBoxModel">
       <Properties>
         <Property name="selectedItem" type="java.lang.Object" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-          <Connection code="&quot;Monthly&quot;" type="code"/>
+          <Connection code="&quot;Daily&quot;" type="code"/>
         </Property>
       </Properties>
       <AuxValues>
-        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new DefaultComboBoxModel&lt;&gt;(&#xa;    new String[]{&#xa;        &quot;Daily&quot;, &quot;Monthly&quot;, &quot;Corrected Meter Data&quot;&#xa;    }&#xa;)"/>
+        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new DefaultComboBoxModel&lt;&gt;(&#xa;    new String[]{&#xa;        &quot;Daily&quot;,&#xa;        &quot;Monthly&quot;,&#xa;        &quot;Corrected Meter Data (Daily)&quot;,&#xa;        &quot;Corrected Meter Data (Monthly&quot;&#xa;    }&#xa;)"/>
       </AuxValues>
     </Component>
     <Component class="javax.swing.DefaultComboBoxModel" name="mspComboBoxModel">
