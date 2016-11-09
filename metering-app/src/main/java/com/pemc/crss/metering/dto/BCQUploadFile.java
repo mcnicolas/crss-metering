@@ -3,6 +3,8 @@ package com.pemc.crss.metering.dto;
 import com.pemc.crss.metering.constants.BCQStatus;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 public class BCQUploadFile {
 
@@ -11,5 +13,6 @@ public class BCQUploadFile {
     private String fileName;
     private long fileSize;
     private BCQStatus status;
+    private Date submittedDate;
 
 }
