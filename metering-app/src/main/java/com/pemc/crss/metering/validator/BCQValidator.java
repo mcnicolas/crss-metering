@@ -51,6 +51,8 @@ public class BCQValidator {
             prevDataEndTime = dataList.get(dataList.size() - 1).getEndTime().getTime();
         }
 
+        checkDuplicates(dataList, nextData, currentLineNo);
+
         if((nextDataEndTime - prevDataEndTime) != interval.getTimeInMillis()) {
             throw new ValidationException(String.format(
                     "End time (%s) in line %d is not appropriate. Interval must be %s minutes.",
@@ -58,8 +60,6 @@ public class BCQValidator {
                     currentLineNo,
                     TimeUnit.MINUTES.convert(interval.getTimeInMillis(), TimeUnit.MILLISECONDS)));
         }
-
-        checkDuplicates(dataList, nextData, currentLineNo);
     }
 
     private static void validateSellingMTN(String sellingMTN, int currentLineNo) throws ValidationException {
@@ -133,7 +133,10 @@ public class BCQValidator {
                 throw new ValidationException(
                         String.format("Line %d is repeated. " +
                                 "Selling MTN: %s, Buying Participant: %s, End Time: %s",
-                                currentLineNo, data.getSellingMTN(), data.getBuyingParticipant(), data.getEndTime()));
+                                currentLineNo,
+                                data.getSellingMTN(),
+                                data.getBuyingParticipant(),
+                                DateFormatUtils.format(data.getEndTime(), DATE_FORMAT)));
             }
         }
     }
