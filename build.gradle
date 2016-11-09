@@ -96,5 +96,5 @@ subprojects {
 }
 
 configure(subprojects - project(':commons-web') - project(':commons-service')) {
-    apply plugin: 'spring-boot'
+    apply plugin: 'org.springframework.boot'
 }
