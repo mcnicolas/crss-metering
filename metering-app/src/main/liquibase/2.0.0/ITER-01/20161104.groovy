@@ -8,10 +8,11 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
         createTable(tableName: 'txn_bcq_upload_file', remarks: 'BCQ upload file') {
             column(name: 'file_id',         type: 'BIGINT')  { constraints(primaryKey: true, nullable: false) }
             column(name: 'transaction_id',  type: 'VARCHAR(36)') { constraints(nullable: false) }
-            column(name: 'file_name',        type: 'VARCHAR(50)')
-            column(name: 'file_size',        type: 'BIGINT')
+            column(name: 'file_name',       type: 'VARCHAR(50)')
+            column(name: 'file_size',       type: 'BIGINT')
             column(name: 'status',          type: 'VARCHAR(13)', remarks:
                     'Possible values: CONFIRMED, NOT_CONFIRMED, NULLIFIED, NOT_NULLIFIED')
+            column(name: 'submitted_date',  type: 'TIMESTAMP')
         }
 
         createTable(tableName: 'txn_bcq_data', remarks: 'BCQ data') {

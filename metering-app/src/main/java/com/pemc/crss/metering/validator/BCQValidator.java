@@ -5,6 +5,7 @@ import com.pemc.crss.metering.parser.bcq.BCQInterval;
 import com.pemc.crss.metering.parser.bcq.util.BCQParserUtil;
 import com.pemc.crss.metering.validator.exception.ValidationException;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -13,8 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 public class BCQValidator {
 
-
-    private static final int TIME_FRAME_CONFIG = 5;
+    private static final String DATE_FORMAT = "MM-dd-yyyy HH:mm";
     private static final int NUMBER_OF_COLUMNS = 5;
 
     private BCQValidator() {}
@@ -53,8 +53,8 @@ public class BCQValidator {
 
         if((nextDataEndTime - prevDataEndTime) != interval.getTimeInMillis()) {
             throw new ValidationException(String.format(
-                    "End time (%d) in line %d is not appropriate. Interval must be %s minutes.",
-                    nextDataEndTime,
+                    "End time (%s) in line %d is not appropriate. Interval must be %s minutes.",
+                    DateFormatUtils.format(nextDataEndTime, DATE_FORMAT),
                     currentLineNo,
                     TimeUnit.MINUTES.convert(interval.getTimeInMillis(), TimeUnit.MILLISECONDS)));
         }
@@ -107,8 +107,8 @@ public class BCQValidator {
         } else {
             if (removeTime(today).getTime() - removeTime(endTime).getTime() > timeFrameMillis) {
                 throw new ValidationException(
-                        String.format("End time (%d) in line %d cannot be earlier than yesterday midnight.",
-                                endTime, currentLineNo));
+                        String.format("End time (%s) in line %d cannot be earlier than yesterday midnight.",
+                                DateFormatUtils.format(endTime, DATE_FORMAT), currentLineNo));
             }
         }
     }

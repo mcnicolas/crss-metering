@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -58,6 +59,7 @@ public class BCQResource {
         uploadFile.setFileName(details.getFileInfo().getFileName());
         uploadFile.setFileSize(details.getFileInfo().getFileSize());
         uploadFile.setStatus(BCQStatus.fromString(details.getFileInfo().getStatus()));
+        uploadFile.setSubmittedDate(new Date());
 
         List<BCQData> dataList = new ArrayList<>();
 
