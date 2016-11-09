@@ -22,8 +22,16 @@ import java.util.List;
 import static com.pemc.crss.meter.upload.SelectedFileUtils.retrieveFileListing;
 import static javax.swing.JFileChooser.APPROVE_OPTION;
 import static javax.swing.JFileChooser.FILES_AND_DIRECTORIES;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 public class HeaderPanel extends JPanel {
+
+    private FileFilter fileFilterXLS = new FileNameExtensionFilter("Excel Files (xls, xlsx)",
+            "xls", "xlsx");
+    private FileFilter fileFilterMDEF = new FileNameExtensionFilter("MDEF Files (mde)",
+            "mde");
+    private FileFilter fileFilterCSV = new FileNameExtensionFilter("CSV Files (csv)",
+            "csv");
 
     private MeterDataUploader parent;
 
@@ -33,6 +41,11 @@ public class HeaderPanel extends JPanel {
 
     public void configureComponents(MeterDataUploader parent) {
         this.parent = parent;
+
+        cboCategory.addItem(new ComboBoxItem("DAILY", "Daily"));
+        cboCategory.addItem(new ComboBoxItem("MONTHLY", "Monthly"));
+        cboCategory.addItem(new ComboBoxItem("CORRECTED_DAILY", "Corrected Meter Data (Daily)"));
+        cboCategory.addItem(new ComboBoxItem("CORRECTED_MONTHLY", "Corrected Meter Data (Monthly)"));
     }
 
     public void configureServices() {
@@ -57,27 +70,14 @@ public class HeaderPanel extends JPanel {
     private void initComponents() {//GEN-BEGIN:initComponents
         GridBagConstraints gridBagConstraints;
 
-        categoryComboBoxModel = new DefaultComboBoxModel<>(
-            new String[]{
-                "Daily",
-                "Monthly",
-                "Corrected Meter Data (Daily)",
-                "Corrected Meter Data (Monthly"
-            }
-        );
         mspComboBoxModel = new DefaultComboBoxModel<>(
-            new String[]{
-                "Manila Electric Company",
-                "Ibaan Electric and Engineering Corporation",
-                "National Grid Corporation of the Phils",
-                "Peninsula Electric Cooperative",
-                "Exemplar Enterprise Inc. (Puyat Flooring Products Inc.)"
-            }
-        );
-        filetypeComboBoxModel = new DefaultComboBoxModel<>(
-            new String[]{
-                "XLS, XLSX", "CSV", "MDEF"
-            }
+                new String[]{
+                        "Manila Electric Company",
+                        "Ibaan Electric and Engineering Corporation",
+                        "National Grid Corporation of the Phils",
+                        "Peninsula Electric Cooperative",
+                        "Exemplar Enterprise Inc. (Puyat Flooring Products Inc.)"
+                }
         );
         toolbarPanel = new JPanel();
         btnSelectFiles = new JButton();
@@ -90,8 +90,6 @@ public class HeaderPanel extends JPanel {
         cboCategory = new JComboBox<>();
         lblMSP = new JLabel();
         cboMSP = new JComboBox<>();
-
-        categoryComboBoxModel.setSelectedItem("Daily");
 
         setLayout(new BorderLayout());
 
@@ -161,8 +159,6 @@ public class HeaderPanel extends JPanel {
         gridBagConstraints.anchor = GridBagConstraints.WEST;
         gridBagConstraints.insets = new Insets(0, 5, 0, 5);
         fieldPanel.add(lblCategory, gridBagConstraints);
-
-        cboCategory.setModel(categoryComboBoxModel);
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
@@ -193,13 +189,12 @@ public class HeaderPanel extends JPanel {
     private void selectFilesActionPerformed(ActionEvent evt) {//GEN-FIRST:event_selectFilesActionPerformed
         JFileChooser fileChooser = new JFileChooser();
 
-        FileFilter fileFilterXLS = new FileNameExtensionFilter("Excel Files (xls, xlsx)", "xls", "xlsx");
-        FileFilter fileFilterMDEF = new FileNameExtensionFilter("MDEF Files (mde)", "mde");
-        FileFilter fileFilterCSV = new FileNameExtensionFilter("CSV Files (csv)", "csv");
+        String selectedCategory = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
+        if (equalsIgnoreCase(selectedCategory, "DAILY")) {
+            fileChooser.addChoosableFileFilter(fileFilterMDEF);
+        }
 
-        // TODO: Dynamic depending on the selected data category
         fileChooser.addChoosableFileFilter(fileFilterXLS);
-        fileChooser.addChoosableFileFilter(fileFilterMDEF);
         fileChooser.addChoosableFileFilter(fileFilterCSV);
         fileChooser.setAcceptAllFileFilterUsed(false);
 
@@ -246,11 +241,9 @@ public class HeaderPanel extends JPanel {
     private JButton btnSettings;
     private JButton btnSettings2;
     private JButton btnUpload;
-    private DefaultComboBoxModel categoryComboBoxModel;
-    private JComboBox<String> cboCategory;
+    private JComboBox<ComboBoxItem> cboCategory;
     private JComboBox<String> cboMSP;
     private JPanel fieldPanel;
-    private DefaultComboBoxModel filetypeComboBoxModel;
     private JLabel lblCategory;
     private JLabel lblMSP;
     private DefaultComboBoxModel mspComboBoxModel;

@@ -12,7 +12,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'transaction_id',        type: 'VARCHAR(36)') { constraints(nullable: false, unique: true) }
             column(name: 'msp_id',                type: 'BIGINT', remarks: 'MSP Registration ID')
             column(name: 'file_count',            type: 'INT', remarks: 'The number of files declared to be uploaded')
-            column(name: 'category',              type: 'VARCHAR(20)', remarks: 'Possible values: DAILY, MONTHLY, CORRECTED_METER_DATA')
+            column(name: 'category',              type: 'VARCHAR(20)', remarks: 'Possible values: DAILY, MONTHLY, CORRECTED_DAILY, CORRECTED_MONTHLY')
             column(name: 'notification_sent',     type: 'CHAR(1)', remarks: 'Indicates that a notification was sent. Possible values: Y/N')
             column(name: 'notification_datetime', type: 'TIMESTAMP')
             column(name: 'tail_received',         type: 'CHAR(1)', remarks: 'Indicates that the trailer record was received and that the upload was successful')
