@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -63,6 +64,12 @@ public class FileTableModel extends AbstractTableModel {
     public void setFileList(List<FileBean> fileList) {
         // TODO: Dirty code. Need to optimize further.
         this.fileList = fileList;
+
+        fireTableDataChanged();
+    }
+
+    public void clearFileList() {
+        this.fileList = new ArrayList<>();
 
         fireTableDataChanged();
     }

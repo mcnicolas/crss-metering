@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.WindowConstants;
@@ -18,6 +19,8 @@ import java.awt.GraphicsEnvironment;
 import java.util.List;
 import java.util.UUID;
 import javax.swing.BorderFactory;
+
+import static javax.swing.JOptionPane.ERROR_MESSAGE;
 
 @Slf4j
 public class MeterDataUploader extends JFrame {
@@ -45,14 +48,14 @@ public class MeterDataUploader extends JFrame {
     }
 
     // TODO:
-    // 1. Handle disabling of upload button when not logged in
-    // 2. Display progress bar
+    // 1. Display progress bar
     public void uploadData(String category, int mspID) {
         String transactionID = UUID.randomUUID().toString();
 
         List<FileBean> selectedFiles = tablePanel.getSelectedFiles();
 
         if (token != null) {
+            // TODO: Add error handling. When an error is encountered throw an exception.
             RestUtil.sendHeader(transactionID, username, selectedFiles.size(), category, mspID, token);
         }
 
@@ -77,13 +80,32 @@ public class MeterDataUploader extends JFrame {
             userType = RestUtil.getUserType(token);
             this.username = username;
 
-            log.debug("Logged in with token: {}", token);
-            log.debug("User type: {}", userType);
+            if (token == null) {
+                JOptionPane.showMessageDialog(this, "Invalid login", "Error", ERROR_MESSAGE);
+            } else {
+                log.debug("Logged in with token: {}", token);
+                log.debug("User type: {}", userType);
+
+                headerPanel.enableToolbar();
+            }
         } catch (LoginException e) {
             log.error(e.getMessage(), e);
 
             // TODO: Handle error
         }
+    }
+
+    public void logout() {
+        token = null;
+        username = null;
+
+        tablePanel.clearSelectedFiles();
+
+        // TODO: Reset status bar
+    }
+
+    public void clearSelectedFiles() {
+        tablePanel.clearSelectedFiles();
     }
 
     private void centerOnScreen() {

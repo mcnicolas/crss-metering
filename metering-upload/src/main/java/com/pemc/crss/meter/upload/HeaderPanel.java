@@ -19,6 +19,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
+import static com.pemc.crss.meter.upload.LoginDialog.RET_OK;
 import static com.pemc.crss.meter.upload.SelectedFileUtils.retrieveFileListing;
 import static javax.swing.JFileChooser.APPROVE_OPTION;
 import static javax.swing.JFileChooser.FILES_AND_DIRECTORIES;
@@ -41,6 +42,8 @@ public class HeaderPanel extends JPanel {
 
     public void configureComponents(MeterDataUploader parent) {
         this.parent = parent;
+
+        btnLogout.setVisible(false);
 
         cboCategory.addItem(new ComboBoxItem("DAILY", "Daily"));
         cboCategory.addItem(new ComboBoxItem("MONTHLY", "Monthly"));
@@ -71,20 +74,21 @@ public class HeaderPanel extends JPanel {
         GridBagConstraints gridBagConstraints;
 
         mspComboBoxModel = new DefaultComboBoxModel<>(
-                new String[]{
-                        "Manila Electric Company",
-                        "Ibaan Electric and Engineering Corporation",
-                        "National Grid Corporation of the Phils",
-                        "Peninsula Electric Cooperative",
-                        "Exemplar Enterprise Inc. (Puyat Flooring Products Inc.)"
-                }
+            new String[]{
+                "Manila Electric Company",
+                "Ibaan Electric and Engineering Corporation",
+                "National Grid Corporation of the Phils",
+                "Peninsula Electric Cooperative",
+                "Exemplar Enterprise Inc. (Puyat Flooring Products Inc.)"
+            }
         );
         toolbarPanel = new JPanel();
         btnSelectFiles = new JButton();
         btnClearTable = new JButton();
         btnUpload = new JButton();
         btnSettings = new JButton();
-        btnSettings2 = new JButton();
+        btnLogout = new JButton();
+        btnLogin = new JButton();
         fieldPanel = new JPanel();
         lblCategory = new JLabel();
         cboCategory = new JComboBox<>();
@@ -95,6 +99,7 @@ public class HeaderPanel extends JPanel {
 
         btnSelectFiles.setIcon(new ImageIcon(getClass().getResource("/images/Transaction List Filled-50.png"))); // NOI18N
         btnSelectFiles.setToolTipText("Select Files");
+        btnSelectFiles.setEnabled(false);
         btnSelectFiles.setFocusable(false);
         btnSelectFiles.setHorizontalTextPosition(SwingConstants.CENTER);
         btnSelectFiles.addActionListener(new ActionListener() {
@@ -104,8 +109,9 @@ public class HeaderPanel extends JPanel {
         });
         toolbarPanel.add(btnSelectFiles);
 
-        btnClearTable.setIcon(new ImageIcon(getClass().getResource("/images/Erase-50.png"))); // NOI18N
+        btnClearTable.setIcon(new ImageIcon(getClass().getResource("/images/Broom-48.png"))); // NOI18N
         btnClearTable.setToolTipText("Clear Selection");
+        btnClearTable.setEnabled(false);
         btnClearTable.setFocusable(false);
         btnClearTable.setHorizontalTextPosition(SwingConstants.CENTER);
         btnClearTable.addActionListener(new ActionListener() {
@@ -117,6 +123,7 @@ public class HeaderPanel extends JPanel {
 
         btnUpload.setIcon(new ImageIcon(getClass().getResource("/images/Upload to the Cloud-50.png"))); // NOI18N
         btnUpload.setToolTipText("Upload Files");
+        btnUpload.setEnabled(false);
         btnUpload.setFocusable(false);
         btnUpload.setHorizontalTextPosition(SwingConstants.CENTER);
         btnUpload.addActionListener(new ActionListener() {
@@ -126,8 +133,9 @@ public class HeaderPanel extends JPanel {
         });
         toolbarPanel.add(btnUpload);
 
-        btnSettings.setIcon(new ImageIcon(getClass().getResource("/images/Installing Updates-48.png"))); // NOI18N
+        btnSettings.setIcon(new ImageIcon(getClass().getResource("/images/Vertical Settings Mixer-50.png"))); // NOI18N
         btnSettings.setToolTipText("Settings");
+        btnSettings.setEnabled(false);
         btnSettings.setFocusable(false);
         btnSettings.setHorizontalTextPosition(SwingConstants.CENTER);
         btnSettings.addActionListener(new ActionListener() {
@@ -137,16 +145,28 @@ public class HeaderPanel extends JPanel {
         });
         toolbarPanel.add(btnSettings);
 
-        btnSettings2.setIcon(new ImageIcon(getClass().getResource("/images/Export-50.png"))); // NOI18N
-        btnSettings2.setToolTipText("Logout");
-        btnSettings2.setFocusable(false);
-        btnSettings2.setHorizontalTextPosition(SwingConstants.CENTER);
-        btnSettings2.addActionListener(new ActionListener() {
+        btnLogout.setIcon(new ImageIcon(getClass().getResource("/images/Export-48.png"))); // NOI18N
+        btnLogout.setToolTipText("Logout");
+        btnLogout.setEnabled(false);
+        btnLogout.setFocusable(false);
+        btnLogout.setHorizontalTextPosition(SwingConstants.CENTER);
+        btnLogout.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 logoutActionPerformed(evt);
             }
         });
-        toolbarPanel.add(btnSettings2);
+        toolbarPanel.add(btnLogout);
+
+        btnLogin.setIcon(new ImageIcon(getClass().getResource("/images/Key-48.png"))); // NOI18N
+        btnLogin.setToolTipText("Settings");
+        btnLogin.setFocusable(false);
+        btnLogin.setHorizontalTextPosition(SwingConstants.CENTER);
+        btnLogin.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                loginActionPerformed(evt);
+            }
+        });
+        toolbarPanel.add(btnLogin);
 
         add(toolbarPanel, BorderLayout.WEST);
 
@@ -159,6 +179,8 @@ public class HeaderPanel extends JPanel {
         gridBagConstraints.anchor = GridBagConstraints.WEST;
         gridBagConstraints.insets = new Insets(0, 5, 0, 5);
         fieldPanel.add(lblCategory, gridBagConstraints);
+
+        cboCategory.setEnabled(false);
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
@@ -175,6 +197,7 @@ public class HeaderPanel extends JPanel {
         fieldPanel.add(lblMSP, gridBagConstraints);
 
         cboMSP.setModel(mspComboBoxModel);
+        cboMSP.setEnabled(false);
         cboMSP.setPreferredSize(new Dimension(350, 27));
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 1;
@@ -208,6 +231,10 @@ public class HeaderPanel extends JPanel {
 
             List<FileBean> selectedFiles = retrieveFileListing(fileChooser.getSelectedFiles(), fileFilter.getExtensions());
             parent.updateTableDisplay(selectedFiles);
+
+            btnSelectFiles.setEnabled(false);
+            btnClearTable.setEnabled(true);
+            btnUpload.setEnabled(true);
         }
     }//GEN-LAST:event_selectFilesActionPerformed
 
@@ -219,7 +246,8 @@ public class HeaderPanel extends JPanel {
         //    disable the combo box
 
         // NOTE: selectedItem and selectedIndex are just temporary code
-        parent.uploadData((String) cboCategory.getSelectedItem(), cboMSP.getSelectedIndex());
+        String category = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
+        parent.uploadData(category, cboMSP.getSelectedIndex());
     }//GEN-LAST:event_uploadActionPerformed
 
     private void settingsActionPerformed(ActionEvent evt) {//GEN-FIRST:event_settingsActionPerformed
@@ -227,19 +255,65 @@ public class HeaderPanel extends JPanel {
     }//GEN-LAST:event_settingsActionPerformed
 
     private void clearSelectionActionPerformed(ActionEvent evt) {//GEN-FIRST:event_clearSelectionActionPerformed
-        // TODO add your handling code here:
+        parent.clearSelectedFiles();
+
+        btnSelectFiles.setEnabled(true);
+        btnClearTable.setEnabled(false);
+        btnUpload.setEnabled(false);
     }//GEN-LAST:event_clearSelectionActionPerformed
 
     private void logoutActionPerformed(ActionEvent evt) {//GEN-FIRST:event_logoutActionPerformed
-        // TODO: Logout from oauth
-        System.exit(0);
+        parent.logout();
+        disableToolbar();
     }//GEN-LAST:event_logoutActionPerformed
+
+    private void loginActionPerformed(ActionEvent evt) {//GEN-FIRST:event_loginActionPerformed
+        LoginDialog loginDialog = new LoginDialog(parent, true);
+        loginDialog.setVisible(true);
+
+        if (loginDialog.getReturnStatus() == RET_OK) {
+            parent.login(loginDialog.getUsername(), loginDialog.getPassword());
+        }
+    }//GEN-LAST:event_loginActionPerformed
+
+    public void enableToolbar() {
+        btnSelectFiles.setEnabled(true);
+        btnClearTable.setEnabled(false);
+        btnUpload.setEnabled(false);
+        btnSettings.setEnabled(true);
+
+        btnLogin.setEnabled(false);
+        btnLogin.setVisible(false);
+
+        btnLogout.setEnabled(true);
+        btnLogout.setVisible(true);
+
+        cboCategory.setEnabled(true);
+        cboMSP.setEnabled(true);
+    }
+
+    public void disableToolbar() {
+        btnSelectFiles.setEnabled(false);
+        btnClearTable.setEnabled(false);
+        btnUpload.setEnabled(false);
+        btnSettings.setEnabled(false);
+
+        btnLogin.setEnabled(true);
+        btnLogin.setVisible(true);
+
+        btnLogout.setEnabled(false);
+        btnLogout.setVisible(false);
+
+        cboCategory.setEnabled(false);
+        cboMSP.setEnabled(false);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private JButton btnClearTable;
+    private JButton btnLogin;
+    private JButton btnLogout;
     private JButton btnSelectFiles;
     private JButton btnSettings;
-    private JButton btnSettings2;
     private JButton btnUpload;
     private JComboBox<ComboBoxItem> cboCategory;
     private JComboBox<String> cboMSP;
