@@ -59,6 +59,10 @@ public class BCQReader {
 
                 dataListMap.get(sellerBuyerKey).add(data);
             }
+
+            for(List<BCQData> dataList : dataListMap.values()) {
+                BCQValidator.validateNoOfRecords(dataList, interval);
+            }
         }
 
         List<BCQData> mergedDataList = dataListMap.values()
@@ -84,7 +88,7 @@ public class BCQReader {
     private List<BCQData> divideDataByInterval(BCQData data, BCQInterval interval) {
         List<BCQData> dividedDataList = new ArrayList<>();
         Date currentStartTime = data.getStartTime();
-        double currentBCQ = data.getBcq();
+        float currentBCQ = data.getBcq();
         int divisor;
 
         if (interval == BCQInterval.QUARTERLY) {
@@ -127,7 +131,7 @@ public class BCQReader {
         return new Date(date.getTime() - interval.getTimeInMillis());
     }
 
-    private double getBCQ(String data) {
-        return Double.parseDouble(data);
+    private float getBCQ(String data) {
+        return Float.parseFloat(data);
     }
 }

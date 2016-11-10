@@ -15,7 +15,7 @@ public class BCQData {
     private String referenceMTN;
     private Date startTime;
     private Date endTime;
-    private double bcq;
+    private float bcq;
 
     @Override
     public String toString() {

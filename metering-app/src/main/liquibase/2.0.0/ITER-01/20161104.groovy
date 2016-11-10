@@ -23,13 +23,18 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'reference_mtn',       type: 'VARCHAR(255)') { constraints(nullable: false) }
             column(name: 'start_time',          type: 'TIMESTAMP') { constraints(nullable: false) }
             column(name: 'end_time',            type: 'TIMESTAMP') { constraints(nullable: false) }
-            column(name: 'bcq',                 type: 'NUMERIC(19,2)') { constraints(nullable: false) }
+            column(name: 'bcq',                 type: 'NUMERIC(19,9)') { constraints(nullable: false) }
         }
 
         addForeignKeyConstraint(
                 baseColumnNames: 'file_id', baseTableName: 'txn_bcq_data', constraintName: 'FK_BCQ_DATA',
                 deferrable: false, initiallyDeferred: false,
                 referencedColumnNames: 'file_id', referencedTableName: 'txn_bcq_upload_file')
+
+        addUniqueConstraint(
+                columnNames: 'selling_mtn, buying_participant, end_time',
+                constraintName: 'uk_txn_organization_buyer_seller',
+                tableName: 'txn_bcq_data')
     }
 
 }
