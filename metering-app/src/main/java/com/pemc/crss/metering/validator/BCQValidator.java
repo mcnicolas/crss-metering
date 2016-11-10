@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class BCQValidator {
 
     private static final String DATE_FORMAT = "MM-dd-yyyy HH:mm";
-    private static final int NUMBER_OF_COLUMNS = 5;
+    private static final int VALID_N0_OF_COLUMNS = 5;
 
     private BCQValidator() {}
 
@@ -29,9 +29,23 @@ public class BCQValidator {
         }
     }
 
+    public static void validateNoOfRecords(List<BCQData> dataList, BCQInterval interval) throws ValidationException {
+        BCQData data = dataList.get(0);
+
+        if (dataList.size() != interval.getValidNoOfRecords()) {
+            throw new ValidationException(String.format(
+                    "Incorrect number of records (found: %d, valid: %d) for data with: " +
+                    "Selling MTN: %s, Buying Participant: %s",
+                    dataList.size(),
+                    interval.getValidNoOfRecords(),
+                    data.getSellingMTN(),
+                    data.getBuyingParticipant()));
+        }
+    }
+
     public static void validateLine(List<String> row, int currentLineNo, long timeFrameMillis)
             throws ValidationException {
-        if (row.size() != NUMBER_OF_COLUMNS) {
+        if (row.size() != VALID_N0_OF_COLUMNS) {
             throw new ValidationException(String.format("Incorrect number of columns in line %d", currentLineNo));
         } else {
             validateSellingMTN(row.get(0), currentLineNo);
