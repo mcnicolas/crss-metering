@@ -2,6 +2,7 @@ package com.pemc.crss.metering.dto;
 
 import lombok.Data;
 
+@Deprecated
 @Data
 public class MeterDataListWebDto {
 

@@ -1,7 +1,5 @@
 package com.pemc.crss.metering.dto;
 
-import com.pemc.crss.metering.parser.meterquantity.ChannelStatus;
-import com.pemc.crss.metering.parser.meterquantity.IntervalStatus;
 import lombok.Data;
 
 import java.util.Date;
@@ -12,6 +10,7 @@ import java.util.Date;
 @Data
 public class MeterData2 {
 
+    private long meterDataID;
     private String sein;
     private Date readingDateTime;
     private int interval;
