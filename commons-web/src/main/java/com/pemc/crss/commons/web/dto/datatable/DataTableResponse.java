@@ -1,8 +1,9 @@
 package com.pemc.crss.commons.web.dto.datatable;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class DataTableResponse<T> implements java.io.Serializable {
+public class DataTableResponse<T> implements Serializable {
 
     private List<T> data;
     private int draw;

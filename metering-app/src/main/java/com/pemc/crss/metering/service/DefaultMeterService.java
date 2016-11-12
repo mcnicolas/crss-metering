@@ -1,8 +1,10 @@
 package com.pemc.crss.metering.service;
 
+import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dao.MeteringDao;
 import com.pemc.crss.metering.dto.MeterData2;
+import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.MeterUploadFile;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
 import com.pemc.crss.metering.parser.QuantityReader;
@@ -10,6 +12,8 @@ import com.pemc.crss.metering.parser.meterquantity.MeterQuantityReaderFactory;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -67,6 +71,18 @@ public class DefaultMeterService implements MeterService {
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<MeterDataDisplay> getMeterData(PageableRequest pageableRequest) {
+        int totalRecords = meteringDao.getTotalRecords(pageableRequest);
+        List<MeterDataDisplay> meterDataList = meteringDao.findAll(pageableRequest);
+
+        return new PageImpl<>(
+                meterDataList,
+                pageableRequest.getPageable(),
+                totalRecords);
     }
 
     @Deprecated // Change in impl

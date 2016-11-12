@@ -21,6 +21,7 @@ ext {
 
 subprojects {
     apply plugin: 'java'
+    apply plugin: 'idea'
     apply plugin: 'io.spring.dependency-management'
 
     project.version = '2.0.0-SNAPSHOT'
@@ -36,6 +37,13 @@ subprojects {
                 username "${mavenUser}"
                 password "${mavenPassword}"
             }
+        }
+    }
+
+    idea {
+        module {
+            downloadJavadoc = true
+            downloadSources = true
         }
     }
 

@@ -39,7 +39,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'file_id',                 type: 'BIGINT')
             column(name: 'sein',                    type: 'VARCHAR(20)') { constraints(nullable: false) }
             column(name: 'interval',                type: 'INT', remarks: 'Minute interval in an hour')
-            column(name: 'reading_datetime',        type: 'TIMESTAMP')
+            column(name: 'reading_datetime',        type: 'BIGINT')
 
             // NOTE: Should be able to save variable decimal places. Maximum of 17
             column(name: 'kwd',                     type: 'DOUBLE PRECISION')
@@ -90,7 +90,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'file_id',                 type: 'BIGINT')
             column(name: 'sein',                    type: 'VARCHAR(20)') { constraints(nullable: false) }
             column(name: 'interval',                type: 'INT')
-            column(name: 'reading_datetime',        type: 'TIMESTAMP')
+            column(name: 'reading_datetime',        type: 'BIGINT')
 
             // NOTE: Should be able to save variable decimal places. Maximum of 10
             column(name: 'kwd',                     type: 'DOUBLE PRECISION')

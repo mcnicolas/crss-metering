@@ -14,6 +14,7 @@
   <!-- library log levels -->
   <logger name="org.springframework" level="WARN"/>
   <logger name="org.hibernate" level="WARN"/>
+  <logger name="com.zaxxer" level="DEBUG"/>
 
   <!-- application log levels -->
   <logger name="com.pemc.crss" level="DEBUG"/>

@@ -1,15 +1,16 @@
 package com.pemc.crss.metering.dao;
 
+import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.ChannelHeader;
 import com.pemc.crss.metering.dto.Header;
 import com.pemc.crss.metering.dto.IntervalData;
 import com.pemc.crss.metering.dto.MeterData;
 import com.pemc.crss.metering.dto.MeterData2;
+import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.MeterUploadFile;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -19,10 +20,15 @@ import org.springframework.stereotype.Repository;
 import javax.inject.Inject;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static java.sql.Types.DOUBLE;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Repository
@@ -98,11 +104,88 @@ public class JdbcMeteringDao implements MeteringDao {
         return keyHolder.getKey().longValue();
     }
 
+    @Override
+    public List<MeterDataDisplay> findAll(PageableRequest pageableRequest) {
+        Map<String, String> params = pageableRequest.getMapParams();
+
+        String category = params.get("category");
+        String readingDate = params.get("readingDate");
+        String sein = params.get("sein");
+        String transactionID = params.get("transactionID");
+
+        MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
+        MQBuilderData query = queryBuilder.selectMeterData(category, readingDate)
+                .addSEINFilter(sein)
+                .addTransactionIDFilter(transactionID)
+                .orderBy(pageableRequest.getOrderList())
+                .build();
+
+        int pageNo = pageableRequest.getPageNo();
+        int pageSize = pageableRequest.getPageSize();
+        int startRow = pageNo * pageSize;
+
+        List<MeterDataDisplay> retVal = jdbcTemplate.query(
+                query.getSql(),
+                query.getArguments(),
+                rs -> {
+                    List<MeterDataDisplay> meterDataList = new ArrayList<>();
+
+                    // TODO: Hackish code. Consider using DB specific resultset filtering
+                    int currentRow = 0;
+                    while (rs.next() && currentRow < startRow + pageSize) {
+                        if (currentRow >= startRow) {
+                            MeterDataDisplay meterData = new MeterDataDisplay();
+
+                            meterData.setMeterDataID(rs.getLong("meter_data_id"));
+                            meterData.setSein(rs.getString("sein"));
+                            meterData.setReadingDateTime(rs.getLong("reading_datetime"));
+                            meterData.setKwd(rs.getString("kwd"));
+                            meterData.setKwhd(rs.getString("kwhd"));
+                            meterData.setKvarhd(rs.getString("kvarhd"));
+                            meterData.setKwr(rs.getString("kwr"));
+                            meterData.setKwhr(rs.getString("kwhr"));
+                            meterData.setKvarhr(rs.getString("kvarhr"));
+                            meterData.setEstimationFlag(rs.getString("estimation_flag"));
+
+                            meterDataList.add(meterData);
+                        }
+
+                        currentRow++;
+                    }
+
+                    return meterDataList;
+                });
+
+        return retVal;
+    }
+
+    @Override
+    public int getTotalRecords(PageableRequest pageableRequest) {
+        Map<String, String> params = pageableRequest.getMapParams();
+
+        String category = params.get("category");
+        String readingDate = params.get("readingDate");
+        String sein = params.get("sein");
+        String transactionID = params.get("transactionID");
+
+        MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
+        MQBuilderData query = queryBuilder.countMeterData(category, readingDate)
+                .addSEINFilter(sein)
+                .addTransactionIDFilter(transactionID)
+                .build();
+
+        return jdbcTemplate.queryForObject(
+                query.getSql(),
+                query.getArguments(),
+                Integer.class
+        );
+    }
+
     // TODO: Dirty code. Revise!
     @Override
     public void saveMeterData(long fileID, List<MeterData2> meterDataList, String category) {
         String insertSQL;
-        if (StringUtils.equalsIgnoreCase(category, "Monthly")) {
+        if (equalsIgnoreCase(category, "Monthly")) {
             insertSQL = insertMonthlyMQ;
         } else {
             insertSQL = insertDailyMQ;
@@ -117,7 +200,10 @@ public class JdbcMeteringDao implements MeteringDao {
                         ps.setLong(1, fileID);
                         ps.setString(2, meterData.getSein());
                         ps.setInt(3, meterData.getInterval());
-                        ps.setTimestamp(4, new Timestamp(meterData.getReadingDateTime().getTime()));
+
+                        // TODO: Optimize at the parsing level
+                        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm");
+                        ps.setLong(4, Long.valueOf(dateFormat.format(meterData.getReadingDateTime())));
 
                         if (meterData.getKwd() != null) {
                             ps.setDouble(5, meterData.getKwd());

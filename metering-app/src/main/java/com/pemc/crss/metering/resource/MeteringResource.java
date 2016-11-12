@@ -1,11 +1,5 @@
 package com.pemc.crss.metering.resource;
 
-import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
-import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.commons.web.resource.BaseListResource;
-import com.pemc.crss.metering.dto.MeterData;
-import com.pemc.crss.metering.dto.MeterData2;
-import com.pemc.crss.metering.dto.MeterDataListWebDto;
 import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.NonNull;
@@ -15,8 +9,6 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,20 +19,17 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.springframework.http.HttpStatus.OK;
 
-// TODO: Move searching to a separate controller
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 @RestController
-public class MeteringResource extends BaseListResource<MeterData2> {
+public class MeteringResource {
 
     public static final String ROUTING_KEY = "meter.quantity";
 
@@ -150,72 +139,6 @@ public class MeteringResource extends BaseListResource<MeterData2> {
     @Deprecated // Change in impl
     private void trailer(Map<String, Object> messagePayload) {
         eventPublisher.publishEvent(new MeterUploadEvent(messagePayload));
-    }
-
-    @Override
-    public DataTableResponse<MeterData2> executeSearch(PageableRequest request) {
-        List<MeterData2> meterDataList = generateSampleMeterDataList(25L);
-
-        int pageNo = request.getPageNo();
-        int pageSize = request.getPageSize();
-
-        int remainingElement = (meterDataList.size() > pageSize * (pageNo + 1)) ?
-                meterDataList.size() :
-                pageSize * (pageNo + 1) - meterDataList.size();
-
-        Page<MeterData2> page = new PageImpl<>(
-                getMeterDataListByPage(meterDataList, pageNo, pageSize),
-                request.getPageable(), remainingElement);
-
-        log.debug("Upload type: {}, Date: {}",
-                request.getMapParams().get("uploadType"),
-                request.getMapParams().get("date"));
-
-        return new DataTableResponse<MeterData2>()
-                .withData(page.getContent())
-                .withRecordsTotal(page.getTotalElements());
-    }
-
-
-    /*****************************************
-     * Sample meter data list generator
-     *****************************************/
-
-    private List<MeterData2> getMeterDataListByPage(List<MeterData2> meterDataList, int pageNo, int pageSize) {
-        int toIndex = (meterDataList.size() < pageSize * (pageNo + 1)) ? meterDataList.size() : pageSize * (pageNo + 1);
-
-        meterDataList = meterDataList.subList((pageSize * pageNo), toIndex);
-
-        return meterDataList;
-    }
-
-    // TODO: Temporary data
-    private List<MeterData2> generateSampleMeterDataList(Long total) {
-        List<MeterData2> meterDataList = new ArrayList<>();
-
-        for (long i = 1; i <= total; i++) {
-            MeterData2 meterData = new MeterData2();
-            meterData.setMeterDataID(i);
-            meterData.setSein("R3MEXCEDC01TNSC0" + i);
-            meterData.setReadingDateTime(new Date());
-            meterData.setKwd(Double.valueOf("7860.00000"));
-            meterData.setKwhd(Double.valueOf("7860.00000"));
-            meterData.setKwr(Double.valueOf("7860.00000"));
-            meterData.setKwhr(Double.valueOf("7860.00000"));
-            meterData.setKvarhd(Double.valueOf("7860.00000"));
-            meterData.setKvarhr(Double.valueOf("7860.00000"));
-            meterData.setVan(Double.valueOf("7860.00000"));
-            meterData.setVbn(Double.valueOf("7860.00000"));
-            meterData.setVcn(Double.valueOf("7860.00000"));
-            meterData.setIan(Double.valueOf("7860.00000"));
-            meterData.setIbn(Double.valueOf("7860.00000"));
-            meterData.setIcn(Double.valueOf("7860.00000"));
-            meterData.setPf(Double.valueOf("7860.00000"));
-
-            meterDataList.add(meterData);
-        }
-
-        return meterDataList;
     }
 
 }
