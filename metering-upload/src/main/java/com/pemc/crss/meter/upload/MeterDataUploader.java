@@ -16,7 +16,19 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.List;
+import java.util.Properties;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
 import java.util.UUID;
 import javax.swing.BorderFactory;
 
@@ -30,9 +42,27 @@ public class MeterDataUploader extends JFrame {
     private String username;
     private String userType;
     private ParticipantName participant;
+    private Properties properties;
 
     public MeterDataUploader() {
         initComponents();
+        initProperties();
+    }
+
+    private void initProperties() {
+        properties = new Properties();
+
+        File config = new File("config.properties");
+        if (!config.exists()) {
+            saveSettings("http://localhost:8080");
+        }
+
+        try (Reader reader = new FileReader("config.properties")) {
+            properties.load(reader);
+            RestUtil.setBaseURL(properties.getProperty("URL"));
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
     }
 
     public void configureComponents() {
@@ -131,6 +161,20 @@ public class MeterDataUploader extends JFrame {
 
     public ParticipantName getParticipant() {
         return participant;
+    }
+
+    public String getProperty(String key) {
+        return properties.getProperty(key);
+    }
+
+    public void saveSettings(String serverURL) {
+        properties.put("URL", serverURL);
+
+        try (Writer writer = new FileWriter("config.properties")) {
+            properties.store(writer, "Saving updated server URL");
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
     }
 
     private void centerOnScreen() {

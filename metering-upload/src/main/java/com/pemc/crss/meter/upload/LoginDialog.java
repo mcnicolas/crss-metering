@@ -41,7 +41,6 @@ public class LoginDialog extends JDialog {
         initComponents();
         setLocationRelativeTo(parent);
 
-        // Close the dialog when Esc is pressed
         String cancelName = "cancel";
         InputMap inputMap = getRootPane().getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         inputMap.put(KeyStroke.getKeyStroke(VK_ESCAPE, 0), cancelName);

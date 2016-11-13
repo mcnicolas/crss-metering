@@ -34,17 +34,18 @@ import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.entity.ContentType.MULTIPART_FORM_DATA;
 
+// TODO: Refactor class. Consider reusing HttpClient.
 @Slf4j
 public class RestUtil {
 
-    // TODO: Make URL configurable with a default value
-    private static final String TOKEN_URL = "http://localhost:8080/admin/oauth/token";
-    private static final String USER_URL = "http://localhost:8080/admin/user";
-    private static final String PARTICIPANT_CATEGORY_URL = "http://localhost:8080/reg/participants/current/category";
-    private static final String MSP_LISTING_URL = "http://localhost:8080/reg/participants/category/msp";
-    private static final String UPLOAD_HEADER = "http://localhost:8080/metering/uploadheader";
-    private static final String UPLOAD_FILE = "http://localhost:8080/metering/uploadfile";
-    private static final String UPLOAD_TRAILER = "http://localhost:8080/metering/uploadtrailer";
+    private static String BASE_URL = "";
+    private static final String TOKEN_URL = "/admin/oauth/token";
+    private static final String USER_URL = "/admin/user";
+    private static final String PARTICIPANT_CATEGORY_URL = "/reg/participants/current/category";
+    private static final String MSP_LISTING_URL = "/reg/participants/category/msp";
+    private static final String UPLOAD_HEADER = "/metering/uploadheader";
+    private static final String UPLOAD_FILE = "/metering/uploadfile";
+    private static final String UPLOAD_TRAILER = "/metering/uploadtrailer";
 
     private static final String CHAR_ENCODING = "UTF-8";
     private static final String CLIENT_ID = "crss";
@@ -59,11 +60,15 @@ public class RestUtil {
     private static final String METERING_DEPARTMENT = "METERING";
     private static final String MSP_CATEGORY = "MSP";
 
+    public static void setBaseURL(String baseURL) {
+        BASE_URL = baseURL;
+    }
+
     public static String login(String username, String password) throws LoginException {
         String retVal = null;
 
         try {
-            URIBuilder builder = new URIBuilder(TOKEN_URL);
+            URIBuilder builder = new URIBuilder(BASE_URL + TOKEN_URL);
 
             String encodedClient = new String(Base64.getEncoder().encode(CLIENT.getBytes()));
 
@@ -101,7 +106,7 @@ public class RestUtil {
 
         // TODO: Retrieve URL from configuration
         try {
-            URIBuilder builder = new URIBuilder(UPLOAD_HEADER);
+            URIBuilder builder = new URIBuilder(BASE_URL + UPLOAD_HEADER);
 
             HttpClient httpClient = HttpClientBuilder.create().build();
 
@@ -137,7 +142,7 @@ public class RestUtil {
 
         // TODO: Retrieve URL from configuration
         try {
-            URIBuilder builder = new URIBuilder(UPLOAD_TRAILER);
+            URIBuilder builder = new URIBuilder(BASE_URL + UPLOAD_TRAILER);
 
             HttpClient httpClient = HttpClientBuilder.create().build();
 
@@ -168,7 +173,7 @@ public class RestUtil {
 
         // TODO: Retrieve URL from configuration
         try {
-            URIBuilder builder = new URIBuilder(UPLOAD_FILE);
+            URIBuilder builder = new URIBuilder(BASE_URL + UPLOAD_FILE);
 
             HttpClient httpClient = HttpClientBuilder.create().build();
 
@@ -213,8 +218,10 @@ public class RestUtil {
         boolean isPemcUser;
 
         try {
-            // TODO: Use a stripped down endpoint to avoid data exposure
-            URIBuilder builder = new URIBuilder(USER_URL);
+            // TODO:
+            // 1. Use a stripped down endpoint to avoid data exposure
+            // 2. Validate user role. Should have MQ upload privilege
+            URIBuilder builder = new URIBuilder(BASE_URL + USER_URL);
 
             HttpClient httpClient = HttpClientBuilder.create().build();
             HttpGet httpGet = new HttpGet(builder.build());
@@ -251,7 +258,7 @@ public class RestUtil {
         List<ComboBoxItem> retVal = new ArrayList<>();
 
         try {
-            URIBuilder builder = new URIBuilder(MSP_LISTING_URL);
+            URIBuilder builder = new URIBuilder(BASE_URL + MSP_LISTING_URL);
 
             HttpClient httpClient = HttpClientBuilder.create().build();
             HttpGet httpGet = new HttpGet(builder.build());
@@ -283,7 +290,7 @@ public class RestUtil {
         ParticipantName retVal = null;
 
         try {
-            URIBuilder builder = new URIBuilder(PARTICIPANT_CATEGORY_URL);
+            URIBuilder builder = new URIBuilder(BASE_URL + PARTICIPANT_CATEGORY_URL);
 
             HttpClient httpClient = HttpClientBuilder.create().build();
             HttpGet httpGet = new HttpGet(builder.build());

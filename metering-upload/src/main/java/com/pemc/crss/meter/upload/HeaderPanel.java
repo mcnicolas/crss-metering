@@ -21,6 +21,7 @@ import java.util.List;
 
 import static com.pemc.crss.meter.upload.LoginDialog.RET_OK;
 import static com.pemc.crss.meter.upload.SelectedFileUtils.retrieveFileListing;
+import static com.pemc.crss.meter.upload.SettingsDialog.RET_SAVE;
 import static javax.swing.JFileChooser.APPROVE_OPTION;
 import static javax.swing.JFileChooser.FILES_AND_DIRECTORIES;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
@@ -273,7 +274,15 @@ public class HeaderPanel extends JPanel {
     }//GEN-LAST:event_uploadActionPerformed
 
     private void settingsActionPerformed(ActionEvent evt) {//GEN-FIRST:event_settingsActionPerformed
-        // TODO add your handling code here:
+        // TODO: Retrieve existing value
+
+        SettingsDialog settingsDialog = new SettingsDialog(parent, true);
+        settingsDialog.configureComponents();
+        settingsDialog.setVisible(true);
+
+        if (settingsDialog.getReturnStatus() == RET_SAVE) {
+            parent.saveSettings(settingsDialog.getServerURL());
+        }
     }//GEN-LAST:event_settingsActionPerformed
 
     private void clearSelectionActionPerformed(ActionEvent evt) {//GEN-FIRST:event_clearSelectionActionPerformed
