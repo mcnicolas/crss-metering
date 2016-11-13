@@ -7,7 +7,7 @@ import java.util.Date;
 
 public class BCQParserUtil {
 
-    private static final String[] DATE_FORMATS = {
+    public static final String[] DATE_FORMATS = {
             "MM-dd-yyyy HH:mm",
             "MM/dd/yy HH:mm"
     };

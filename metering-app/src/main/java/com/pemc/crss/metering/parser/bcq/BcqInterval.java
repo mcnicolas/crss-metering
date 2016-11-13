@@ -1,10 +1,14 @@
 package com.pemc.crss.metering.parser.bcq;
 
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public enum BCQInterval {
+public enum BcqInterval {
 
     HOURLY("Hourly", TimeUnit.MINUTES.toMillis(60), 24),
     QUARTERLY("15mins", TimeUnit.MINUTES.toMillis(15), 96),
@@ -14,16 +18,16 @@ public enum BCQInterval {
     private final long timeInMillis;
     private final int validNoOfRecords;
 
-    BCQInterval(String description, long timeInMillis, int validNoOfRecords) {
+    BcqInterval(String description, long timeInMillis, int validNoOfRecords) {
         this.description = description;
         this.timeInMillis = timeInMillis;
         this.validNoOfRecords = validNoOfRecords;
     }
 
-    private static final Map<String, BCQInterval> INTERVAL_MAP = new HashMap<>();
+    private static final Map<String, BcqInterval> INTERVAL_MAP = new HashMap<>();
 
     static {
-        for (BCQInterval interval : BCQInterval.values()) {
+        for (BcqInterval interval : BcqInterval.values()) {
             INTERVAL_MAP.put(interval.description, interval);
         }
     }
@@ -40,9 +44,17 @@ public enum BCQInterval {
         return validNoOfRecords;
     }
 
-    public static BCQInterval fromDescription(String description) {
-        BCQInterval interval = INTERVAL_MAP.get(description);
+    public static BcqInterval fromDescription(String description) {
+        BcqInterval interval = INTERVAL_MAP.get(description);
 
         return interval == null ? null : INTERVAL_MAP.get(description);
+    }
+
+    public static String getValidIntervals() {
+        List<String> validIntervals = new ArrayList<>();
+
+        INTERVAL_MAP.entrySet().forEach(entry -> validIntervals.add(entry.getKey()));
+
+        return StringUtils.join(validIntervals, ", ");
     }
 }

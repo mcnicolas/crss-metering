@@ -5,10 +5,8 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
-public class BCQDataInfo {
+public class BcqDataInfo {
 
-    private String sellingMTN;
-    private String buyingParticipant;
     private String referenceMTN;
     private Date startTime;
     private Date endTime;

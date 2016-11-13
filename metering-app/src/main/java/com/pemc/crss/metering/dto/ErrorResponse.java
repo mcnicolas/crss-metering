@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.dto;
 
 public class ErrorResponse {
+
     private String error;
 
     public ErrorResponse(String error) {
@@ -14,5 +15,5 @@ public class ErrorResponse {
     public void setError(String error) {
         this.error = error;
     }
-}
 
+}
