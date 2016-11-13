@@ -21,6 +21,7 @@ import java.util.UUID;
 import javax.swing.BorderFactory;
 
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 @Slf4j
 public class MeterDataUploader extends JFrame {
@@ -28,6 +29,7 @@ public class MeterDataUploader extends JFrame {
     private String token;
     private String username;
     private String userType;
+    private ParticipantName participant;
 
     public MeterDataUploader() {
         initComponents();
@@ -41,6 +43,7 @@ public class MeterDataUploader extends JFrame {
     }
 
     public void configureServices() {
+        headerPanel.configureServices();
     }
 
     public void updateTableDisplay(List<FileBean> selectedFiles) {
@@ -77,13 +80,25 @@ public class MeterDataUploader extends JFrame {
     public void login(String username, String password) {
         try {
             token = RestUtil.login(username, password);
-            userType = RestUtil.getUserType(token);
-            this.username = username;
 
             if (token == null) {
                 JOptionPane.showMessageDialog(this, "Invalid login", "Error", ERROR_MESSAGE);
             } else {
                 log.debug("Logged in with token: {}", token);
+
+                this.username = username;
+
+                // TODO: Validate user
+                // 1. User should be a valid user in the system (non-expired, non-locked, etc)
+                // 2. User should be a PEMC User or a Trading Participant with an MSP registration category
+                // 3. If PEMC User, it should belong to the metering department
+                userType = RestUtil.getUserType(token);
+
+                // TODO: Avoid redundant rest call
+                if (equalsIgnoreCase(userType, "MSP")) {
+                    participant = RestUtil.getParticipant(token);
+                }
+
                 log.debug("User type: {}", userType);
 
                 headerPanel.enableToolbar();
@@ -98,6 +113,8 @@ public class MeterDataUploader extends JFrame {
     public void logout() {
         token = null;
         username = null;
+        userType = null;
+        participant = null;
 
         tablePanel.clearSelectedFiles();
 
@@ -106,6 +123,14 @@ public class MeterDataUploader extends JFrame {
 
     public void clearSelectedFiles() {
         tablePanel.clearSelectedFiles();
+    }
+
+    public List<ComboBoxItem> getMSPListing() {
+        return RestUtil.getMSPListing(token);
+    }
+
+    public ParticipantName getParticipant() {
+        return participant;
     }
 
     private void centerOnScreen() {

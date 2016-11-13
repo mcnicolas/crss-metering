@@ -1,7 +1,5 @@
 package com.pemc.crss.meter.upload;
 
-import lombok.Data;
-
 import java.io.Serializable;
 
 public class ComboBoxItem implements Serializable {

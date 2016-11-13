@@ -30,7 +30,6 @@ public class ApplicationLoader {
         MeterDataUploader dataUploader = new MeterDataUploader();
 
         dataUploader.configureComponents();
-        dataUploader.configureServices();
         dataUploader.setVisible(true);
 
         LoginDialog loginDialog = new LoginDialog(dataUploader, true);
@@ -39,6 +38,8 @@ public class ApplicationLoader {
         if (loginDialog.getReturnStatus() == RET_OK) {
             dataUploader.login(loginDialog.getUsername(), loginDialog.getPassword());
         }
+
+        dataUploader.configureServices();
     }
 
 }

@@ -52,10 +52,10 @@ public class HeaderPanel extends JPanel {
     }
 
     public void configureServices() {
+        populateMSPComboBox();
+
         // TODO:
-        // 0. Consider prepopulation of MSP via async call at startup
-        // 1. Populate MSP combo box: Registration /category/msp
-        // 2. MSP combo box should have a blank item as the first element
+
         // 3. Determine user type
         // 4. If MSP, change MSP combo box selection to corresponding logged in MSP and disable combo box
         // 5. If PEMC user, enable MSP combo box selection
@@ -63,6 +63,38 @@ public class HeaderPanel extends JPanel {
         // 6. Upon clicking on upload the following validation should take place:
         // 6.1 there should be some files selected
         // 6.2 there should be an msp selected (if pemc user)
+    }
+
+    private void populateMSPComboBox() {
+        // 0. Consider prepopulation of MSP via async call at startup
+        // 1. Populate MSP combo box: Registration /category/msp
+        // 2. MSP combo box should have a blank item as the first element
+
+        DefaultComboBoxModel<ComboBoxItem> model = (DefaultComboBoxModel<ComboBoxItem>) cboMSP.getModel();
+        model.removeAllElements();
+
+        cboMSP.addItem(new ComboBoxItem("", ""));
+
+        for (ComboBoxItem comboBoxItem : parent.getMSPListing()) {
+            cboMSP.addItem(comboBoxItem);
+        }
+
+        ParticipantName participant = parent.getParticipant();
+        if (participant != null) {
+            updateSelectedMSP(parent.getParticipant().getShortName());
+            cboMSP.setEnabled(false);
+        }
+    }
+
+    public void updateSelectedMSP(String shortName) {
+        DefaultComboBoxModel<ComboBoxItem> model = (DefaultComboBoxModel<ComboBoxItem>) cboMSP.getModel();
+
+        for (int i = 0; i < model.getSize(); i++) {
+            ComboBoxItem item = model.getElementAt(i);
+            if (equalsIgnoreCase(item.getValue(), shortName)) {
+                cboMSP.setSelectedIndex(i);
+            }
+        }
     }
 
     /**
@@ -73,15 +105,6 @@ public class HeaderPanel extends JPanel {
     private void initComponents() {//GEN-BEGIN:initComponents
         GridBagConstraints gridBagConstraints;
 
-        mspComboBoxModel = new DefaultComboBoxModel<>(
-            new String[]{
-                "Manila Electric Company",
-                "Ibaan Electric and Engineering Corporation",
-                "National Grid Corporation of the Phils",
-                "Peninsula Electric Cooperative",
-                "Exemplar Enterprise Inc. (Puyat Flooring Products Inc.)"
-            }
-        );
         toolbarPanel = new JPanel();
         btnSelectFiles = new JButton();
         btnClearTable = new JButton();
@@ -196,7 +219,6 @@ public class HeaderPanel extends JPanel {
         gridBagConstraints.insets = new Insets(0, 5, 0, 5);
         fieldPanel.add(lblMSP, gridBagConstraints);
 
-        cboMSP.setModel(mspComboBoxModel);
         cboMSP.setEnabled(false);
         cboMSP.setPreferredSize(new Dimension(350, 27));
         gridBagConstraints = new GridBagConstraints();
@@ -274,6 +296,8 @@ public class HeaderPanel extends JPanel {
         if (loginDialog.getReturnStatus() == RET_OK) {
             parent.login(loginDialog.getUsername(), loginDialog.getPassword());
         }
+
+        parent.configureServices();
     }//GEN-LAST:event_loginActionPerformed
 
     public void enableToolbar() {
@@ -316,11 +340,10 @@ public class HeaderPanel extends JPanel {
     private JButton btnSettings;
     private JButton btnUpload;
     private JComboBox<ComboBoxItem> cboCategory;
-    private JComboBox<String> cboMSP;
+    private JComboBox<ComboBoxItem> cboMSP;
     private JPanel fieldPanel;
     private JLabel lblCategory;
     private JLabel lblMSP;
-    private DefaultComboBoxModel mspComboBoxModel;
     private JPanel toolbarPanel;
     // End of variables declaration//GEN-END:variables
 }

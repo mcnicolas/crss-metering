@@ -16,6 +16,7 @@ import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
@@ -39,6 +41,7 @@ public class RestUtil {
     private static final String TOKEN_URL = "http://localhost:8080/admin/oauth/token";
     private static final String USER_URL = "http://localhost:8080/admin/user";
     private static final String PARTICIPANT_CATEGORY_URL = "http://localhost:8080/reg/participants/current/category";
+    private static final String MSP_LISTING_URL = "http://localhost:8080/reg/participants/category/msp";
     private static final String UPLOAD_HEADER = "http://localhost:8080/metering/uploadheader";
     private static final String UPLOAD_FILE = "http://localhost:8080/metering/uploadfile";
     private static final String UPLOAD_TRAILER = "http://localhost:8080/metering/uploadtrailer";
@@ -53,7 +56,6 @@ public class RestUtil {
     private static final String PEMC_USERTYPE = "PEMC";
     private static final String MSP_USERTYPE = "MSP";
 
-    private static final String BILLING_DEPARTMENT = "BILLING";
     private static final String METERING_DEPARTMENT = "METERING";
     private static final String MSP_CATEGORY = "MSP";
 
@@ -211,6 +213,7 @@ public class RestUtil {
         boolean isPemcUser;
 
         try {
+            // TODO: Use a stripped down endpoint to avoid data exposure
             URIBuilder builder = new URIBuilder(USER_URL);
 
             HttpClient httpClient = HttpClientBuilder.create().build();
@@ -227,14 +230,14 @@ public class RestUtil {
                 userType = obj.getJSONObject("principal").get("department").toString();
                 isPemcUser = Boolean.valueOf(obj.getJSONObject("principal").get("pemcUser").toString());
 
-                if(isPemcUser) {
-                    if(userType.equalsIgnoreCase(BILLING_DEPARTMENT) || userType.equalsIgnoreCase(METERING_DEPARTMENT)) {
+                if (isPemcUser) {
+                    if (equalsIgnoreCase(userType, METERING_DEPARTMENT)) {
                         userType = PEMC_USERTYPE;
                     } else {
                         userType = null;
                     }
                 } else {
-                    userType = getCategory(token);
+                    userType = getParticipant(token).getRegistrationCategory();
                 }
             }
         } catch (URISyntaxException | IOException e) {
@@ -244,8 +247,40 @@ public class RestUtil {
         return userType;
     }
 
-    private static String getCategory(String token) {
-        String category = null;
+    public static List<ComboBoxItem> getMSPListing(String token) {
+        List<ComboBoxItem> retVal = new ArrayList<>();
+
+        try {
+            URIBuilder builder = new URIBuilder(MSP_LISTING_URL);
+
+            HttpClient httpClient = HttpClientBuilder.create().build();
+            HttpGet httpGet = new HttpGet(builder.build());
+            httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", token));
+
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+            StatusLine statusLine = httpResponse.getStatusLine();
+
+            if (statusLine.getStatusCode() == SC_OK) {
+                String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+                JSONArray jsonArray = new JSONArray(content);
+
+                Iterator<Object> iterator = jsonArray.iterator();
+                while (iterator.hasNext()) {
+                    JSONObject object = (JSONObject) iterator.next();
+
+                    retVal.add(new ComboBoxItem(object.getString("shortName"),
+                            object.getString("participantName")));
+                }
+            }
+        } catch (URISyntaxException | IOException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        return retVal;
+    }
+
+    public static ParticipantName getParticipant(String token) {
+        ParticipantName retVal = null;
 
         try {
             URIBuilder builder = new URIBuilder(PARTICIPANT_CATEGORY_URL);
@@ -261,19 +296,18 @@ public class RestUtil {
                 String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
                 JSONObject obj = new JSONObject(content);
 
-                category = obj.get("category").toString();
-
-                if(category.equalsIgnoreCase(MSP_CATEGORY)) {
-                    category = MSP_USERTYPE;
-                } else {
-                    category = null;
-                }
+                // TODO: Improve json deserialization
+                retVal = new ParticipantName();
+                retVal.setId(obj.getLong("id"));
+                retVal.setShortName(obj.getString("shortName"));
+                retVal.setParticipantName(obj.getString("participantName"));
+                retVal.setRegistrationCategory(obj.getString("registrationCategory"));
             }
         } catch (URISyntaxException | IOException e) {
             log.error(e.getMessage(), e);
         }
 
-        return category;
+        return retVal;
     }
 
     private static String getFileType(Path path) {
