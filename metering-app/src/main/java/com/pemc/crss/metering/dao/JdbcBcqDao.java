@@ -6,7 +6,6 @@ import com.pemc.crss.metering.dto.BcqUploadFile;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,7 +17,9 @@ import javax.inject.Inject;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Repository
@@ -65,8 +66,8 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public void saveBcqData(long fileID, Map<BcqHeader, Set<BcqData>> headerDataMap) {
-        for (Map.Entry<BcqHeader, Set<BcqData>> entry : headerDataMap.entrySet()) {
+    public void saveBcqData(long fileID, Map<BcqHeader, List<BcqData>> headerDataMap) {
+        for (Map.Entry<BcqHeader, List<BcqData>> entry : headerDataMap.entrySet()) {
             BcqHeader header = entry.getKey();
             boolean headerExists = headerExists(header);
             long headerId = saveBcqHeader(fileID, header, headerExists);

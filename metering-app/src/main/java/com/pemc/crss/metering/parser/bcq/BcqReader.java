@@ -26,20 +26,34 @@ public class BcqReader {
 
     private static final int DEFAULT_INTERVAL_CONFIG_IN_MINUTES = 5;
 
-    public Map<BcqHeader, Set<BcqData>> readData(InputStream inputStream, Date validDeclarationDate)
+    public Map<BcqHeader, List<BcqData>> readData(InputStream inputStream, Date validDeclarationDate)
             throws IOException, ValidationException {
 
-        Set<List<String>> dataRecord = new HashSet<>();
+        List<List<String>> dataRecord = new ArrayList<>();
+        Set<List<String>> uniqueDataRecord = new LinkedHashSet<>(); //seller buyer date
+
 
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
-            List<String> row;
+            List<String> line;
 
-            while ((row = reader.read()) != null) {
-                if (!dataRecord.add(row)) {
-                    int lineNo = reader.getLineNumber();
+            while ((line = reader.read()) != null) {
 
-                    BcqErrorMessageFormatter.formatMessage(lineNo, DUPLICATE, StringUtils.join(row, ", "));
+                if (reader.getLineNumber() > 2) {
+                    List<String> data = new ArrayList<>();
+
+                    data.add(line.get(0));
+                    data.add(line.get(1));
+                    data.add(line.get(3));
+
+                    if (!uniqueDataRecord.add(data)) {
+                        int lineNo = reader.getLineNumber();
+
+                        throw new ValidationException(
+                                BcqErrorMessageFormatter.formatMessage(lineNo, DUPLICATE, StringUtils.join(line, ", ")));
+                    }
                 }
+
+                dataRecord.add(line);
             }
 
             BcqCsvValidator.validateCsv(dataRecord);

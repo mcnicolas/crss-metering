@@ -8,10 +8,11 @@ public enum BcqValidationMessage {
     MISSING_REFERENCE_MTN("Missing reference MTN."),
     MISSING_END_TIME("Missing end time."),
     INVALID_END_TIME_FORMAT("Invalid end time format."),
-    INVALID_END_TIME_FRAME("Invalid end time."),
+    INVALID_DATE("Invalid date."),
     MISSING_BCQ("Missing bcq."),
     INVALID_BCQ("Invalid bcq."),
-    DUPLICATE("Duplicate record.");
+    DUPLICATE("Duplicate record."),
+    INVALID_DATA_SIZE("Invalid data size.");
 
     private final String message;
 

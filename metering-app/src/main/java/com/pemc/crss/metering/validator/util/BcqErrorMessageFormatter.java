@@ -9,8 +9,12 @@ public class BcqErrorMessageFormatter {
     private final static String VALID_TEXT_TEMPLATE = "\nVALID: %s";
 
     public static String formatMessage(int lineNo, BcqValidationMessage validationMessage) {
-        return String.format(LINE_ERROR_TEMPLATE, lineNo) +
-                validationMessage.getMessage();
+        if (lineNo > 0) {
+            return String.format(LINE_ERROR_TEMPLATE, lineNo) +
+                    validationMessage.getMessage();
+        }
+
+        return String.format("ERROR: %s", validationMessage.getMessage());
     }
 
     public static String formatMessage(int lineNo, BcqValidationMessage validationMessage, Object found) {

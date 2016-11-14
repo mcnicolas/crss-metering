@@ -9,7 +9,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import static com.pemc.crss.metering.constants.BcqValidationMessage.*;
 import static com.pemc.crss.metering.parser.bcq.BcqInterval.getValidIntervals;
@@ -17,12 +16,11 @@ import static com.pemc.crss.metering.validator.util.BcqErrorMessageFormatter.for
 
 public class BcqCsvValidator {
 
-    private final static int VALID_INTERVAL_NO_OF_COLUMNS = 2;
     private final static int VALID_DATA_NO_OF_COLUMNS = 5;
 
     private BcqCsvValidator() {}
 
-    public static void validateCsv(Set<List<String>> dataRecord) throws ValidationException {
+    public static void validateCsv(List<List<String>> dataRecord) throws ValidationException {
         int currentLineNo = 1;
 
         for (List<String> line :dataRecord) {
@@ -45,7 +43,7 @@ public class BcqCsvValidator {
     private static void validateInterval(List<String> line) throws ValidationException {
         int lineNo = 1; //default first line
 
-        validateNoOfColumns(line.size(), VALID_INTERVAL_NO_OF_COLUMNS, lineNo);
+        validateNoOfColumns(line.size(), VALID_DATA_NO_OF_COLUMNS, lineNo);
 
         String intervalString = line.get(1);
 
@@ -102,7 +100,7 @@ public class BcqCsvValidator {
 
         if (endDate == null) {
             String errorMessage = formatMessage(lineNo, INVALID_END_TIME_FORMAT,
-                    endDateString, StringUtils.join(BCQParserUtil.DATE_FORMATS, ", "));
+                    endDateString, StringUtils.join(BCQParserUtil.DATE_TIME_FORMATS, ", "));
 
             throw new ValidationException(errorMessage);
         }

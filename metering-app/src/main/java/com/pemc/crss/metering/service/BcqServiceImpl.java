@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -28,7 +27,7 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public void saveBcqData(long fileID, Map<BcqHeader, Set<BcqData>> headerDataMap) {
+    public void saveBcqData(long fileID, Map<BcqHeader, List<BcqData>> headerDataMap) {
         bcqDao.saveBcqData(fileID, headerDataMap);
     }
 }
