@@ -28,10 +28,6 @@ public class BcqHeader {
             return false;
         }
 
-        if (!super.equals(o)) {
-            return false;
-        }
-
         BcqHeader that = (BcqHeader) o;
         return Objects.equals(bcqHeaderId, that.bcqHeaderId)
                 && Objects.equals(fileId, that.fileId)
@@ -45,8 +41,7 @@ public class BcqHeader {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(),
-                bcqHeaderId, fileId, sellingMTN, buyingParticipant, sellingParticipantName,
+        return Objects.hash(bcqHeaderId, fileId, sellingMTN, buyingParticipant, sellingParticipantName,
                 sellingParticipantShortName, status, declarationDate);
     }
 }

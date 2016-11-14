@@ -38,10 +38,6 @@ public class BcqData {
             return false;
         }
 
-        if (!super.equals(o)) {
-            return false;
-        }
-
         BcqData that = (BcqData) o;
         return Objects.equals(bcqDataId, that.bcqDataId)
                 && Objects.equals(bcqHeaderId, that.bcqHeaderId)
@@ -53,6 +49,6 @@ public class BcqData {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), bcqDataId, bcqHeaderId, referenceMTN, startTime, endTime, bcq);
+        return Objects.hash(bcqDataId, bcqHeaderId, referenceMTN, startTime, endTime, bcq);
     }
 }
