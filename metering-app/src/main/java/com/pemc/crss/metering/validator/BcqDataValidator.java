@@ -13,10 +13,10 @@ import org.apache.commons.lang3.time.DateUtils;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import static com.pemc.crss.metering.constants.BcqValidationMessage.*;
+import static com.pemc.crss.metering.parser.bcq.BcqInterval.FIVE_MINUTES_PERIOD;
 import static com.pemc.crss.metering.parser.bcq.BcqInterval.QUARTERLY;
 
 public class BcqDataValidator {
@@ -25,60 +25,43 @@ public class BcqDataValidator {
                                                                     int intervalConfig,
                                                                     Date validDeclarationDate) throws ValidationException {
 
-        BcqInterval interval = null;
         Map<BcqHeader, List<BcqData>> headerDataMap = new HashMap<>();
-        int currentLineNo = 1;
-        BcqData lastData = null;
 
-        for (List<String> line : dataRecord) {
-            switch (currentLineNo) {
-                case 1:
-                    interval = BcqInterval.fromDescription(line.get(1));
+        BcqInterval interval = getAndValidateInterval(dataRecord.get(0), intervalConfig);
+        int validDataSize = getValidNoOfRecords(intervalConfig);
 
-                    if (interval == BcqInterval.FIVE_MINUTES_PERIOD && intervalConfig != 5) {
-                        throw new ValidationException(
-                                BcqErrorMessageFormatter.formatMessage(0, INVALID_INTERVAL,
-                                        interval.getDescription(), QUARTERLY.getDescription()));
-                    }
-                    break;
-                case 2:
-                    break;
-                default:
-                    BcqHeader header = getHeader(line, validDeclarationDate, currentLineNo);
+        BcqHeader lastHeader = null;
 
-                    if (!headerDataMap.containsKey(header)) {
-                        headerDataMap.put(header, new ArrayList<>());
-                    }
+        for (int i = 2; i < dataRecord.size(); i ++) {
+            int lineNo = i + 1;
+            List<String> line = dataRecord.get(i);
+            BcqHeader header = getHeader(line, validDeclarationDate, lineNo);
+            BcqData prevData = null;
+            BcqData data = getData(line, interval);
 
-                    List<BcqData> currentDataList = headerDataMap.get(header);
+            if (!headerDataMap.containsKey(header)) {
+                if (headerDataMap.size() > 0) {
+                    validateDataSize(headerDataMap, lastHeader, validDataSize, interval, intervalConfig);
+                }
+                headerDataMap.put(header, new ArrayList<>());
 
-                    BcqData data = getData(line, interval);
-                    BcqData prevData = null;
-
-                    if (currentDataList.size() > 0) {
-                        prevData = currentDataList.get(currentDataList.size() - 1);
-                    } else {
-                        if (lastData != null) {
-                            if (!DateTimeUtils.isStartOfDay(lastData.getEndTime())) {
-                                prevData = lastData;
-                            }
-                        }
-                    }
-
-                    validateNextData(prevData, data, interval, currentLineNo);
-
-                    List<BcqData> dataList = divideDataByInterval(getData(line, interval), interval, intervalConfig);
-
-                    headerDataMap.get(header).addAll(dataList);
-
-                    lastData = data;
-                    break;
+                lastHeader = header;
             }
 
-            currentLineNo ++;
+            List<BcqData> currentDataList = headerDataMap.get(header);
+
+            if (currentDataList.size() > 0) {
+                prevData = currentDataList.get(currentDataList.size() - 1);
+            }
+
+            validateNextData(prevData, data, interval, lineNo);
+
+            List<BcqData> dataList = divideDataByInterval(getData(line, interval), interval, intervalConfig);
+
+            headerDataMap.get(header).addAll(dataList);
         }
 
-        validateDataSize(headerDataMap, intervalConfig);
+        validateDataSize(headerDataMap, lastHeader, validDataSize, interval, intervalConfig);
 
         return headerDataMap;
     }
@@ -109,10 +92,32 @@ public class BcqDataValidator {
         return dividedDataList;
     }
 
+    private static BcqInterval getAndValidateInterval(List<String> line, int intervalConfig)
+            throws ValidationException {
+
+        BcqInterval interval = BcqInterval.fromDescription(line.get(1));
+
+        if (interval == BcqInterval.FIVE_MINUTES_PERIOD && intervalConfig != 5) {
+            throw new ValidationException(
+                    BcqErrorMessageFormatter.formatMessage(0, INVALID_INTERVAL.getMessage(),
+                            interval.getDescription(), QUARTERLY.getDescription()));
+        }
+
+        return interval;
+    }
+
+    private static int getValidNoOfRecords(int intervalConfig) {
+
+        return intervalConfig == 5 ?
+                FIVE_MINUTES_PERIOD.getValidNoOfRecords() :
+                QUARTERLY.getValidNoOfRecords();
+    }
+
     private static BcqHeader getHeader(List<String> line, Date validDeclarationDate, int lineNo)
             throws ValidationException {
 
         BcqHeader header = new BcqHeader();
+        System.out.println(line);
         Date declarationDate = BCQParserUtil.parseDateTime(line.get(3));
 
         validateDeclarationDate(declarationDate, validDeclarationDate, lineNo);
@@ -145,8 +150,10 @@ public class BcqDataValidator {
         return new Date(date.getTime() - interval.getTimeInMillis());
     }
 
-    private static String formatAndGetDate(Date date) {
-        DateFormat dateFormat = new SimpleDateFormat(BCQParserUtil.DATE_TIME_FORMATS[0]);
+    private static String formatAndGetDate(Date date, boolean withTime) {
+        String format = withTime ? BCQParserUtil.DATE_TIME_FORMATS[0] : BCQParserUtil.DATE_FORMATS[0];
+        DateFormat dateFormat = new SimpleDateFormat(format);
+
         return dateFormat.format(date);
     }
 
@@ -160,42 +167,57 @@ public class BcqDataValidator {
 
         if (validDeclarationDate == null) {
             validDeclarationDateString = StringUtils.<String>join(
-                    Arrays.asList(formatAndGetDate(yesterday), formatAndGetDate(tomorrow)), " - ");
+                    Arrays.asList(formatAndGetDate(yesterday, true), formatAndGetDate(tomorrow, true)), " - ");
 
             if (declarationDate.after(tomorrow) || declarationDate.before(yesterday)) {
-                String errorMessage = BcqErrorMessageFormatter.formatMessage(lineNo, INVALID_DATE,
-                        formatAndGetDate(declarationDate), validDeclarationDateString);
+                String errorMessage = BcqErrorMessageFormatter.formatMessage(lineNo, INVALID_DATE.getMessage(),
+                        formatAndGetDate(declarationDate, true), validDeclarationDateString);
 
                 throw new ValidationException(errorMessage);
             }
         } else {
             validDeclarationDateString = StringUtils.<String>join(
                     Arrays.asList(
-                            formatAndGetDate(DateTimeUtils.startOfDay(validDeclarationDate)),
-                            formatAndGetDate(DateTimeUtils.startOfDay(DateUtils.addDays(validDeclarationDate, 1)))),
+                            formatAndGetDate(DateTimeUtils.startOfDay(validDeclarationDate), true),
+                            formatAndGetDate(DateTimeUtils.startOfDay(DateUtils.addDays(validDeclarationDate, 1)), true)),
                     " - ");
 
             if (declarationDate.after(validDeclarationDate) || declarationDate.before(validDeclarationDate)) {
-                String errorMessage = BcqErrorMessageFormatter.formatMessage(lineNo, INVALID_DATE,
-                        formatAndGetDate(declarationDate), validDeclarationDateString);
+                String errorMessage = BcqErrorMessageFormatter.formatMessage(lineNo, INVALID_DATE.getMessage(),
+                        formatAndGetDate(declarationDate, true), validDeclarationDateString);
 
                 throw new ValidationException(errorMessage);
             }
         }
     }
 
-    private static void validateDataSize(Map<BcqHeader, List<BcqData>> headerDataMap, int intervalConfig)
-            throws ValidationException {
+    private static void validateDataSize(Map<BcqHeader, List<BcqData>> headerDataMap, BcqHeader header, int validDataSize,
+                                         BcqInterval interval, int intervalConfig) throws ValidationException {
 
-        int validDataSize = (intervalConfig == 5 ? 288 : 96) * headerDataMap.entrySet().size();
-        int dataSize = 0;
+        int divisor;
 
-        for (Entry<BcqHeader, List<BcqData>> entry : headerDataMap.entrySet()) {
-            dataSize += entry.getValue().size();
+        if (interval == FIVE_MINUTES_PERIOD) {
+            divisor = intervalConfig == 5 ? 1 : 0;
+        } else if (interval == QUARTERLY) {
+            divisor = intervalConfig == 5 ? 3 : 1;
+        } else {
+            divisor = intervalConfig == 5 ? 12 : 4;
         }
 
-        if (dataSize != validDataSize) {
-            String errorMessage = BcqErrorMessageFormatter.formatMessage(0, INVALID_DATA_SIZE, dataSize, validDataSize);
+        List<BcqData> lastDataList = headerDataMap.get(header);
+
+        if (lastDataList.size() != validDataSize) {
+            String additionalMessage = String.format(
+                    "Complete first the record with data (Selling MTN: %s, Buying Participant: %s, Date: %s), " +
+                            "before end or proceeding to a new record.",
+                    header.getSellingMTN(),
+                    header.getBuyingParticipant(),
+                    formatAndGetDate(header.getDeclarationDate(), false));
+
+            String errorMessage = BcqErrorMessageFormatter.formatMessage(0,
+                    INVALID_DATA_SIZE.getMessage() + " " + additionalMessage,
+                    lastDataList.size() / divisor,
+                    validDataSize / divisor);
 
             throw new ValidationException(errorMessage);
         }
@@ -218,9 +240,9 @@ public class BcqDataValidator {
 
         if (diff != interval.getTimeInMillis()) {
             String errorMessage = BcqErrorMessageFormatter.formatMessage(lineNo,
-                    INVALID_DATE,
-                    formatAndGetDate(nextData.getEndTime()),
-                    formatAndGetDate(validDate));
+                    INVALID_DATE.getMessage(),
+                    formatAndGetDate(nextData.getEndTime(), true),
+                    formatAndGetDate(validDate, true));
 
             throw new ValidationException(errorMessage);
         }

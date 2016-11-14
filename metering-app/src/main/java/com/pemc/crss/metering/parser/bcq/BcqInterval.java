@@ -40,7 +40,7 @@ public enum BcqInterval {
         return timeInMillis;
     }
 
-    public long getValidNoOfRecords() {
+    public int getValidNoOfRecords() {
         return validNoOfRecords;
     }
 

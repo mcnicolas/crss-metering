@@ -49,7 +49,8 @@ public class BcqReader {
                         int lineNo = reader.getLineNumber();
 
                         throw new ValidationException(
-                                BcqErrorMessageFormatter.formatMessage(lineNo, DUPLICATE, StringUtils.join(line, ", ")));
+                                BcqErrorMessageFormatter.formatMessage(lineNo, DUPLICATE.getMessage(),
+                                        StringUtils.join(line, ", ")));
                     }
                 }
 

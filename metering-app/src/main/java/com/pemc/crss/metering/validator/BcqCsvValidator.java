@@ -48,7 +48,7 @@ public class BcqCsvValidator {
         String intervalString = line.get(1);
 
         if(BcqInterval.fromDescription(intervalString) == null) {
-            String errorMessage = formatMessage(lineNo, INVALID_INTERVAL,
+            String errorMessage = formatMessage(lineNo, INVALID_INTERVAL.getMessage(),
                     intervalString, getValidIntervals());
 
             throw new ValidationException(errorMessage);
@@ -75,7 +75,8 @@ public class BcqCsvValidator {
             throws ValidationException {
 
         if (noOfColumns != validNoOfColumns) {
-            String errorMessage = formatMessage(lineNo, INVALID_NO_OF_COLUMNS, noOfColumns, validNoOfColumns);
+            String errorMessage = formatMessage(lineNo, INVALID_NO_OF_COLUMNS.getMessage(),
+                    noOfColumns, validNoOfColumns);
 
             throw new ValidationException(errorMessage);
         }
@@ -99,7 +100,7 @@ public class BcqCsvValidator {
         Date endDate = BCQParserUtil.parseDateTime(endDateString);
 
         if (endDate == null) {
-            String errorMessage = formatMessage(lineNo, INVALID_END_TIME_FORMAT,
+            String errorMessage = formatMessage(lineNo, INVALID_END_TIME_FORMAT.getMessage(),
                     endDateString, StringUtils.join(BCQParserUtil.DATE_TIME_FORMATS, ", "));
 
             throw new ValidationException(errorMessage);
@@ -110,7 +111,7 @@ public class BcqCsvValidator {
         validateNotEmpty(bcqString, MISSING_BCQ, lineNo);
 
         if (!NumberUtils.isParsable(bcqString)) {
-            String errorMessage = formatMessage(lineNo, INVALID_BCQ, bcqString);
+            String errorMessage = formatMessage(lineNo, INVALID_BCQ.getMessage(), bcqString);
 
             throw new ValidationException(errorMessage);
         }
@@ -120,7 +121,7 @@ public class BcqCsvValidator {
             throws ValidationException {
 
         if (value == null || value.isEmpty()) {
-            String errorMessage = formatMessage(lineNo, validationMessage);
+            String errorMessage = formatMessage(lineNo, validationMessage.getMessage());
 
             throw new ValidationException(errorMessage);
         }

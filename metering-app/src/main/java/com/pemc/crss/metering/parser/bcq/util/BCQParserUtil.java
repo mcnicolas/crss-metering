@@ -12,6 +12,11 @@ public class BCQParserUtil {
             "MM-dd-yyyy HH:mm"
     };
 
+    public static final String[] DATE_FORMATS = {
+            "MM/dd/yyyy",
+            "MM-dd-yyyy"
+    };
+
     private BCQParserUtil() {}
 
     public static Date parseDateTime(String dateString) {
