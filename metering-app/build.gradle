@@ -23,8 +23,8 @@ configurations {
 }
 
 apply plugin: 'org.liquibase.gradle'
-
 apply from: 'liquibase.gradle'
+apply from: file('docker.gradle')
 
 dependencies {
     compile 'org.apache.poi:poi'

@@ -12,11 +12,14 @@ buildscript {
     dependencies {
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.4.2.RELEASE'
         classpath 'io.spring.gradle:dependency-management-plugin:0.6.1.RELEASE'
+        classpath 'org.ajoberstar:gradle-git:1.5.1'
     }
 }
 
 ext {
     springBootVersion = '1.4.2.RELEASE'
+    git = org.ajoberstar.grgit.Grgit.open()
+    revision = git.head().abbreviatedId
 }
 
 subprojects {
@@ -24,7 +27,7 @@ subprojects {
     apply plugin: 'idea'
     apply plugin: 'io.spring.dependency-management'
 
-    project.version = '2.0.0-SNAPSHOT'
+    project.version = '2.0.0.BUILD-SNAPSHOT'
     project.buildDir = 'target'
 
     sourceCompatibility = 1.8
