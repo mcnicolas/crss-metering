@@ -85,4 +85,13 @@ public final class DateTimeUtils {
         return Long.valueOf(formattedDate);
     }
 
+    public static boolean isStartOfDay(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+
+        return calendar.get(HOUR_OF_DAY) == 0
+                && calendar.get(MINUTE) == 0
+                && calendar.get(SECOND) == 0;
+    }
+
 }
