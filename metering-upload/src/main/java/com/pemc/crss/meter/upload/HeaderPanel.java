@@ -159,7 +159,6 @@ public class HeaderPanel extends JPanel {
 
         btnSettings.setIcon(new ImageIcon(getClass().getResource("/images/Vertical Settings Mixer-50.png"))); // NOI18N
         btnSettings.setToolTipText("Settings");
-        btnSettings.setEnabled(false);
         btnSettings.setFocusable(false);
         btnSettings.setHorizontalTextPosition(SwingConstants.CENTER);
         btnSettings.addActionListener(new ActionListener() {
