@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.resource;
 
+import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.*;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
 import com.pemc.crss.metering.service.BcqService;
@@ -12,7 +13,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -30,13 +34,13 @@ public class BcqResource {
     public BcqDetails uploadData(@RequestParam("file") MultipartFile file)
             throws IOException, ValidationException {
 
-        Map<BcqHeaderInfo, List<BcqDataInfo>> headerDataMap = new HashMap<>();
+        List<BcqHeaderDataInfoPair> headerDataInfoPairList = new ArrayList<>();
         BcqUploadFileInfo fileInfo = new BcqUploadFileInfo();
         fileInfo.setFileName(file.getOriginalFilename());
         fileInfo.setFileSize(file.getSize());
 
-        bcqReader.readData(file.getInputStream(), null).entrySet().forEach(entry -> {
-            BcqHeader header = entry.getKey();
+        bcqReader.readData(file.getInputStream(), null).forEach(headerDataPair -> {
+            BcqHeader header = headerDataPair.getHeader();
             BcqHeaderInfo headerInfo = new BcqHeaderInfo();
 
             headerInfo.setSellingMTN(header.getSellingMTN());
@@ -44,8 +48,9 @@ public class BcqResource {
             headerInfo.setSellingParticipantName(null);
             headerInfo.setSellingParticipantShortName(null);
             headerInfo.setStatus(null);
+            headerInfo.setDeclarationDate(header.getDeclarationDate());
 
-            List<BcqData> dataList = entry.getValue();
+            List<BcqData> dataList = headerDataPair.getDataList();
             List<BcqDataInfo> dataInfoList = new ArrayList<>();
 
             for (BcqData data : dataList) {
@@ -58,10 +63,10 @@ public class BcqResource {
                 dataInfoList.add(dataInfo);
             }
 
-            headerDataMap.put(headerInfo, dataInfoList);
+            headerDataInfoPairList.add(new BcqHeaderDataInfoPair(headerInfo, dataInfoList));
         });
 
-        return new BcqDetails(fileInfo, headerDataMap, null);
+        return new BcqDetails(null, fileInfo, headerDataInfoPairList, null);
     }
 
     @PostMapping("/save")
@@ -71,19 +76,20 @@ public class BcqResource {
         uploadFile.setFileSize(details.getFileInfo().getFileSize());
         uploadFile.setSubmittedDate(new Date());
 
-        Map<BcqHeader, List<BcqData>> headerDataMap = new HashMap<>();
+        List<BcqHeaderDataPair> headerDataPairList = new ArrayList<>();
 
-        details.getHeaderDataMap().entrySet().forEach(entry -> {
-            BcqHeaderInfo headerInfo = entry.getKey();
+        details.getHeaderDataInfoPairList().forEach(headerDataInfoPair -> {
+            BcqHeaderInfo headerInfo = headerDataInfoPair.getHeaderInfo();
             BcqHeader header = new BcqHeader();
 
             header.setSellingMTN(headerInfo.getSellingMTN());
             header.setBuyingParticipant(headerInfo.getBuyingParticipant());
             header.setSellingParticipantName(headerInfo.getSellingParticipantName());
             header.setSellingParticipantShortName(headerInfo.getSellingParticipantShortName());
-            header.setStatus(headerInfo.getStatus());
+            header.setStatus(BcqStatus.fromString(headerInfo.getStatus()));
+            header.setDeclarationDate(headerInfo.getDeclarationDate());
 
-            List<BcqDataInfo> dataInfoList = entry.getValue();
+            List<BcqDataInfo> dataInfoList = headerDataInfoPair.getDataInfoList();
             List<BcqData> dataList = new ArrayList<>();
 
             for (BcqDataInfo dataInfo : dataInfoList) {
@@ -96,13 +102,13 @@ public class BcqResource {
                 dataList.add(data);
             }
 
-            headerDataMap.put(header, dataList);
+            headerDataPairList.add(new BcqHeaderDataPair(header, dataList));
         });
 
         String transactionId = UUID.randomUUID().toString();
         long fileId = bcqService.saveBcqUploadFile(transactionId, uploadFile);
 
-        bcqService.saveBcqData(fileId, headerDataMap);
+        bcqService.saveBcqData(fileId, headerDataPairList);
 
         return true;
     }

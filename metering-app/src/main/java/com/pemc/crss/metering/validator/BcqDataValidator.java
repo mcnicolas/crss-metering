@@ -2,6 +2,7 @@ package com.pemc.crss.metering.validator;
 
 import com.pemc.crss.metering.dto.BcqData;
 import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.BcqHeaderDataPair;
 import com.pemc.crss.metering.parser.bcq.BcqInterval;
 import com.pemc.crss.metering.parser.bcq.util.BCQParserUtil;
 import com.pemc.crss.metering.utils.DateTimeUtils;
@@ -21,16 +22,15 @@ import static com.pemc.crss.metering.parser.bcq.BcqInterval.QUARTERLY;
 
 public class BcqDataValidator {
 
-    public static Map<BcqHeader, List<BcqData>> getAndValidateRecord(List<List<String>> dataRecord,
-                                                                    int intervalConfig,
-                                                                    Date validDeclarationDate) throws ValidationException {
+    public static List<BcqHeaderDataPair> getAndValidateRecord(List<List<String>> dataRecord, int intervalConfig,
+                                                               Date validDeclarationDate) throws ValidationException {
 
-        Map<BcqHeader, List<BcqData>> headerDataMap = new HashMap<>();
+
+        Set<BcqHeader> headerSet = new HashSet<>();
+        List<BcqHeaderDataPair> headerDataPairList = new ArrayList<>();
 
         BcqInterval interval = getAndValidateInterval(dataRecord.get(0), intervalConfig);
         int validDataSize = getValidNoOfRecords(intervalConfig);
-
-        BcqHeader lastHeader = null;
 
         for (int i = 2; i < dataRecord.size(); i ++) {
             int lineNo = i + 1;
@@ -39,16 +39,17 @@ public class BcqDataValidator {
             BcqData prevData = null;
             BcqData data = getData(line, interval);
 
-            if (!headerDataMap.containsKey(header)) {
-                if (headerDataMap.size() > 0) {
-                    validateDataSize(headerDataMap, lastHeader, validDataSize, interval, intervalConfig);
+            if (!headerSet.contains(header)) {
+                if (headerDataPairList.size() > 0) {
+                    validateDataSize(headerDataPairList.get(headerDataPairList.size() - 1), validDataSize,
+                            interval, intervalConfig);
                 }
-                headerDataMap.put(header, new ArrayList<>());
 
-                lastHeader = header;
+                headerDataPairList.add(new BcqHeaderDataPair(header, new ArrayList<>()));
+                headerSet.add(header);
             }
 
-            List<BcqData> currentDataList = headerDataMap.get(header);
+            List<BcqData> currentDataList = headerDataPairList.get(headerDataPairList.size() - 1).getDataList();
 
             if (currentDataList.size() > 0) {
                 prevData = currentDataList.get(currentDataList.size() - 1);
@@ -58,12 +59,12 @@ public class BcqDataValidator {
 
             List<BcqData> dataList = divideDataByInterval(getData(line, interval), interval, intervalConfig);
 
-            headerDataMap.get(header).addAll(dataList);
+            headerDataPairList.get(headerDataPairList.size() - 1).getDataList().addAll(dataList);
         }
 
-        validateDataSize(headerDataMap, lastHeader, validDataSize, interval, intervalConfig);
+        validateDataSize(headerDataPairList.get(headerDataPairList.size() - 1), validDataSize, interval, intervalConfig);
 
-        return headerDataMap;
+        return headerDataPairList;
     }
 
     private static List<BcqData> divideDataByInterval(BcqData data, BcqInterval interval, int intervalConfig) {
@@ -191,7 +192,7 @@ public class BcqDataValidator {
         }
     }
 
-    private static void validateDataSize(Map<BcqHeader, List<BcqData>> headerDataMap, BcqHeader header, int validDataSize,
+    private static void validateDataSize(BcqHeaderDataPair headerDataPair, int validDataSize,
                                          BcqInterval interval, int intervalConfig) throws ValidationException {
 
         int divisor;
@@ -204,7 +205,8 @@ public class BcqDataValidator {
             divisor = intervalConfig == 5 ? 12 : 4;
         }
 
-        List<BcqData> lastDataList = headerDataMap.get(header);
+        BcqHeader header = headerDataPair.getHeader();
+        List<BcqData> lastDataList = headerDataPair.getDataList();
 
         if (lastDataList.size() != validDataSize) {
             String additionalMessage = String.format(

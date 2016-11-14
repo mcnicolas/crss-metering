@@ -1,8 +1,7 @@
 package com.pemc.crss.metering.service;
 
 import com.pemc.crss.metering.dao.BcqDao;
-import com.pemc.crss.metering.dto.BcqData;
-import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.BcqHeaderDataPair;
 import com.pemc.crss.metering.dto.BcqUploadFile;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -27,7 +25,7 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public void saveBcqData(long fileID, Map<BcqHeader, List<BcqData>> headerDataMap) {
-        bcqDao.saveBcqData(fileID, headerDataMap);
+    public void saveBcqData(long fileID, List<BcqHeaderDataPair> headerDataPairList) {
+        bcqDao.saveBcqData(fileID, headerDataPairList);
     }
 }

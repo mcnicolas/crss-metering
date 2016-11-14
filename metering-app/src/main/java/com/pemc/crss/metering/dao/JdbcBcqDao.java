@@ -2,6 +2,7 @@ package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.metering.dto.BcqData;
 import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.BcqHeaderDataPair;
 import com.pemc.crss.metering.dto.BcqUploadFile;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +18,7 @@ import javax.inject.Inject;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Repository
@@ -50,13 +49,14 @@ public class JdbcBcqDao implements BcqDao {
     @Override
     public long saveBcqUploadFile(String transactionID, BcqUploadFile bcqUploadFile) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
+        log.debug(insertManifest);
         jdbcTemplate.update(
                 connection -> {
                     PreparedStatement ps = connection.prepareStatement(insertManifest, new String[]{"file_id"});
                     ps.setString(1, transactionID);
                     ps.setString(2, bcqUploadFile.getFileName());
                     ps.setLong(3, bcqUploadFile.getFileSize());
-                    ps.setTimestamp(5, new Timestamp(bcqUploadFile.getSubmittedDate().getTime()));
+                    ps.setTimestamp(4, new Timestamp(bcqUploadFile.getSubmittedDate().getTime()));
 
                     return ps;
                 },
@@ -66,12 +66,12 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public void saveBcqData(long fileID, Map<BcqHeader, List<BcqData>> headerDataMap) {
-        for (Map.Entry<BcqHeader, List<BcqData>> entry : headerDataMap.entrySet()) {
-            BcqHeader header = entry.getKey();
+    public void saveBcqData(long fileID, List<BcqHeaderDataPair> headerDataPairList) {
+        for (BcqHeaderDataPair headerDataPair : headerDataPairList) {
+            BcqHeader header = headerDataPair.getHeader();
             boolean headerExists = headerExists(header);
             long headerId = saveBcqHeader(fileID, header, headerExists);
-            List<BcqData> dataList = new ArrayList<>(entry.getValue());
+            List<BcqData> dataList = headerDataPair.getDataList();
 
             String sql = headerExists ? updateData : insertData;
 
@@ -112,7 +112,11 @@ public class JdbcBcqDao implements BcqDao {
 
                     ps.setLong(1, fileId);
 
-                    if (!update) {
+                    if (update) {
+                        ps.setString(2, header.getSellingMTN());
+                        ps.setString(3, header.getBuyingParticipant());
+                        ps.setTimestamp(4, new Timestamp(header.getDeclarationDate().getTime()));
+                    } else {
                         ps.setString(2, header.getSellingMTN());
                         ps.setString(3, header.getBuyingParticipant());
                         ps.setString(4, header.getSellingParticipantName());
