@@ -20,7 +20,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'buying_participant',              type: 'VARCHAR(255)')
             column(name: 'selling_participant_name',        type: 'VARCHAR(255)')
             column(name: 'selling_participant_short_name',  type: 'VARCHAR(255)')
-            column(name: 'status',                          type: 'VARCHAR(13)',)
+            column(name: 'status',                          type: 'VARCHAR(17)',)
             column(name: 'declaration_date',                type: 'TIMESTAMP')
         }
 
