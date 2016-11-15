@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -70,7 +69,7 @@ public class BcqResource {
     }
 
     @PostMapping("/save")
-    public Boolean saveData(@RequestBody BcqDetails details) {
+    public void saveData(@RequestBody BcqDetails details) {
         BcqUploadFile uploadFile = new BcqUploadFile();
         uploadFile.setFileName(details.getFileInfo().getFileName());
         uploadFile.setFileSize(details.getFileInfo().getFileSize());
@@ -105,11 +104,6 @@ public class BcqResource {
             headerDataPairList.add(new BcqHeaderDataPair(header, dataList));
         });
 
-        String transactionId = UUID.randomUUID().toString();
-        long fileId = bcqService.saveBcqUploadFile(transactionId, uploadFile);
-
-        bcqService.saveBcqData(fileId, headerDataPairList);
-
-        return true;
+        bcqService.saveBcqDetails(uploadFile, headerDataPairList, details.getBuyerIds(), details.getSellerId());
     }
 }

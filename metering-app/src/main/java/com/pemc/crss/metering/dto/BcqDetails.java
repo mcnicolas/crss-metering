@@ -4,15 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor
 public class BcqDetails {
 
-    private Long sellingParticipantId;
+    private Long sellerId;
     private BcqUploadFileInfo fileInfo;
     private List<BcqHeaderDataInfoPair> headerDataInfoPairList;
-    private Set<Long> buyingParticipantIds;
+    private List<Long> buyerIds;
 
 }
