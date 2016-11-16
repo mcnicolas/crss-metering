@@ -1,12 +1,14 @@
 buildscript {
     repositories {
         maven {
-            url "http://nexus.exist.com:8082/repository/maven-exist/"
-            credentials {
-                username "${mavenUser}"
-                password "${mavenPassword}"
-            }
+            url "https://plugins.gradle.org/m2/"
         }
+        maven {
+            url 'https://repo.spring.io/plugins-release'
+        }
+
+        jcenter()
+        mavenCentral()
     }
 
     dependencies {
@@ -35,12 +37,15 @@ subprojects {
 
     repositories {
         maven {
-            url "http://nexus.exist.com:8082/repository/maven-exist/"
-            credentials {
-                username "${mavenUser}"
-                password "${mavenPassword}"
-            }
+            url "https://plugins.gradle.org/m2/"
         }
+        maven {
+            url 'https://repo.spring.io/plugins-release'
+        }
+
+        // this two repository must not be here since it was already
+        jcenter()
+        mavenCentral()
     }
 
     idea {
@@ -98,7 +103,6 @@ subprojects {
             // DB Related
             dependency 'com.zaxxer:HikariCP:2.5.1'
             dependency 'org.postgresql:postgresql:9.4.1211'
-            dependency 'com.oracle:ojdbc6:11.2.0.3'
 
             dependency 'org.springframework.security.oauth:spring-security-oauth2:2.0.10.RELEASE'
         }
