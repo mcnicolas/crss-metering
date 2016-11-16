@@ -15,9 +15,14 @@ eureka:
 
 ---
 spring:
-  profiles: dev
+  profiles: native
   config:
     name: default
+  cloud:
+    config:
+      enabled: false
+      discovery:
+        enabled: false
 eureka:
   client:
     serviceUrl:
