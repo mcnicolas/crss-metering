@@ -23,8 +23,8 @@ public class MQDisplayQueryBuilder {
 
     public MQDisplayQueryBuilder selectMeterData(String category, String readingDate) {
         String selectSQL = "SELECT B.*" +
-                " FROM TXN_MQ_MANIFEST_FILE AS A" +
-                " INNER JOIN ${MQ_TABLE} AS B ON A.FILE_ID = B.FILE_ID";
+                " FROM TXN_MQ_MANIFEST_FILE A" +
+                " INNER JOIN ${MQ_TABLE} B ON A.FILE_ID = B.FILE_ID";
 
         String tableName = getTableName(category);
         selectSQL = selectSQL.replace("${MQ_TABLE}", tableName);
@@ -37,8 +37,8 @@ public class MQDisplayQueryBuilder {
 
     public MQDisplayQueryBuilder countMeterData(String category, String readingDate) {
         String countSQL = "SELECT COUNT(B.SEIN)" +
-                " FROM TXN_MQ_MANIFEST_FILE AS A" +
-                " INNER JOIN ${MQ_TABLE} AS B ON A.FILE_ID = B.FILE_ID";
+                " FROM TXN_MQ_MANIFEST_FILE A" +
+                " INNER JOIN ${MQ_TABLE} B ON A.FILE_ID = B.FILE_ID";
 
         String tableName = getTableName(category);
         countSQL = countSQL.replace("${MQ_TABLE}", tableName);
