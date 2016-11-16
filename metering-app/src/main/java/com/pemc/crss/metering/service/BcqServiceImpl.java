@@ -1,7 +1,7 @@
 package com.pemc.crss.metering.service;
 
 import com.pemc.crss.metering.dao.BcqDao;
-import com.pemc.crss.metering.dto.BcqHeaderDataPair;
+import com.pemc.crss.metering.dto.BcqDeclaration;
 import com.pemc.crss.metering.dto.BcqUploadFile;
 import com.pemc.crss.metering.event.BcqUploadEvent;
 import lombok.NonNull;
@@ -45,17 +45,17 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public void saveBcqData(long fileID, List<BcqHeaderDataPair> headerDataPairList) {
-        bcqDao.saveBcqData(fileID, headerDataPairList);
+    public void saveBcqData(long fileID, List<BcqDeclaration> bcqDeclarationList) {
+        bcqDao.saveBcqData(fileID, bcqDeclarationList);
     }
 
     @Override
-    public void saveBcqDetails(BcqUploadFile file, List<BcqHeaderDataPair> headerDataPairList,
+    public void saveBcqDetails(BcqUploadFile file, List<BcqDeclaration> bcqDeclarationList,
                                List<Long> buyerIds, Long sellerId) {
 
         String transactionId = UUID.randomUUID().toString();
         long fileId = bcqDao.saveBcqUploadFile(transactionId, file);
-        bcqDao.saveBcqData(fileId, headerDataPairList);
+        bcqDao.saveBcqData(fileId, bcqDeclarationList);
 
         Map<String, Object> payload = new HashMap<>();
         String format = "MMM. dd, yyyy hh:mm";
@@ -63,11 +63,11 @@ public class BcqServiceImpl implements BcqService {
         String submittedDate = dateFormat.format(file.getSubmittedDate());
 
         payload.put("submittedDate", submittedDate);
-        payload.put("recordCount", headerDataPairList.size() * headerDataPairList.get(0).getDataList().size());
+        payload.put("recordCount", bcqDeclarationList.size() * bcqDeclarationList.get(0).getDataList().size());
         payload.put("sellerName",
-                headerDataPairList.get(0).getHeader().getSellingParticipantName());
+                bcqDeclarationList.get(0).getHeader().getSellingParticipantName());
         payload.put("sellerShortName",
-                headerDataPairList.get(0).getHeader().getSellingParticipantShortName());
+                bcqDeclarationList.get(0).getHeader().getSellingParticipantShortName());
 
         for(Long id : buyerIds) {
             payload.put("buyerId", id);

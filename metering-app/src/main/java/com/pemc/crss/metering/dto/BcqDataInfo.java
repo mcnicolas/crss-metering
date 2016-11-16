@@ -7,7 +7,7 @@ import java.util.Date;
 @Data
 public class BcqDataInfo {
 
-    private String referenceMTN;
+    private String referenceMtn;
     private Date startTime;
     private Date endTime;
     private float bcq;

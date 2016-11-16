@@ -1,8 +1,8 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.metering.dto.BcqData;
+import com.pemc.crss.metering.dto.BcqDeclaration;
 import com.pemc.crss.metering.dto.BcqHeader;
-import com.pemc.crss.metering.dto.BcqHeaderDataPair;
 import com.pemc.crss.metering.dto.BcqUploadFile;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -66,12 +66,12 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public void saveBcqData(long fileID, List<BcqHeaderDataPair> headerDataPairList) {
-        for (BcqHeaderDataPair headerDataPair : headerDataPairList) {
-            BcqHeader header = headerDataPair.getHeader();
+    public void saveBcqData(long fileID, List<BcqDeclaration> bcqDeclarationList) {
+        for (BcqDeclaration bcqDeclaration : bcqDeclarationList) {
+            BcqHeader header = bcqDeclaration.getHeader();
             boolean headerExists = headerExists(header);
             long headerId = saveBcqHeader(fileID, header, headerExists);
-            List<BcqData> dataList = headerDataPair.getDataList();
+            List<BcqData> dataList = bcqDeclaration.getDataList();
 
             String sql = headerExists ? updateData : insertData;
 
@@ -81,13 +81,13 @@ public class JdbcBcqDao implements BcqDao {
                     BcqData data = dataList.get(i);
 
                     if (headerExists) {
-                        ps.setString(1, data.getReferenceMTN());
+                        ps.setString(1, data.getReferenceMtn());
                         ps.setFloat(2, data.getBcq());
                         ps.setTimestamp(3, new Timestamp(data.getEndTime().getTime()));
                         ps.setLong(4, headerId);
                     } else {
                         ps.setLong(1, headerId);
-                        ps.setString(2, data.getReferenceMTN());
+                        ps.setString(2, data.getReferenceMtn());
                         ps.setTimestamp(3, new Timestamp(data.getStartTime().getTime()));
                         ps.setTimestamp(4, new Timestamp(data.getEndTime().getTime()));
                         ps.setFloat(5, data.getBcq());
@@ -113,16 +113,16 @@ public class JdbcBcqDao implements BcqDao {
                     ps.setLong(1, fileId);
 
                     if (update) {
-                        ps.setString(2, header.getSellingMTN());
+                        ps.setString(2, header.getSellingMtn());
                         ps.setString(3, header.getBuyingParticipant());
-                        ps.setTimestamp(4, new Timestamp(header.getDeclarationDate().getTime()));
+                        ps.setTimestamp(4, new Timestamp(header.getTradingDate().getTime()));
                     } else {
-                        ps.setString(2, header.getSellingMTN());
+                        ps.setString(2, header.getSellingMtn());
                         ps.setString(3, header.getBuyingParticipant());
                         ps.setString(4, header.getSellingParticipantName());
                         ps.setString(5, header.getSellingParticipantShortName());
                         ps.setString(6, header.getStatus().toString());
-                        ps.setTimestamp(7, new Timestamp(header.getDeclarationDate().getTime()));
+                        ps.setTimestamp(7, new Timestamp(header.getTradingDate().getTime()));
                     }
 
                     return ps;
@@ -135,9 +135,9 @@ public class JdbcBcqDao implements BcqDao {
     private boolean headerExists(BcqHeader header) {
         return jdbcTemplate.queryForObject(headerExists,
                 new Object[] {
-                        header.getSellingMTN(),
+                        header.getSellingMtn(),
                         header.getBuyingParticipant(),
-                        header.getDeclarationDate()
+                        header.getTradingDate()
         }, Boolean.class);
     }
 }

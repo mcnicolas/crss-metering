@@ -21,7 +21,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'selling_participant_name',        type: 'VARCHAR(255)')
             column(name: 'selling_participant_short_name',  type: 'VARCHAR(255)')
             column(name: 'status',                          type: 'VARCHAR(17)',)
-            column(name: 'declaration_date',                type: 'TIMESTAMP')
+            column(name: 'trading_date',                    type: 'TIMESTAMP')
         }
 
         createTable(tableName: 'txn_bcq_data', remarks: 'BCQ data') {
@@ -44,7 +44,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
                 referencedColumnNames: 'bcq_header_id', referencedTableName: 'txn_bcq_header')
 
         addUniqueConstraint(
-                columnNames: 'selling_mtn, buying_participant, declaration_date',
+                columnNames: 'selling_mtn, buying_participant, trading_date',
                 constraintName: 'uk_bcq_header',
                 tableName: 'txn_bcq_header')
 

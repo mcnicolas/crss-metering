@@ -11,12 +11,12 @@ public class BcqHeader {
 
     private long bcqHeaderId;
     private long fileId;
-    private String sellingMTN;
+    private String sellingMtn;
     private String buyingParticipant;
     private String sellingParticipantName;
     private String sellingParticipantShortName;
     private BcqStatus status;
-    private Date declarationDate;
+    private Date tradingDate;
 
     @Override
     public boolean equals(Object o) {
@@ -31,17 +31,17 @@ public class BcqHeader {
         BcqHeader that = (BcqHeader) o;
         return Objects.equals(bcqHeaderId, that.bcqHeaderId)
                 && Objects.equals(fileId, that.fileId)
-                && Objects.equals(sellingMTN, that.sellingMTN)
+                && Objects.equals(sellingMtn, that.sellingMtn)
                 && Objects.equals(buyingParticipant, that.buyingParticipant)
                 && Objects.equals(sellingParticipantName, that.sellingParticipantName)
                 && Objects.equals(sellingParticipantShortName, that.sellingParticipantShortName)
                 && Objects.equals(status, that.status)
-                && Objects.equals(declarationDate, that.declarationDate);
+                && Objects.equals(tradingDate, that.tradingDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(bcqHeaderId, fileId, sellingMTN, buyingParticipant, sellingParticipantName,
-                sellingParticipantShortName, status, declarationDate);
+        return Objects.hash(bcqHeaderId, fileId, sellingMtn, buyingParticipant, sellingParticipantName,
+                sellingParticipantShortName, status, tradingDate);
     }
 }

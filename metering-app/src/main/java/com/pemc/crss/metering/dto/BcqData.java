@@ -11,7 +11,7 @@ public class BcqData {
 
     private long bcqDataId;
     private long bcqHeaderId;
-    private String referenceMTN;
+    private String referenceMtn;
     private Date startTime;
     private Date endTime;
     private float bcq;
@@ -21,7 +21,7 @@ public class BcqData {
         return MoreObjects.toStringHelper(this)
                 .add("id", getBcqDataId())
                 .add("fileId", getBcqHeaderId())
-                .add("referenceMTN", getReferenceMTN())
+                .add("referenceMtn", getReferenceMtn())
                 .add("startTime", getStartTime())
                 .add("endTime", getEndTime())
                 .add("bcq", getBcq())
@@ -41,7 +41,7 @@ public class BcqData {
         BcqData that = (BcqData) o;
         return Objects.equals(bcqDataId, that.bcqDataId)
                 && Objects.equals(bcqHeaderId, that.bcqHeaderId)
-                && Objects.equals(referenceMTN, that.referenceMTN)
+                && Objects.equals(referenceMtn, that.referenceMtn)
                 && Objects.equals(startTime, that.startTime)
                 && Objects.equals(endTime, that.endTime)
                 && Objects.equals(bcq, that.bcq);
@@ -49,6 +49,6 @@ public class BcqData {
 
     @Override
     public int hashCode() {
-        return Objects.hash(bcqDataId, bcqHeaderId, referenceMTN, startTime, endTime, bcq);
+        return Objects.hash(bcqDataId, bcqHeaderId, referenceMtn, startTime, endTime, bcq);
     }
 }

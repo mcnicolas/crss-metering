@@ -11,7 +11,7 @@ public class BcqDetails {
 
     private Long sellerId;
     private BcqUploadFileInfo fileInfo;
-    private List<BcqHeaderDataInfoPair> headerDataInfoPairList;
+    private List<BcqDeclarationInfo> bcqDeclarationInfoList;
     private List<Long> buyerIds;
 
 }

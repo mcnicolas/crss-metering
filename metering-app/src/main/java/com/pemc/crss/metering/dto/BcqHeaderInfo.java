@@ -7,7 +7,7 @@ import java.util.Date;
 @Data
 public class BcqHeaderInfo {
 
-    private String sellingMTN;
+    private String sellingMtn;
     private String buyingParticipant;
     private String sellingParticipantName;
     private String sellingParticipantShortName;
