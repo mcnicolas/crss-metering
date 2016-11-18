@@ -37,9 +37,9 @@ public class ApplicationLoader {
 
         if (loginDialog.getReturnStatus() == RET_OK) {
             dataUploader.login(loginDialog.getUsername(), loginDialog.getPassword());
-        }
 
-        dataUploader.configureServices();
+            dataUploader.configureServices();
+        }
     }
 
 }

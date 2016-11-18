@@ -303,16 +303,15 @@ public class HeaderPanel extends JPanel {
 
         if (loginDialog.getReturnStatus() == RET_OK) {
             parent.login(loginDialog.getUsername(), loginDialog.getPassword());
-        }
 
-        parent.configureServices();
+            parent.configureServices();
+        }
     }//GEN-LAST:event_loginActionPerformed
 
     public void enableToolbar() {
         btnSelectFiles.setEnabled(true);
         btnClearTable.setEnabled(false);
         btnUpload.setEnabled(false);
-        btnSettings.setEnabled(true);
 
         btnLogin.setEnabled(false);
         btnLogin.setVisible(false);
@@ -328,7 +327,6 @@ public class HeaderPanel extends JPanel {
         btnSelectFiles.setEnabled(false);
         btnClearTable.setEnabled(false);
         btnUpload.setEnabled(false);
-        btnSettings.setEnabled(false);
 
         btnLogin.setEnabled(true);
         btnLogin.setVisible(true);
