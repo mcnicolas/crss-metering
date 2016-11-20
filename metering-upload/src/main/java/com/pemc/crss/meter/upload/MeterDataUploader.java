@@ -1,12 +1,15 @@
 package com.pemc.crss.meter.upload;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
+import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
@@ -16,21 +19,20 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.List;
 import java.util.Properties;
-import java.util.PropertyResourceBundle;
-import java.util.ResourceBundle;
 import java.util.UUID;
-import javax.swing.BorderFactory;
 
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
@@ -40,6 +42,7 @@ public class MeterDataUploader extends JFrame {
 
     private String token;
     private String username;
+    private String fullName;
     private String userType;
     private ParticipantName participant;
     private Properties properties;
@@ -83,28 +86,62 @@ public class MeterDataUploader extends JFrame {
     // TODO:
     // 1. Display progress bar
     public void uploadData(String category, int mspID) {
+        ((CardLayout)statusBarPanel.getLayout()).show(statusBarPanel, "Upload");
+
         String transactionID = UUID.randomUUID().toString();
-
         List<FileBean> selectedFiles = tablePanel.getSelectedFiles();
+        uploadProgressBar.setValue(0);
+        uploadProgressBar.setMinimum(0);
+        uploadProgressBar.setMaximum(selectedFiles.size() + 2);
 
-        if (token != null) {
-            // TODO: Add error handling. When an error is encountered throw an exception.
-            RestUtil.sendHeader(transactionID, username, selectedFiles.size(), category, mspID, token);
-        }
+        SwingWorker<Void, String> worker = new SwingWorker<Void, String>() {
+            @Override
+            protected Void doInBackground() throws Exception {
 
-        for (FileBean selectedFile : selectedFiles) {
-            RestUtil.sendFile(transactionID, selectedFile, category, token);
+                int counter = 0;
+                if (token != null) {
+                    // TODO: Add error handling. When an error is encountered throw an exception.
+                    RestUtil.sendHeader(transactionID, username, selectedFiles.size(), category, mspID, token);
+                    publish("Sending header record");
+                    setProgress(++counter);
+                }
 
-            log.debug("Uploading file:{}", selectedFile.getPath().getFileName().toString());
-        }
+                for (FileBean selectedFile : selectedFiles) {
+                    RestUtil.sendFile(transactionID, selectedFile, category, token);
+                    publish(selectedFile.getPath().getFileName().toString());
+                    setProgress(++counter);
 
-        RestUtil.sendTrailer(transactionID, token);
+                    log.debug("Uploading file:{}", selectedFile.getPath().getFileName().toString());
+                }
 
-        // TODO: Upload files
-        // 0. Generate uuid
-        // 1. send header
-        // 2. loop through the files and send each file individually
-        // 3. send trailer
+                RestUtil.sendTrailer(transactionID, token);
+                publish("Sending trailer record");
+                setProgress(++counter);
+
+                return null;
+            }
+
+            @Override
+            protected void process(List<String> chunks) {
+                uploadFilename.setText(chunks.get(chunks.size() - 1));
+            }
+
+            @Override
+            protected void done() {
+                // TODO: Change status bar to a different card
+                System.out.println("Done uploading files");
+            }
+        };
+
+        worker.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (StringUtils.equalsIgnoreCase(evt.getPropertyName(), "progress"))
+                uploadProgressBar.setValue((Integer) evt.getNewValue());
+            }
+        });
+
+        worker.execute();
     }
 
     public void login(String username, String password) {
@@ -122,7 +159,13 @@ public class MeterDataUploader extends JFrame {
                 // 1. User should be a valid user in the system (non-expired, non-locked, etc)
                 // 2. User should be a PEMC User or a Trading Participant with an MSP registration category
                 // 3. If PEMC User, it should belong to the metering department
-                userType = RestUtil.getUserType(token);
+                List<String> userData = RestUtil.getUserType(token);
+
+                fullName = userData.get(0);
+                jLabel14.setText(fullName);
+                ((CardLayout)statusBarPanel.getLayout()).show(statusBarPanel, "LoggedIn");
+
+                userType = userData.get(1);
 
                 // TODO: Avoid redundant rest call
                 if (equalsIgnoreCase(userType, "MSP")) {
@@ -169,6 +212,7 @@ public class MeterDataUploader extends JFrame {
 
     public void saveSettings(String serverURL) {
         properties.put("URL", serverURL);
+        RestUtil.setBaseURL(properties.getProperty("URL"));
 
         try (Writer writer = new FileWriter("config.properties")) {
             properties.store(writer, "Saving updated server URL");
@@ -197,11 +241,17 @@ public class MeterDataUploader extends JFrame {
      */
     @SuppressWarnings("unchecked")
     private void initComponents() {//GEN-BEGIN:initComponents
+        GridBagConstraints gridBagConstraints;
 
         headerPanel = new HeaderPanel();
         tablePanel = new TablePanel();
         statusBarPanel = new JPanel();
         blankPanel = new JPanel();
+        loggedinPanel = new JPanel();
+        leftStatusPanel1 = new JPanel();
+        jLabel13 = new JLabel();
+        jLabel14 = new JLabel();
+        centerStatusPanel1 = new JPanel();
         statusPanel = new JPanel();
         leftStatusPanel = new JPanel();
         jLabel1 = new JLabel();
@@ -216,8 +266,9 @@ public class MeterDataUploader extends JFrame {
         jLabel7 = new JLabel();
         jLabel6 = new JLabel();
         centerUploadPanel = new JPanel();
-        jLabel5 = new JLabel();
-        jProgressBar1 = new JProgressBar();
+        uploadProgressBar = new JProgressBar();
+        lblUploading = new JLabel();
+        uploadFilename = new JLabel();
         rightUploadPanel = new JPanel();
         jLabel8 = new JLabel();
         jLabel9 = new JLabel();
@@ -225,7 +276,7 @@ public class MeterDataUploader extends JFrame {
         jLabel11 = new JLabel();
         initializeProgressPanel = new JPanel();
         lblUploadStatus = new JLabel();
-        uploadProgress = new JProgressBar();
+        initializeProgressBar = new JProgressBar();
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setTitle("Meter Quantity Uploader");
@@ -241,6 +292,23 @@ public class MeterDataUploader extends JFrame {
 
         blankPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 3, 3), new SoftBevelBorder(BevelBorder.LOWERED)));
         statusBarPanel.add(blankPanel, "blank");
+
+        loggedinPanel.setLayout(new BorderLayout());
+
+        leftStatusPanel1.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
+
+        jLabel13.setText("Logged in user:");
+        leftStatusPanel1.add(jLabel13);
+
+        jLabel14.setText("Chris A. Lim");
+        leftStatusPanel1.add(jLabel14);
+
+        loggedinPanel.add(leftStatusPanel1, BorderLayout.WEST);
+
+        centerStatusPanel1.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
+        loggedinPanel.add(centerStatusPanel1, BorderLayout.CENTER);
+
+        statusBarPanel.add(loggedinPanel, "LoggedIn");
 
         statusPanel.setLayout(new BorderLayout());
 
@@ -286,10 +354,29 @@ public class MeterDataUploader extends JFrame {
         uploadProgressPanel.add(leftUploadPanel, BorderLayout.WEST);
 
         centerUploadPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
+        centerUploadPanel.setLayout(new GridBagLayout());
 
-        jLabel5.setText("Uploading: asdf.xls");
-        centerUploadPanel.add(jLabel5);
-        centerUploadPanel.add(jProgressBar1);
+        uploadProgressBar.setDoubleBuffered(true);
+        uploadProgressBar.setMinimumSize(new Dimension(300, 20));
+        uploadProgressBar.setPreferredSize(new Dimension(300, 20));
+        uploadProgressBar.setStringPainted(true);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new Insets(0, 5, 0, 5);
+        centerUploadPanel.add(uploadProgressBar, gridBagConstraints);
+
+        lblUploading.setText("Uploading:");
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new Insets(0, 5, 0, 5);
+        centerUploadPanel.add(lblUploading, gridBagConstraints);
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new Insets(0, 5, 0, 5);
+        centerUploadPanel.add(uploadFilename, gridBagConstraints);
 
         uploadProgressPanel.add(centerUploadPanel, BorderLayout.CENTER);
 
@@ -317,8 +404,8 @@ public class MeterDataUploader extends JFrame {
         lblUploadStatus.setText("Loading MSP Data");
         initializeProgressPanel.add(lblUploadStatus);
 
-        uploadProgress.setPreferredSize(new Dimension(300, 20));
-        initializeProgressPanel.add(uploadProgress);
+        initializeProgressBar.setPreferredSize(new Dimension(300, 20));
+        initializeProgressPanel.add(initializeProgressBar);
 
         statusBarPanel.add(initializeProgressPanel, "Initialize");
 
@@ -331,31 +418,37 @@ public class MeterDataUploader extends JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private JPanel blankPanel;
     private JPanel centerStatusPanel;
+    private JPanel centerStatusPanel1;
     private JPanel centerUploadPanel;
     private HeaderPanel headerPanel;
+    private JProgressBar initializeProgressBar;
     private JPanel initializeProgressPanel;
     private JLabel jLabel1;
     private JLabel jLabel10;
     private JLabel jLabel11;
     private JLabel jLabel12;
+    private JLabel jLabel13;
+    private JLabel jLabel14;
     private JLabel jLabel2;
     private JLabel jLabel3;
     private JLabel jLabel4;
-    private JLabel jLabel5;
     private JLabel jLabel6;
     private JLabel jLabel7;
     private JLabel jLabel8;
     private JLabel jLabel9;
-    private JProgressBar jProgressBar1;
     private JLabel lblUploadStatus;
+    private JLabel lblUploading;
     private JPanel leftStatusPanel;
+    private JPanel leftStatusPanel1;
     private JPanel leftUploadPanel;
+    private JPanel loggedinPanel;
     private JPanel rightStatusPanel;
     private JPanel rightUploadPanel;
     private JPanel statusBarPanel;
     private JPanel statusPanel;
     private TablePanel tablePanel;
-    private JProgressBar uploadProgress;
+    private JLabel uploadFilename;
+    private JProgressBar uploadProgressBar;
     private JPanel uploadProgressPanel;
     // End of variables declaration//GEN-END:variables
 

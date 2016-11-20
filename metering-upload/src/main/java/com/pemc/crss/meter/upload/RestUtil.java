@@ -99,6 +99,50 @@ public class RestUtil {
         return retVal;
     }
 
+    public static List<String> getUserType(String token) {
+        List<String> retVal = new ArrayList<>();
+
+        boolean isPemcUser;
+
+        try {
+            // TODO:
+            // 1. Use a stripped down endpoint to avoid data exposure
+            // 2. Validate user role. Should have MQ upload privilege
+            URIBuilder builder = new URIBuilder(BASE_URL + USER_URL);
+
+            HttpClient httpClient = HttpClientBuilder.create().build();
+            HttpGet httpGet = new HttpGet(builder.build());
+            httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", token));
+
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+            StatusLine statusLine = httpResponse.getStatusLine();
+
+            if (statusLine.getStatusCode() == SC_OK) {
+                String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+                JSONObject obj = new JSONObject(content);
+
+                retVal.add(obj.getJSONObject("principal").getString("fullName"));
+
+                String userType = obj.getJSONObject("principal").get("department").toString();
+                isPemcUser = Boolean.valueOf(obj.getJSONObject("principal").get("pemcUser").toString());
+
+                if (isPemcUser) {
+                    if (equalsIgnoreCase(userType, METERING_DEPARTMENT)) {
+                        retVal.add(PEMC_USERTYPE);
+                    } else {
+                        retVal.add("");
+                    }
+                } else {
+                    retVal.add(getParticipant(token).getRegistrationCategory());
+                }
+            }
+        } catch (URISyntaxException | IOException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        return retVal;
+    }
+
     public static void sendHeader(String transactionID, String username, int fileCount, String category, int mspID,
                                   String token) {
 
@@ -213,47 +257,6 @@ public class RestUtil {
         }
     }
 
-    public static String getUserType(String token) {
-        String userType = null;
-        boolean isPemcUser;
-
-        try {
-            // TODO:
-            // 1. Use a stripped down endpoint to avoid data exposure
-            // 2. Validate user role. Should have MQ upload privilege
-            URIBuilder builder = new URIBuilder(BASE_URL + USER_URL);
-
-            HttpClient httpClient = HttpClientBuilder.create().build();
-            HttpGet httpGet = new HttpGet(builder.build());
-            httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", token));
-
-            HttpResponse httpResponse = httpClient.execute(httpGet);
-            StatusLine statusLine = httpResponse.getStatusLine();
-
-            if (statusLine.getStatusCode() == SC_OK) {
-                String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
-                JSONObject obj = new JSONObject(content);
-
-                userType = obj.getJSONObject("principal").get("department").toString();
-                isPemcUser = Boolean.valueOf(obj.getJSONObject("principal").get("pemcUser").toString());
-
-                if (isPemcUser) {
-                    if (equalsIgnoreCase(userType, METERING_DEPARTMENT)) {
-                        userType = PEMC_USERTYPE;
-                    } else {
-                        userType = null;
-                    }
-                } else {
-                    userType = getParticipant(token).getRegistrationCategory();
-                }
-            }
-        } catch (URISyntaxException | IOException e) {
-            log.error(e.getMessage(), e);
-        }
-
-        return userType;
-    }
-
     public static List<ComboBoxItem> getMSPListing(String token) {
         List<ComboBoxItem> retVal = new ArrayList<>();
 
@@ -275,8 +278,10 @@ public class RestUtil {
                 while (iterator.hasNext()) {
                     JSONObject object = (JSONObject) iterator.next();
 
-                    retVal.add(new ComboBoxItem(object.getString("shortName"),
-                            object.getString("participantName")));
+                    String shortName = object.getString("shortName");
+                    String participantName = object.getString("participantName") + "(" + shortName + ")";
+
+                    retVal.add(new ComboBoxItem(shortName, participantName));
                 }
             }
         } catch (URISyntaxException | IOException e) {
