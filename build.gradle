@@ -99,6 +99,8 @@ subprojects {
                 entry 'logback-classic'
             }
 
+            dependency 'de.appelgriepsch.logback:logback-gelf-appender:1.2'
+
             // DB Related
             dependency 'com.zaxxer:HikariCP:2.5.1'
             dependency 'org.postgresql:postgresql:9.4.1211'
@@ -109,6 +111,6 @@ subprojects {
 
 }
 
-configure(subprojects - project(':commons-web') - project(':commons-service')) {
+configure(subprojects - project(':commons-web') - project(':commons-service') - project(':commons-log')) {
     apply plugin: 'org.springframework.boot'
 }

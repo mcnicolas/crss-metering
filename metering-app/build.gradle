@@ -55,6 +55,7 @@ dependencies {
 
     compile project(':commons-service')
     compile project(':commons-web')
+    compile project(':commons-log')
 }
 
 liquibase {

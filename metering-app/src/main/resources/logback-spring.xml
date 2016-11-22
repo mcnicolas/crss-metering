@@ -3,18 +3,23 @@
 
   <!-- property configs -->
   <springProperty name="APP_NAME" source="spring.application.name"/>
+  <springProperty name="GRAYLOG_HOST" source="graylog.host"/>
 
   <!-- appender configs -->
   <include resource="org/springframework/boot/logging/logback/base.xml"/>
+  <include resource="com/pemc/crss/commons/logger/crss-file-appender.xml"/>
+  <include resource="com/pemc/crss/commons/logger/crss-gelf-appender.xml"/>
+
 
   <root level="INFO">
     <appender-ref ref="CONSOLE" />
+    <appender-ref ref="GELF" />
+    <appender-ref ref="DAILY_FILE" />
   </root>
 
   <!-- library log levels -->
   <logger name="org.springframework" level="INFO"/>
-  <logger name="org.hibernate" level="WARN"/>
-  <logger name="com.zaxxer" level="DEBUG"/>
+  <logger name="org.hibernate" level="INFO"/>
 
   <!-- application log levels -->
   <logger name="com.pemc.crss" level="DEBUG"/>

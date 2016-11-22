@@ -1,3 +1,4 @@
+include 'commons-log'
 include 'commons-service'
 include 'commons-web'
 include 'metering-app'
