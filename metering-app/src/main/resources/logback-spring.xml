@@ -19,6 +19,7 @@
 
   <!-- library log levels -->
   <logger name="org.springframework" level="INFO"/>
+  <logger name="org.springframework.amqp" level="DEBUG"/>
   <logger name="org.hibernate" level="INFO"/>
 
   <!-- application log levels -->

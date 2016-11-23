@@ -4,9 +4,8 @@ import com.pemc.crss.metering.dto.BcqData;
 import com.pemc.crss.metering.dto.BcqDeclaration;
 import com.pemc.crss.metering.dto.BcqHeader;
 import com.pemc.crss.metering.dto.BcqUploadFile;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,13 +13,11 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import javax.inject.Inject;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Repository
 @Slf4j
 public class JdbcBcqDao implements BcqDao {
@@ -43,8 +40,12 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.header.exists}")
     private String headerExists;
 
-    @NonNull
     private final JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    public JdbcBcqDao(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Override
     public long saveBcqUploadFile(String transactionID, BcqUploadFile bcqUploadFile) {

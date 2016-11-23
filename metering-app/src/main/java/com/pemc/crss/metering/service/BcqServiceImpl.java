@@ -4,14 +4,12 @@ import com.pemc.crss.metering.dao.BcqDao;
 import com.pemc.crss.metering.dto.BcqDeclaration;
 import com.pemc.crss.metering.dto.BcqUploadFile;
 import com.pemc.crss.metering.event.BcqUploadEvent;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.inject.Inject;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -28,14 +26,16 @@ import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_SUBMIT
 @Slf4j
 @Service
 @Transactional
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class BcqServiceImpl implements BcqService {
 
-    @NonNull
     private final BcqDao bcqDao;
-
-    @NonNull
     private final ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    public BcqServiceImpl(BcqDao bcqDao, ApplicationEventPublisher eventPublisher) {
+        this.bcqDao = bcqDao;
+        this.eventPublisher = eventPublisher;
+    }
 
     @Override
     public long saveBcqUploadFile(String transactionID, BcqUploadFile bcqUploadFile) {

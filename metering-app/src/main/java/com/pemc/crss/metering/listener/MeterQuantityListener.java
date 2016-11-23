@@ -1,8 +1,6 @@
 package com.pemc.crss.metering.listener;
 
 import com.pemc.crss.metering.service.MeterService;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.core.ExchangeTypes;
@@ -10,20 +8,22 @@ import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import javax.inject.Inject;
-
 @Slf4j
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Component
 public class MeterQuantityListener {
 
-    @NonNull
     private final MeterService meterService;
+
+    @Autowired
+    public MeterQuantityListener(MeterService meterService) {
+        this.meterService = meterService;
+    }
 
     @Async
     @RabbitListener(bindings = {

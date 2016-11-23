@@ -273,8 +273,6 @@ public class HeaderPanel extends JPanel {
     }//GEN-LAST:event_uploadActionPerformed
 
     private void settingsActionPerformed(ActionEvent evt) {//GEN-FIRST:event_settingsActionPerformed
-        // TODO: Retrieve existing value
-
         SettingsDialog settingsDialog = new SettingsDialog(parent, true);
         settingsDialog.configureComponents();
         settingsDialog.setVisible(true);

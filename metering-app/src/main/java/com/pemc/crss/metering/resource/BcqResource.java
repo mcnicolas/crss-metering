@@ -6,14 +6,12 @@ import com.pemc.crss.metering.event.BcqUploadEvent;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.validator.exception.ValidationException;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.inject.Inject;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -28,17 +26,18 @@ import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_VALIDA
 @Slf4j
 @RestController
 @RequestMapping("/bcq")
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class BcqResource {
 
-    @NonNull
     private BcqReader bcqReader;
-
-    @NonNull
     private BcqService bcqService;
-
-    @NonNull
     private final ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    public BcqResource(BcqReader bcqReader, BcqService bcqService, ApplicationEventPublisher eventPublisher) {
+        this.bcqReader = bcqReader;
+        this.bcqService = bcqService;
+        this.eventPublisher = eventPublisher;
+    }
 
     @PostMapping("/upload")
     public BcqDetails uploadData(@RequestParam("file") MultipartFile file)

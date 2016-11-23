@@ -133,10 +133,8 @@ public class MeterDataUploader extends JFrame {
             }
         };
 
-        worker.addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                if (StringUtils.equalsIgnoreCase(evt.getPropertyName(), "progress"))
+        worker.addPropertyChangeListener(evt -> {
+            if (equalsIgnoreCase(evt.getPropertyName(), "progress")) {
                 uploadProgressBar.setValue((Integer) evt.getNewValue());
             }
         });
@@ -179,7 +177,7 @@ public class MeterDataUploader extends JFrame {
         } catch (LoginException e) {
             log.error(e.getMessage(), e);
 
-            // TODO: Handle error
+            JOptionPane.showMessageDialog(this, e.getMessage(), "Error", ERROR_MESSAGE);
         }
     }
 

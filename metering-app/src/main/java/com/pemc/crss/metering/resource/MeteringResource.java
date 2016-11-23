@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,20 +28,21 @@ import java.util.Map;
 import static org.springframework.http.HttpStatus.OK;
 
 @Slf4j
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 @RestController
 public class MeteringResource {
 
     public static final String ROUTING_KEY = "meter.quantity";
 
-    @NonNull
     private final MeterService meterService;
-
-    @NonNull
     private final RabbitTemplate rabbitTemplate;
-
-    @NonNull
     private final ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    public MeteringResource(MeterService meterService, RabbitTemplate rabbitTemplate, ApplicationEventPublisher eventPublisher) {
+        this.meterService = meterService;
+        this.rabbitTemplate = rabbitTemplate;
+        this.eventPublisher = eventPublisher;
+    }
 
     @Deprecated
     @GetMapping("/sample")

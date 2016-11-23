@@ -9,16 +9,14 @@ import com.pemc.crss.metering.dto.MeterUploadFile;
 import com.pemc.crss.metering.dto.MeterUploadHeader;
 import com.pemc.crss.metering.parser.QuantityReader;
 import com.pemc.crss.metering.parser.meterquantity.MeterQuantityReaderFactory;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collection;
@@ -31,15 +29,17 @@ import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static org.apache.commons.lang.StringUtils.equalsIgnoreCase;
 
 @Slf4j
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Service
 public class DefaultMeterService implements MeterService {
 
-    @NonNull
     private final MeteringDao meteringDao;
-
-    @NonNull
     private final MeterQuantityReaderFactory readerFactory;
+
+    @Autowired
+    public DefaultMeterService(MeteringDao meteringDao, MeterQuantityReaderFactory readerFactory) {
+        this.meteringDao = meteringDao;
+        this.readerFactory = readerFactory;
+    }
 
     @Override
     @Transactional
@@ -64,6 +64,8 @@ public class DefaultMeterService implements MeterService {
     @Transactional
     public void saveMeterData(long fileID, String fileType, byte[] fileContent, String category) {
         try {
+            // TODO: Validate
+
             QuantityReader<MeterData2> reader = readerFactory.getMeterQuantityReader(fileType);
             List<MeterData2> meterData = reader.readData(new ByteArrayInputStream(fileContent));
 

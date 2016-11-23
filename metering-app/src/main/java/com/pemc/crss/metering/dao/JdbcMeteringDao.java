@@ -1,23 +1,14 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.dto.ChannelHeader;
-import com.pemc.crss.metering.dto.Header;
-import com.pemc.crss.metering.dto.IntervalData;
-import com.pemc.crss.metering.dto.MeterData;
-import com.pemc.crss.metering.dto.MeterData2;
-import com.pemc.crss.metering.dto.MeterDataDisplay;
-import com.pemc.crss.metering.dto.MeterUploadFile;
-import com.pemc.crss.metering.dto.MeterUploadHeader;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import com.pemc.crss.metering.dto.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import javax.inject.Inject;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -30,7 +21,6 @@ import java.util.Map;
 import static java.sql.Types.DOUBLE;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 @Repository
 public class JdbcMeteringDao implements MeteringDao {
 
@@ -49,8 +39,12 @@ public class JdbcMeteringDao implements MeteringDao {
     @Value("${mq.meter.monthly}")
     private String insertMonthlyMQ;
 
-    @NonNull
     private final JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    public JdbcMeteringDao(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Override
     public long saveHeader(String transactionID, long mspID, int fileCount, String category, String username) {
