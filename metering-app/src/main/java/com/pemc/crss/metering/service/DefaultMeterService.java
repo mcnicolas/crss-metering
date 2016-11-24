@@ -43,8 +43,8 @@ public class DefaultMeterService implements MeterService {
 
     @Override
     @Transactional
-    public long saveHeader(String transactionID, long mspID, int fileCount, String category, String username) {
-        return meteringDao.saveHeader(transactionID, mspID, fileCount, category, username);
+    public long saveHeader(String transactionID, int fileCount, String category, String username) {
+        return meteringDao.saveHeader(transactionID, fileCount, category, username);
     }
 
     @Override
@@ -62,14 +62,14 @@ public class DefaultMeterService implements MeterService {
 
     @Override
     @Transactional
-    public void saveMeterData(long fileID, String fileType, byte[] fileContent, String category) {
+    public void saveMeterData(long fileID, String fileType, byte[] fileContent, String mspShortName, String category) {
         try {
             // TODO: Validate
 
             QuantityReader<MeterData2> reader = readerFactory.getMeterQuantityReader(fileType);
             List<MeterData2> meterData = reader.readData(new ByteArrayInputStream(fileContent));
 
-            meteringDao.saveMeterData(fileID, meterData, category);
+            meteringDao.saveMeterData(fileID, meterData, mspShortName, category);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }

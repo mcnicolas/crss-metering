@@ -1,7 +1,6 @@
 package com.pemc.crss.meter.upload;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -22,8 +21,6 @@ import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -83,9 +80,7 @@ public class MeterDataUploader extends JFrame {
         tablePanel.updateTableDisplay(selectedFiles);
     }
 
-    // TODO:
-    // 1. Display progress bar
-    public void uploadData(String category, int mspID) {
+    public void uploadData(String category, String mspShortName) {
         ((CardLayout)statusBarPanel.getLayout()).show(statusBarPanel, "Upload");
 
         String transactionID = UUID.randomUUID().toString();
@@ -101,13 +96,13 @@ public class MeterDataUploader extends JFrame {
                 int counter = 0;
                 if (token != null) {
                     // TODO: Add error handling. When an error is encountered throw an exception.
-                    RestUtil.sendHeader(transactionID, username, selectedFiles.size(), category, mspID, token);
+                    RestUtil.sendHeader(transactionID, username, selectedFiles.size(), category, token);
                     publish("Sending header record");
                     setProgress(++counter);
                 }
 
                 for (FileBean selectedFile : selectedFiles) {
-                    RestUtil.sendFile(transactionID, selectedFile, category, token);
+                    RestUtil.sendFile(transactionID, selectedFile, category, mspShortName, token);
                     publish(selectedFile.getPath().getFileName().toString());
                     setProgress(++counter);
 

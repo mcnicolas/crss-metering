@@ -2,8 +2,6 @@ package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.service.MeterService;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
@@ -18,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import javax.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,7 +49,6 @@ public class MeteringResource {
 
     @PostMapping("/uploadheader")
     public void sendHeader(@RequestParam("transactionID") String transactionID,
-                           @RequestParam("mspID") long mspID,
                            @RequestParam("fileCount") int fileCount,
                            @RequestParam("category") String category,
                            @RequestParam("username") String username) {
@@ -61,7 +57,7 @@ public class MeteringResource {
         log.debug("Transaction ID:{}", transactionID);
 
         // TODO: Return headerID
-        long headerID = meterService.saveHeader(transactionID, mspID, fileCount, category, username);
+        long headerID = meterService.saveHeader(transactionID, fileCount, category, username);
     }
 
     @PostMapping("/uploadfile")
@@ -72,6 +68,7 @@ public class MeteringResource {
                          @RequestParam("fileType") String fileType,
                          @RequestParam("fileSize") long fileSize,
                          @RequestParam("checksum") String checksum,
+                         @RequestParam("mspShortName") String mspShortName,
                          @RequestParam("category") String category) throws IOException {
 
         MultipartFile file = request.getFile("file");
@@ -83,6 +80,7 @@ public class MeteringResource {
                 .setHeader("fileType", fileType)
                 .setHeader("fileSize", fileSize)
                 .setHeader("checksum", checksum)
+                .setHeader("mspShortName", mspShortName)
                 .setHeader("category", category)
                 .setHeaderIfAbsent("Content type", file.getContentType())
                 .build();

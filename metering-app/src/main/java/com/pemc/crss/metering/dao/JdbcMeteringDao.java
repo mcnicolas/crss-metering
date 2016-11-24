@@ -47,17 +47,16 @@ public class JdbcMeteringDao implements MeteringDao {
     }
 
     @Override
-    public long saveHeader(String transactionID, long mspID, int fileCount, String category, String username) {
+    public long saveHeader(String transactionID, int fileCount, String category, String username) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
                     PreparedStatement ps = connection.prepareStatement(insertHeaderManifest, new String[]{"header_id"});
                     ps.setString(1, transactionID);
-                    ps.setLong(2, mspID);
-                    ps.setInt(3, fileCount);
-                    ps.setString(4, category);
-                    ps.setString(5, username);
-                    ps.setTimestamp(6, new Timestamp(new Date().getTime()));
+                    ps.setInt(2, fileCount);
+                    ps.setString(3, category);
+                    ps.setString(4, username);
+                    ps.setTimestamp(5, new Timestamp(new Date().getTime()));
 
                     return ps;
                 },
@@ -177,7 +176,7 @@ public class JdbcMeteringDao implements MeteringDao {
 
     // TODO: Dirty code. Revise!
     @Override
-    public void saveMeterData(long fileID, List<MeterData2> meterDataList, String category) {
+    public void saveMeterData(long fileID, List<MeterData2> meterDataList, String mspShortName, String category) {
         String insertSQL;
         if (equalsIgnoreCase(category, "Monthly")) {
             insertSQL = insertMonthlyMQ;
@@ -319,6 +318,7 @@ public class JdbcMeteringDao implements MeteringDao {
                         ps.setString(44, meterData.getEstimationFlag());
                         ps.setInt(45, 1);
 
+                        ps.setString(46, mspShortName);
                         return ps;
                     });
         }

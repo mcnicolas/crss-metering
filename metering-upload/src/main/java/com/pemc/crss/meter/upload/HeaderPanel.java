@@ -269,7 +269,9 @@ public class HeaderPanel extends JPanel {
 
         // NOTE: selectedItem and selectedIndex are just temporary code
         String category = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
-        parent.uploadData(category, cboMSP.getSelectedIndex());
+        String mspShortName = ((ComboBoxItem)cboMSP.getSelectedItem()).getValue();
+
+        parent.uploadData(category, mspShortName);
     }//GEN-LAST:event_uploadActionPerformed
 
     private void settingsActionPerformed(ActionEvent evt) {//GEN-FIRST:event_settingsActionPerformed

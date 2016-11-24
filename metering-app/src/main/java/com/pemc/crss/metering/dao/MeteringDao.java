@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface MeteringDao {
 
-    long saveHeader(String transactionID, long mspID, int fileCount, String category, String username);
+    long saveHeader(String transactionID, int fileCount, String category, String username);
 
     void saveTrailer(String transactionID);
 
@@ -28,6 +28,6 @@ public interface MeteringDao {
 
     void saveMeterUploadMDEF(long fileID, MeterData meterData);
 
-    void saveMeterData(long fileID, List<MeterData2> meterDataList, String category);
+    void saveMeterData(long fileID, List<MeterData2> meterDataList, String mspShortName, String category);
 
 }

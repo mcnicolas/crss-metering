@@ -38,13 +38,14 @@ public class MeterQuantityListener {
                                          @Header String fileType,
                                          @Header long fileSize,
                                          @Header String checksum,
+                                         @Header String mspShortName,
                                          @Header String category,
                                          @Payload byte[] fileContent) {
 
         try {
             long fileID = meterService.saveFileManifest(headerID, transactionID, fileName, fileType, fileSize, checksum);
 
-            meterService.saveMeterData(fileID, fileType, fileContent, category);
+            meterService.saveMeterData(fileID, fileType, fileContent, mspShortName, category);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
 

@@ -143,8 +143,7 @@ public class RestUtil {
         return retVal;
     }
 
-    public static void sendHeader(String transactionID, String username, int fileCount, String category, int mspID,
-                                  String token) {
+    public static void sendHeader(String transactionID, String username, int fileCount, String category, String token) {
 
         log.debug("Transaction ID: {}", transactionID);
 
@@ -159,7 +158,6 @@ public class RestUtil {
 
             List<NameValuePair> formParams = new ArrayList<>();
             formParams.add(new BasicNameValuePair("transactionID", transactionID));
-            formParams.add(new BasicNameValuePair("mspID", String.valueOf(mspID)));
             formParams.add(new BasicNameValuePair("fileCount", String.valueOf(fileCount)));
             formParams.add(new BasicNameValuePair("category", category));
             formParams.add(new BasicNameValuePair("username", username));
@@ -212,7 +210,7 @@ public class RestUtil {
         }
     }
 
-    public static void sendFile(String transactionID, FileBean file, String category, String token) {
+    public static void sendFile(String transactionID, FileBean file, String category, String mspShortName, String token) {
         log.debug("Transaction ID: {}", transactionID);
 
         // TODO: Retrieve URL from configuration
@@ -237,6 +235,7 @@ public class RestUtil {
                     .addTextBody("fileType", getFileType(file.getPath()))
                     .addTextBody("fileSize", String.valueOf(file.getSize()))
                     .addTextBody("checksum", file.getChecksum())
+                    .addTextBody("mspShortName", mspShortName)
                     .addTextBody("category", category)
                     .addPart("file", fileContent)
                     .build();
