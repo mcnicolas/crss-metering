@@ -8,8 +8,8 @@ import java.util.Date;
 public class BCQParserUtil {
 
     public static final String[] DATE_TIME_FORMATS = {
-            "MM/dd/yyyy HH:mm",
-            "MM-dd-yyyy HH:mm"
+            "yyyy-MM-dd HH:mm",
+            "yyyy/MM/dd HH:mm"
     };
 
     public static final String[] DATE_FORMATS = {
