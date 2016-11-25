@@ -72,6 +72,8 @@ public class BcqServiceImpl implements BcqService {
         eventPublisher.publishEvent(event);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public Page<BcqDeclarationDisplay> findAll(PageableRequest pageableRequest) {
         return bcqDao.findAll(pageableRequest);
     }
