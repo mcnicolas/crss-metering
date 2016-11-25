@@ -15,11 +15,11 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
 
     changeSet(id: "${REL}_${ITER}_${FILE}_02", author: 'clim', failOnError: true) {
         addColumn(tableName: 'txn_meter_data_daily') {
-            column(name: 'msp_shortname', type: 'VARCHAR(50)') { constraints(nullable: false) }
+            column(name: 'msp_shortname', type: 'VARCHAR(50)')
         }
 
         addColumn(tableName: 'txn_meter_data_monthly') {
-            column(name: 'msp_shortname', type: 'VARCHAR(50)') { constraints(nullable: false) }
+            column(name: 'msp_shortname', type: 'VARCHAR(50)')
         }
 
         dropColumn(tableName: 'txn_mq_manifest_header') {
