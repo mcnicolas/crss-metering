@@ -143,7 +143,8 @@ public class RestUtil {
         return retVal;
     }
 
-    public static void sendHeader(String transactionID, String username, int fileCount, String category, String token) {
+    public static void sendHeader(String transactionID, String username, int fileCount, String category, String token)
+            throws ConnectionException {
 
         log.debug("Transaction ID: {}", transactionID);
 
@@ -171,7 +172,9 @@ public class RestUtil {
 
                 log.debug("Response:{}", content);
             } else {
-                log.error("Unauthorized:{}", httpResponse.getStatusLine().getStatusCode());
+                throw new ConnectionException("Connection error"
+                        + " [statusCode:" + httpResponse.getStatusLine().getStatusCode()
+                        + " reason:" + httpResponse.getStatusLine().getReasonPhrase());
             }
         } catch (URISyntaxException | IOException e) {
             log.error(e.getMessage(), e);
@@ -179,7 +182,7 @@ public class RestUtil {
     }
 
     // TODO: Optimize code. Remove duplication.
-    public static void sendTrailer(String transactionID, String token) {
+    public static void sendTrailer(String transactionID, String token) throws ConnectionException {
         log.debug("Transaction ID: {}", transactionID);
 
         // TODO: Retrieve URL from configuration
@@ -203,14 +206,18 @@ public class RestUtil {
 
                 log.debug("Response:{}", content);
             } else {
-                log.error("Unauthorized:{}", httpResponse.getStatusLine().getStatusCode());
+                throw new ConnectionException("Connection error"
+                        + " [statusCode:" + httpResponse.getStatusLine().getStatusCode()
+                        + " reason:" + httpResponse.getStatusLine().getReasonPhrase());
             }
         } catch (URISyntaxException | IOException e) {
             log.error(e.getMessage(), e);
         }
     }
 
-    public static void sendFile(String transactionID, FileBean file, String category, String mspShortName, String token) {
+    public static void sendFile(String transactionID, FileBean file, String category, String mspShortName, String token)
+            throws ConnectionException {
+
         log.debug("Transaction ID: {}", transactionID);
 
         // TODO: Retrieve URL from configuration
@@ -249,7 +256,9 @@ public class RestUtil {
 
                 log.debug("Response:{}", content);
             } else {
-                log.error("Unauthorized:{}", httpResponse.getStatusLine().getStatusCode());
+                throw new ConnectionException("Connection error"
+                        + " [statusCode:" + httpResponse.getStatusLine().getStatusCode()
+                        + " reason:" + httpResponse.getStatusLine().getReasonPhrase());
             }
         } catch (URISyntaxException | IOException e) {
             log.error(e.getMessage(), e);

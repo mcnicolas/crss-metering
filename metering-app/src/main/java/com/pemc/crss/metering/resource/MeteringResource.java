@@ -28,7 +28,7 @@ import static org.springframework.http.HttpStatus.OK;
 @RestController
 public class MeteringResource {
 
-    public static final String ROUTING_KEY = "meter.quantity";
+    public static final String ROUTING_KEY = "crss.meter.quantity";
 
     private final MeterService meterService;
     private final RabbitTemplate rabbitTemplate;
@@ -84,7 +84,7 @@ public class MeteringResource {
                 .setHeader("category", category)
                 .setHeaderIfAbsent("Content type", file.getContentType())
                 .build();
-        rabbitTemplate.send(ROUTING_KEY, message);
+        rabbitTemplate.send("crss.meter.quantity", ROUTING_KEY, message);
     }
 
     @PostMapping("/uploadtrailer")
