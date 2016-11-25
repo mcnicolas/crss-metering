@@ -8,9 +8,12 @@ spring:
       connectionTimeout: 10000
       maximumPoolSize: 20
   rabbitmq:
-#    TODO: Need to finalize username/password
     username: guest
     password: guest
+    host: localhost
+    ports:
+      - "5672:5672"
+      - "15672:15672"
 
 server:
   port: 8084
@@ -54,6 +57,7 @@ logging:
     com.netflix: WARN
     org.springframework.cloud: WARN
     org.hibernate.SQL: DEBUG
+    org.springframework.amqp.rabbit.listener: WARN
 
 mq:
   manifest:
@@ -93,3 +97,14 @@ bcq:
       VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?)
     update: >
       UPDATE TXN_BCQ_DATA SET REFERENCE_MTN = ?, BCQ = ? WHERE END_TIME = ? AND BCQ_HEADER_ID = ?
+  display:
+    data: >
+      SELECT A.SELLING_PARTICIPANT_NAME, A.SELLING_PARTICIPANT_SHORT_NAME, A.SELLING_MTN,
+      A.BUYING_PARTICIPANT, A.TRADING_DATE, B.TRANSACTION_ID, B.SUBMITTED_DATE, A.STATUS
+      FROM TXN_BCQ_HEADER A INNER JOIN TXN_BCQ_UPLOAD_FILE ON A.FILE_ID = B.FILE_ID
+      WHERE A.TRADING_DATE = ?
+    count: >
+      SELECT COUNT(*) FROM TXN_BCQ_HEADER A INNER JOIN TXN_BCQ_UPLOAD_FILE ON A.FILE_ID = B.FILE_ID
+      WHERE A.TRADING_DATE = ?
+    pagination: >
+      LIMIT ? OFFSET ?
