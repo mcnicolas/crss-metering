@@ -8,12 +8,9 @@ spring:
       connectionTimeout: 10000
       maximumPoolSize: 20
   rabbitmq:
+#    TODO: Need to finalize username/password
     username: guest
     password: guest
-    host: localhost
-    ports:
-      - "5672:5672"
-      - "15672:15672"
 
 server:
   port: 8084
