@@ -24,6 +24,12 @@ public class BcqDisplayQueryBuilder {
     @Value("${bcq.display.pagination}")
     private String displayPagination;
 
+    public BcqDisplayQueryBuilder(String displayData, String displayCount, String displayPagination) {
+        this.displayData = displayData;
+        this.displayCount = displayCount;
+        this.displayPagination = displayPagination;
+    }
+
     public BcqDisplayQueryBuilder selectBcqDeclarations(Date tradingDate) {
         sqlBuilder.append(displayData);
         arguments.add(tradingDate);
@@ -31,7 +37,7 @@ public class BcqDisplayQueryBuilder {
         return this;
     }
 
-    public BcqDisplayQueryBuilder countBcqDelarations(Date tradingDate) {
+    public BcqDisplayQueryBuilder countBcqDeclarations(Date tradingDate) {
         sqlBuilder.append(displayCount);
         arguments.add(tradingDate);
 
