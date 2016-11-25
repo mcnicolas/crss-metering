@@ -86,8 +86,8 @@ public class MQDisplayQueryBuilder {
         return this;
     }
 
-    public MQBuilderData build() {
-        MQBuilderData retVal = new MQBuilderData();
+    public BuilderData build() {
+        BuilderData retVal = new BuilderData();
         retVal.setSql(sqlBuilder.toString());
         retVal.setArguments(arguments.toArray());
 
