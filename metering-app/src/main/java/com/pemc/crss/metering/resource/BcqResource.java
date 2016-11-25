@@ -1,5 +1,8 @@
 package com.pemc.crss.metering.resource;
 
+import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
+import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
+import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.*;
 import com.pemc.crss.metering.event.BcqUploadEvent;
@@ -9,6 +12,7 @@ import com.pemc.crss.metering.validator.exception.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,7 +30,7 @@ import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_VALIDA
 @Slf4j
 @RestController
 @RequestMapping("/bcq")
-public class BcqResource {
+public class BcqResource extends BaseListResource<BcqDeclarationDisplay> {
 
     private BcqReader bcqReader;
     private BcqService bcqService;
@@ -136,5 +140,14 @@ public class BcqResource {
 
         BcqUploadEvent eventDept = new BcqUploadEvent(payload, NTF_BCQ_VALIDATION_DEPT, VALIDATION, BILLING);
         eventPublisher.publishEvent(eventDept);
+    }
+
+    @Override
+    public DataTableResponse<BcqDeclarationDisplay> executeSearch(PageableRequest request) {
+        Page<BcqDeclarationDisplay> bcqDeclarationPage = bcqService.findAll(request);
+
+        return new DataTableResponse<BcqDeclarationDisplay>()
+                .withData(bcqDeclarationPage.getContent())
+                .withRecordsTotal(bcqDeclarationPage.getTotalElements());
     }
 }
