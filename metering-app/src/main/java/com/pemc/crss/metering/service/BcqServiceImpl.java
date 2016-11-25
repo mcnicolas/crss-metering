@@ -1,12 +1,15 @@
 package com.pemc.crss.metering.service;
 
+import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dao.BcqDao;
 import com.pemc.crss.metering.dto.BcqDeclaration;
+import com.pemc.crss.metering.dto.BcqDeclarationDisplay;
 import com.pemc.crss.metering.dto.BcqUploadFile;
 import com.pemc.crss.metering.event.BcqUploadEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,5 +70,9 @@ public class BcqServiceImpl implements BcqService {
         payload.put("sellerId", sellerId);
         BcqUploadEvent event = new BcqUploadEvent(payload, NTF_BCQ_SUBMIT_SELLER, SUBMIT, SELLER);
         eventPublisher.publishEvent(event);
+    }
+
+    public Page<BcqDeclarationDisplay> findAll(PageableRequest pageableRequest) {
+        return bcqDao.findAll(pageableRequest);
     }
 }

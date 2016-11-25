@@ -1,12 +1,13 @@
 package com.pemc.crss.metering.dao;
 
-import com.pemc.crss.metering.dto.BcqData;
-import com.pemc.crss.metering.dto.BcqDeclaration;
-import com.pemc.crss.metering.dto.BcqHeader;
-import com.pemc.crss.metering.dto.BcqUploadFile;
+import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
+import com.pemc.crss.metering.dto.*;
+import com.pemc.crss.metering.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -16,7 +17,10 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 @Slf4j
@@ -67,7 +71,7 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public void saveBcqData(long fileID, List<BcqDeclaration> bcqDeclarationList) {
+    public void saveBcqDeclaration(long fileID, List<BcqDeclaration> bcqDeclarationList) {
         for (BcqDeclaration bcqDeclaration : bcqDeclarationList) {
             BcqHeader header = bcqDeclaration.getHeader();
             boolean headerExists = headerExists(header);
@@ -102,6 +106,61 @@ public class JdbcBcqDao implements BcqDao {
             });
         }
     }
+
+    @Override
+    public Page<BcqDeclarationDisplay> findAll(PageableRequest pageableRequest) {
+        int totalRecords = getTotalRecords(pageableRequest);
+        Map<String, String> params = pageableRequest.getMapParams();
+        Date tradingDate = DateTimeUtils.parseDate(params.get("tradingDate"));
+        String sellingParticipant = params.get("sellingParticipant");
+        String sellingMtn = params.get("sellingMtn");
+        String buyingParticipant = params.get("buyingParticipant");
+        String status = params.get("status");
+
+        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder();
+        BuilderData query = builder.countBcqDelarations(tradingDate)
+                .addBuyingParticipantFilter(buyingParticipant)
+                .addSellingParticipantFilter(sellingParticipant)
+                .addSellingMtnFilter(sellingMtn)
+                .addStatusFilter(status)
+                .orderBy(pageableRequest.getOrderList())
+                .paginate(pageableRequest.getPageNo(), pageableRequest.getPageSize())
+                .build();
+
+        List<BcqDeclarationDisplay> bcqDeclarationList = jdbcTemplate.query(
+                query.getSql(),
+                query.getArguments(),
+                rs -> {
+                    List<BcqDeclarationDisplay> content = new ArrayList<>();
+;
+                    while (rs.next()) {
+                        BcqDeclarationDisplay bcqDeclaration = new BcqDeclarationDisplay();
+
+                        bcqDeclaration.setSellingParticipantName(rs.getString("selling_participant_name"));
+                        bcqDeclaration.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
+                        bcqDeclaration.setSellingMtn(rs.getString("selling_mtn"));
+                        bcqDeclaration.setBuyingParticipant(rs.getString("buying_participant"));
+                        bcqDeclaration.setTradingDate(rs.getString("trading_date"));
+                        bcqDeclaration.setTransactionID("transaction_id");
+                        bcqDeclaration.setSubmittedDate(rs.getString("submitted_date"));
+                        bcqDeclaration.setUpdatedVia("");
+                        bcqDeclaration.setStatus(rs.getString("status"));
+
+                        content.add(bcqDeclaration);
+                    }
+
+                    return content;
+                });
+
+        return new PageImpl<>(
+                bcqDeclarationList,
+                pageableRequest.getPageable(),
+                totalRecords);
+    }
+
+    /****************************************************
+     * SUPPORT METHODS
+     ****************************************************/
 
     private long saveBcqHeader(long fileId, BcqHeader header, boolean update) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -140,5 +199,27 @@ public class JdbcBcqDao implements BcqDao {
                         header.getBuyingParticipant(),
                         header.getTradingDate()
         }, Boolean.class);
+    }
+
+    private int getTotalRecords(PageableRequest pageableRequest) {
+        Map<String, String> params = pageableRequest.getMapParams();
+        Date tradingDate = DateTimeUtils.parseDate(params.get("tradingDate"));
+        String sellingParticipant = params.get("sellingParticipant");
+        String sellingMtn = params.get("sellingMtn");
+        String buyingParticipant = params.get("buyingParticipant");
+        String status = params.get("status");
+
+        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder();
+        BuilderData query = builder.countBcqDelarations(tradingDate)
+                .addBuyingParticipantFilter(buyingParticipant)
+                .addSellingParticipantFilter(sellingParticipant)
+                .addSellingMtnFilter(sellingMtn)
+                .addStatusFilter(status)
+                .build();
+
+        return jdbcTemplate.queryForObject(
+                query.getSql(),
+                query.getArguments(),
+                Integer.class);
     }
 }

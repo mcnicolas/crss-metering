@@ -13,13 +13,21 @@ public class BCQParserUtil {
     };
 
     public static final String[] DATE_FORMATS = {
-            "MM/dd/yyyy",
-            "MM-dd-yyyy"
+            "yyyy-MM-dd",
+            "yyyy/MM/dd"
     };
 
     private BCQParserUtil() {}
 
     public static Date parseDateTime(String dateString) {
+        try {
+            return DateUtils.parseDate(dateString, DATE_TIME_FORMATS);
+        } catch (ParseException ignored) {}
+
+        return null;
+    }
+
+    public static Date parseDate(String dateString) {
         try {
             return DateUtils.parseDate(dateString, DATE_TIME_FORMATS);
         } catch (ParseException ignored) {}
