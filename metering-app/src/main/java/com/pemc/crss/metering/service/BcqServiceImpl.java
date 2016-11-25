@@ -38,24 +38,12 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public long saveBcqUploadFile(String transactionID, BcqUploadFile bcqUploadFile) {
-        String transactionId = UUID.randomUUID().toString();
-
-        return bcqDao.saveBcqUploadFile(transactionId, bcqUploadFile);
-    }
-
-    @Override
-    public void saveBcqData(long fileID, List<BcqDeclaration> bcqDeclarationList) {
-        bcqDao.saveBcqData(fileID, bcqDeclarationList);
-    }
-
-    @Override
     public void saveBcqDetails(BcqUploadFile file, List<BcqDeclaration> bcqDeclarationList,
                                List<Long> buyerIds, Long sellerId) {
 
         String transactionId = UUID.randomUUID().toString();
         long fileId = bcqDao.saveBcqUploadFile(transactionId, file);
-        bcqDao.saveBcqData(fileId, bcqDeclarationList);
+        bcqDao.saveBcqDeclaration(fileId, bcqDeclarationList);
 
         Map<String, Object> payload = new HashMap<>();
         String format = "MMM. dd, yyyy hh:mm";

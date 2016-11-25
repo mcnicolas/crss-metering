@@ -10,8 +10,4 @@ public interface BcqService {
     void saveBcqDetails(BcqUploadFile file, List<BcqDeclaration> bcqDeclarationList,
                         List<Long> buyerIds, Long sellerId);
 
-    long saveBcqUploadFile(String transactionID, BcqUploadFile bcqUploadFile);
-
-    void saveBcqData(long fileID, List<BcqDeclaration> bcqDeclarationList);
-
 }
