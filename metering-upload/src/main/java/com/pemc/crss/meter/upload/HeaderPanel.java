@@ -24,7 +24,10 @@ import static com.pemc.crss.meter.upload.SelectedFileUtils.retrieveFileListing;
 import static com.pemc.crss.meter.upload.SettingsDialog.RET_SAVE;
 import static javax.swing.JFileChooser.APPROVE_OPTION;
 import static javax.swing.JFileChooser.FILES_AND_DIRECTORIES;
+import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class HeaderPanel extends JPanel {
 
@@ -261,15 +264,20 @@ public class HeaderPanel extends JPanel {
     }//GEN-LAST:event_selectFilesActionPerformed
 
     private void uploadActionPerformed(ActionEvent evt) {//GEN-FIRST:event_uploadActionPerformed
+        String mspShortName = ((ComboBoxItem)cboMSP.getSelectedItem()).getValue();
+
+        if (isBlank(mspShortName)) {
+            showMessageDialog(parent, "Please select an MSP", "Blank MSP Error", ERROR_MESSAGE);
+            cboMSP.requestFocus();
+
+            return;
+        }
+
         // TODO:
-        // 1. Create custom model for MSP
-        // 2. Populate MSP combo box from rest call to registration module
         // 3. If user is an MSP, set the default combo box selection to the currently logged in user and
         //    disable the combo box
 
-        // NOTE: selectedItem and selectedIndex are just temporary code
         String category = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
-        String mspShortName = ((ComboBoxItem)cboMSP.getSelectedItem()).getValue();
 
         parent.uploadData(category, mspShortName);
     }//GEN-LAST:event_uploadActionPerformed
