@@ -2,7 +2,7 @@ package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.*;
-import com.pemc.crss.metering.utils.DateTimeUtils;
+import com.pemc.crss.metering.parser.bcq.util.BCQParserUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -111,7 +111,7 @@ public class JdbcBcqDao implements BcqDao {
     public Page<BcqDeclarationDisplay> findAll(PageableRequest pageableRequest) {
         int totalRecords = getTotalRecords(pageableRequest);
         Map<String, String> params = pageableRequest.getMapParams();
-        Date tradingDate = DateTimeUtils.parseDate(params.get("tradingDate"));
+        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
         String sellingParticipant = params.get("sellingParticipant");
         String sellingMtn = params.get("sellingMtn");
         String buyingParticipant = params.get("buyingParticipant");
@@ -203,7 +203,7 @@ public class JdbcBcqDao implements BcqDao {
 
     private int getTotalRecords(PageableRequest pageableRequest) {
         Map<String, String> params = pageableRequest.getMapParams();
-        Date tradingDate = DateTimeUtils.parseDate(params.get("tradingDate"));
+        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
         String sellingParticipant = params.get("sellingParticipant");
         String sellingMtn = params.get("sellingMtn");
         String buyingParticipant = params.get("buyingParticipant");
