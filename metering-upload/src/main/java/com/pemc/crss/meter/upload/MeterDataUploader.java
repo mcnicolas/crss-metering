@@ -30,8 +30,10 @@ import java.io.Writer;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 @Slf4j
@@ -97,7 +99,7 @@ public class MeterDataUploader extends JFrame {
                 if (token != null) {
                     // TODO: Add error handling. When an error is encountered throw an exception.
                     RestUtil.sendHeader(transactionID, username, selectedFiles.size(), category, token);
-                    publish("Sending header record");
+                    publish("Header record");
                     setProgress(++counter);
                 }
 
@@ -110,7 +112,7 @@ public class MeterDataUploader extends JFrame {
                 }
 
                 RestUtil.sendTrailer(transactionID, token);
-                publish("Sending trailer record");
+                publish("Trailer record");
                 setProgress(++counter);
 
                 return null;
@@ -123,6 +125,14 @@ public class MeterDataUploader extends JFrame {
 
             @Override
             protected void done() {
+                try {
+                    get();
+                } catch (InterruptedException | ExecutionException e) {
+                    log.error(e.getMessage(), e);
+
+                    showMessageDialog(MeterDataUploader.this, e.getMessage(), "Upload Error", ERROR_MESSAGE);
+                }
+
                 // TODO: Change status bar to a different card
                 System.out.println("Done uploading files");
             }
@@ -142,7 +152,7 @@ public class MeterDataUploader extends JFrame {
             token = RestUtil.login(username, password);
 
             if (token == null) {
-                JOptionPane.showMessageDialog(this, "Invalid login", "Error", ERROR_MESSAGE);
+                showMessageDialog(this, "Invalid login", "Error", ERROR_MESSAGE);
             } else {
                 log.debug("Logged in with token: {}", token);
 
@@ -172,7 +182,7 @@ public class MeterDataUploader extends JFrame {
         } catch (LoginException e) {
             log.error(e.getMessage(), e);
 
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Error", ERROR_MESSAGE);
+            showMessageDialog(this, e.getMessage(), "Error", ERROR_MESSAGE);
         }
     }
 

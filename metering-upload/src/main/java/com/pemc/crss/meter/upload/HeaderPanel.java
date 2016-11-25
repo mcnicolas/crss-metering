@@ -273,10 +273,6 @@ public class HeaderPanel extends JPanel {
             return;
         }
 
-        // TODO:
-        // 3. If user is an MSP, set the default combo box selection to the currently logged in user and
-        //    disable the combo box
-
         String category = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
 
         parent.uploadData(category, mspShortName);
