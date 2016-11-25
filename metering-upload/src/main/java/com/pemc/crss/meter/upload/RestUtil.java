@@ -2,6 +2,7 @@ package com.pemc.crss.meter.upload;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -171,7 +172,9 @@ public class RestUtil {
             if (httpResponse.getStatusLine().getStatusCode() == SC_OK) {
                 String content = EntityUtils.toString(httpResponse.getEntity());
 
-                retVal = Long.valueOf(content);
+                if (NumberUtils.isParsable(content)) {
+                    retVal = Long.valueOf(content);
+                }
 
                 log.debug("Response:{}", content);
             } else {
