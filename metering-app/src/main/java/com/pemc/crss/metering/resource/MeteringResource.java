@@ -48,7 +48,7 @@ public class MeteringResource {
     }
 
     @PostMapping("/uploadheader")
-    public void sendHeader(@RequestParam("transactionID") String transactionID,
+    public long sendHeader(@RequestParam("transactionID") String transactionID,
                            @RequestParam("fileCount") int fileCount,
                            @RequestParam("category") String category,
                            @RequestParam("username") String username) {
@@ -56,8 +56,7 @@ public class MeteringResource {
 
         log.debug("Transaction ID:{}", transactionID);
 
-        // TODO: Return headerID
-        long headerID = meterService.saveHeader(transactionID, fileCount, category, username);
+        return meterService.saveHeader(transactionID, fileCount, category, username);
     }
 
     @PostMapping("/uploadfile")

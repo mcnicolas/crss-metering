@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
@@ -96,15 +95,15 @@ public class MeterDataUploader extends JFrame {
             protected Void doInBackground() throws Exception {
 
                 int counter = 0;
+                long headerID = -1;
                 if (token != null) {
-                    // TODO: Add error handling. When an error is encountered throw an exception.
-                    RestUtil.sendHeader(transactionID, username, selectedFiles.size(), category, token);
+                    headerID = RestUtil.sendHeader(transactionID, username, selectedFiles.size(), category, token);
                     publish("Header record");
                     setProgress(++counter);
                 }
 
                 for (FileBean selectedFile : selectedFiles) {
-                    RestUtil.sendFile(transactionID, selectedFile, category, mspShortName, token);
+                    RestUtil.sendFile(headerID, transactionID, selectedFile, category, mspShortName, token);
                     publish(selectedFile.getPath().getFileName().toString());
                     setProgress(++counter);
 

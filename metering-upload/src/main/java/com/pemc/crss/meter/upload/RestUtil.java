@@ -143,12 +143,13 @@ public class RestUtil {
         return retVal;
     }
 
-    public static void sendHeader(String transactionID, String username, int fileCount, String category, String token)
+    public static long sendHeader(String transactionID, String username, int fileCount, String category, String token)
             throws ConnectionException {
+
+        long retVal = -1;
 
         log.debug("Transaction ID: {}", transactionID);
 
-        // TODO: Retrieve URL from configuration
         try {
             URIBuilder builder = new URIBuilder(BASE_URL + UPLOAD_HEADER);
 
@@ -170,6 +171,8 @@ public class RestUtil {
             if (httpResponse.getStatusLine().getStatusCode() == SC_OK) {
                 String content = EntityUtils.toString(httpResponse.getEntity());
 
+                retVal = Long.valueOf(content);
+
                 log.debug("Response:{}", content);
             } else {
                 throw new ConnectionException("Connection error"
@@ -179,6 +182,8 @@ public class RestUtil {
         } catch (URISyntaxException | IOException e) {
             log.error(e.getMessage(), e);
         }
+
+        return retVal;
     }
 
     // TODO: Optimize code. Remove duplication.
@@ -215,12 +220,11 @@ public class RestUtil {
         }
     }
 
-    public static void sendFile(String transactionID, FileBean file, String category, String mspShortName, String token)
+    public static void sendFile(long headerID, String transactionID, FileBean file, String category, String mspShortName, String token)
             throws ConnectionException {
 
         log.debug("Transaction ID: {}", transactionID);
 
-        // TODO: Retrieve URL from configuration
         try {
             URIBuilder builder = new URIBuilder(BASE_URL + UPLOAD_FILE);
 
@@ -236,7 +240,7 @@ public class RestUtil {
             MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
             HttpEntity entity = multipartEntityBuilder
                     .setContentType(MULTIPART_FORM_DATA)
-                    .addTextBody("headerID", "1") // TODO: Send actual header_id
+                    .addTextBody("headerID", String.valueOf(headerID))
                     .addTextBody("transactionID", transactionID)
                     .addTextBody("fileName", file.getPath().getFileName().toString())
                     .addTextBody("fileType", getFileType(file.getPath()))
