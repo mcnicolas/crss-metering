@@ -38,8 +38,8 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.data.update}")
     private String updateData;
 
-    @Value("${bcq.header.exists}")
-    private String headerExists;
+    @Value("${bcq.header.count}")
+    private String headerCount;
 
     @Value("${bcq.display.data}")
     private String displayData;
@@ -199,12 +199,12 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     private boolean headerExists(BcqHeader header) {
-        return jdbcTemplate.queryForObject(headerExists,
+        return jdbcTemplate.queryForObject(headerCount,
                 new Object[] {
                         header.getSellingMtn(),
                         header.getBuyingParticipant(),
                         header.getTradingDate()
-        }, Boolean.class);
+        }, Integer.class) > 0;
     }
 
     private int getTotalRecords(PageableRequest pageableRequest) {
