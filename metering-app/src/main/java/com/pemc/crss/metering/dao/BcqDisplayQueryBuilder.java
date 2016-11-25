@@ -47,10 +47,10 @@ public class BcqDisplayQueryBuilder {
         return this;
     }
 
-    public BcqDisplayQueryBuilder addSellingParticipantShortNameFilter(String sellingParticipantShortName) {
-        if (isNotBlank(sellingParticipantShortName)) {
+    public BcqDisplayQueryBuilder addSellingParticipantFilter(String sellingParticipant) {
+        if (isNotBlank(sellingParticipant)) {
             sqlBuilder.append(" AND A.SELLING_PARTICIPANT_SHORT_NAME LIKE ?");
-            arguments.add("%" + sellingParticipantShortName + "%");
+            arguments.add("%" + sellingParticipant + "%");
         }
 
         return this;
@@ -88,7 +88,7 @@ public class BcqDisplayQueryBuilder {
 
     public BcqDisplayQueryBuilder paginate(int pageNo, int pageSize) {
         sqlBuilder.append(" ").append(displayPagination);
-        arguments.add((pageNo - 1) * pageSize);
+        arguments.add(pageNo * pageSize);
         arguments.add(pageSize);
 
         return this;
