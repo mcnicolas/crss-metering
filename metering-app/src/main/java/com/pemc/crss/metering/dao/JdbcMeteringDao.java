@@ -107,7 +107,7 @@ public class JdbcMeteringDao implements MeteringDao {
         String transactionID = params.get("transactionID");
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
-        MQBuilderData query = queryBuilder.selectMeterData(category, readingDate)
+        BuilderData query = queryBuilder.selectMeterData(category, readingDate)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
                 .orderBy(pageableRequest.getOrderList())
@@ -162,7 +162,7 @@ public class JdbcMeteringDao implements MeteringDao {
         String transactionID = params.get("transactionID");
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
-        MQBuilderData query = queryBuilder.countMeterData(category, readingDate)
+        BuilderData query = queryBuilder.countMeterData(category, readingDate)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
                 .build();
