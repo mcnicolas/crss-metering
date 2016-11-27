@@ -26,6 +26,7 @@ import static javax.swing.JFileChooser.APPROVE_OPTION;
 import static javax.swing.JFileChooser.FILES_AND_DIRECTORIES;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.showMessageDialog;
+import static org.apache.commons.io.FilenameUtils.getExtension;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -39,6 +40,7 @@ public class HeaderPanel extends JPanel {
             "csv");
 
     private MeterDataUploader parent;
+    private String selectedFileExtension = "";
 
     public HeaderPanel() {
         initComponents();
@@ -255,6 +257,13 @@ public class HeaderPanel extends JPanel {
             FileNameExtensionFilter fileFilter = (FileNameExtensionFilter) fileChooser.getFileFilter();
 
             List<FileBean> selectedFiles = retrieveFileListing(fileChooser.getSelectedFiles(), fileFilter.getExtensions());
+
+            // TODO: Dirty code - refactor
+            if (!selectedFiles.isEmpty()) {
+                FileBean fileBean = selectedFiles.get(0);
+                selectedFileExtension = getExtension(fileBean.getPath().getFileName().toString());
+            }
+
             parent.updateTableDisplay(selectedFiles);
 
             btnSelectFiles.setEnabled(false);
@@ -264,6 +273,17 @@ public class HeaderPanel extends JPanel {
     }//GEN-LAST:event_selectFilesActionPerformed
 
     private void uploadActionPerformed(ActionEvent evt) {//GEN-FIRST:event_uploadActionPerformed
+        String category = ((ComboBoxItem)cboCategory.getSelectedItem()).getValue();
+
+        if (!equalsIgnoreCase(category, "daily") && equalsIgnoreCase(selectedFileExtension, "mde")) {
+            showMessageDialog(parent, "MDEF files can only be uploaded for Daily category.", "File Validation Error",
+                    ERROR_MESSAGE);
+            cboCategory.requestFocus();
+
+            return;
+        }
+
+        // Validate MSP
         String mspShortName = ((ComboBoxItem)cboMSP.getSelectedItem()).getValue();
 
         if (isBlank(mspShortName)) {
@@ -272,8 +292,6 @@ public class HeaderPanel extends JPanel {
 
             return;
         }
-
-        String category = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
 
         parent.uploadData(category, mspShortName);
     }//GEN-LAST:event_uploadActionPerformed
@@ -294,6 +312,8 @@ public class HeaderPanel extends JPanel {
         btnSelectFiles.setEnabled(true);
         btnClearTable.setEnabled(false);
         btnUpload.setEnabled(false);
+
+        selectedFileExtension = "";
     }//GEN-LAST:event_clearSelectionActionPerformed
 
     private void logoutActionPerformed(ActionEvent evt) {//GEN-FIRST:event_logoutActionPerformed
