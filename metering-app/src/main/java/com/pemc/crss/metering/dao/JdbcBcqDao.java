@@ -89,18 +89,18 @@ public class JdbcBcqDao implements BcqDao {
             for (BcqData data : dataList) {
                 jdbcTemplate.update(
                         connection -> {
-                            PreparedStatement ps = connection.prepareStatement(sql);
+                            PreparedStatement ps;
 
                             if (headerExists) {
                                 log.debug("Header exists, doing an update.");
-                                connection.prepareStatement(sql);
+                                ps = connection.prepareStatement(sql);
                                 ps.setString(1, data.getReferenceMtn());
                                 ps.setBigDecimal(2, data.getBcq());
                                 ps.setTimestamp(3, new Timestamp(data.getEndTime().getTime()));
                                 ps.setLong(4, headerId);
                             } else {
                                 log.debug("New header, doing an insert.");
-                                connection.prepareStatement(sql, new String[]{"bcq_data_id"});
+                                ps = connection.prepareStatement(sql, new String[]{"bcq_data_id"});
                                 ps.setLong(1, headerId);
                                 ps.setString(2, data.getReferenceMtn());
                                 ps.setTimestamp(3, new Timestamp(data.getStartTime().getTime()));
