@@ -51,7 +51,10 @@ public class MeterQuantityCSVReader implements QuantityReader<MeterData2> {
         retVal.setKwr(getNumericValue(row.get(6)));
         retVal.setKwhr(getNumericValue(row.get(7)));
         retVal.setKvarhr(getNumericValue(row.get(8)));
-        retVal.setEstimationFlag(row.get(9));
+
+        if (row.size() > 9) {
+            retVal.setEstimationFlag(row.get(9));
+        }
 
         return retVal;
     }
