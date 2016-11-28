@@ -10,6 +10,7 @@ import com.pemc.crss.metering.validator.exception.ValidationException;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import static com.pemc.crss.metering.constants.BcqValidationRules.*;
 import static com.pemc.crss.metering.parser.bcq.BcqInterval.HOURLY;
 import static com.pemc.crss.metering.parser.bcq.BcqInterval.QUARTERLY;
+import static java.math.BigDecimal.ROUND_HALF_UP;
 
 public class BcqValidator {//TODO Cleanup
 
@@ -206,7 +208,7 @@ public class BcqValidator {//TODO Cleanup
         data.setReferenceMtn(getAndValidateReferenceMtn(line.get(2)));
         data.setStartTime(getStartTime(endTime, interval));
         data.setEndTime(endTime);
-        data.setBcq(getAndValidateBcq(line.get(4)));
+        data.setBcq(BigDecimal.valueOf(getAndValidateBcq(line.get(4))));
 
         return data;
     }
@@ -263,7 +265,7 @@ public class BcqValidator {//TODO Cleanup
     private List<BcqData> divideDataByInterval(BcqData data, BcqInterval interval) {
         List<BcqData> dividedDataList = new ArrayList<>();
         Date currentStartTime = data.getStartTime();
-        float currentBcq = data.getBcq();
+        BigDecimal currentBcq = data.getBcq();
         int divisor;
 
         if (interval == QUARTERLY) {
@@ -277,7 +279,7 @@ public class BcqValidator {//TODO Cleanup
             partialData.setReferenceMtn(data.getReferenceMtn());
             partialData.setStartTime(currentStartTime);
             partialData.setEndTime(new Date(currentStartTime.getTime() + TimeUnit.MINUTES.toMillis(intervalConfig)));
-            partialData.setBcq(currentBcq / divisor);
+            partialData.setBcq(currentBcq.divide(BigDecimal.valueOf(divisor), 9, ROUND_HALF_UP));
             dividedDataList.add(partialData);
 
             currentStartTime = partialData.getEndTime();

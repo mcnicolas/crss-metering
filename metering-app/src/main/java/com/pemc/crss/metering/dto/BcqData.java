@@ -3,6 +3,7 @@ package com.pemc.crss.metering.dto;
 import com.google.common.base.MoreObjects;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Objects;
 
@@ -14,7 +15,7 @@ public class BcqData {
     private String referenceMtn;
     private Date startTime;
     private Date endTime;
-    private float bcq;
+    private BigDecimal bcq;
 
     @Override
     public String toString() {

@@ -17,7 +17,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -72,7 +75,7 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> {
                 dataInfo.setReferenceMtn(data.getReferenceMtn());
                 dataInfo.setStartTime(data.getStartTime());
                 dataInfo.setEndTime(data.getEndTime());
-                dataInfo.setBcq(data.getBcq());
+                dataInfo.setBcq(data.getBcq().toPlainString());
                 dataInfoList.add(dataInfo);
             }
 
@@ -111,7 +114,8 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> {
                 data.setReferenceMtn(dataInfo.getReferenceMtn());
                 data.setStartTime(dataInfo.getStartTime());
                 data.setEndTime(dataInfo.getEndTime());
-                data.setBcq(dataInfo.getBcq());
+                NumberFormat format = DecimalFormat.getInstance();
+                data.setBcq(new BigDecimal(dataInfo.getBcq()));
                 dataList.add(data);
             }
 

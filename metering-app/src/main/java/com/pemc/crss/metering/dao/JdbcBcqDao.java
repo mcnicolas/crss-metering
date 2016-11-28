@@ -93,7 +93,7 @@ public class JdbcBcqDao implements BcqDao {
 
                     if (headerExists) {
                         ps.setString(1, data.getReferenceMtn());
-                        ps.setFloat(2, data.getBcq());
+                        ps.setBigDecimal(2, data.getBcq());
                         ps.setTimestamp(3, new Timestamp(data.getEndTime().getTime()));
                         ps.setLong(4, headerId);
                     } else {
@@ -101,7 +101,7 @@ public class JdbcBcqDao implements BcqDao {
                         ps.setString(2, data.getReferenceMtn());
                         ps.setTimestamp(3, new Timestamp(data.getStartTime().getTime()));
                         ps.setTimestamp(4, new Timestamp(data.getEndTime().getTime()));
-                        ps.setFloat(5, data.getBcq());
+                        ps.setBigDecimal(5, data.getBcq());
                     }
                 }
 
