@@ -134,7 +134,8 @@ public class MeterDataUploader extends JFrame {
                 } catch (InterruptedException | ExecutionException e) {
                     log.error(e.getMessage(), e);
 
-                    showMessageDialog(MeterDataUploader.this, e.getMessage(), "Upload Error", ERROR_MESSAGE);
+                    String errorMessage = e.getMessage().substring(e.getMessage().indexOf(":")).trim();
+                    showMessageDialog(MeterDataUploader.this, errorMessage, "Upload Error", ERROR_MESSAGE);
                 }
 
                 // TODO: Change status bar to a different card
