@@ -10,9 +10,9 @@ import java.util.concurrent.TimeUnit;
 
 public enum BcqInterval {
 
-    HOURLY("Hourly", TimeUnit.MINUTES.toMillis(60), 24),
-    QUARTERLY("15mins", TimeUnit.MINUTES.toMillis(15), 96),
-    FIVE_MINUTES_PERIOD("5mins", TimeUnit.MINUTES.toMillis(5), 288);
+    HOURLY("HOURLY", TimeUnit.MINUTES.toMillis(60), 24),
+    QUARTERLY("15MINS", TimeUnit.MINUTES.toMillis(15), 96),
+    FIVE_MINUTES_PERIOD("5MINS", TimeUnit.MINUTES.toMillis(5), 288);
 
     private final String description;
     private final long timeInMillis;
@@ -45,9 +45,7 @@ public enum BcqInterval {
     }
 
     public static BcqInterval fromDescription(String description) {
-        BcqInterval interval = INTERVAL_MAP.get(description);
-
-        return interval == null ? null : INTERVAL_MAP.get(description);
+        return INTERVAL_MAP.get(description.toUpperCase());
     }
 
     public static String getValidIntervals() {

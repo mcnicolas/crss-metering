@@ -44,7 +44,9 @@ public class BcqValidator {//TODO Cleanup
 
         validateHeader(csv.get(1));
 
+        Date previousDate = null;
         BcqDeclaration bcqDeclaration = new BcqDeclaration();
+
         for (List<String> line : csv.subList(2, csv.size())) {
             BcqHeader header = getAndValidateBcqHeader(line);
 
@@ -61,13 +63,10 @@ public class BcqValidator {//TODO Cleanup
 
             List<BcqData> currentDataList = bcqDeclaration.getDataList();
             BcqData data = getData(line, interval);
-            Date previousDate = null;
-
-            if (currentDataList.size() > 0) {
-                previousDate = currentDataList.get(currentDataList.size() - 1).getEndTime();
-            }
 
             validateTimeInterval(data.getEndTime(), previousDate, interval);
+
+            previousDate = data.getEndTime();
 
             currentDataList.addAll(divideDataByInterval(data, interval));
             bcqDeclaration.setDataList(currentDataList);
