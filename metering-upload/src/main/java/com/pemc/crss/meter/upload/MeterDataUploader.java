@@ -283,12 +283,11 @@ public class MeterDataUploader extends JFrame {
         uploadTimer = new JLabel();
         centerUploadPanel = new JPanel();
         uploadProgressBar = new JProgressBar();
-        btnCancel = new JButton();
         rightUploadPanel = new JPanel();
-        jLabel8 = new JLabel();
-        jLabel9 = new JLabel();
-        jLabel10 = new JLabel();
-        jLabel11 = new JLabel();
+        lblUploadSpeed = new JLabel();
+        uploadSpeed = new JLabel();
+        lblTimeRemaining = new JLabel();
+        timeRemaining = new JLabel();
         initializeProgressPanel = new JPanel();
         lblUploadStatus = new JLabel();
         initializeProgressBar = new JProgressBar();
@@ -384,12 +383,9 @@ public class MeterDataUploader extends JFrame {
         uploadProgressPanel.setLayout(new BorderLayout());
 
         leftUploadPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
-
-        lblTime.setText("Time:");
         leftUploadPanel.add(lblTime);
 
         uploadTimer.setHorizontalAlignment(SwingConstants.RIGHT);
-        uploadTimer.setText("05:47");
         uploadTimer.setMaximumSize(new Dimension(40, 16));
         uploadTimer.setMinimumSize(new Dimension(40, 16));
         uploadTimer.setPreferredSize(new Dimension(40, 16));
@@ -411,33 +407,29 @@ public class MeterDataUploader extends JFrame {
         gridBagConstraints.insets = new Insets(0, 5, 0, 5);
         centerUploadPanel.add(uploadProgressBar, gridBagConstraints);
 
-        btnCancel.setText("Cancel");
-        btnCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                cancelActionPerformed(evt);
-            }
-        });
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new Insets(0, 5, 0, 5);
-        centerUploadPanel.add(btnCancel, gridBagConstraints);
-
         uploadProgressPanel.add(centerUploadPanel, BorderLayout.CENTER);
 
         rightUploadPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 3), new SoftBevelBorder(BevelBorder.LOWERED)));
 
-        jLabel8.setText("Upload Speed:");
-        rightUploadPanel.add(jLabel8);
+        lblUploadSpeed.setMaximumSize(new Dimension(90, 16));
+        lblUploadSpeed.setMinimumSize(new Dimension(90, 16));
+        lblUploadSpeed.setPreferredSize(new Dimension(90, 16));
+        rightUploadPanel.add(lblUploadSpeed);
 
-        jLabel9.setText("750 KB/s");
-        rightUploadPanel.add(jLabel9);
+        uploadSpeed.setMaximumSize(new Dimension(60, 16));
+        uploadSpeed.setMinimumSize(new Dimension(60, 16));
+        uploadSpeed.setPreferredSize(new Dimension(60, 16));
+        rightUploadPanel.add(uploadSpeed);
 
-        jLabel10.setText("Time Remaining:");
-        rightUploadPanel.add(jLabel10);
+        lblTimeRemaining.setMaximumSize(new Dimension(110, 16));
+        lblTimeRemaining.setMinimumSize(new Dimension(110, 16));
+        lblTimeRemaining.setPreferredSize(new Dimension(110, 16));
+        rightUploadPanel.add(lblTimeRemaining);
 
-        jLabel11.setText("5:34");
-        rightUploadPanel.add(jLabel11);
+        timeRemaining.setMaximumSize(new Dimension(40, 16));
+        timeRemaining.setMinimumSize(new Dimension(40, 16));
+        timeRemaining.setPreferredSize(new Dimension(40, 16));
+        rightUploadPanel.add(timeRemaining);
 
         uploadProgressPanel.add(rightUploadPanel, BorderLayout.EAST);
 
@@ -460,15 +452,8 @@ public class MeterDataUploader extends JFrame {
         setLocationRelativeTo(null);
     }//GEN-END:initComponents
 
-    private void cancelActionPerformed(ActionEvent evt) {//GEN-FIRST:event_cancelActionPerformed
-        // TODO: Cancel upload process
-
-        showMessageDialog(this, "Meter quantity upload cancelled.", "Cancel", INFORMATION_MESSAGE);
-    }//GEN-LAST:event_cancelActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private JPanel blankPanel;
-    private JButton btnCancel;
     private JPanel centerStatusPanel1;
     private JPanel centerStatusPanel2;
     private JPanel centerUploadPanel;
@@ -477,13 +462,11 @@ public class MeterDataUploader extends JFrame {
     private HeaderPanel headerPanel;
     private JProgressBar initializeProgressBar;
     private JPanel initializeProgressPanel;
-    private JLabel jLabel10;
-    private JLabel jLabel11;
-    private JLabel jLabel8;
-    private JLabel jLabel9;
     private JLabel lblFileCount;
     private JLabel lblTime;
+    private JLabel lblTimeRemaining;
     private JLabel lblTotalFileSize;
+    private JLabel lblUploadSpeed;
     private JLabel lblUploadStatus;
     private JLabel lblUser1;
     private JLabel lblUser2;
@@ -493,9 +476,11 @@ public class MeterDataUploader extends JFrame {
     private JPanel statusBarPanel;
     private JPanel statusPanel;
     private TablePanel tablePanel;
+    private JLabel timeRemaining;
     private JLabel totalFileSize;
     private JProgressBar uploadProgressBar;
     private JPanel uploadProgressPanel;
+    private JLabel uploadSpeed;
     private JLabel uploadTimer;
     private JLabel userFullName1;
     private JLabel userFullName2;
