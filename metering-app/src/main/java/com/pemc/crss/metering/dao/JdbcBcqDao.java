@@ -178,15 +178,15 @@ public class JdbcBcqDao implements BcqDao {
 
         jdbcTemplate.update(
                 connection -> {
-                    PreparedStatement ps = connection.prepareStatement(sql, new String[]{"bcq_header_id"});
-
-                    ps.setLong(1, fileId);
+                    PreparedStatement ps;
 
                     if (update) {
+                        ps = connection.prepareStatement(sql);
                         ps.setString(2, header.getSellingMtn());
                         ps.setString(3, header.getBuyingParticipant());
                         ps.setTimestamp(4, new Timestamp(header.getTradingDate().getTime()));
                     } else {
+                        ps = connection.prepareStatement(sql, new String[]{"bcq_header_id"});
                         ps.setString(2, header.getSellingMtn());
                         ps.setString(3, header.getBuyingParticipant());
                         ps.setString(4, header.getSellingParticipantName());
@@ -194,6 +194,8 @@ public class JdbcBcqDao implements BcqDao {
                         ps.setString(6, header.getStatus().toString());
                         ps.setTimestamp(7, new Timestamp(header.getTradingDate().getTime()));
                     }
+
+                    ps.setLong(1, fileId);
 
                     return ps;
                 },
