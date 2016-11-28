@@ -86,11 +86,11 @@ public class JdbcBcqDao implements BcqDao {
 
             String sql = headerExists ? updateData : insertData;
 
-            for (BcqData data : bcqDeclaration.getDataList()) {
+            for (BcqData data : dataList) {
                 KeyHolder keyHolder = new GeneratedKeyHolder();
                 jdbcTemplate.update(
                         connection -> {
-                            PreparedStatement ps = connection.prepareStatement(sql);
+                            PreparedStatement ps = connection.prepareStatement(sql, new String[]{"bcq_data_id"});
 
                             if (headerExists) {
                                 ps.setString(1, data.getReferenceMtn());
