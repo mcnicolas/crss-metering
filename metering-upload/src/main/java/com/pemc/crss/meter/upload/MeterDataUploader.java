@@ -164,7 +164,8 @@ public class MeterDataUploader extends JFrame {
 
                 List<String> userData = RestUtil.getUserType(token);
 
-                if (!equalsIgnoreCase(userData.get(1), "PEMC") && !equalsIgnoreCase(userData.get(1), "MSP")) {
+                if (userData.size() > 1 &&
+                        (!equalsIgnoreCase(userData.get(1), "PEMC") && !equalsIgnoreCase(userData.get(1), "MSP"))) {
                     showMessageDialog(this, "Invalid login", "Error", ERROR_MESSAGE);
                     token = null;
 
