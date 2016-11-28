@@ -307,7 +307,7 @@ public class RestUtil {
     }
 
     public static ParticipantName getParticipant(String token) {
-        ParticipantName retVal = null;
+        ParticipantName retVal = new ParticipantName();
 
         try {
             URIBuilder builder = new URIBuilder(BASE_URL + PARTICIPANT_CATEGORY_URL);
@@ -324,7 +324,6 @@ public class RestUtil {
                 JSONObject obj = new JSONObject(content);
 
                 // TODO: Improve json deserialization
-                retVal = new ParticipantName();
                 retVal.setId(obj.getLong("id"));
                 retVal.setShortName(obj.getString("shortName"));
                 retVal.setParticipantName(obj.getString("participantName"));

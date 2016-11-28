@@ -3,7 +3,6 @@ package com.pemc.crss.meter.upload;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -22,8 +21,6 @@ import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -36,7 +33,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
-import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
@@ -156,6 +152,8 @@ public class MeterDataUploader extends JFrame {
     }
 
     public void login(String username, String password) {
+        // TODO: Use SwingWorker
+
         try {
             token = RestUtil.login(username, password);
 
@@ -164,13 +162,16 @@ public class MeterDataUploader extends JFrame {
             } else {
                 log.debug("Logged in with token: {}", token);
 
-                this.username = username;
-
-                // TODO: Validate user
-                // 1. User should be a valid user in the system (non-expired, non-locked, etc)
-                // 2. User should be a PEMC User or a Trading Participant with an MSP registration category
-                // 3. If PEMC User, it should belong to the metering department
                 List<String> userData = RestUtil.getUserType(token);
+
+                if (!equalsIgnoreCase(userData.get(1), "PEMC") && !equalsIgnoreCase(userData.get(1), "MSP")) {
+                    showMessageDialog(this, "Invalid login", "Error", ERROR_MESSAGE);
+                    token = null;
+
+                    return;
+                }
+
+                this.username = username;
 
                 userFullName1.setText(userData.get(0));
                 userFullName2.setText(userData.get(0));
@@ -202,7 +203,7 @@ public class MeterDataUploader extends JFrame {
 
         tablePanel.clearSelectedFiles();
 
-        // TODO: Reset status bar
+        ((CardLayout)statusBarPanel.getLayout()).show(statusBarPanel, "blank");
     }
 
     public void clearSelectedFiles() {
