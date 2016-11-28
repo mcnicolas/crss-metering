@@ -63,15 +63,14 @@ public class BcqValidator {//TODO Cleanup
                 }
             }
 
-            List<BcqData> currentDataList = bcqDeclaration.getDataList();
             BcqData data = getData(line, interval);
 
             validateTimeInterval(data.getEndTime(), previousDate, interval);
 
             previousDate = data.getEndTime();
 
-            currentDataList.addAll(divideDataByInterval(data, interval));
-            bcqDeclaration.setDataList(currentDataList);
+            bcqDeclaration.getDataList().addAll(divideDataByInterval(data, interval));
+            System.out.println(bcqDeclaration.getDataList().size());
         }
 
         validateBcqDataSize(bcqDeclaration, interval);
@@ -245,6 +244,8 @@ public class BcqValidator {//TODO Cleanup
             divisor = intervalConfig == 5 ? 12 : 4;
         }
 
+        System.out.println(bcqDeclaration.getDataList().size() + " ------------------ " + validBcqSize);
+
         if (bcqDeclaration.getDataList().size() != validBcqSize) {
             throw new ValidationException(
                     String.format(INCOMPLETE_ENTRIES.getErrorMessage(),
@@ -270,8 +271,10 @@ public class BcqValidator {//TODO Cleanup
 
         if (interval == QUARTERLY) {
             divisor = intervalConfig == 5 ? 3 : 1;
-        } else {
+        } else if (interval == HOURLY) {
             divisor = intervalConfig == 5 ? 12 : 4;
+        } else {
+            return Collections.singletonList(data);
         }
 
         for (int count = 1; count <= divisor; count ++) {
