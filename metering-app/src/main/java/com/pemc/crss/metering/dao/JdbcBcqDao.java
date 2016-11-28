@@ -47,8 +47,8 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.display.count}")
     private String displayCount;
 
-    @Value("${bcq.display.pagination}")
-    private String displayPagination;
+    @Value("${bcq.display.wrapper}")
+    private String displayWrapper;
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -60,7 +60,6 @@ public class JdbcBcqDao implements BcqDao {
     @Override
     public long saveBcqUploadFile(String transactionID, BcqUploadFile bcqUploadFile) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        log.debug(insertManifest);
         jdbcTemplate.update(
                 connection -> {
                     PreparedStatement ps = connection.prepareStatement(insertManifest, new String[]{"file_id"});
@@ -123,8 +122,8 @@ public class JdbcBcqDao implements BcqDao {
         String buyingParticipant = params.get("buyingParticipant");
         String status = params.get("status");
 
-        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayPagination);
-        BuilderData query = builder.countBcqDeclarations(tradingDate)
+        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayWrapper);
+        BuilderData query = builder.selectBcqDeclarations(tradingDate)
                 .addBuyingParticipantFilter(buyingParticipant)
                 .addSellingParticipantFilter(sellingParticipant)
                 .addSellingMtnFilter(sellingMtn)
@@ -132,6 +131,8 @@ public class JdbcBcqDao implements BcqDao {
                 .orderBy(pageableRequest.getOrderList())
                 .paginate(pageableRequest.getPageNo(), pageableRequest.getPageSize())
                 .build();
+
+        System.out.println("---query--- " + query.getSql());
 
         List<BcqDeclarationDisplay> bcqDeclarationList = jdbcTemplate.query(
                 query.getSql(),
@@ -215,7 +216,7 @@ public class JdbcBcqDao implements BcqDao {
         String buyingParticipant = params.get("buyingParticipant");
         String status = params.get("status");
 
-        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayPagination);
+        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayWrapper);
         BuilderData query = builder.countBcqDeclarations(tradingDate)
                 .addBuyingParticipantFilter(buyingParticipant)
                 .addSellingParticipantFilter(sellingParticipant)

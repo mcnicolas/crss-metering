@@ -1,7 +1,6 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageOrder;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,20 +13,14 @@ public class BcqDisplayQueryBuilder {
 
     private StringBuilder sqlBuilder = new StringBuilder();
     private List<Object> arguments = new ArrayList<>();
-
-    @Value("${bcq.display.data}")
     private String displayData;
-
-    @Value("${bcq.display.count}")
     private String displayCount;
+    private String displayWrapper;
 
-    @Value("${bcq.display.pagination}")
-    private String displayPagination;
-
-    public BcqDisplayQueryBuilder(String displayData, String displayCount, String displayPagination) {
+    public BcqDisplayQueryBuilder(String displayData, String displayCount, String displayWrapper) {
         this.displayData = displayData;
         this.displayCount = displayCount;
-        this.displayPagination = displayPagination;
+        this.displayWrapper = displayWrapper;
     }
 
     public BcqDisplayQueryBuilder selectBcqDeclarations(Date tradingDate) {
@@ -93,9 +86,11 @@ public class BcqDisplayQueryBuilder {
     }
 
     public BcqDisplayQueryBuilder paginate(int pageNo, int pageSize) {
-        sqlBuilder.append(" ").append(displayPagination);
-        arguments.add(pageNo * pageSize);
-        arguments.add(pageSize);
+        String selectQuery = sqlBuilder.toString();
+        displayWrapper = displayWrapper.replace("{SELECT_QUERY}", selectQuery);
+        displayWrapper = displayWrapper.replace("{PAGE_NO}", String.valueOf(pageNo));
+        displayWrapper = displayWrapper.replace("{PAGE_SIZE}", String.valueOf(pageSize));
+        sqlBuilder = new StringBuilder(displayWrapper);
 
         return this;
     }
