@@ -8,16 +8,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 @Repository
 @Slf4j
@@ -85,30 +86,30 @@ public class JdbcBcqDao implements BcqDao {
 
             String sql = headerExists ? updateData : insertData;
 
-            jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    BcqData data = dataList.get(i);
+            for (BcqData data : bcqDeclaration.getDataList()) {
+                KeyHolder keyHolder = new GeneratedKeyHolder();
+                jdbcTemplate.update(
+                        connection -> {
+                            PreparedStatement ps = connection.prepareStatement(sql);
 
-                    if (headerExists) {
-                        ps.setString(1, data.getReferenceMtn());
-                        ps.setBigDecimal(2, data.getBcq());
-                        ps.setTimestamp(3, new Timestamp(data.getEndTime().getTime()));
-                        ps.setLong(4, headerId);
-                    } else {
-                        ps.setLong(1, headerId);
-                        ps.setString(2, data.getReferenceMtn());
-                        ps.setTimestamp(3, new Timestamp(data.getStartTime().getTime()));
-                        ps.setTimestamp(4, new Timestamp(data.getEndTime().getTime()));
-                        ps.setBigDecimal(5, data.getBcq());
-                    }
-                }
+                            if (headerExists) {
+                                ps.setString(1, data.getReferenceMtn());
+                                ps.setBigDecimal(2, data.getBcq());
+                                ps.setTimestamp(3, new Timestamp(data.getEndTime().getTime()));
+                                ps.setLong(4, headerId);
+                            } else {
+                                ps.setLong(1, headerId);
+                                ps.setString(2, data.getReferenceMtn());
+                                ps.setTimestamp(3, new Timestamp(data.getStartTime().getTime()));
+                                ps.setTimestamp(4, new Timestamp(data.getEndTime().getTime()));
+                                ps.setBigDecimal(5, data.getBcq());
+                            }
 
-                @Override
-                public int getBatchSize() {
-                    return dataList.size();
-                }
-            });
+                            return ps;
+                        },
+                        keyHolder
+                );
+            }
         }
     }
 
@@ -131,8 +132,6 @@ public class JdbcBcqDao implements BcqDao {
                 .orderBy(pageableRequest.getOrderList())
                 .paginate(pageableRequest.getPageNo(), pageableRequest.getPageSize())
                 .build();
-
-        System.out.println("---query--- " + query.getSql());
 
         List<BcqDeclarationDisplay> bcqDeclarationList = jdbcTemplate.query(
                 query.getSql(),
