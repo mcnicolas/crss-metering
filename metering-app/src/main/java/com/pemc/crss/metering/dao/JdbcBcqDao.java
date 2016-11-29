@@ -8,12 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -51,6 +53,9 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.display.wrapper}")
     private String displayWrapper;
 
+    @Value("${bcq.header.id}")
+    private String selectHeaderId;
+
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -86,34 +91,30 @@ public class JdbcBcqDao implements BcqDao {
 
             String sql = headerExists ? updateData : insertData;
 
-            for (BcqData data : dataList) {
-                jdbcTemplate.update(
-                        connection -> {
-                            PreparedStatement ps;
+            jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    BcqData data = dataList.get(i);
 
-                            if (headerExists) {
-                                log.debug("Header exists, doing an update.");
-                                ps = connection.prepareStatement(sql);
-                                ps.setString(1, data.getReferenceMtn());
-                                ps.setBigDecimal(2, data.getBcq());
-                                ps.setTimestamp(3, new Timestamp(data.getEndTime().getTime()));
-                                ps.setLong(4, headerId);
-                            } else {
-                                log.debug("New header, doing an insert.");
-                                ps = connection.prepareStatement(sql, new String[]{"bcq_data_id"});
-                                ps.setLong(1, headerId);
-                                ps.setString(2, data.getReferenceMtn());
-                                ps.setTimestamp(3, new Timestamp(data.getStartTime().getTime()));
-                                ps.setTimestamp(4, new Timestamp(data.getEndTime().getTime()));
-                                ps.setBigDecimal(5, data.getBcq());
-                            }
+                    if (headerExists) {
+                        ps.setString(1, data.getReferenceMtn());
+                        ps.setBigDecimal(2, data.getBcq());
+                        ps.setTimestamp(3, new Timestamp(data.getEndTime().getTime()));
+                        ps.setLong(4, headerId);
+                    } else {
+                        ps.setLong(1, headerId);
+                        ps.setString(2, data.getReferenceMtn());
+                        ps.setTimestamp(3, new Timestamp(data.getStartTime().getTime()));
+                        ps.setTimestamp(4, new Timestamp(data.getEndTime().getTime()));
+                        ps.setBigDecimal(5, data.getBcq());
+                    }
+                }
 
-                            return ps;
-                        }
-                );
-
-
-            }
+                @Override
+                public int getBatchSize() {
+                    return dataList.size();
+                }
+            });
         }
     }
 
@@ -173,35 +174,39 @@ public class JdbcBcqDao implements BcqDao {
      ****************************************************/
 
     private long saveBcqHeader(long fileId, BcqHeader header, boolean update) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        String sql = update ? updateHeader : insertHeader;
+        if (update) {
+            log.debug("Header exists, doing an update.");
 
-        jdbcTemplate.update(
-                connection -> {
-                    PreparedStatement ps;
+            jdbcTemplate.update(con -> {
+                PreparedStatement ps = con.prepareStatement(updateHeader);
+                ps.setLong(1, fileId);
+                ps.setString(2, header.getSellingMtn());
+                ps.setString(3, header.getBuyingParticipant());
+                ps.setTimestamp(4, new Timestamp(header.getTradingDate().getTime()));
 
-                    if (update) {
-                        ps = connection.prepareStatement(sql);
-                        ps.setString(2, header.getSellingMtn());
-                        ps.setString(3, header.getBuyingParticipant());
-                        ps.setTimestamp(4, new Timestamp(header.getTradingDate().getTime()));
-                    } else {
-                        ps = connection.prepareStatement(sql, new String[]{"bcq_header_id"});
-                        ps.setString(2, header.getSellingMtn());
-                        ps.setString(3, header.getBuyingParticipant());
-                        ps.setString(4, header.getSellingParticipantName());
-                        ps.setString(5, header.getSellingParticipantShortName());
-                        ps.setString(6, header.getStatus().toString());
-                        ps.setTimestamp(7, new Timestamp(header.getTradingDate().getTime()));
-                    }
+                return ps;
+            });
 
-                    ps.setLong(1, fileId);
+            return getHeaderIdBy(header);
+        } else {
+            KeyHolder keyHolder = new GeneratedKeyHolder();
+            log.debug("New header, doing an insert.");
 
-                    return ps;
-                },
-                keyHolder);
+            jdbcTemplate.update(con -> {
+                PreparedStatement ps = con.prepareStatement(insertHeader, new String[]{"bcq_header_id"});
+                ps.setLong(1, fileId);
+                ps.setString(2, header.getSellingMtn());
+                ps.setString(3, header.getBuyingParticipant());
+                ps.setString(4, header.getSellingParticipantName());
+                ps.setString(5, header.getSellingParticipantShortName());
+                ps.setString(6, header.getStatus().toString());
+                ps.setTimestamp(7, new Timestamp(header.getTradingDate().getTime()));
 
-        return keyHolder.getKey().longValue();
+                return ps;
+            }, keyHolder);
+
+            return keyHolder.getKey().longValue();
+        }
     }
 
     private boolean headerExists(BcqHeader header) {
@@ -211,6 +216,15 @@ public class JdbcBcqDao implements BcqDao {
                         header.getBuyingParticipant(),
                         header.getTradingDate()
         }, Integer.class) > 0;
+    }
+
+    private long getHeaderIdBy(BcqHeader header) {
+        return jdbcTemplate.queryForObject(selectHeaderId,
+                new Object[] {
+                        header.getSellingMtn(),
+                        header.getBuyingParticipant(),
+                        header.getTradingDate()
+                }, Long.class);
     }
 
     private int getTotalRecords(PageableRequest pageableRequest) {
