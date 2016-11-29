@@ -1,7 +1,6 @@
 package com.pemc.crss.meter.upload;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -42,8 +41,6 @@ public class SelectedFileUtils {
                         if (isReadable(file) && !isSymbolicLink(file)
                                 && isValidFileExtension(file.toString(), fileExtensions)) {
 
-                            log.debug("Processing file:{}", file.toString());
-
                             try (InputStream source = new DigestInputStream(Files.newInputStream(file), md)) {
 
                                 IOUtils.copy(source, NULL_OUTPUT_STREAM);
@@ -57,6 +54,7 @@ public class SelectedFileUtils {
                                 fileBean.setLastModified(fileAttributes.lastModifiedTime());
                                 fileBean.setSize(fileAttributes.size());
                                 fileBean.setChecksum(hash);
+                                fileBean.setStatus("");
 
                                 retVal.add(fileBean);
                             }

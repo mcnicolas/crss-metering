@@ -1,5 +1,7 @@
 package com.pemc.crss.meter.upload;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
@@ -7,6 +9,7 @@ import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
@@ -21,10 +24,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import static java.awt.event.KeyEvent.VK_ESCAPE;
 import static javax.swing.JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT;
+import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static javax.swing.JOptionPane.showMessageDialog;
 
+@Slf4j
 public class SettingsDialog extends JDialog {
 
     public static final int RET_CANCEL = 0;
@@ -133,7 +141,15 @@ public class SettingsDialog extends JDialog {
     }//GEN-END:initComponents
 
     private void saveActionPerformed(ActionEvent evt) {//GEN-FIRST:event_saveActionPerformed
-        doClose(RET_SAVE);
+        try {
+            new URL(txtServerURL.getText());
+
+            doClose(RET_SAVE);
+        } catch (MalformedURLException e) {
+            log.error(e.getMessage(), e);
+
+            showMessageDialog(parent, e.getMessage(), "Malformed URL", ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_saveActionPerformed
 
     private void cancelActionPerformed(ActionEvent evt) {//GEN-FIRST:event_cancelActionPerformed
@@ -143,7 +159,7 @@ public class SettingsDialog extends JDialog {
     private void closeDialog(WindowEvent evt) {//GEN-FIRST:event_closeDialog
         doClose(RET_CANCEL);
     }//GEN-LAST:event_closeDialog
-    
+
     private void doClose(int retStatus) {
         returnStatus = retStatus;
         setVisible(false);
