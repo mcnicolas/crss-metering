@@ -39,8 +39,8 @@ public class BcqDisplayQueryBuilder {
 
     public BcqDisplayQueryBuilder addSellingMtnFilter(String sellingMtn) {
         if (isNotBlank(sellingMtn)) {
-            sqlBuilder.append(" AND A.SELLING_MTN LIKE ?");
-            arguments.add("%" + sellingMtn + "%");
+            sqlBuilder.append(" AND UPPER(A.SELLING_MTN) LIKE ?");
+            arguments.add("%" + sellingMtn.toUpperCase() + "%");
         }
 
         return this;
@@ -48,8 +48,8 @@ public class BcqDisplayQueryBuilder {
 
     public BcqDisplayQueryBuilder addSellingParticipantFilter(String sellingParticipant) {
         if (isNotBlank(sellingParticipant)) {
-            sqlBuilder.append(" AND A.SELLING_PARTICIPANT_SHORT_NAME LIKE ?");
-            arguments.add("%" + sellingParticipant + "%");
+            sqlBuilder.append(" AND UPPER(A.SELLING_PARTICIPANT_SHORT_NAME) LIKE ?");
+            arguments.add("%" + sellingParticipant.toUpperCase() + "%");
         }
 
         return this;
@@ -57,8 +57,8 @@ public class BcqDisplayQueryBuilder {
 
     public BcqDisplayQueryBuilder addBuyingParticipantFilter(String buyingParticipant) {
         if (isNotBlank(buyingParticipant)) {
-            sqlBuilder.append(" AND A.BUYING_PARTICIPANT LIKE ?");
-            arguments.add("%" + buyingParticipant + "%");
+            sqlBuilder.append(" AND UPPER(A.BUYING_PARTICIPANT) LIKE ?");
+            arguments.add("%" + buyingParticipant.toUpperCase() + "%");
         }
 
         return this;
