@@ -6,6 +6,7 @@ import com.pemc.crss.metering.utils.DateTimeUtils;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.StringJoiner;
 
 import static com.pemc.crss.metering.utils.DateTimeUtils.dateToLong;
 import static com.pemc.crss.metering.utils.DateTimeUtils.endOfDay;
@@ -69,18 +70,14 @@ public class MQDisplayQueryBuilder {
 
     public MQDisplayQueryBuilder orderBy(List<PageOrder> pageOrderList) {
         if (isNotEmpty(pageOrderList)) {
-            sqlBuilder.append(" ORDER BY ?");
+            sqlBuilder.append(" ORDER BY ");
 
-            PageOrder pageOrder = pageOrderList.get(0);
-            arguments.add(pageOrder.getSortColumn());
-
-            switch (pageOrder.getSortDirection()) {
-                case ASC:
-                    sqlBuilder.append(" ASC");
-                    break;
-                case DESC:
-                    sqlBuilder.append(" DESC");
+            StringJoiner joiner = new StringJoiner(",");
+            for (PageOrder pageOrder : pageOrderList) {
+                joiner.add(pageOrder.getSortColumn() + " " + pageOrder.getSortDirection());
             }
+
+            sqlBuilder.append(joiner.toString());
         }
 
         return this;
