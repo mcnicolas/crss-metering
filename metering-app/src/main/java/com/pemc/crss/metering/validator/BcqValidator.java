@@ -60,6 +60,7 @@ public class BcqValidator {//TODO Cleanup
                     validateBcqDataSize(bcqDeclaration, interval);
                     bcqDeclarationList.add(bcqDeclaration);
                     bcqDeclaration = new BcqDeclaration(header, new ArrayList<>());
+                    previousDate = null;
                 }
             }
 
@@ -70,7 +71,6 @@ public class BcqValidator {//TODO Cleanup
             previousDate = data.getEndTime();
 
             bcqDeclaration.getDataList().addAll(divideDataByInterval(data, interval));
-            System.out.println(bcqDeclaration.getDataList().size());
         }
 
         validateBcqDataSize(bcqDeclaration, interval);
@@ -243,8 +243,6 @@ public class BcqValidator {//TODO Cleanup
         } else if (interval == HOURLY) {
             divisor = intervalConfig == 5 ? 12 : 4;
         }
-
-        System.out.println(bcqDeclaration.getDataList().size() + " ------------------ " + validBcqSize);
 
         if (bcqDeclaration.getDataList().size() != validBcqSize) {
             throw new ValidationException(
