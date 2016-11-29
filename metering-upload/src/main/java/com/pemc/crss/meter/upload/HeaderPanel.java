@@ -273,7 +273,7 @@ public class HeaderPanel extends JPanel {
     }//GEN-LAST:event_selectFilesActionPerformed
 
     private void uploadActionPerformed(ActionEvent evt) {//GEN-FIRST:event_uploadActionPerformed
-        String category = ((ComboBoxItem)cboCategory.getSelectedItem()).getValue();
+        String category = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
 
         if (!equalsIgnoreCase(category, "daily") && equalsIgnoreCase(selectedFileExtension, "mde")) {
             showMessageDialog(parent, "MDEF files can only be uploaded for Daily category.", "File Validation Error",
@@ -284,7 +284,7 @@ public class HeaderPanel extends JPanel {
         }
 
         // Validate MSP
-        String mspShortName = ((ComboBoxItem)cboMSP.getSelectedItem()).getValue();
+        String mspShortName = ((ComboBoxItem) cboMSP.getSelectedItem()).getValue();
 
         if (isBlank(mspShortName)) {
             showMessageDialog(parent, "Please select an MSP", "Blank MSP Error", ERROR_MESSAGE);
@@ -325,9 +325,8 @@ public class HeaderPanel extends JPanel {
         LoginDialog loginDialog = new LoginDialog(parent, true);
         loginDialog.setVisible(true);
 
-        if (loginDialog.getReturnStatus() == RET_OK) {
-            parent.login(loginDialog.getUsername(), loginDialog.getPassword());
-
+        if (loginDialog.getReturnStatus() == RET_OK
+                && parent.login(loginDialog.getUsername(), loginDialog.getPassword())) {
             parent.configureServices();
         }
     }//GEN-LAST:event_loginActionPerformed
@@ -339,6 +338,8 @@ public class HeaderPanel extends JPanel {
 
         btnLogin.setEnabled(false);
         btnLogin.setVisible(false);
+
+        btnSettings.setEnabled(false);
 
         btnLogout.setEnabled(true);
         btnLogout.setVisible(true);
@@ -354,6 +355,8 @@ public class HeaderPanel extends JPanel {
 
         btnLogin.setEnabled(true);
         btnLogin.setVisible(true);
+
+        btnSettings.setEnabled(true);
 
         btnLogout.setEnabled(false);
         btnLogout.setVisible(false);

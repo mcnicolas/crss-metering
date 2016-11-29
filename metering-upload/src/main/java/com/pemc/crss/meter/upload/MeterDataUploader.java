@@ -1,6 +1,7 @@
 package com.pemc.crss.meter.upload;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -9,6 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
+import javax.swing.Timer;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
@@ -21,18 +23,30 @@ import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
+import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
+import static javax.swing.JOptionPane.OK_OPTION;
+import static javax.swing.JOptionPane.showConfirmDialog;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
@@ -40,16 +54,26 @@ import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 @Slf4j
 public class MeterDataUploader extends JFrame {
 
-    private String token;
+    private final DateFormat timerFormat = new SimpleDateFormat("mm:ss");
+
+    private HttpHandler httpHandler;
     private String username;
-    private String fullName;
     private String userType;
     private ParticipantName participant;
     private Properties properties;
+    private Timer uploadTimer;
+    private long startTime = 0;
 
-    public MeterDataUploader() {
+    public MeterDataUploader(HttpHandler httpHandler) {
+        this.httpHandler = httpHandler;
+
+        uploadTimer = new Timer(53, new TimerListener());
+        uploadTimer.setInitialDelay(0);
+
         initComponents();
         initProperties();
+
+        httpHandler.initialize(properties.getProperty("URL"));
     }
 
     private void initProperties() {
@@ -62,7 +86,6 @@ public class MeterDataUploader extends JFrame {
 
         try (Reader reader = new FileReader("config.properties")) {
             properties.load(reader);
-            RestUtil.setBaseURL(properties.getProperty("URL"));
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
@@ -89,40 +112,46 @@ public class MeterDataUploader extends JFrame {
 
         totalFileSize.setText(byteCountToDisplaySize(totalSize));
 
-        ((CardLayout)statusBarPanel.getLayout()).show(statusBarPanel, "Status");
+        ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "Status");
 
         tablePanel.updateTableDisplay(selectedFiles);
     }
 
     public void uploadData(String category, String mspShortName) {
-        ((CardLayout)statusBarPanel.getLayout()).show(statusBarPanel, "Upload");
+        ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "Upload");
+
+        startTime = System.currentTimeMillis();
+        uploadTimer.start();
 
         String transactionID = UUID.randomUUID().toString();
         List<FileBean> selectedFiles = tablePanel.getSelectedFiles();
         uploadProgressBar.setValue(0);
         uploadProgressBar.setMinimum(0);
-        uploadProgressBar.setMaximum(selectedFiles.size() + 2);
+        uploadProgressBar.setMaximum(100);
+
+        int totalProgress = selectedFiles.size() + 2;
 
         SwingWorker<Void, String> worker = new SwingWorker<Void, String>() {
             @Override
             protected Void doInBackground() throws Exception {
 
                 int counter = 0;
-                long headerID = -1;
-                if (token != null) {
-                    headerID = RestUtil.sendHeader(transactionID, username, selectedFiles.size(), category, token);
-                    setProgress(++counter);
-                }
+
+                long headerID = httpHandler.sendHeader(transactionID, username, selectedFiles.size(), category);
+                int progressValue = (100 * ++counter)/totalProgress;
+                setProgress(progressValue);
 
                 for (FileBean selectedFile : selectedFiles) {
-                    RestUtil.sendFile(headerID, transactionID, selectedFile, category, mspShortName, token);
-                    setProgress(++counter);
+                    httpHandler.sendFile(headerID, transactionID, selectedFile, category, mspShortName);
+                    progressValue = (100 * ++counter)/totalProgress;
+                    setProgress(progressValue);
 
                     log.debug("Uploading file:{}", selectedFile.getPath().getFileName().toString());
                 }
 
-                RestUtil.sendTrailer(transactionID, token);
-                setProgress(++counter);
+                httpHandler.sendTrailer(transactionID);
+                progressValue = (100 * ++counter)/totalProgress;
+                setProgress(progressValue);
 
                 return null;
             }
@@ -138,8 +167,12 @@ public class MeterDataUploader extends JFrame {
                     showMessageDialog(MeterDataUploader.this, errorMessage, "Upload Error", ERROR_MESSAGE);
                 }
 
-                // TODO: Change status bar to a different card
-                System.out.println("Done uploading files");
+                uploadTimer.stop();
+
+                long elapsedTime = System.currentTimeMillis() - startTime;
+                String duration = DurationFormatUtils.formatDurationHMS(elapsedTime);
+
+                log.info("Done uploading files. Upload took: {}", duration);
             }
         };
 
@@ -152,64 +185,62 @@ public class MeterDataUploader extends JFrame {
         worker.execute();
     }
 
-    public void login(String username, String password) {
+    public boolean login(String username, String password) {
+        boolean retVal = false;
+
         // TODO: Use SwingWorker
 
         try {
-            token = RestUtil.login(username, password);
+            httpHandler.login(username, password);
 
-            if (token == null) {
+            List<String> userData = httpHandler.getUserType();
+
+            if (userData.size() > 1 &&
+                    (!equalsIgnoreCase(userData.get(1), "PEMC") && !equalsIgnoreCase(userData.get(1), "MSP"))) {
                 showMessageDialog(this, "Invalid login", "Error", ERROR_MESSAGE);
-            } else {
-                log.debug("Logged in with token: {}", token);
 
-                List<String> userData = RestUtil.getUserType(token);
-
-                if (userData.size() > 1 &&
-                        (!equalsIgnoreCase(userData.get(1), "PEMC") && !equalsIgnoreCase(userData.get(1), "MSP"))) {
-                    showMessageDialog(this, "Invalid login", "Error", ERROR_MESSAGE);
-                    token = null;
-
-                    return;
-                }
-
-                this.username = username;
-
-                userFullName1.setText(userData.get(0));
-                userFullName2.setText(userData.get(0));
-                ((CardLayout)statusBarPanel.getLayout()).show(statusBarPanel, "LoggedIn");
-
-                userType = userData.get(1);
-
-                // TODO: Avoid redundant rest call
-                if (equalsIgnoreCase(userType, "MSP")) {
-                    participant = RestUtil.getParticipant(token);
-                }
-
-                log.debug("User type: {}", userType);
-
-                headerPanel.enableToolbar();
+                return false;
             }
-        } catch (LoginException e) {
+
+            this.username = username;
+
+            userFullName1.setText(userData.get(0));
+            userFullName2.setText(userData.get(0));
+            ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "LoggedIn");
+
+            userType = userData.get(1);
+
+            // TODO: Avoid redundant rest call
+            if (equalsIgnoreCase(userType, "MSP")) {
+                participant = httpHandler.getParticipant();
+            }
+
+            headerPanel.enableToolbar();
+
+            retVal = true;
+        } catch (LoginException | HttpConnectionException | HttpResponseException e) {
             log.error(e.getMessage(), e);
 
             showMessageDialog(this, e.getMessage(), "Error", ERROR_MESSAGE);
         }
+
+        return retVal;
     }
 
     public void logout() {
-        token = null;
+        log.debug("Logging out user:{}", username);
+
         username = null;
         userType = null;
         participant = null;
 
         tablePanel.clearSelectedFiles();
 
-        ((CardLayout)statusBarPanel.getLayout()).show(statusBarPanel, "blank");
+        ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "blank");
     }
 
     public void clearSelectedFiles() {
-        ((CardLayout)statusBarPanel.getLayout()).show(statusBarPanel, "LoggedIn");
+        ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "LoggedIn");
 
         // TODO: Clear status
 
@@ -217,7 +248,15 @@ public class MeterDataUploader extends JFrame {
     }
 
     public List<ComboBoxItem> getMSPListing() {
-        return RestUtil.getMSPListing(token);
+        List<ComboBoxItem> retVal = new ArrayList<>();
+
+        try {
+            retVal = httpHandler.getMSPListing();
+        } catch (HttpConnectionException | HttpResponseException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        return retVal;
     }
 
     public ParticipantName getParticipant() {
@@ -230,10 +269,11 @@ public class MeterDataUploader extends JFrame {
 
     public void saveSettings(String serverURL) {
         properties.put("URL", serverURL);
-        RestUtil.setBaseURL(properties.getProperty("URL"));
 
         try (Writer writer = new FileWriter("config.properties")) {
             properties.store(writer, "Saving updated server URL");
+
+            httpHandler.initialize(serverURL);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
@@ -283,7 +323,7 @@ public class MeterDataUploader extends JFrame {
         uploadProgressPanel = new JPanel();
         leftUploadPanel = new JPanel();
         lblTime = new JLabel();
-        uploadTimer = new JLabel();
+        uploadTimerValue = new JLabel();
         centerUploadPanel = new JPanel();
         uploadProgressBar = new JProgressBar();
         rightUploadPanel = new JPanel();
@@ -295,10 +335,15 @@ public class MeterDataUploader extends JFrame {
         lblUploadStatus = new JLabel();
         initializeProgressBar = new JProgressBar();
 
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Meter Quantity Uploader");
         setMinimumSize(new Dimension(700, 550));
         setResizable(false);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
         getContentPane().add(headerPanel, BorderLayout.NORTH);
 
         tablePanel.setBorder(BorderFactory.createEmptyBorder(3, 3, 0, 3));
@@ -386,13 +431,16 @@ public class MeterDataUploader extends JFrame {
         uploadProgressPanel.setLayout(new BorderLayout());
 
         leftUploadPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
+
+        lblTime.setText("Time:");
         leftUploadPanel.add(lblTime);
 
-        uploadTimer.setHorizontalAlignment(SwingConstants.RIGHT);
-        uploadTimer.setMaximumSize(new Dimension(40, 16));
-        uploadTimer.setMinimumSize(new Dimension(40, 16));
-        uploadTimer.setPreferredSize(new Dimension(40, 16));
-        leftUploadPanel.add(uploadTimer);
+        uploadTimerValue.setHorizontalAlignment(SwingConstants.RIGHT);
+        uploadTimerValue.setText("00:00");
+        uploadTimerValue.setMaximumSize(new Dimension(40, 16));
+        uploadTimerValue.setMinimumSize(new Dimension(40, 16));
+        uploadTimerValue.setPreferredSize(new Dimension(40, 16));
+        leftUploadPanel.add(uploadTimerValue);
 
         uploadProgressPanel.add(leftUploadPanel, BorderLayout.WEST);
 
@@ -455,6 +503,23 @@ public class MeterDataUploader extends JFrame {
         setLocationRelativeTo(null);
     }//GEN-END:initComponents
 
+    private void formWindowClosing(WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        int action = showConfirmDialog(this,
+                "Are you sure you want to exit Meter Quantity Uploader?",
+                "Confirm Exit", OK_CANCEL_OPTION, INFORMATION_MESSAGE);
+        if (action == OK_OPTION) {
+            log.info("Closing down Meter Data Uploader");
+
+            try {
+                httpHandler.shutdown();
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+            }
+
+            System.exit(0);
+        }
+    }//GEN-LAST:event_formWindowClosing
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private JPanel blankPanel;
     private JPanel centerStatusPanel1;
@@ -484,11 +549,19 @@ public class MeterDataUploader extends JFrame {
     private JProgressBar uploadProgressBar;
     private JPanel uploadProgressPanel;
     private JLabel uploadSpeed;
-    private JLabel uploadTimer;
+    private JLabel uploadTimerValue;
     private JLabel userFullName1;
     private JLabel userFullName2;
     private JPanel userStatusPanel1;
     private JPanel userStatusPanel2;
     // End of variables declaration//GEN-END:variables
+
+    private class TimerListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Date elapsed = new Date(System.currentTimeMillis() - startTime);
+            uploadTimerValue.setText(timerFormat.format(elapsed));
+        }
+    }
 
 }

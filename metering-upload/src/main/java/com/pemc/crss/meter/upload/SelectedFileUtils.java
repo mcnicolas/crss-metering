@@ -42,8 +42,6 @@ public class SelectedFileUtils {
                         if (isReadable(file) && !isSymbolicLink(file)
                                 && isValidFileExtension(file.toString(), fileExtensions)) {
 
-                            log.debug("Processing file:{}", file.toString());
-
                             try (InputStream source = new DigestInputStream(Files.newInputStream(file), md)) {
 
                                 IOUtils.copy(source, NULL_OUTPUT_STREAM);
