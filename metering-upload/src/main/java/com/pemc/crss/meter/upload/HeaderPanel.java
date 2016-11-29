@@ -25,6 +25,7 @@ import static com.pemc.crss.meter.upload.SettingsDialog.RET_SAVE;
 import static javax.swing.JFileChooser.APPROVE_OPTION;
 import static javax.swing.JFileChooser.FILES_AND_DIRECTORIES;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
+import static javax.swing.JOptionPane.WARNING_MESSAGE;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.io.FilenameUtils.getExtension;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
@@ -258,17 +259,18 @@ public class HeaderPanel extends JPanel {
 
             List<FileBean> selectedFiles = retrieveFileListing(fileChooser.getSelectedFiles(), fileFilter.getExtensions());
 
-            // TODO: Dirty code - refactor
-            if (!selectedFiles.isEmpty()) {
+            if (selectedFiles.isEmpty()) {
+                showMessageDialog(parent, "No files found matching " + fileFilter.getDescription(),
+                        "Missing Files", WARNING_MESSAGE);
+            } else {
                 FileBean fileBean = selectedFiles.get(0);
                 selectedFileExtension = getExtension(fileBean.getPath().getFileName().toString());
+
+                parent.updateTableDisplay(selectedFiles);
+                btnSelectFiles.setEnabled(false);
+                btnClearTable.setEnabled(true);
+                btnUpload.setEnabled(true);
             }
-
-            parent.updateTableDisplay(selectedFiles);
-
-            btnSelectFiles.setEnabled(false);
-            btnClearTable.setEnabled(true);
-            btnUpload.setEnabled(true);
         }
     }//GEN-LAST:event_selectFilesActionPerformed
 

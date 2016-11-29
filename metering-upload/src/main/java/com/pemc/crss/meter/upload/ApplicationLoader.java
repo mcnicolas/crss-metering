@@ -42,8 +42,8 @@ public class ApplicationLoader {
         LoginDialog loginDialog = new LoginDialog(dataUploader, true);
         loginDialog.setVisible(true);
 
-        if (loginDialog.getReturnStatus() == RET_OK) {
-            dataUploader.login(loginDialog.getUsername(), loginDialog.getPassword());
+        if (loginDialog.getReturnStatus() == RET_OK
+                && dataUploader.login(loginDialog.getUsername(), loginDialog.getPassword())) {
 
             dataUploader.configureServices();
         }
