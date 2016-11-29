@@ -187,7 +187,7 @@ public class JdbcBcqDao implements BcqDao {
                 return ps;
             });
 
-            return getHeaderIdBy(header);
+            return getHeaderIdBy(header.getSellingMtn(), header.getBuyingParticipant(), header.getTradingDate());
         } else {
             KeyHolder keyHolder = new GeneratedKeyHolder();
             log.debug("New header, doing an insert.");
@@ -218,12 +218,12 @@ public class JdbcBcqDao implements BcqDao {
         }, Integer.class) > 0;
     }
 
-    private long getHeaderIdBy(BcqHeader header) {
+    private long getHeaderIdBy(String sellingMtn, String buyingParticipant, Date tradingDate) {
         return jdbcTemplate.queryForObject(selectHeaderId,
                 new Object[] {
-                        header.getSellingMtn(),
-                        header.getBuyingParticipant(),
-                        header.getTradingDate()
+                        sellingMtn,
+                        buyingParticipant,
+                        tradingDate
                 }, Long.class);
     }
 
