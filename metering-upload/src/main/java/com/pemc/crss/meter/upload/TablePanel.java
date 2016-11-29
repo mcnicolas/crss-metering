@@ -24,30 +24,36 @@ public class TablePanel extends JPanel {
         column.setHeaderValue("");
         column.setPreferredWidth(50);
         column.setMinWidth(50);
-        column.setResizable(false);
+        column.setResizable(true);
 
         column = columnModel.getColumn(1);
         column.setHeaderValue("Filename");
-        column.setPreferredWidth(350);
-        column.setMinWidth(350);
-        column.setResizable(false);
+        column.setPreferredWidth(305);
+        column.setMinWidth(305);
+        column.setResizable(true);
 
         column = columnModel.getColumn(2);
         column.setHeaderValue("Timestamp");
-        column.setPreferredWidth(150);
-        column.setMinWidth(150);
+        column.setPreferredWidth(140);
+        column.setMinWidth(140);
         column.setResizable(true);
 
         column = columnModel.getColumn(3);
         column.setHeaderValue("Size");
-        column.setPreferredWidth(100);
-        column.setMinWidth(100);
+        column.setPreferredWidth(75);
+        column.setMinWidth(75);
         column.setResizable(true);
 
         column = columnModel.getColumn(4);
         column.setHeaderValue("Checksum");
         column.setPreferredWidth(300);
         column.setMinWidth(250);
+        column.setResizable(true);
+
+        column = columnModel.getColumn(5);
+        column.setHeaderValue("Status");
+        column.setPreferredWidth(80);
+        column.setMinWidth(80);
         column.setResizable(true);
     }
 
@@ -66,6 +72,12 @@ public class TablePanel extends JPanel {
     public void clearSelectedFiles() {
         FileTableModel tableModel = (FileTableModel) fileTable.getModel();
         tableModel.clearFileList();
+    }
+
+    public void updateRecordStatus(int key) {
+        FileTableModel tableModel = (FileTableModel) fileTable.getModel();
+
+        tableModel.updateUploadedStatus(key);
     }
 
     /**

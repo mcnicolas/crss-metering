@@ -131,7 +131,7 @@ public class MeterDataUploader extends JFrame {
 
         int totalProgress = selectedFiles.size() + 2;
 
-        SwingWorker<Void, String> worker = new SwingWorker<Void, String>() {
+        SwingWorker<Void, FileBean> worker = new SwingWorker<Void, FileBean>() {
             @Override
             protected Void doInBackground() throws Exception {
 
@@ -143,6 +143,8 @@ public class MeterDataUploader extends JFrame {
 
                 for (FileBean selectedFile : selectedFiles) {
                     httpHandler.sendFile(headerID, transactionID, selectedFile, category, mspShortName);
+                    publish(selectedFile);
+
                     progressValue = (100 * ++counter)/totalProgress;
                     setProgress(progressValue);
 
@@ -154,6 +156,11 @@ public class MeterDataUploader extends JFrame {
                 setProgress(progressValue);
 
                 return null;
+            }
+
+            @Override
+            protected void process(List<FileBean> fileBeans) {
+                tablePanel.updateRecordStatus(fileBeans.get(0).getKey());
             }
 
             @Override

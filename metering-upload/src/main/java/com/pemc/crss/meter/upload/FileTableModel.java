@@ -7,11 +7,18 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 
 public class FileTableModel extends AbstractTableModel {
 
+    private final DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+
     private List<FileBean> fileList;
+    private Map<Integer, FileBean> map;
 
     @Override
     public int getRowCount() {
@@ -24,7 +31,7 @@ public class FileTableModel extends AbstractTableModel {
 
     @Override
     public int getColumnCount() {
-        return 5;
+        return 6;
     }
 
     @Override
@@ -39,21 +46,19 @@ public class FileTableModel extends AbstractTableModel {
         String retVal;
         switch (columnIndex) {
             case 0:
-                return String.valueOf(rowIndex + 1);
+                return bean.getKey();
             case 1:
                 Path path = bean.getPath();
                 return path.getFileName();
             case 2:
-                // TODO: optimize for performance
                 FileTime lastModifiedDate = bean.getLastModified();
-                Date x = new Date(lastModifiedDate.toMillis());
-                DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
-
-                return dateFormat.format(x);
+                return dateFormat.format(new Date(lastModifiedDate.toMillis()));
             case 3:
-                return org.apache.commons.io.FileUtils.byteCountToDisplaySize(bean.getSize());
+                return byteCountToDisplaySize(bean.getSize());
             case 4:
                 return bean.getChecksum();
+            case 5:
+                return bean.getStatus();
             default:
                 retVal = "";
         }
@@ -61,9 +66,19 @@ public class FileTableModel extends AbstractTableModel {
         return retVal;
     }
 
-    public void setFileList(List<FileBean> fileList) {
-        // TODO: Dirty code. Need to optimize further.
-        this.fileList = fileList;
+    public void setFileList(List<FileBean> fileBeans) {
+        this.fileList = new ArrayList<>();
+        this.map = new HashMap<>();
+
+        for (int i = 0; i < fileBeans.size(); i++) {
+            FileBean bean = fileBeans.get(i);
+
+            int key = i + 1;
+            bean.setKey(key);
+
+            fileList.add(bean);
+            map.put(key, bean);
+        }
 
         fireTableDataChanged();
     }
@@ -76,6 +91,13 @@ public class FileTableModel extends AbstractTableModel {
 
     public List<FileBean> getFileList() {
         return this.fileList;
+    }
+
+    public void updateUploadedStatus(int key) {
+        FileBean bean = map.get(key);
+        bean.setStatus("Uploaded");
+
+        fireTableRowsUpdated(key - 1, key + 1);
     }
 
 }
