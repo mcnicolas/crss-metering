@@ -152,7 +152,7 @@ public class JdbcBcqDao implements BcqDao {
                         bcqDeclaration.setSellingMtn(rs.getString("selling_mtn"));
                         bcqDeclaration.setBuyingParticipant(rs.getString("buying_participant"));
                         bcqDeclaration.setTradingDate(rs.getString("trading_date"));
-                        bcqDeclaration.setTransactionID("transaction_id");
+                        bcqDeclaration.setTransactionID(rs.getString("transaction_id"));
                         bcqDeclaration.setSubmittedDate(rs.getString("submitted_date"));
                         bcqDeclaration.setUpdatedVia("");
                         bcqDeclaration.setStatus(rs.getString("status"));
