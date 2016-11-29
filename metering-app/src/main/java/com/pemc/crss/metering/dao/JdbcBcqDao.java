@@ -56,6 +56,9 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.header.id}")
     private String selectHeaderId;
 
+    @Value("${bcq.data.details}")
+    private String dataDetails;
+
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -119,7 +122,7 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public Page<BcqDeclarationDisplay> findAll(PageableRequest pageableRequest) {
+    public Page<BcqDeclarationDisplay> findAllDeclarations(PageableRequest pageableRequest) {
         int totalRecords = getTotalRecords(pageableRequest);
         Map<String, String> params = pageableRequest.getMapParams();
         Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
@@ -167,6 +170,33 @@ public class JdbcBcqDao implements BcqDao {
                 bcqDeclarationList,
                 pageableRequest.getPageable(),
                 totalRecords);
+    }
+
+    @Override
+    public List<BcqData> findAllData(Map<String, String> params) {
+        String sellingMtn = params.get("sellingMtn");
+        String buyingParticipant = params.get("buyingParticipant");
+        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
+        long headerId = getHeaderIdBy(sellingMtn, buyingParticipant, tradingDate);
+
+        return jdbcTemplate.query(
+                dataDetails,
+                new Object[]{headerId},
+                rs -> {
+                    List<BcqData> content = new ArrayList<>();
+
+                    while (rs.next()) {
+                        BcqData bcqData = new BcqData();
+
+                        bcqData.setReferenceMtn(rs.getString("reference_mtn"));
+                        bcqData.setEndTime(rs.getTime("end_time"));
+                        bcqData.setBcq(rs.getBigDecimal("bcq"));
+
+                        content.add(bcqData);
+                    }
+
+                    return content;
+                });
     }
 
     /****************************************************

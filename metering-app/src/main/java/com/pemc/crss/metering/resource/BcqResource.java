@@ -19,8 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -145,9 +143,26 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> {
         eventPublisher.publishEvent(eventDept);
     }
 
+    @PostMapping("/data/list")
+    public List<BcqDataInfo> getData(@RequestBody Map<String, String> params) {
+        List<BcqDataInfo> dataInfoList = new ArrayList<>();
+
+        bcqService.findAllData(params).forEach(data -> {
+            BcqDataInfo dataInfo = new BcqDataInfo();
+
+            dataInfo.setReferenceMtn(data.getReferenceMtn());
+            dataInfo.setEndTime(data.getEndTime());
+            dataInfo.setBcq(data.getBcq().toPlainString());
+
+            dataInfoList.add(dataInfo);
+        });
+
+        return dataInfoList;
+    }
+
     @Override
     public DataTableResponse<BcqDeclarationDisplay> executeSearch(PageableRequest request) {
-        Page<BcqDeclarationDisplay> bcqDeclarationPage = bcqService.findAll(request);
+        Page<BcqDeclarationDisplay> bcqDeclarationPage = bcqService.findAllDeclarations(request);
 
         return new DataTableResponse<BcqDeclarationDisplay>()
                 .withData(bcqDeclarationPage.getContent())
