@@ -15,7 +15,7 @@ buildscript {
     dependencies {
         classpath 'gradle.plugin.org.liquibase:liquibase-gradle-plugin:1.2.1'
         classpath 'org.postgresql:postgresql:9.4.1211'
-        classpath files("$rootDir/libs/ojdbc6-11.2.0.3.jar")
+        classpath files("$rootDir/libs/ojdbc6-11.2.0.4.jar")
     }
 }
 
@@ -49,7 +49,7 @@ dependencies {
 
     runtime 'com.zaxxer:HikariCP'
     runtime 'org.postgresql:postgresql'
-    runtime files("$rootDir/libs/ojdbc6-11.2.0.3.jar")
+    runtime files("$rootDir/libs/ojdbc6-11.2.0.4.jar")
 
     testCompile 'org.springframework.boot:spring-boot-starter-test'
 
