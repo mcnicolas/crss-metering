@@ -64,7 +64,7 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> {
             headerInfo.setSellingParticipantName(null);
             headerInfo.setSellingParticipantShortName(null);
             headerInfo.setStatus(null);
-            headerInfo.setDeclarationDate(header.getTradingDate());
+            headerInfo.setTradingDate(header.getTradingDate());
 
             List<BcqData> dataList = bcqDeclaration.getDataList();
             List<BcqDataInfo> dataInfoList = new ArrayList<>();
@@ -103,7 +103,7 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> {
             header.setSellingParticipantName(headerInfo.getSellingParticipantName());
             header.setSellingParticipantShortName(headerInfo.getSellingParticipantShortName());
             header.setStatus(BcqStatus.fromString(headerInfo.getStatus()));
-            header.setTradingDate(headerInfo.getDeclarationDate());
+            header.setTradingDate(headerInfo.getTradingDate());
 
             List<BcqDataInfo> dataInfoList = headerDataInfoPair.getDataInfoList();
             List<BcqData> dataList = new ArrayList<>();
@@ -114,7 +114,6 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> {
                 data.setReferenceMtn(dataInfo.getReferenceMtn());
                 data.setStartTime(dataInfo.getStartTime());
                 data.setEndTime(dataInfo.getEndTime());
-                NumberFormat format = DecimalFormat.getInstance();
                 data.setBcq(new BigDecimal(dataInfo.getBcq()));
                 dataList.add(data);
             }

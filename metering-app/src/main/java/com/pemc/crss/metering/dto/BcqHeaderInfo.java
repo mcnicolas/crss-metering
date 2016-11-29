@@ -12,6 +12,6 @@ public class BcqHeaderInfo {
     private String sellingParticipantName;
     private String sellingParticipantShortName;
     private String status;
-    private Date declarationDate;
+    private Date tradingDate;
 
 }
