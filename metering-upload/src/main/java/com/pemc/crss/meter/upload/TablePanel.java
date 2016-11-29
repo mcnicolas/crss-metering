@@ -6,6 +6,7 @@ import javax.swing.JTable;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import java.awt.BorderLayout;
+import java.awt.Rectangle;
 import java.util.List;
 
 public class TablePanel extends JPanel {
@@ -78,6 +79,9 @@ public class TablePanel extends JPanel {
         FileTableModel tableModel = (FileTableModel) fileTable.getModel();
 
         tableModel.updateUploadedStatus(key);
+
+        Rectangle rectangle = fileTable.getCellRect(key - 1, 0, true);
+        fileTable.scrollRectToVisible(rectangle);
     }
 
     /**
