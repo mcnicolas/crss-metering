@@ -295,6 +295,7 @@ public class HeaderPanel extends JPanel {
             return;
         }
 
+        uploadingToolbar();
         parent.uploadData(category, mspShortName);
     }//GEN-LAST:event_uploadActionPerformed
 
@@ -320,7 +321,7 @@ public class HeaderPanel extends JPanel {
 
     private void logoutActionPerformed(ActionEvent evt) {//GEN-FIRST:event_logoutActionPerformed
         parent.logout();
-        disableToolbar();
+        loggedOutToolbar();
     }//GEN-LAST:event_logoutActionPerformed
 
     private void loginActionPerformed(ActionEvent evt) {//GEN-FIRST:event_loginActionPerformed
@@ -333,7 +334,43 @@ public class HeaderPanel extends JPanel {
         }
     }//GEN-LAST:event_loginActionPerformed
 
-    public void enableToolbar() {
+    // TODO: Find a more elegant way of enabling/disabling buttons
+
+    public void uploadingToolbar() {
+        btnSelectFiles.setEnabled(false);
+        btnClearTable.setEnabled(false);
+        btnUpload.setEnabled(false);
+
+        btnLogin.setEnabled(false);
+        btnLogin.setVisible(false);
+
+        btnSettings.setEnabled(false);
+
+        btnLogout.setEnabled(false);
+        btnLogout.setVisible(true);
+
+        cboCategory.setEnabled(false);
+        cboMSP.setEnabled(false);
+    }
+
+    public void readyToUploadToolbar() {
+        btnSelectFiles.setEnabled(false);
+        btnClearTable.setEnabled(true);
+        btnUpload.setEnabled(true);
+
+        btnLogin.setEnabled(false);
+        btnLogin.setVisible(false);
+
+        btnSettings.setEnabled(false);
+
+        btnLogout.setEnabled(true);
+        btnLogout.setVisible(true);
+
+        cboCategory.setEnabled(true);
+        cboMSP.setEnabled(true);
+    }
+
+    public void loggedInToolbar() {
         btnSelectFiles.setEnabled(true);
         btnClearTable.setEnabled(false);
         btnUpload.setEnabled(false);
@@ -350,7 +387,7 @@ public class HeaderPanel extends JPanel {
         cboMSP.setEnabled(true);
     }
 
-    public void disableToolbar() {
+    public void loggedOutToolbar() {
         btnSelectFiles.setEnabled(false);
         btnClearTable.setEnabled(false);
         btnUpload.setEnabled(false);

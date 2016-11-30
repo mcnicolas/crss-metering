@@ -175,6 +175,8 @@ public class MeterDataUploader extends JFrame {
                     showMessageDialog(MeterDataUploader.this, errorMessage, "Upload Error", ERROR_MESSAGE);
                 }
 
+                headerPanel.readyToUploadToolbar();
+
                 uploadTimer.stop();
 
                 long elapsedTime = System.currentTimeMillis() - startTime;
@@ -227,7 +229,7 @@ public class MeterDataUploader extends JFrame {
                 participant = httpHandler.getParticipant();
             }
 
-            headerPanel.enableToolbar();
+            headerPanel.loggedInToolbar();
 
             retVal = true;
         } catch (LoginException | HttpConnectionException | HttpResponseException e) {
