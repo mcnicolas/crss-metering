@@ -119,6 +119,8 @@ public class MeterDataUploader extends JFrame {
     }
 
     public void uploadData(String category, String mspShortName) {
+        tablePanel.resetStatus();
+
         ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "Upload");
 
         startTime = System.currentTimeMillis();

@@ -75,6 +75,15 @@ public class TablePanel extends JPanel {
         tableModel.clearFileList();
     }
 
+    public void resetStatus() {
+        FileTableModel tableModel = (FileTableModel) fileTable.getModel();
+
+        tableModel.resetUploadedStatus();
+
+        Rectangle rectangle = fileTable.getCellRect(0, 0, true);
+        fileTable.scrollRectToVisible(rectangle);
+    }
+
     public void updateRecordStatus(int key) {
         FileTableModel tableModel = (FileTableModel) fileTable.getModel();
 

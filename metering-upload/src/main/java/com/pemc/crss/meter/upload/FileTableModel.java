@@ -100,4 +100,12 @@ public class FileTableModel extends AbstractTableModel {
         fireTableRowsUpdated(key - 1, key + 1);
     }
 
+    public void resetUploadedStatus() {
+        for (FileBean fileBean : fileList) {
+            fileBean.setStatus("");
+        }
+
+        fireTableDataChanged();
+    }
+
 }
