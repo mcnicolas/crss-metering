@@ -1,7 +1,6 @@
 package com.pemc.crss.meter.upload;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -50,6 +49,8 @@ import static javax.swing.JOptionPane.showConfirmDialog;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationHMS;
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 @Slf4j
 public class MeterDataUploader extends JFrame {
@@ -177,9 +178,13 @@ public class MeterDataUploader extends JFrame {
                 uploadTimer.stop();
 
                 long elapsedTime = System.currentTimeMillis() - startTime;
-                String duration = DurationFormatUtils.formatDurationHMS(elapsedTime);
 
-                log.info("Done uploading files. Upload took: {}", duration);
+                log.info("Done uploading files. Upload took: {}", formatDurationHMS(elapsedTime));
+
+                String message = "Finished uploading " + selectedFiles.size() + " file/s"
+                        + " in " + formatDurationWords(elapsedTime, true, true) + "\n"
+                        + "with Transaction ID: " + transactionID;
+                showMessageDialog(MeterDataUploader.this, message, "Upload Complete", INFORMATION_MESSAGE);
             }
         };
 
