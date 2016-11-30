@@ -53,7 +53,7 @@ public class MQDisplayQueryBuilder {
     public MQDisplayQueryBuilder addSEINFilter(String sein) {
         if (isNotBlank(sein)) {
             sqlBuilder.append(" AND SEIN LIKE ?");
-            arguments.add(sein + "%");
+            arguments.add("%" + sein + "%");
         }
 
         return this;
@@ -62,7 +62,7 @@ public class MQDisplayQueryBuilder {
     public MQDisplayQueryBuilder addTransactionIDFilter(String transactionID) {
         if (isNotBlank(transactionID)) {
             sqlBuilder.append(" AND A.TRANSACTION_ID LIKE ?");
-            arguments.add(transactionID + "%");
+            arguments.add("%" + transactionID + "%");
         }
 
         return this;
