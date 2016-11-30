@@ -178,7 +178,12 @@ public class JdbcMeteringDao implements MeteringDao {
     @Override
     public void saveMeterData(long fileID, List<MeterData2> meterDataList, String mspShortName, String category) {
         String insertSQL;
-        if (equalsIgnoreCase(category, "Monthly")) {
+
+        // TODO: Change category to enumeration and add validation for invalid category value
+        // Valid values are:
+        // DAILY, CORRECTED_DAILY
+        // MONTHLY, CORRECTED_MONTHLY
+        if (equalsIgnoreCase(category, "MONTHLY") || equalsIgnoreCase(category, "CORRECTED_MONTHLY")) {
             insertSQL = insertMonthlyMQ;
         } else {
             insertSQL = insertDailyMQ;
