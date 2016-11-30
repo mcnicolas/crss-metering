@@ -2,6 +2,7 @@ package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -21,8 +23,11 @@ import java.util.Map;
 import static java.sql.Types.DOUBLE;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
+@Slf4j
 @Repository
 public class JdbcMeteringDao implements MeteringDao {
+
+    private final DateFormat readingDateFormat = new SimpleDateFormat("yyyyMMddHHmm");
 
     @Value("${mq.manifest.header}")
     private String insertHeaderManifest;
@@ -131,7 +136,15 @@ public class JdbcMeteringDao implements MeteringDao {
 
                             meterData.setMeterDataID(rs.getLong("meter_data_id"));
                             meterData.setSein(rs.getString("sein"));
-                            meterData.setReadingDateTime(rs.getLong("reading_datetime"));
+
+                            try {
+                                meterData.setReadingDateTime(
+                                        readingDateFormat.parse(String.valueOf(rs.getLong("reading_datetime")))
+                                );
+                            } catch (ParseException e) {
+                                log.error(e.getMessage(), e);
+                            }
+
                             meterData.setKwd(rs.getString("kwd"));
                             meterData.setKwhd(rs.getString("kwhd"));
                             meterData.setKvarhd(rs.getString("kvarhd"));
