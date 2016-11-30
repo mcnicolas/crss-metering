@@ -15,6 +15,7 @@ buildscript {
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.4.2.RELEASE'
         classpath 'io.spring.gradle:dependency-management-plugin:0.6.1.RELEASE'
         classpath 'org.ajoberstar:gradle-git:1.5.1'
+        classpath 'gradle.plugin.edu.sc.seis.gradle:launch4j:1.6.2'
     }
 }
 

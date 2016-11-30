@@ -1,3 +1,9 @@
+apply plugin: 'edu.sc.seis.launch4j'
+
+launch4j {
+    mainClassName = 'com.pemc.crss.meter.upload.ApplicationLoader'
+}
+
 dependencies {
     compile 'commons-io:commons-io'
     compile 'org.apache.commons:commons-lang3'
