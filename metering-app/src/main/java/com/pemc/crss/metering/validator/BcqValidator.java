@@ -58,8 +58,8 @@ public class BcqValidator {//TODO Cleanup
             } else {
                 if (!bcqDeclaration.getHeader().equals(header)) {
                     validateBcqDataSize(bcqDeclaration, interval);
-                    bcqDeclarationList.add(bcqDeclaration);
                     bcqDeclaration = new BcqDeclaration(header, new ArrayList<>());
+                    bcqDeclarationList.add(bcqDeclaration);
                     previousDate = null;
                 }
             }

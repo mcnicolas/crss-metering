@@ -92,8 +92,8 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> {
 
         List<BcqDeclaration> bcqDeclarationList = new ArrayList<>();
 
-        details.getBcqDeclarationInfoList().forEach(headerDataInfoPair -> {
-            BcqHeaderInfo headerInfo = headerDataInfoPair.getHeaderInfo();
+        details.getBcqDeclarationInfoList().forEach(declarationInfo -> {
+            BcqHeaderInfo headerInfo = declarationInfo.getHeaderInfo();
             BcqHeader header = new BcqHeader();
 
             header.setSellingMtn(headerInfo.getSellingMtn());
@@ -103,7 +103,7 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> {
             header.setStatus(BcqStatus.fromString(headerInfo.getStatus()));
             header.setTradingDate(headerInfo.getTradingDate());
 
-            List<BcqDataInfo> dataInfoList = headerDataInfoPair.getDataInfoList();
+            List<BcqDataInfo> dataInfoList = declarationInfo.getDataInfoList();
             List<BcqData> dataList = new ArrayList<>();
 
             for (BcqDataInfo dataInfo : dataInfoList) {
