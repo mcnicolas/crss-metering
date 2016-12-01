@@ -79,7 +79,7 @@ public class BcqValidator {//TODO Cleanup
     }
 
     private void validateNotEmpty(List<List<String>> csv) throws ValidationException {
-        if (csv.size() == 0) {
+        if (csv.size() < 3) {
             throw new ValidationException(EMPTY.getErrorMessage());
         }
     }
