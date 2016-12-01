@@ -2,7 +2,6 @@ package com.pemc.crss.metering.listener;
 
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.springframework.amqp.core.ExchangeTypes;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -16,6 +15,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.Map;
 
+import static org.springframework.amqp.core.ExchangeTypes.FANOUT;
+import static org.springframework.amqp.core.ExchangeTypes.TOPIC;
+
 @Slf4j
 @Component
 public class ConfigurationListener {
@@ -28,17 +30,17 @@ public class ConfigurationListener {
     }
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = "crss.config.update", durable = "true"),
-            exchange = @Exchange(type = ExchangeTypes.FANOUT, value = "crss.config.update"))
-    )
+            value = @Queue(),
+            exchange = @Exchange(value = "crss.config.update", type = FANOUT)))
     public void updateConfiguration(@Payload byte[] config) {
+        log.debug("Receiving update configuration");
         updateCache(config);
     }
 
     // TODO: Revisit exchange type. Requirement is to target specific service instance who initiated the config request.
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "crss.config.response.metering", durable = "true"),
-            exchange = @Exchange(type = ExchangeTypes.TOPIC, value = "crss.config"),
+            exchange = @Exchange(type = TOPIC, value = "crss.config"),
             key = "crss.config.response.metering")
     )
     public void updateCache(@Payload byte[] config) {
