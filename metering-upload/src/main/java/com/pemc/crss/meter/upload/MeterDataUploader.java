@@ -172,47 +172,50 @@ public class MeterDataUploader extends JFrame {
             protected void done() {
                 try {
                     get();
+
+                    long elapsedTime = System.currentTimeMillis() - startTime;
+
+                    log.info("Done uploading files. Upload took: {}", formatDurationHMS(elapsedTime));
+
+                    JPanel messagePanel = new JPanel(new GridBagLayout());
+                    String durationMessage = "Finished uploading " + selectedFiles.size()
+                            + " file/s in " + formatDurationWords(elapsedTime, true, true);
+                    JLabel durationLabel = new JLabel(durationMessage);
+
+                    GridBagConstraints constraints = new GridBagConstraints();
+                    constraints.gridx = 0;
+                    constraints.gridy = 0;
+                    constraints.gridwidth = 2;
+                    constraints.anchor = WEST;
+                    messagePanel.add(durationLabel, constraints);
+
+                    JLabel transactionLabel = new JLabel("with Transaction ID:");
+                    constraints = new GridBagConstraints();
+                    constraints.gridx = 0;
+                    constraints.gridy = 1;
+                    messagePanel.add(transactionLabel, constraints);
+
+                    JTextField txtTransaction = new JTextField(transactionID);
+                    constraints = new GridBagConstraints();
+                    constraints.gridx = 1;
+                    constraints.gridy = 1;
+                    constraints.insets = new Insets(0, 5, 0, 5);
+                    messagePanel.add(txtTransaction, constraints);
+
+                    showMessageDialog(MeterDataUploader.this, messagePanel, "Upload Complete", INFORMATION_MESSAGE);
                 } catch (InterruptedException | ExecutionException e) {
                     log.error(e.getMessage(), e);
 
                     String errorMessage = e.getMessage().substring(e.getMessage().indexOf(":")).trim();
                     showMessageDialog(MeterDataUploader.this, errorMessage, "Upload Error", ERROR_MESSAGE);
+
+                    uploadProgressBar.setValue(0);
+                    uploadTimerValue.setText("00:00");
                 }
 
                 headerPanel.readyToUploadToolbar();
 
                 uploadTimer.stop();
-
-                long elapsedTime = System.currentTimeMillis() - startTime;
-
-                log.info("Done uploading files. Upload took: {}", formatDurationHMS(elapsedTime));
-
-                JPanel messagePanel = new JPanel(new GridBagLayout());
-                String durationMessage = "Finished uploading " + selectedFiles.size()
-                        + " file/s in " + formatDurationWords(elapsedTime, true, true);
-                JLabel durationLabel = new JLabel(durationMessage);
-
-                GridBagConstraints constraints = new GridBagConstraints();
-                constraints.gridx = 0;
-                constraints.gridy = 0;
-                constraints.gridwidth = 2;
-                constraints.anchor = WEST;
-                messagePanel.add(durationLabel, constraints);
-
-                JLabel transactionLabel = new JLabel("with Transaction ID:");
-                constraints = new GridBagConstraints();
-                constraints.gridx = 0;
-                constraints.gridy = 1;
-                messagePanel.add(transactionLabel, constraints);
-
-                JTextField txtTransaction = new JTextField(transactionID);
-                constraints = new GridBagConstraints();
-                constraints.gridx = 1;
-                constraints.gridy = 1;
-                constraints.insets = new Insets(0, 5, 0, 5);
-                messagePanel.add(txtTransaction, constraints);
-
-                showMessageDialog(MeterDataUploader.this, messagePanel, "Upload Complete", INFORMATION_MESSAGE);
             }
         };
 
