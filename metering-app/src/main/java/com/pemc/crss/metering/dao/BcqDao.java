@@ -1,10 +1,7 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.dto.BcqData;
-import com.pemc.crss.metering.dto.BcqDeclaration;
-import com.pemc.crss.metering.dto.BcqDeclarationDisplay;
-import com.pemc.crss.metering.dto.BcqUploadFile;
+import com.pemc.crss.metering.dto.*;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -16,8 +13,10 @@ public interface BcqDao {
 
     List<Long> saveBcqDeclaration(long fileID, List<BcqDeclaration> bcqDeclarationList);
 
-    Page<BcqDeclarationDisplay> findAllDeclarations(PageableRequest pageableRequest);
+    Page<BcqDeclarationDisplay> findAllBcqDeclarations(PageableRequest pageableRequest);
 
-    List<BcqData> findAllData(Map<String, String> params);
+    BcqDeclarationDisplay findBcqDeclaration(long headerId);
+
+    List<BcqData> findAllBcqData(long headerId);
 
 }

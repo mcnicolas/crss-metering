@@ -31,7 +31,7 @@ import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_VALIDA
 @Slf4j
 @RestController
 @RequestMapping("/bcq")
-public class BcqResource extends BaseListResource<BcqDeclarationDisplay> {
+public class BcqResource extends BaseListResource<BcqDeclarationDisplay> { //TODO: Use DTO mapper
 
     private BcqReader bcqReader;
     private BcqService bcqService;
@@ -143,26 +143,29 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> {
         eventPublisher.publishEvent(eventDept);
     }
 
-    @PostMapping("/data/list")
-    public List<BcqDataInfo> getData(@RequestBody Map<String, String> params) {
+    @GetMapping("/declaration/{headerId}")
+    public BcqDeclarationDisplay getDeclaration(@PathVariable long headerId) {
+        return bcqService.findBcqDeclaration(headerId);
+    }
+
+    @GetMapping("/data/{headerId}")
+    public List<BcqDataInfo> getData(@PathVariable long headerId) {
         List<BcqDataInfo> dataInfoList = new ArrayList<>();
 
-        bcqService.findAllData(params).forEach(data -> {
+        for (BcqData data : bcqService.findAllBcqData(headerId)) {
             BcqDataInfo dataInfo = new BcqDataInfo();
 
             dataInfo.setReferenceMtn(data.getReferenceMtn());
             dataInfo.setEndTime(data.getEndTime());
             dataInfo.setBcq(data.getBcq().toPlainString());
-
             dataInfoList.add(dataInfo);
-        });
-
+        }
         return dataInfoList;
     }
 
     @Override
     public DataTableResponse<BcqDeclarationDisplay> executeSearch(PageableRequest request) {
-        Page<BcqDeclarationDisplay> bcqDeclarationPage = bcqService.findAllDeclarations(request);
+        Page<BcqDeclarationDisplay> bcqDeclarationPage = bcqService.findAllBcqDeclarations(request);
 
         return new DataTableResponse<BcqDeclarationDisplay>()
                 .withData(bcqDeclarationPage.getContent())

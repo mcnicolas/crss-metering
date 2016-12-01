@@ -2,10 +2,7 @@ package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dao.BcqDao;
-import com.pemc.crss.metering.dto.BcqData;
-import com.pemc.crss.metering.dto.BcqDeclaration;
-import com.pemc.crss.metering.dto.BcqDeclarationDisplay;
-import com.pemc.crss.metering.dto.BcqUploadFile;
+import com.pemc.crss.metering.dto.*;
 import com.pemc.crss.metering.event.BcqUploadEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +26,7 @@ import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_SUBMIT
 
 @Slf4j
 @Service
-@Transactional
+@Transactional(readOnly = true)
 public class BcqServiceImpl implements BcqService {
 
     private final BcqDao bcqDao;
@@ -42,6 +39,7 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
+    @Transactional
     public void saveBcqDetails(BcqUploadFile file, List<BcqDeclaration> bcqDeclarationList,
                                List<Long> buyerIds, Long sellerId) {
 
@@ -75,14 +73,17 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<BcqDeclarationDisplay> findAllDeclarations(PageableRequest pageableRequest) {
-        return bcqDao.findAllDeclarations(pageableRequest);
+    public Page<BcqDeclarationDisplay> findAllBcqDeclarations(PageableRequest pageableRequest) {
+        return bcqDao.findAllBcqDeclarations(pageableRequest);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<BcqData> findAllData(Map<String, String> params) {
-        return bcqDao.findAllData(params);
+    public BcqDeclarationDisplay findBcqDeclaration(long headerId) {
+        return bcqDao.findBcqDeclaration(headerId);
+    }
+
+    @Override
+    public List<BcqData> findAllBcqData(long headerId) {
+        return bcqDao.findAllBcqData(headerId);
     }
 }

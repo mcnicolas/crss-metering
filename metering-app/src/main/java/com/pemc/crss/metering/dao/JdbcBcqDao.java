@@ -50,8 +50,8 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.display.count}")
     private String displayCount;
 
-    @Value("${bcq.display.wrapper}")
-    private String displayWrapper;
+    @Value("${bcq.display.paginate}")
+    private String displayPaginate;
 
     @Value("${bcq.header.id}")
     private String selectHeaderId;
@@ -128,7 +128,7 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public Page<BcqDeclarationDisplay> findAllDeclarations(PageableRequest pageableRequest) {
+    public Page<BcqDeclarationDisplay> findAllBcqDeclarations(PageableRequest pageableRequest) {
         int totalRecords = getTotalRecords(pageableRequest);
         Map<String, String> params = pageableRequest.getMapParams();
         Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
@@ -137,8 +137,8 @@ public class JdbcBcqDao implements BcqDao {
         String buyingParticipant = params.get("buyingParticipant");
         String status = params.get("status");
 
-        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayWrapper);
-        BuilderData query = builder.selectBcqDeclarations(tradingDate)
+        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayPaginate);
+        BuilderData query = builder.selectBcqDeclarationsByTradingDate(tradingDate)
                 .addBuyingParticipantFilter(buyingParticipant)
                 .addSellingParticipantFilter(sellingParticipant)
                 .addSellingMtnFilter(sellingMtn)
@@ -155,7 +155,7 @@ public class JdbcBcqDao implements BcqDao {
 ;
                     while (rs.next()) {
                         BcqDeclarationDisplay bcqDeclaration = new BcqDeclarationDisplay();
-
+                        bcqDeclaration.setHeaderId(rs.getLong("bcq_header_id"));
                         bcqDeclaration.setSellingParticipantName(rs.getString("selling_participant_name"));
                         bcqDeclaration.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
                         bcqDeclaration.setSellingMtn(rs.getString("selling_mtn"));
@@ -179,12 +179,34 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public List<BcqData> findAllData(Map<String, String> params) {
-        String sellingMtn = params.get("sellingMtn");
-        String buyingParticipant = params.get("buyingParticipant");
-        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
-        long headerId = getHeaderIdBy(sellingMtn, buyingParticipant, tradingDate);
+    public BcqDeclarationDisplay findBcqDeclaration(long headerId) {
+        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData);
+        BuilderData query = builder.selectBcqDeclarationsByHeaderId(headerId).build();
 
+        return jdbcTemplate.query(
+                query.getSql(),
+                query.getArguments(),
+                rs -> {
+                    rs.next();
+
+                    BcqDeclarationDisplay bcqDeclaration = new BcqDeclarationDisplay();
+                    bcqDeclaration.setHeaderId(rs.getLong("bcq_header_id"));
+                    bcqDeclaration.setSellingParticipantName(rs.getString("selling_participant_name"));
+                    bcqDeclaration.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
+                    bcqDeclaration.setSellingMtn(rs.getString("selling_mtn"));
+                    bcqDeclaration.setBuyingParticipant(rs.getString("buying_participant"));
+                    bcqDeclaration.setTradingDate(rs.getString("trading_date"));
+                    bcqDeclaration.setTransactionID(rs.getString("transaction_id"));
+                    bcqDeclaration.setSubmittedDate(rs.getString("submitted_date"));
+                    bcqDeclaration.setUpdatedVia("");
+                    bcqDeclaration.setStatus(rs.getString("status"));
+
+                    return bcqDeclaration;
+                });
+    }
+
+    @Override
+    public List<BcqData> findAllBcqData(long headerId) {
         return jdbcTemplate.query(
                 dataDetails,
                 new Object[]{headerId},
@@ -271,8 +293,8 @@ public class JdbcBcqDao implements BcqDao {
         String buyingParticipant = params.get("buyingParticipant");
         String status = params.get("status");
 
-        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayWrapper);
-        BuilderData query = builder.countBcqDeclarations(tradingDate)
+        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayPaginate);
+        BuilderData query = builder.countBcqDeclarationsByTradingDate(tradingDate)
                 .addBuyingParticipantFilter(buyingParticipant)
                 .addSellingParticipantFilter(sellingParticipant)
                 .addSellingMtnFilter(sellingMtn)

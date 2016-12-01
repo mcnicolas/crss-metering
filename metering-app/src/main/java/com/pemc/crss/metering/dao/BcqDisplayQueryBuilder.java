@@ -13,25 +13,47 @@ public class BcqDisplayQueryBuilder {
 
     private StringBuilder sqlBuilder = new StringBuilder();
     private List<Object> arguments = new ArrayList<>();
-    private String displayData;
-    private String displayCount;
-    private String displayWrapper;
+    private String selectQuery;
+    private String countQuery;
+    private String paginationQuery;
 
-    public BcqDisplayQueryBuilder(String displayData, String displayCount, String displayWrapper) {
-        this.displayData = displayData;
-        this.displayCount = displayCount;
-        this.displayWrapper = displayWrapper;
+    public BcqDisplayQueryBuilder(String selectQuery) {
+        this.selectQuery = selectQuery;
     }
 
-    public BcqDisplayQueryBuilder selectBcqDeclarations(Date tradingDate) {
-        sqlBuilder.append(displayData);
+    public BcqDisplayQueryBuilder(String selectQuery, String countQuery, String paginationQuery) {
+        this.selectQuery = selectQuery;
+        this.countQuery = countQuery;
+        this.paginationQuery = paginationQuery;
+    }
+
+    public BcqDisplayQueryBuilder selectBcqDeclarationsByHeaderId(long headerId) {
+        sqlBuilder.append(selectQuery);
+        sqlBuilder.append(" WHERE A.BCQ_HEADER_ID = ?");
+        arguments.add(headerId);
+
+        return this;
+    }
+
+    public BcqDisplayQueryBuilder selectBcqDeclarationsByTradingDate(Date tradingDate) {
+        sqlBuilder.append(selectQuery);
+        sqlBuilder.append(" WHERE A.TRADING_DATE = ?");
         arguments.add(tradingDate);
 
         return this;
     }
 
-    public BcqDisplayQueryBuilder countBcqDeclarations(Date tradingDate) {
-        sqlBuilder.append(displayCount);
+    public BcqDisplayQueryBuilder countBcqDeclarationsByHeaderId(long headerId) {
+        sqlBuilder.append(countQuery);
+        sqlBuilder.append(" WHERE A.BCQ_HEADER_ID = ?");
+        arguments.add(headerId);
+
+        return this;
+    }
+
+    public BcqDisplayQueryBuilder countBcqDeclarationsByTradingDate(Date tradingDate) {
+        sqlBuilder.append(countQuery);
+        sqlBuilder.append(" WHERE A.TRADING_DATE = ?");
         arguments.add(tradingDate);
 
         return this;
@@ -87,10 +109,10 @@ public class BcqDisplayQueryBuilder {
 
     public BcqDisplayQueryBuilder paginate(int pageNo, int pageSize) {
         String selectQuery = sqlBuilder.toString();
-        displayWrapper = displayWrapper.replace("{SELECT_QUERY}", selectQuery);
-        displayWrapper = displayWrapper.replace("{PAGE_NO}", String.valueOf(pageNo));
-        displayWrapper = displayWrapper.replace("{PAGE_SIZE}", String.valueOf(pageSize));
-        sqlBuilder = new StringBuilder(displayWrapper);
+        paginationQuery = paginationQuery.replace("{SELECT_QUERY}", selectQuery);
+        paginationQuery = paginationQuery.replace("{PAGE_NO}", String.valueOf(pageNo));
+        paginationQuery = paginationQuery.replace("{PAGE_SIZE}", String.valueOf(pageSize));
+        sqlBuilder = new StringBuilder(paginationQuery);
 
         return this;
     }

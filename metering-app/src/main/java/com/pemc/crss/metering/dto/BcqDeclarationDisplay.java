@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class BcqDeclarationDisplay {
 
+    private long headerId;
     private String sellingParticipantName;
     private String sellingParticipantShortName;
     private String sellingMtn;
