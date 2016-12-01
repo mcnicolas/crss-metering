@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
+import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.MeterData;
 import com.pemc.crss.metering.dto.MeterData2;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
@@ -28,6 +29,6 @@ public interface MeteringDao {
 
     void saveMeterUploadMDEF(long fileID, MeterData meterData);
 
-    void saveMeterData(long fileID, List<MeterData2> meterDataList, String mspShortName, String category);
+    void saveMeterData(long fileID, List<MeterData2> meterDataList, String mspShortName, UploadType uploadType);
 
 }

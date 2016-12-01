@@ -62,14 +62,16 @@ public class DefaultMeterService implements MeterService {
 
     @Override
     @Transactional
-    public void saveMeterData(long fileID, String fileType, byte[] fileContent, String mspShortName, String category) {
+    public void validateAndSave(long fileID, String fileType, byte[] fileContent, String mspShortName, UploadType uploadType) {
         try {
-            // TODO: Validate
+            // TODO: Add validation logic here...
 
             QuantityReader<MeterData2> reader = readerFactory.getMeterQuantityReader(fileType);
             List<MeterData2> meterData = reader.readData(new ByteArrayInputStream(fileContent));
+            log.debug("Finished parsing MQ data for {} records", meterData.size());
 
-            meteringDao.saveMeterData(fileID, meterData, mspShortName, category);
+            meteringDao.saveMeterData(fileID, meterData, mspShortName, uploadType);
+            log.debug("Finished saving MQ data to the database. fileID:{}", fileID);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
@@ -90,7 +92,7 @@ public class DefaultMeterService implements MeterService {
     @Deprecated // Change in impl
     @Override
     @Transactional
-    public void saveMeterData(Collection<MultipartFile> multipartFiles, UploadType uploadType) throws IOException {
+    public void validateAndSave(Collection<MultipartFile> multipartFiles, UploadType uploadType) throws IOException {
         MeterUploadHeader meterUploadHeader = new MeterUploadHeader();
 
         // TODO: Retrieve MSP ID from Registration Service

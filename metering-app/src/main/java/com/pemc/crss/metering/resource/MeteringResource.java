@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.resource;
 
+import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ import static org.springframework.http.HttpStatus.OK;
 @RestController
 public class MeteringResource {
 
-    public static final String ROUTING_KEY = "crss.meter.quantity";
+    public static final String ROUTING_KEY = "crss.mq.data";
 
     private final MeterService meterService;
     private final RabbitTemplate rabbitTemplate;
@@ -54,7 +55,7 @@ public class MeteringResource {
                            @RequestParam("username") String username) {
         // TODO: Should the file manifest be initialized?
 
-        log.debug("Transaction ID:{}", transactionID);
+        log.debug("Received header record txnID:{} fileCount:{} category:{} username:{}", transactionID, fileCount, category, username);
 
         return meterService.saveHeader(transactionID, fileCount, category, username);
     }
@@ -80,15 +81,18 @@ public class MeteringResource {
                 .setHeader("fileSize", fileSize)
                 .setHeader("checksum", checksum)
                 .setHeader("mspShortName", mspShortName)
-                .setHeader("category", category)
+                .setHeader("category", UploadType.valueOf(category))
                 .setHeaderIfAbsent("Content type", file.getContentType())
                 .build();
-        rabbitTemplate.send("crss.meter.quantity", ROUTING_KEY, message);
+
+        log.debug("Received file {} headerID:{} txnID:{} category:{} delegating to queue", fileName, headerID, transactionID, category);
+
+        rabbitTemplate.send("crss.mq", ROUTING_KEY, message);
     }
 
     @PostMapping("/uploadtrailer")
     public void sendTrailer(@RequestParam("transactionID") String transactionID) {
-        log.debug("Transaction ID:{}", transactionID);
+        log.debug("Received trailer record txnID:{}", transactionID);
 
         meterService.saveTrailer(transactionID);
 

@@ -1,7 +1,15 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.dto.*;
+import com.pemc.crss.metering.constants.UploadType;
+import com.pemc.crss.metering.dto.ChannelHeader;
+import com.pemc.crss.metering.dto.Header;
+import com.pemc.crss.metering.dto.IntervalData;
+import com.pemc.crss.metering.dto.MeterData;
+import com.pemc.crss.metering.dto.MeterData2;
+import com.pemc.crss.metering.dto.MeterDataDisplay;
+import com.pemc.crss.metering.dto.MeterUploadFile;
+import com.pemc.crss.metering.dto.MeterUploadHeader;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,8 +28,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import static com.pemc.crss.metering.constants.UploadType.DAILY;
 import static java.sql.Types.DOUBLE;
-import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 @Slf4j
 @Repository
@@ -188,159 +196,143 @@ public class JdbcMeteringDao implements MeteringDao {
         );
     }
 
-    // TODO: Dirty code. Revise!
     @Override
-    public void saveMeterData(long fileID, List<MeterData2> meterDataList, String mspShortName, String category) {
+    public void saveMeterData(long fileID, List<MeterData2> meterDataList, String mspShortName, UploadType uploadType) {
         String insertSQL;
 
-        // TODO: Change category to enumeration and add validation for invalid category value
-        // Valid values are:
-        // DAILY, CORRECTED_DAILY
-        // MONTHLY, CORRECTED_MONTHLY
-        if (equalsIgnoreCase(category, "MONTHLY") || equalsIgnoreCase(category, "CORRECTED_MONTHLY")) {
-            insertSQL = insertMonthlyMQ;
-        } else {
-            insertSQL = insertDailyMQ;
-        }
+        insertSQL = uploadType == DAILY ? insertDailyMQ : insertMonthlyMQ;
 
-        // TODO: Use batch update
-        for (MeterData2 meterData : meterDataList) {
-            jdbcTemplate.update(
-                    connection -> {
-                        PreparedStatement ps = connection.prepareStatement(insertSQL);
+        jdbcTemplate.batchUpdate(insertSQL, meterDataList, 50, (ps, meterData) -> {
+            ps.setLong(1, fileID);
+            ps.setString(2, meterData.getSein());
+            ps.setInt(3, meterData.getInterval());
 
-                        ps.setLong(1, fileID);
-                        ps.setString(2, meterData.getSein());
-                        ps.setInt(3, meterData.getInterval());
+            // TODO: Optimize at the parsing level
+            DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm");
+            ps.setLong(4, Long.valueOf(dateFormat.format(meterData.getReadingDateTime())));
 
-                        // TODO: Optimize at the parsing level
-                        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm");
-                        ps.setLong(4, Long.valueOf(dateFormat.format(meterData.getReadingDateTime())));
+            if (meterData.getKwd() != null) {
+                ps.setDouble(5, meterData.getKwd());
+            } else {
+                ps.setNull(5, DOUBLE);
+            }
 
-                        if (meterData.getKwd() != null) {
-                            ps.setDouble(5, meterData.getKwd());
-                        } else {
-                            ps.setNull(5, DOUBLE);
-                        }
+            ps.setInt(6, meterData.getKwdChannelStatus());
+            ps.setInt(7, meterData.getKwdIntervalStatus());
 
-                        ps.setInt(6, meterData.getKwdChannelStatus());
-                        ps.setInt(7, meterData.getKwdIntervalStatus());
+            if (meterData.getKwhd() != null) {
+                ps.setDouble(8, meterData.getKwhd());
+            } else {
+                ps.setNull(8, DOUBLE);
+            }
 
-                        if (meterData.getKwhd() != null) {
-                            ps.setDouble(8, meterData.getKwhd());
-                        } else {
-                            ps.setNull(8, DOUBLE);
-                        }
+            ps.setInt(9, meterData.getKwhdChannelStatus());
+            ps.setInt(10, meterData.getKwhdIntervalStatus());
 
-                        ps.setInt(9, meterData.getKwhdChannelStatus());
-                        ps.setInt(10, meterData.getKwhdIntervalStatus());
+            if (meterData.getKvarhd() != null) {
+                ps.setDouble(11, meterData.getKvarhd());
+            } else {
+                ps.setNull(11, DOUBLE);
+            }
 
-                        if (meterData.getKvarhd() != null) {
-                            ps.setDouble(11, meterData.getKvarhd());
-                        } else {
-                            ps.setNull(11, DOUBLE);
-                        }
+            ps.setInt(12, meterData.getKvarhdChannelStatus());
+            ps.setInt(13, meterData.getKvarhdIntervalStatus());
 
-                        ps.setInt(12, meterData.getKvarhdChannelStatus());
-                        ps.setInt(13, meterData.getKvarhdIntervalStatus());
+            if (meterData.getKwr() != null) {
+                ps.setDouble(14, meterData.getKwr());
+            } else {
+                ps.setNull(14, DOUBLE);
+            }
 
-                        if (meterData.getKwr() != null) {
-                            ps.setDouble(14, meterData.getKwr());
-                        } else {
-                            ps.setNull(14, DOUBLE);
-                        }
+            ps.setInt(15, meterData.getKwrChannelStatus());
+            ps.setInt(16, meterData.getKwrIntervalStatus());
 
-                        ps.setInt(15, meterData.getKwrChannelStatus());
-                        ps.setInt(16, meterData.getKwrIntervalStatus());
+            if (meterData.getKwhr() != null) {
+                ps.setDouble(17, meterData.getKwhr());
+            } else {
+                ps.setNull(17, DOUBLE);
+            }
 
-                        if (meterData.getKwhr() != null) {
-                            ps.setDouble(17, meterData.getKwhr());
-                        } else {
-                            ps.setNull(17, DOUBLE);
-                        }
+            ps.setInt(18, meterData.getKwhrChannelStatus());
+            ps.setInt(19, meterData.getKwhrIntervalStatus());
 
-                        ps.setInt(18, meterData.getKwhrChannelStatus());
-                        ps.setInt(19, meterData.getKwhrIntervalStatus());
+            if (meterData.getKvarhr() != null) {
+                ps.setDouble(20, meterData.getKvarhr());
+            } else {
+                ps.setNull(20, DOUBLE);
+            }
 
-                        if (meterData.getKvarhr() != null) {
-                            ps.setDouble(20, meterData.getKvarhr());
-                        } else {
-                            ps.setNull(20, DOUBLE);
-                        }
+            ps.setInt(21, meterData.getKvarhrChannelStatus());
+            ps.setInt(22, meterData.getKvarhrIntervalStatus());
 
-                        ps.setInt(21, meterData.getKvarhrChannelStatus());
-                        ps.setInt(22, meterData.getKvarhrIntervalStatus());
+            if (meterData.getVan() != null) {
+                ps.setDouble(23, meterData.getVan());
+            } else {
+                ps.setNull(23, DOUBLE);
+            }
 
-                        if (meterData.getVan() != null) {
-                            ps.setDouble(23, meterData.getVan());
-                        } else {
-                            ps.setNull(23, DOUBLE);
-                        }
+            ps.setInt(24, meterData.getVanChannelStatus());
+            ps.setInt(25, meterData.getVanIntervalStatus());
 
-                        ps.setInt(24, meterData.getVanChannelStatus());
-                        ps.setInt(25, meterData.getVanIntervalStatus());
+            if (meterData.getVbn() != null) {
+                ps.setDouble(26, meterData.getVbn());
+            } else {
+                ps.setNull(26, DOUBLE);
+            }
 
-                        if (meterData.getVbn() != null) {
-                            ps.setDouble(26, meterData.getVbn());
-                        } else {
-                            ps.setNull(26, DOUBLE);
-                        }
+            ps.setInt(27, meterData.getVbnChannelStatus());
+            ps.setInt(28, meterData.getVbnIntervalStatus());
 
-                        ps.setInt(27, meterData.getVbnChannelStatus());
-                        ps.setInt(28, meterData.getVbnIntervalStatus());
+            if (meterData.getVcn() != null) {
+                ps.setDouble(29, meterData.getVcn());
+            } else {
+                ps.setNull(29, DOUBLE);
+            }
 
-                        if (meterData.getVcn() != null) {
-                            ps.setDouble(29, meterData.getVcn());
-                        } else {
-                            ps.setNull(29, DOUBLE);
-                        }
+            ps.setInt(30, meterData.getVcnChannelStatus());
+            ps.setInt(31, meterData.getVcnIntervalStatus());
 
-                        ps.setInt(30, meterData.getVcnChannelStatus());
-                        ps.setInt(31, meterData.getVcnIntervalStatus());
+            if (meterData.getIan() != null) {
+                ps.setDouble(32, meterData.getIan());
+            } else {
+                ps.setNull(32, DOUBLE);
+            }
 
-                        if (meterData.getIan() != null) {
-                            ps.setDouble(32, meterData.getIan());
-                        } else {
-                            ps.setNull(32, DOUBLE);
-                        }
+            ps.setInt(33, meterData.getIanChannelStatus());
+            ps.setInt(34, meterData.getIanIntervalStatus());
 
-                        ps.setInt(33, meterData.getIanChannelStatus());
-                        ps.setInt(34, meterData.getIanIntervalStatus());
+            if (meterData.getIbn() != null) {
+                ps.setDouble(35, meterData.getIbn());
+            } else {
+                ps.setNull(35, DOUBLE);
+            }
 
-                        if (meterData.getIbn() != null) {
-                            ps.setDouble(35, meterData.getIbn());
-                        } else {
-                            ps.setNull(35, DOUBLE);
-                        }
+            ps.setInt(36, meterData.getIbnChannelStatus());
+            ps.setInt(37, meterData.getIbnIntervalStatus());
 
-                        ps.setInt(36, meterData.getIbnChannelStatus());
-                        ps.setInt(37, meterData.getIbnIntervalStatus());
+            if (meterData.getIcn() != null) {
+                ps.setDouble(38, meterData.getIcn());
+            } else {
+                ps.setNull(38, DOUBLE);
+            }
 
-                        if (meterData.getIcn() != null) {
-                            ps.setDouble(38, meterData.getIcn());
-                        } else {
-                            ps.setNull(38, DOUBLE);
-                        }
+            ps.setInt(39, meterData.getIcnChannelStatus());
+            ps.setInt(40, meterData.getIcnIntervalStatus());
 
-                        ps.setInt(39, meterData.getIcnChannelStatus());
-                        ps.setInt(40, meterData.getIcnIntervalStatus());
+            if (meterData.getPf() != null) {
+                ps.setDouble(41, meterData.getPf());
+            } else {
+                ps.setNull(41, DOUBLE);
+            }
 
-                        if (meterData.getPf() != null) {
-                            ps.setDouble(41, meterData.getPf());
-                        } else {
-                            ps.setNull(41, DOUBLE);
-                        }
+            ps.setInt(42, meterData.getPfChannelStatus());
+            ps.setInt(43, meterData.getPfIntervalStatus());
 
-                        ps.setInt(42, meterData.getPfChannelStatus());
-                        ps.setInt(43, meterData.getPfIntervalStatus());
+            ps.setString(44, meterData.getEstimationFlag());
+            ps.setInt(45, 1);
 
-                        ps.setString(44, meterData.getEstimationFlag());
-                        ps.setInt(45, 1);
-
-                        ps.setString(46, mspShortName);
-                        return ps;
-                    });
-        }
+            ps.setString(46, mspShortName);
+        });
     }
 
     @Deprecated

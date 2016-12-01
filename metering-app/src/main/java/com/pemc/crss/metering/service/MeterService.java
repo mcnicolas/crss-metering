@@ -17,10 +17,10 @@ public interface MeterService {
 
     long saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize, String checksum);
 
-    void saveMeterData(long fileID, String fileType, byte[] fileContent, String mspShortName, String category);
+    void validateAndSave(long fileID, String fileType, byte[] fileContent, String mspShortName, UploadType uploadType);
 
     Page<MeterDataDisplay> getMeterData(PageableRequest pageableRequest);
 
-    void saveMeterData(Collection<MultipartFile> values, UploadType uploadType) throws IOException;
+    void validateAndSave(Collection<MultipartFile> values, UploadType uploadType) throws IOException;
 
 }

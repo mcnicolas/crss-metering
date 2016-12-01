@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.listener;
 
+import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
@@ -26,10 +27,9 @@ public class MeterQuantityListener {
     }
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = "crss.meter.quantity", durable = "true"),
-            exchange = @Exchange(type = DIRECT, value = "crss.meter.quantity"),
-            key = "crss.meter.quantity")
-    )
+            value = @Queue(value = "crss.mq.data", durable = "true"),
+            exchange = @Exchange(type = DIRECT, value = "crss.mq"),
+            key = "crss.mq.data"))
     public void processMeterQuantityFile(@Header int headerID,
                                          @Header String transactionID,
                                          @Header String fileName,
@@ -40,13 +40,14 @@ public class MeterQuantityListener {
                                          @Header String category,
                                          @Payload byte[] fileContent) {
 
-        log.debug("Received MQ File. headerID:{} txnID:{} fileName:{} checksum:{} mspShortName:{} category:{}",
-                headerID, transactionID, fileName, checksum, mspShortName, category);
+        log.debug("Received MQ File. fileName:{} headerID:{} txnID:{} checksum:{} mspShortName:{} category:{}",
+                fileName, headerID, transactionID, checksum, mspShortName, category);
 
         try {
             long fileID = meterService.saveFileManifest(headerID, transactionID, fileName, fileType, fileSize, checksum);
+            log.debug("Saved manifest file fileID:{}", fileID);
 
-            meterService.saveMeterData(fileID, fileType, fileContent, mspShortName, category);
+            meterService.validateAndSave(fileID, fileType, fileContent, mspShortName, UploadType.valueOf(category));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
 
