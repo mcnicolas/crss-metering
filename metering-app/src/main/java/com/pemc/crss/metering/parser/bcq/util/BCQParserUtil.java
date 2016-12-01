@@ -21,7 +21,7 @@ public class BCQParserUtil {
 
     public static Date parseDateTime(String dateString) {
         try {
-            return DateUtils.parseDateStrictly(dateString, DATE_TIME_FORMATS);
+            return DateUtils.parseDateStrictly(dateString, DATE_TIME_FORMATS[0]);
         } catch (ParseException ignored) {}
 
         return null;
