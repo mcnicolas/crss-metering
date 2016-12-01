@@ -87,6 +87,7 @@ public class BcqUploadEventListener implements ApplicationListener<BcqUploadEven
                 } else if (notificationRecipient == BUYER) {
                     payload.put("sellerName", source.get("sellerName"));
                     payload.put("sellerShortName", source.get("sellerShortName"));
+                    payload.put("headerId", source.get("headerId"));
                 }
                 break;
             case VALIDATION:

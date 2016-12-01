@@ -14,7 +14,7 @@ public interface BcqDao {
 
     long saveBcqUploadFile(String transactionID, BcqUploadFile uploadFile);
 
-    void saveBcqDeclaration(long fileID, List<BcqDeclaration> bcqDeclarationList);
+    List<Long> saveBcqDeclaration(long fileID, List<BcqDeclaration> bcqDeclarationList);
 
     Page<BcqDeclarationDisplay> findAllDeclarations(PageableRequest pageableRequest);
 

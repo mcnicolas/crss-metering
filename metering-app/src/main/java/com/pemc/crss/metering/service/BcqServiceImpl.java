@@ -47,7 +47,7 @@ public class BcqServiceImpl implements BcqService {
 
         String transactionId = UUID.randomUUID().toString();
         long fileId = bcqDao.saveBcqUploadFile(transactionId, file);
-        bcqDao.saveBcqDeclaration(fileId, bcqDeclarationList);
+        List<Long> headerIds = bcqDao.saveBcqDeclaration(fileId, bcqDeclarationList);
 
         Map<String, Object> payload = new HashMap<>();
         String format = "MMM. dd, yyyy hh:mm";
@@ -61,10 +61,11 @@ public class BcqServiceImpl implements BcqService {
         payload.put("sellerShortName",
                 bcqDeclarationList.get(0).getHeader().getSellingParticipantShortName());
 
-        for(Long id : buyerIds) {
-            payload.put("buyerId", id);
-            BcqUploadEvent event = new BcqUploadEvent(payload, NTF_BCQ_SUBMIT_BUYER, SUBMIT, BUYER);
+        for (int i = 0; i < headerIds.size(); i ++) {
+            payload.put("headerId", headerIds.get(i));
+            payload.put("buyerId", buyerIds.get(i));
 
+            BcqUploadEvent event = new BcqUploadEvent(payload, NTF_BCQ_SUBMIT_BUYER, SUBMIT, BUYER);
             eventPublisher.publishEvent(event);
         }
 

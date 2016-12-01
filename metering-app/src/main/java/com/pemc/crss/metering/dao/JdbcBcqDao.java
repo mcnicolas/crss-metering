@@ -85,7 +85,9 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public void saveBcqDeclaration(long fileID, List<BcqDeclaration> bcqDeclarationList) {
+    public List<Long> saveBcqDeclaration(long fileID, List<BcqDeclaration> bcqDeclarationList) {
+        List<Long> headerIds = new ArrayList<>();
+
         for (BcqDeclaration bcqDeclaration : bcqDeclarationList) {
             BcqHeader header = bcqDeclaration.getHeader();
             boolean headerExists = headerExists(header);
@@ -118,7 +120,11 @@ public class JdbcBcqDao implements BcqDao {
                     return dataList.size();
                 }
             });
+
+            headerIds.add(headerId);
         }
+
+        return headerIds;
     }
 
     @Override
