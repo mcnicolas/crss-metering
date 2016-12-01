@@ -65,7 +65,7 @@ mq:
       UPDATE TXN_MQ_MANIFEST_HEADER SET tail_received = 'Y' WHERE transaction_id = ?
     file: >
       INSERT INTO TXN_MQ_MANIFEST_FILE (file_id, header_id, transaction_id, filename, filetype,
-      filesize, checksum) VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?)
+      filesize, checksum, upload_datetime) VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?)
   meter:
     daily: >
       INSERT INTO TXN_METER_DATA_DAILY VALUES(

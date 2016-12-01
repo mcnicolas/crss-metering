@@ -94,6 +94,7 @@ public class JdbcMeteringDao implements MeteringDao {
                     ps.setString(4, fileType);
                     ps.setLong(5, fileSize);
                     ps.setString(6, checksum);
+                    ps.setTimestamp(7, new Timestamp(new Date().getTime()));
 
                     return ps;
                 },

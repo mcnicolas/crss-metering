@@ -7,6 +7,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
@@ -41,6 +42,7 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
+import static java.awt.GridBagConstraints.WEST;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
@@ -185,10 +187,32 @@ public class MeterDataUploader extends JFrame {
 
                 log.info("Done uploading files. Upload took: {}", formatDurationHMS(elapsedTime));
 
-                String message = "Finished uploading " + selectedFiles.size() + " file/s"
-                        + " in " + formatDurationWords(elapsedTime, true, true) + "\n"
-                        + "with Transaction ID: " + transactionID;
-                showMessageDialog(MeterDataUploader.this, message, "Upload Complete", INFORMATION_MESSAGE);
+                JPanel messagePanel = new JPanel(new GridBagLayout());
+                String durationMessage = "Finished uploading " + selectedFiles.size()
+                        + " file/s in " + formatDurationWords(elapsedTime, true, true);
+                JLabel durationLabel = new JLabel(durationMessage);
+
+                GridBagConstraints constraints = new GridBagConstraints();
+                constraints.gridx = 0;
+                constraints.gridy = 0;
+                constraints.gridwidth = 2;
+                constraints.anchor = WEST;
+                messagePanel.add(durationLabel, constraints);
+
+                JLabel transactionLabel = new JLabel("with Transaction ID:");
+                constraints = new GridBagConstraints();
+                constraints.gridx = 0;
+                constraints.gridy = 1;
+                messagePanel.add(transactionLabel, constraints);
+
+                JTextField txtTransaction = new JTextField(transactionID);
+                constraints = new GridBagConstraints();
+                constraints.gridx = 1;
+                constraints.gridy = 1;
+                constraints.insets = new Insets(0, 5, 0, 5);
+                messagePanel.add(txtTransaction, constraints);
+
+                showMessageDialog(MeterDataUploader.this, messagePanel, "Upload Complete", INFORMATION_MESSAGE);
             }
         };
 
