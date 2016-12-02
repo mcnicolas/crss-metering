@@ -3,7 +3,6 @@ package com.pemc.crss.metering.resource;
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.commons.web.resource.BaseListResource;
-import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.*;
 import com.pemc.crss.metering.event.BcqUploadEvent;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
@@ -17,10 +16,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.pemc.crss.metering.constants.BcqNotificationRecipient.BILLING;
 import static com.pemc.crss.metering.constants.BcqNotificationRecipient.SELLER;
@@ -31,7 +30,7 @@ import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_VALIDA
 @Slf4j
 @RestController
 @RequestMapping("/bcq")
-public class BcqResource extends BaseListResource<BcqDeclarationDisplay> { //TODO: Use DTO mapper
+public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Use DTO mapper
 
     private BcqReader bcqReader;
     private BcqService bcqService;
@@ -44,43 +43,30 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> { //TOD
         this.eventPublisher = eventPublisher;
     }
 
+    @Override
+    public DataTableResponse<BcqHeaderDisplay> executeSearch(PageableRequest request) {
+        Page<BcqHeader> headerPage = bcqService.findAllHeaders(request);
+        List<BcqHeaderDisplay> headerDisplayList = new ArrayList<>();
+        headerPage.getContent().forEach(header -> headerDisplayList.add(new BcqHeaderDisplay(header)));
+
+        return new DataTableResponse<BcqHeaderDisplay>()
+                .withData(headerDisplayList)
+                .withRecordsTotal(headerPage.getTotalElements());
+    }
+
     @PostMapping("/upload")
     public BcqDetails uploadData(@RequestParam("file") MultipartFile file)
             throws IOException, ValidationException {
 
-        List<BcqDeclarationInfo> bcqDeclarationInfoList = new ArrayList<>();
+        List<BcqHeaderInfo> headerInfoList = new ArrayList<>();
         BcqUploadFileInfo fileInfo = new BcqUploadFileInfo();
         fileInfo.setFileName(file.getOriginalFilename());
         fileInfo.setFileSize(file.getSize());
 
-        bcqReader.readData(file.getInputStream(), null).forEach(bcqDeclaration -> {
-            BcqHeader header = bcqDeclaration.getHeader();
-            BcqHeaderInfo headerInfo = new BcqHeaderInfo();
+        bcqReader.readData(file.getInputStream(), null).forEach(header ->
+                headerInfoList.add(new BcqHeaderInfo(header)));
 
-            headerInfo.setSellingMtn(header.getSellingMtn());
-            headerInfo.setBuyingParticipant(header.getBuyingParticipant());
-            headerInfo.setSellingParticipantName(null);
-            headerInfo.setSellingParticipantShortName(null);
-            headerInfo.setStatus(null);
-            headerInfo.setTradingDate(header.getTradingDate());
-
-            List<BcqData> dataList = bcqDeclaration.getDataList();
-            List<BcqDataInfo> dataInfoList = new ArrayList<>();
-
-            for (BcqData data : dataList) {
-                BcqDataInfo dataInfo = new BcqDataInfo();
-
-                dataInfo.setReferenceMtn(data.getReferenceMtn());
-                dataInfo.setStartTime(data.getStartTime());
-                dataInfo.setEndTime(data.getEndTime());
-                dataInfo.setBcq(data.getBcq().toPlainString());
-                dataInfoList.add(dataInfo);
-            }
-
-            bcqDeclarationInfoList.add(new BcqDeclarationInfo(headerInfo, dataInfoList));
-        });
-
-        return new BcqDetails(null, fileInfo, bcqDeclarationInfoList, null);
+        return new BcqDetails(null, fileInfo, headerInfoList, null);
     }
 
     @PostMapping("/save")
@@ -90,36 +76,25 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> { //TOD
         uploadFile.setFileSize(details.getFileInfo().getFileSize());
         uploadFile.setSubmittedDate(new Date());
 
-        List<BcqDeclaration> bcqDeclarationList = new ArrayList<>();
-
-        details.getBcqDeclarationInfoList().forEach(declarationInfo -> {
-            BcqHeaderInfo headerInfo = declarationInfo.getHeaderInfo();
-            BcqHeader header = new BcqHeader();
-
-            header.setSellingMtn(headerInfo.getSellingMtn());
-            header.setBuyingParticipant(headerInfo.getBuyingParticipant());
-            header.setSellingParticipantName(headerInfo.getSellingParticipantName());
-            header.setSellingParticipantShortName(headerInfo.getSellingParticipantShortName());
-            header.setStatus(BcqStatus.fromString(headerInfo.getStatus()));
-            header.setTradingDate(headerInfo.getTradingDate());
-
-            List<BcqDataInfo> dataInfoList = declarationInfo.getDataInfoList();
-            List<BcqData> dataList = new ArrayList<>();
-
-            for (BcqDataInfo dataInfo : dataInfoList) {
-                BcqData data = new BcqData();
-
-                data.setReferenceMtn(dataInfo.getReferenceMtn());
-                data.setStartTime(dataInfo.getStartTime());
-                data.setEndTime(dataInfo.getEndTime());
-                data.setBcq(new BigDecimal(dataInfo.getBcq()));
-                dataList.add(data);
-            }
-
-            bcqDeclarationList.add(new BcqDeclaration(header, dataList));
+        List<BcqHeader> headerList = new ArrayList<>();
+        details.getHeaderInfoList().forEach(headerInfo -> {
+            headerList.add(headerInfo.target());
         });
 
-        bcqService.saveBcqDetails(uploadFile, bcqDeclarationList, details.getBuyerIds(), details.getSellerId());
+        bcqService.saveBcq(uploadFile, headerList, details.getBuyerIds(), details.getSellerId());
+    }
+
+    @GetMapping("/declaration/{headerId}")
+    public BcqHeaderDisplay getHeader(@PathVariable long headerId) {
+        return new BcqHeaderDisplay(bcqService.findHeader(headerId));
+    }
+
+    @GetMapping("/data/{headerId}")
+    public List<BcqDataInfo> getData(@PathVariable long headerId) {
+        return bcqService.findAllData(headerId)
+                .stream()
+                .map(BcqDataInfo::new)
+                .collect(Collectors.toList());
     }
 
     @PostMapping("/validation-error")
@@ -141,34 +116,5 @@ public class BcqResource extends BaseListResource<BcqDeclarationDisplay> { //TOD
 
         BcqUploadEvent eventDept = new BcqUploadEvent(payload, NTF_BCQ_VALIDATION_DEPT, VALIDATION, BILLING);
         eventPublisher.publishEvent(eventDept);
-    }
-
-    @GetMapping("/declaration/{headerId}")
-    public BcqDeclarationDisplay getDeclaration(@PathVariable long headerId) {
-        return bcqService.findBcqDeclaration(headerId);
-    }
-
-    @GetMapping("/data/{headerId}")
-    public List<BcqDataInfo> getData(@PathVariable long headerId) {
-        List<BcqDataInfo> dataInfoList = new ArrayList<>();
-
-        for (BcqData data : bcqService.findAllBcqData(headerId)) {
-            BcqDataInfo dataInfo = new BcqDataInfo();
-
-            dataInfo.setReferenceMtn(data.getReferenceMtn());
-            dataInfo.setEndTime(data.getEndTime());
-            dataInfo.setBcq(data.getBcq().toPlainString());
-            dataInfoList.add(dataInfo);
-        }
-        return dataInfoList;
-    }
-
-    @Override
-    public DataTableResponse<BcqDeclarationDisplay> executeSearch(PageableRequest request) {
-        Page<BcqDeclarationDisplay> bcqDeclarationPage = bcqService.findAllBcqDeclarations(request);
-
-        return new DataTableResponse<BcqDeclarationDisplay>()
-                .withData(bcqDeclarationPage.getContent())
-                .withRecordsTotal(bcqDeclarationPage.getTotalElements());
     }
 }

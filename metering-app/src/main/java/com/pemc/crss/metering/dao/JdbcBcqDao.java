@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
+import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.*;
 import com.pemc.crss.metering.parser.bcq.util.BCQParserUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -10,11 +11,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -35,14 +38,22 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.header.update}")
     private String updateHeader;
 
+    @Value("${bcq.header.count}")
+    private String countHeader;
+
+    private String updateHeaderStatus;
+
+    @Value("${bcq.header.id}")
+    private String selectHeaderId;
+
     @Value("${bcq.data.insert}")
     private String insertData;
 
     @Value("${bcq.data.update}")
     private String updateData;
 
-    @Value("${bcq.header.count}")
-    private String headerCount;
+    @Value("${bcq.data.details}")
+    private String dataDetails;
 
     @Value("${bcq.display.data}")
     private String displayData;
@@ -53,12 +64,6 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.display.paginate}")
     private String displayPaginate;
 
-    @Value("${bcq.header.id}")
-    private String selectHeaderId;
-
-    @Value("${bcq.data.details}")
-    private String dataDetails;
-
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -67,7 +72,7 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public long saveBcqUploadFile(String transactionID, BcqUploadFile bcqUploadFile) {
+    public long saveUploadFile(String transactionID, BcqUploadFile bcqUploadFile) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
@@ -85,14 +90,13 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public List<Long> saveBcqDeclaration(long fileID, List<BcqDeclaration> bcqDeclarationList) {
+    public List<Long> saveBcq(long fileID, List<BcqHeader> headerList) {
         List<Long> headerIds = new ArrayList<>();
 
-        for (BcqDeclaration bcqDeclaration : bcqDeclarationList) {
-            BcqHeader header = bcqDeclaration.getHeader();
+        for (BcqHeader header: headerList) {
             boolean headerExists = headerExists(header);
             long headerId = saveBcqHeader(fileID, header, headerExists);
-            List<BcqData> dataList = bcqDeclaration.getDataList();
+            List<BcqData> dataList = header.getDataList();
 
             String sql = headerExists ? updateData : insertData;
 
@@ -128,7 +132,7 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public Page<BcqDeclarationDisplay> findAllBcqDeclarations(PageableRequest pageableRequest) {
+    public Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest) {
         int totalRecords = getTotalRecords(pageableRequest);
         Map<String, String> params = pageableRequest.getMapParams();
         Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
@@ -147,62 +151,26 @@ public class JdbcBcqDao implements BcqDao {
                 .paginate(pageableRequest.getPageNo(), pageableRequest.getPageSize())
                 .build();
 
-        List<BcqDeclarationDisplay> bcqDeclarationList = jdbcTemplate.query(
+        List<BcqHeader> headerList = jdbcTemplate.query(
                 query.getSql(),
                 query.getArguments(),
-                rs -> {
-                    List<BcqDeclarationDisplay> content = new ArrayList<>();
-;
-                    while (rs.next()) {
-                        BcqDeclarationDisplay bcqDeclaration = new BcqDeclarationDisplay();
-                        bcqDeclaration.setHeaderId(rs.getLong("bcq_header_id"));
-                        bcqDeclaration.setSellingParticipantName(rs.getString("selling_participant_name"));
-                        bcqDeclaration.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
-                        bcqDeclaration.setSellingMtn(rs.getString("selling_mtn"));
-                        bcqDeclaration.setBuyingParticipant(rs.getString("buying_participant"));
-                        bcqDeclaration.setTradingDate(rs.getString("trading_date"));
-                        bcqDeclaration.setTransactionID(rs.getString("transaction_id"));
-                        bcqDeclaration.setSubmittedDate(rs.getString("submitted_date"));
-                        bcqDeclaration.setUpdatedVia("");
-                        bcqDeclaration.setStatus(rs.getString("status"));
-
-                        content.add(bcqDeclaration);
-                    }
-
-                    return content;
-                });
+                new BcqHeaderRowMapper());
 
         return new PageImpl<>(
-                bcqDeclarationList,
+                headerList,
                 pageableRequest.getPageable(),
                 totalRecords);
     }
 
     @Override
-    public BcqDeclarationDisplay findBcqDeclaration(long headerId) {
+    public BcqHeader findHeader(long headerId) {
         BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData);
         BuilderData query = builder.selectBcqDeclarationsByHeaderId(headerId).build();
 
-        return jdbcTemplate.query(
+        return jdbcTemplate.queryForObject(
                 query.getSql(),
                 query.getArguments(),
-                rs -> {
-                    rs.next();
-
-                    BcqDeclarationDisplay bcqDeclaration = new BcqDeclarationDisplay();
-                    bcqDeclaration.setHeaderId(rs.getLong("bcq_header_id"));
-                    bcqDeclaration.setSellingParticipantName(rs.getString("selling_participant_name"));
-                    bcqDeclaration.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
-                    bcqDeclaration.setSellingMtn(rs.getString("selling_mtn"));
-                    bcqDeclaration.setBuyingParticipant(rs.getString("buying_participant"));
-                    bcqDeclaration.setTradingDate(rs.getString("trading_date"));
-                    bcqDeclaration.setTransactionID(rs.getString("transaction_id"));
-                    bcqDeclaration.setSubmittedDate(rs.getString("submitted_date"));
-                    bcqDeclaration.setUpdatedVia("");
-                    bcqDeclaration.setStatus(rs.getString("status"));
-
-                    return bcqDeclaration;
-                });
+                new BcqHeaderRowMapper());
     }
 
     @Override
@@ -225,6 +193,20 @@ public class JdbcBcqDao implements BcqDao {
 
                     return content;
                 });
+    }
+
+    @Override
+    public void updateHeaderStatus(long headerId, BcqStatus status) {
+        log.debug("Updating status of header to {} with ID: {}", status, headerId);
+        jdbcTemplate.update(
+                connection -> {
+                    PreparedStatement ps = connection.prepareStatement(updateHeaderStatus);
+                    ps.setString(1, status.toString());
+                    ps.setLong(2, headerId);
+
+                    return ps;
+                });
+        log.debug("Successfully updated status to {} of header with ID: {}", status, headerId);
     }
 
     /****************************************************
@@ -268,7 +250,7 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     private boolean headerExists(BcqHeader header) {
-        return jdbcTemplate.queryForObject(headerCount,
+        return jdbcTemplate.queryForObject(countHeader,
                 new Object[] {
                         header.getSellingMtn(),
                         header.getBuyingParticipant(),
@@ -305,5 +287,32 @@ public class JdbcBcqDao implements BcqDao {
                 query.getSql(),
                 query.getArguments(),
                 Integer.class);
+    }
+
+
+
+
+
+    private class BcqHeaderRowMapper implements RowMapper<BcqHeader> {
+
+        @Override
+        public BcqHeader mapRow(ResultSet rs, int rowNum) throws SQLException {
+            BcqHeader header = new BcqHeader();
+            BcqUploadFile uploadFile = new BcqUploadFile();
+
+            header.setHeaderId(rs.getLong("bcq_header_id"));
+            header.setSellingParticipantName(rs.getString("selling_participant_name"));
+            header.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
+            header.setSellingMtn(rs.getString("selling_mtn"));
+            header.setBuyingParticipant(rs.getString("buying_participant"));
+            header.setTradingDate(rs.getDate("trading_date"));
+            header.setUpdatedVia("");
+            header.setStatus(BcqStatus.fromString(rs.getString("status")));
+            uploadFile.setTransactionID(rs.getString("transaction_id"));
+            uploadFile.setSubmittedDate(rs.getDate("submitted_date"));
+            header.setUploadFile(uploadFile);
+
+            return header;
+        }
     }
 }

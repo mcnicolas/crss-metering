@@ -1,22 +1,26 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.dto.*;
+import com.pemc.crss.metering.constants.BcqStatus;
+import com.pemc.crss.metering.dto.BcqData;
+import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.BcqUploadFile;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
-import java.util.Map;
 
 public interface BcqDao {
 
-    long saveBcqUploadFile(String transactionID, BcqUploadFile uploadFile);
+    long saveUploadFile(String transactionID, BcqUploadFile uploadFile);
 
-    List<Long> saveBcqDeclaration(long fileID, List<BcqDeclaration> bcqDeclarationList);
+    List<Long> saveBcq(long fileID, List<BcqHeader> headerList);
 
-    Page<BcqDeclarationDisplay> findAllBcqDeclarations(PageableRequest pageableRequest);
+    Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest);
 
-    BcqDeclarationDisplay findBcqDeclaration(long headerId);
+    BcqHeader findHeader(long headerId);
 
     List<BcqData> findAllBcqData(long headerId);
+
+    void updateHeaderStatus(long headerId, BcqStatus status);
 
 }

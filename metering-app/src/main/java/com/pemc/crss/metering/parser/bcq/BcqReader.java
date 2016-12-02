@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.parser.bcq;
 
-import com.pemc.crss.metering.dto.BcqDeclaration;
+import com.pemc.crss.metering.dto.BcqHeader;
 import com.pemc.crss.metering.validator.BcqValidator;
 import com.pemc.crss.metering.validator.exception.ValidationException;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ public class BcqReader {
 
     private static final int DEFAULT_INTERVAL_CONFIG_IN_MINUTES = 5;
 
-    public List<BcqDeclaration> readData(InputStream inputStream, Date validTradingDate)
+    public List<BcqHeader> readData(InputStream inputStream, Date validTradingDate)
             throws IOException, ValidationException {
 
         BcqValidator validator = new BcqValidator(DEFAULT_INTERVAL_CONFIG_IN_MINUTES, validTradingDate);

@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
+import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
 import com.pemc.crss.metering.dto.*;
 import com.pemc.crss.metering.event.BcqUploadEvent;
@@ -40,12 +41,10 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     @Transactional
-    public void saveBcqDetails(BcqUploadFile file, List<BcqDeclaration> bcqDeclarationList,
-                               List<Long> buyerIds, Long sellerId) {
-
+    public void saveBcq(BcqUploadFile file, List<BcqHeader> headerList, List<Long> buyerIds, Long sellerId) {
         String transactionId = UUID.randomUUID().toString();
-        long fileId = bcqDao.saveBcqUploadFile(transactionId, file);
-        List<Long> headerIds = bcqDao.saveBcqDeclaration(fileId, bcqDeclarationList);
+        long fileId = bcqDao.saveUploadFile(transactionId, file);
+        List<Long> headerIds = bcqDao.saveBcq(fileId, headerList);
 
         Map<String, Object> payload = new HashMap<>();
         String format = "MMM. dd, yyyy hh:mm";
@@ -53,11 +52,11 @@ public class BcqServiceImpl implements BcqService {
         String submittedDate = dateFormat.format(file.getSubmittedDate());
 
         payload.put("submittedDate", submittedDate);
-        payload.put("recordCount", bcqDeclarationList.size() * bcqDeclarationList.get(0).getDataList().size());
+        payload.put("recordCount", headerList.size() * headerList.get(0).getDataList().size());
         payload.put("sellerName",
-                bcqDeclarationList.get(0).getHeader().getSellingParticipantName());
+                headerList.get(0).getSellingParticipantName());
         payload.put("sellerShortName",
-                bcqDeclarationList.get(0).getHeader().getSellingParticipantShortName());
+                headerList.get(0).getSellingParticipantShortName());
 
         for (int i = 0; i < headerIds.size(); i ++) {
             payload.put("headerId", headerIds.get(i));
@@ -73,17 +72,23 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public Page<BcqDeclarationDisplay> findAllBcqDeclarations(PageableRequest pageableRequest) {
-        return bcqDao.findAllBcqDeclarations(pageableRequest);
+    public Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest) {
+        return bcqDao.findAllHeaders(pageableRequest);
     }
 
     @Override
-    public BcqDeclarationDisplay findBcqDeclaration(long headerId) {
-        return bcqDao.findBcqDeclaration(headerId);
+    public BcqHeader findHeader(long headerId) {
+        return bcqDao.findHeader(headerId);
     }
 
     @Override
-    public List<BcqData> findAllBcqData(long headerId) {
+    public List<BcqData> findAllData(long headerId) {
         return bcqDao.findAllBcqData(headerId);
+    }
+
+    @Override
+    @Transactional
+    public void updateHeaderStatus(long headerId, BcqStatus status) {
+        bcqDao.updateHeaderStatus(headerId, status);
     }
 }

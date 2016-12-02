@@ -1,7 +1,6 @@
 package com.pemc.crss.metering.validator;
 
 import com.pemc.crss.metering.dto.BcqData;
-import com.pemc.crss.metering.dto.BcqDeclaration;
 import com.pemc.crss.metering.dto.BcqHeader;
 import com.pemc.crss.metering.parser.bcq.BcqInterval;
 import com.pemc.crss.metering.parser.bcq.util.BCQParserUtil;
@@ -16,7 +15,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqValidationRules.*;
-import static com.pemc.crss.metering.parser.bcq.BcqInterval.*;
+import static com.pemc.crss.metering.parser.bcq.BcqInterval.HOURLY;
+import static com.pemc.crss.metering.parser.bcq.BcqInterval.QUARTERLY;
 import static java.math.BigDecimal.ROUND_HALF_UP;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -27,66 +27,55 @@ public class BcqValidator {//TODO Cleanup
 
     private int intervalConfig;
     private Date validTradingDate;
-    private Set<String> uniqueHeaderSet = new HashSet<>();
+    private Set<String> uniqueDataSet = new HashSet<>();
 
     public BcqValidator(int intervalConfig, Date validTradingDate) {
         this.intervalConfig = intervalConfig;
         this.validTradingDate = validTradingDate;
     }
 
-    public List<BcqDeclaration> getAndValidateBcq(List<List<String>> csv) throws ValidationException {
+    public List<BcqHeader> getAndValidateBcq(List<List<String>> csv) throws ValidationException {
         validateNotEmpty(csv);
         BcqInterval interval = getAndValidateInterval(csv.get(0));
         validateColumnHeader(csv.get(1));
 
-        List<BcqDeclaration> declarationList = new ArrayList<>();
-        BcqDeclaration currentDeclaration = new BcqDeclaration();
-        Date previousDate = null;
+        List<BcqHeader> headerList = new ArrayList<>();
 
         for (List<String> line : csv.subList(2, csv.size())) {
             BcqHeader header = getAndValidateBcqHeader(line);
+            List<BcqData> dataList = new ArrayList<>();
 
-            if (currentDeclaration.getHeader() == null) {
-                currentDeclaration = new BcqDeclaration(header, new ArrayList<>());
-                declarationList.add(currentDeclaration);
+            if (headerList.contains(header)) {
+                header = headerList.get(headerList.indexOf(header));
+                dataList = header.getDataList();
             } else {
-                if (!currentDeclaration.getHeader().equals(header)) {
-                    currentDeclaration = new BcqDeclaration();
-                    currentDeclaration.setHeader(header);
-
-                    if (declarationList.contains(currentDeclaration)) {
-                        currentDeclaration = declarationList.get(declarationList.indexOf(currentDeclaration));
-                        List<BcqData> dataList = currentDeclaration.getDataList();
-                        previousDate = dataList.get(dataList.size() -1).getEndTime();
-                    } else {
-                        currentDeclaration = new BcqDeclaration(header, new ArrayList<>());
-                        declarationList.add(currentDeclaration);
-                        previousDate = null;
-                    }
-                }
+                headerList.add(header);
+                header.setDataList(dataList);
             }
 
             BcqData data = getAndValidateData(line, interval);
-            validateTimeInterval(data.getEndTime(), previousDate, interval);
-            previousDate = data.getEndTime();
-            currentDeclaration.getDataList().add(data);
+            dataList.add(data);
         }
 
-        for (BcqDeclaration declaration : declarationList) {
-            validateBcqDataSize(declaration, interval);
-            List<BcqData> finalizedDataList = new ArrayList<>();
-            for (BcqData data : declaration.getDataList()) {
-                finalizedDataList.addAll(divideDataByInterval(data, interval));
-            }
-            declaration.setDataList(finalizedDataList);
+        for (BcqHeader header : headerList) {
+            validateDataSize(header, interval);
+            List<BcqData> dataList = header.getDataList();
+            dataList.sort((d1, d2) -> d1.getEndTime().compareTo(d2.getEndTime()));
+            header.setDataList(getAndValidateDataList(dataList, interval));
         }
 
-        return declarationList;
+        return headerList;
     }
 
     private void validateNotEmpty(List<List<String>> csv) throws ValidationException {
         if (csv.size() < 3) {
             throw new ValidationException(EMPTY.getErrorMessage());
+        }
+    }
+
+    private void validateColumnHeader(List<String> line) throws ValidationException {
+        if (line.size() != VALID_NO_OF_COLUMNS) {
+            throw new ValidationException(INCORRECT_COLUMN_HEADER_COUNT.getErrorMessage());
         }
     }
 
@@ -102,10 +91,19 @@ public class BcqValidator {//TODO Cleanup
         return interval;
     }
 
-    private void validateColumnHeader(List<String> line) throws ValidationException {
-        if (line.size() != VALID_NO_OF_COLUMNS) {
-            throw new ValidationException(INCORRECT_COLUMN_HEADER_COUNT.getErrorMessage());
+    private List<BcqData> getAndValidateDataList(List<BcqData> dataList, BcqInterval interval)
+            throws ValidationException {
+
+        List<BcqData> finalizedDataList = new ArrayList<>();
+        Date previousDate = null;
+
+        for (BcqData data : dataList) {
+            validateTimeInterval(data.getEndTime(), previousDate, interval);
+            previousDate = data.getEndTime();
+            finalizedDataList.addAll(divideDataByInterval(data, interval));
         }
+
+        return finalizedDataList;
     }
 
     private BcqHeader getAndValidateBcqHeader(List<String> line) throws ValidationException {
@@ -119,7 +117,7 @@ public class BcqValidator {//TODO Cleanup
         header.setBuyingParticipant(buyingParticipant);
         header.setTradingDate(tradingDate);
 
-        if (!uniqueHeaderSet.add(sellingMtn + "," + buyingParticipant + "," + tradingDate)) {
+        if (!uniqueDataSet.add(sellingMtn + "," + buyingParticipant + "," + tradingDate)) {
             throw new ValidationException(
                     String.format(DUPLICATE_DATE.getErrorMessage(),
                             header.getTradingDate(),
@@ -240,15 +238,15 @@ public class BcqValidator {//TODO Cleanup
         return new Date(date.getTime() - interval.getTimeInMillis());
     }
 
-    private void validateBcqDataSize(BcqDeclaration bcqDeclaration, BcqInterval interval) throws ValidationException {
+    private void validateDataSize(BcqHeader header, BcqInterval interval) throws ValidationException {
         int validBcqSize = interval.getValidNoOfRecords();
 
-        if (bcqDeclaration.getDataList().size() != validBcqSize) {
+        if (header.getDataList().size() != validBcqSize) {
             throw new ValidationException(
                     String.format(INCOMPLETE_ENTRIES.getErrorMessage(),
-                            formatAndGetDate(bcqDeclaration.getHeader().getTradingDate(), false),
-                            bcqDeclaration.getHeader().getSellingMtn(),
-                            bcqDeclaration.getHeader().getBuyingParticipant(),
+                            formatAndGetDate(header.getTradingDate(), false),
+                            header.getSellingMtn(),
+                            header.getBuyingParticipant(),
                             validBcqSize));
         }
     }

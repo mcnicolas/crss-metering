@@ -4,12 +4,13 @@ import com.pemc.crss.metering.constants.BcqStatus;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 @Data
 public class BcqHeader {
 
-    private long bcqHeaderId;
+    private long headerId;
     private long fileId;
     private String sellingMtn;
     private String buyingParticipant;
@@ -17,6 +18,9 @@ public class BcqHeader {
     private String sellingParticipantShortName;
     private BcqStatus status;
     private Date tradingDate;
+    private String updatedVia;
+    private BcqUploadFile uploadFile;
+    private List<BcqData> dataList;
 
     @Override
     public boolean equals(Object o) {
@@ -29,7 +33,7 @@ public class BcqHeader {
         }
 
         BcqHeader that = (BcqHeader) o;
-        return Objects.equals(bcqHeaderId, that.bcqHeaderId)
+        return Objects.equals(headerId, that.headerId)
                 && Objects.equals(fileId, that.fileId)
                 && Objects.equals(sellingMtn, that.sellingMtn)
                 && Objects.equals(buyingParticipant, that.buyingParticipant)
@@ -41,7 +45,7 @@ public class BcqHeader {
 
     @Override
     public int hashCode() {
-        return Objects.hash(bcqHeaderId, fileId, sellingMtn, buyingParticipant, sellingParticipantName,
+        return Objects.hash(headerId, fileId, sellingMtn, buyingParticipant, sellingParticipantName,
                 sellingParticipantShortName, status, tradingDate);
     }
 }
