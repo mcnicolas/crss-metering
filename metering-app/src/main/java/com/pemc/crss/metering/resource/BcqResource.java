@@ -3,6 +3,7 @@ package com.pemc.crss.metering.resource;
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.commons.web.resource.BaseListResource;
+import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.*;
 import com.pemc.crss.metering.event.BcqUploadEvent;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
@@ -95,6 +96,11 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
                 .stream()
                 .map(BcqDataInfo::new)
                 .collect(Collectors.toList());
+    }
+
+    @PostMapping("/{headerId}/status")
+    public void saveData(@PathVariable long headerId, @RequestParam String status) {
+        bcqService.updateHeaderStatus(headerId, BcqStatus.fromString(status));
     }
 
     @PostMapping("/validation-error")

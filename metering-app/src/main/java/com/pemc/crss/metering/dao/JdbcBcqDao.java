@@ -41,6 +41,7 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.header.count}")
     private String countHeader;
 
+    @Value("${bcq.header.status}")
     private String updateHeaderStatus;
 
     @Value("${bcq.header.id}")
@@ -206,7 +207,7 @@ public class JdbcBcqDao implements BcqDao {
 
                     return ps;
                 });
-        log.debug("Successfully updated status to {} of header with ID: {}", status, headerId);
+        log.debug("Successfully updated status of header with ID: {} to {} ", headerId, status);
     }
 
     /****************************************************

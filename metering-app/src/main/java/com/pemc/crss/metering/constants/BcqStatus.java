@@ -4,6 +4,7 @@ import java.util.Locale;
 
 public enum BcqStatus {
 
+    CANCELLED,
     CONFIRMED,
     NOT_CONFIRMED,
     FOR_CONFIRMATION,
