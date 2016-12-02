@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.metering.constants.UploadType;
+import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +11,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,12 +42,6 @@ public class MeteringResource {
         this.eventPublisher = eventPublisher;
     }
 
-    @Deprecated
-    @GetMapping("/sample")
-    public String sample() {
-        return "Success";
-    }
-
     @PostMapping("/uploadheader")
     public long sendHeader(@RequestParam("transactionID") String transactionID,
                            @RequestParam("fileCount") int fileCount,
@@ -73,6 +67,7 @@ public class MeteringResource {
 
         MultipartFile file = request.getFile("file");
 
+        // TODO: Pass a FileManifest bean instead. Could use a json converter
         Message message = MessageBuilder.withBody(file.getBytes())
                 .setHeader("headerID", headerID)
                 .setHeader("transactionID", transactionID)

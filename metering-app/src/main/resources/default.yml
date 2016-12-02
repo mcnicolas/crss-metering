@@ -66,6 +66,8 @@ mq:
     file: >
       INSERT INTO TXN_MQ_MANIFEST_FILE (file_id, header_id, transaction_id, filename, filetype,
       filesize, checksum, upload_datetime) VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?)
+    status: >
+      UPDATE TXN_MQ_MANIFEST_FILE SET PROCESS_FLAG = 'Y', STATUS = :status, ERROR_DETAILS = :errorDetail WHERE FILE_ID = :fileID
   meter:
     daily: >
       INSERT INTO TXN_METER_DATA_DAILY VALUES(

@@ -53,6 +53,8 @@ dependencies {
 
     testCompile 'org.springframework.boot:spring-boot-starter-test'
 
+    compile 'commons-io:commons-io'
+
     compile project(':commons-service')
     compile project(':commons-web')
     compile project(':commons-log')

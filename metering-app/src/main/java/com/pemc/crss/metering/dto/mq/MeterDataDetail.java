@@ -1,16 +1,11 @@
-package com.pemc.crss.metering.dto;
+package com.pemc.crss.metering.dto.mq;
 
 import lombok.Data;
 
 import java.util.Date;
 
-/**
- * TODO: Will be renamed to MeterData when fully implemented and previous DTO classes will be removed
- */
-
-@Deprecated
 @Data
-public class MeterData2 {
+public class MeterDataDetail {
 
     private long meterDataID;
     private String sein;

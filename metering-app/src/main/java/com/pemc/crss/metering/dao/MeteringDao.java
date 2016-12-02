@@ -1,12 +1,10 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.constants.UploadType;
-import com.pemc.crss.metering.dto.MeterData;
-import com.pemc.crss.metering.dto.MeterData2;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
-import com.pemc.crss.metering.dto.MeterUploadFile;
-import com.pemc.crss.metering.dto.MeterUploadHeader;
+import com.pemc.crss.metering.dto.mq.FileManifest;
+import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.validator.ValidationResult;
 
 import java.util.List;
 
@@ -16,19 +14,13 @@ public interface MeteringDao {
 
     void saveTrailer(String transactionID);
 
-    long saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize,
-                          String checksum);
+    long saveFileManifest(FileManifest fileManifest);
 
     List<MeterDataDisplay> findAll(PageableRequest pageableRequest);
 
     int getTotalRecords(PageableRequest pageableRequest);
 
-    long saveMeterUploadHeader(MeterUploadHeader meterUploadHeader);
+    void saveMeterData(FileManifest fileManifest, List<MeterDataDetail> meterDataDetails);
 
-    long saveMeterUploadFile(long transactionID, MeterUploadFile meterUploadFile);
-
-    void saveMeterUploadMDEF(long fileID, MeterData meterData);
-
-    void saveMeterData(long fileID, List<MeterData2> meterDataList, String mspShortName, UploadType uploadType);
-
+    void updateManifestStatus(ValidationResult validationResult);
 }

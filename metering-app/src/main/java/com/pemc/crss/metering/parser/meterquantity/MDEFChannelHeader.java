@@ -1,9 +1,9 @@
-package com.pemc.crss.metering.dto;
+package com.pemc.crss.metering.parser.meterquantity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChannelHeader {
+class MDEFChannelHeader {
 
     // RLEN 2 bytes
     private int recordLength;
@@ -68,7 +68,7 @@ public class ChannelHeader {
     // TD_ORIGIN 1 byte
     private String dataOrigin;
 
-    private List<IntervalData> intervals = new ArrayList<>();
+    private List<MDEFIntervalData> intervals = new ArrayList<>();
 
     public int getRecordLength() {
         return recordLength;
@@ -238,16 +238,16 @@ public class ChannelHeader {
         this.dataOrigin = dataOrigin;
     }
 
-    public List<IntervalData> getIntervals() {
+    public List<MDEFIntervalData> getIntervals() {
         return intervals;
     }
 
-    public void setIntervals(List<IntervalData> intervals) {
+    public void setIntervals(List<MDEFIntervalData> intervals) {
         this.intervals = intervals;
     }
 
-    public void addInterval(IntervalData intervalData) {
-        intervals.add(intervalData);
+    public void addInterval(MDEFIntervalData MDEFIntervalData) {
+        intervals.add(MDEFIntervalData);
     }
 
 }

@@ -1,6 +1,6 @@
-package com.pemc.crss.metering.dto;
+package com.pemc.crss.metering.parser.meterquantity;
 
-public class TrailerRecord {
+class MDEFTrailerRecord {
 
     private int recordLength;
     private int recordCode;

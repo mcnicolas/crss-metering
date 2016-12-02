@@ -1,6 +1,8 @@
 package com.pemc.crss.metering.parser.meterquantity;
 
-import com.pemc.crss.metering.dto.MeterData2;
+import com.pemc.crss.metering.dto.mq.MeterData;
+import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.dto.mq.MeterDataHeader;
 import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -10,7 +12,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,10 +28,12 @@ import static java.util.Calendar.MINUTE;
 import static org.apache.poi.ss.usermodel.DateUtil.getJavaCalendar;
 
 @Slf4j
-public class MeterQuantityExcelReader implements QuantityReader<MeterData2> {
+public class MeterQuantityExcelReader implements QuantityReader {
 
     @Override
-    public List<MeterData2> readData(InputStream inputStream) throws IOException {
+    public MeterData readData(InputStream inputStream) throws IOException {
+        MeterData retVal = new MeterData();
+
         // TODO: Use poi eventmodel for faster processing
         Workbook workbook;
         try {
@@ -41,12 +44,11 @@ public class MeterQuantityExcelReader implements QuantityReader<MeterData2> {
 
         Sheet sheet = workbook.getSheetAt(0);
 
-        List<MeterData2> meterDataList = new ArrayList<>();
-
         Iterator<Row> rowIterator = sheet.rowIterator();
 
-        // Skip first row
-        rowIterator.next();
+        MeterDataHeader header = readHeader(rowIterator.next());
+
+        List<MeterDataDetail> meterDataList = new ArrayList<>();
 
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
@@ -55,7 +57,8 @@ public class MeterQuantityExcelReader implements QuantityReader<MeterData2> {
                 continue;
             }
 
-            MeterData2 meterData = new MeterData2();
+            MeterDataDetail meterData = new MeterDataDetail();
+
             meterData.setSein(row.getCell(0).getStringCellValue());
 
             Calendar readingDateTime = getDateValue(row.getCell(1));
@@ -77,7 +80,21 @@ public class MeterQuantityExcelReader implements QuantityReader<MeterData2> {
             meterDataList.add(meterData);
         }
 
-        return meterDataList;
+        retVal.setMeterDataHeader(header);
+        retVal.setMeterDataDetails(meterDataList);
+
+        return retVal;
+    }
+
+    private MeterDataHeader readHeader(Row row) {
+        MeterDataHeader retVal = new MeterDataHeader();
+
+        List<String> columns = new ArrayList<>();
+        row.forEach(cell -> columns.add(cell.getStringCellValue()));
+
+        retVal.setColumnNames(columns);
+
+        return retVal;
     }
 
     private String getStringValue(Cell cell) {

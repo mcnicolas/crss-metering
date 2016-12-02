@@ -1,12 +1,8 @@
 package com.pemc.crss.metering.parser.meterquantity;
 
 import com.pemc.crss.metering.constants.UnitOfMeasure;
-import com.pemc.crss.metering.dto.ChannelHeader;
-import com.pemc.crss.metering.dto.Header;
-import com.pemc.crss.metering.dto.IntervalData;
-import com.pemc.crss.metering.dto.MeterData;
-import com.pemc.crss.metering.dto.MeterData2;
-import com.pemc.crss.metering.dto.TrailerRecord;
+import com.pemc.crss.metering.dto.mq.MeterData;
+import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +25,7 @@ import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static java.util.Calendar.MINUTE;
 
 @Slf4j
-public class MeterQuantityMDEFReader implements QuantityReader<MeterData2> {
+public class MeterQuantityMDEFReader implements QuantityReader {
 
     private static final int RECORD_BLOCK_SIZE = 216;
 
@@ -42,15 +38,15 @@ public class MeterQuantityMDEFReader implements QuantityReader<MeterData2> {
 
     // TODO: UGLY CODE. NEED TO OPTIMIZE!
     @Override
-    public List<MeterData2> readData(InputStream inputStream) throws IOException {
-        MeterData meterData = readMDEF(inputStream);
+    public MeterData readData(InputStream inputStream) throws IOException {
+        MDEFMeterData mdefMeterData = readMDEF(inputStream);
 
-        Map<String, MeterData2> meterDataMap = new HashMap<>();
+        Map<String, MeterDataDetail> meterDataMap = new HashMap<>();
 
-        for (ChannelHeader channel : meterData.getChannels()) {
+        for (MDEFChannelHeader channel : mdefMeterData.getChannels()) {
             int intervalPerHour = MINUTES_IN_HOUR / channel.getIntervalPerHour();
 
-            for (IntervalData interval : channel.getIntervals()) {
+            for (MDEFIntervalData interval : channel.getIntervals()) {
                 List<Float> meterReadingList = interval.getMeterReading();
                 List<Integer> channelStatusList = interval.getChannelStatus();
                 List<Integer> intervalStatusList = interval.getIntervalStatus();
@@ -59,11 +55,11 @@ public class MeterQuantityMDEFReader implements QuantityReader<MeterData2> {
                 for (int i = 0; i < meterReadingList.size(); i++) {
                     String key = interval.getCustomerID() + "_" + readingDateList.get(i);
 
-                    MeterData2 value;
+                    MeterDataDetail value;
                     if (meterDataMap.containsKey(key)) {
                         value = meterDataMap.get(key);
                     } else {
-                        value = new MeterData2();
+                        value = new MeterDataDetail();
 
                         value.setSein(interval.getCustomerID());
                         value.setInterval(intervalPerHour);
@@ -155,22 +151,25 @@ public class MeterQuantityMDEFReader implements QuantityReader<MeterData2> {
             }
         }
 
-        List<MeterData2> retVal = new ArrayList<>(meterDataMap.values());
-        retVal.sort(Comparator.comparing(MeterData2::getReadingDateTime));
+        List<MeterDataDetail> meterDataDetails = new ArrayList<>(meterDataMap.values());
+        meterDataDetails.sort(Comparator.comparing(MeterDataDetail::getReadingDateTime));
+
+        MeterData retVal = new MeterData();
+        retVal.setMeterDataDetails(meterDataDetails);
 
         return retVal;
     }
 
-    public MeterData readMDEF(InputStream inputStream) throws IOException {
+    public MDEFMeterData readMDEF(InputStream inputStream) throws IOException {
 
-        MeterData meterData = new MeterData();
+        MDEFMeterData MDEFMeterData = new MDEFMeterData();
 
         try (InputStream data = new BufferedInputStream(inputStream)) {
             byte[] buffer = new byte[RECORD_BLOCK_SIZE];
 
             String channelHeaderTaStop = "";
 
-            ChannelHeader channelHeader = null;
+            MDEFChannelHeader MDEFChannelHeader = null;
 
             while (data.read(buffer, 0, RECORD_BLOCK_SIZE) >= 0) {
 
@@ -179,37 +178,37 @@ public class MeterQuantityMDEFReader implements QuantityReader<MeterData2> {
                 // TODO: Change to strategy pattern
                 switch (recordCode) {
                     case METER_HEADER:
-                        channelHeader = null;
+                        MDEFChannelHeader = null;
 
-                        meterData.setHeader(readMeterHeader(buffer));
+                        MDEFMeterData.setMDEFHeader(readMeterHeader(buffer));
 
                         break;
                     case CHANNEL_HEADER:
-                        channelHeader = readChannelHeader(buffer);
-                        meterData.addChannel(channelHeader);
+                        MDEFChannelHeader = readChannelHeader(buffer);
+                        MDEFMeterData.addChannel(MDEFChannelHeader);
 
-                        intervalStartDateForChannel = channelHeader.getStartTime();
-                        channelHeaderTaStop = channelHeader.getStopTime();
-                        int channelIntervalPerHour = channelHeader.getIntervalPerHour();
+                        intervalStartDateForChannel = MDEFChannelHeader.getStartTime();
+                        channelHeaderTaStop = MDEFChannelHeader.getStopTime();
+                        int channelIntervalPerHour = MDEFChannelHeader.getIntervalPerHour();
 
                         minuteInterval = MINUTES_IN_HOUR / channelIntervalPerHour;
 
                         break;
                     case INTERVAL_DATA:
-                        IntervalData intervalData = readIntervalData(buffer, intervalStartDateForChannel, channelHeaderTaStop);
+                        MDEFIntervalData MDEFIntervalData = readIntervalData(buffer, intervalStartDateForChannel, channelHeaderTaStop);
 
-                        if (intervalData != null && channelHeader != null) {
-                            channelHeader.addInterval(intervalData);
+                        if (MDEFIntervalData != null && MDEFChannelHeader != null) {
+                            MDEFChannelHeader.addInterval(MDEFIntervalData);
                         }
 
                         break;
                     case TRAILER_RECORD:
                     default:
-                        meterData.setTrailerRecord(readTrailer(buffer));
+                        MDEFMeterData.setMDEFTrailerRecord(readTrailer(buffer));
                 }
             }
 
-            return meterData;
+            return MDEFMeterData;
         } catch (IOException e) {
             log.error(e.getMessage(), e);
 
@@ -217,8 +216,8 @@ public class MeterQuantityMDEFReader implements QuantityReader<MeterData2> {
         }
     }
 
-    private Header readMeterHeader(byte[] record) {
-        Header header = new Header();
+    private MDEFHeader readMeterHeader(byte[] record) {
+        MDEFHeader header = new MDEFHeader();
 
         ByteBuffer buffer = ByteBuffer.wrap(record, 0, RECORD_BLOCK_SIZE);
         buffer.order(LITTLE_ENDIAN);
@@ -238,8 +237,8 @@ public class MeterQuantityMDEFReader implements QuantityReader<MeterData2> {
         return header;
     }
 
-    private ChannelHeader readChannelHeader(byte[] record) {
-        ChannelHeader retVal = new ChannelHeader();
+    private MDEFChannelHeader readChannelHeader(byte[] record) {
+        MDEFChannelHeader retVal = new MDEFChannelHeader();
 
         ByteBuffer buffer = ByteBuffer.wrap(record, 0, RECORD_BLOCK_SIZE);
         buffer.order(LITTLE_ENDIAN);
@@ -274,8 +273,8 @@ public class MeterQuantityMDEFReader implements QuantityReader<MeterData2> {
     }
 
     // TODO: Use of intervalStartDateForChannel has a side-effect. Need to refactor
-    private IntervalData readIntervalData(byte[] buffer, String intervalStartDate, String channelHeaderTaStop) {
-        IntervalData retVal = new IntervalData();
+    private MDEFIntervalData readIntervalData(byte[] buffer, String intervalStartDate, String channelHeaderTaStop) {
+        MDEFIntervalData retVal = new MDEFIntervalData();
 
         List<Float> meterReadings = new ArrayList<>();
         List<Integer> channelStatusList = new ArrayList<>();
@@ -355,8 +354,8 @@ public class MeterQuantityMDEFReader implements QuantityReader<MeterData2> {
         return retVal;
     }
 
-    private TrailerRecord readTrailer(byte[] record) {
-        TrailerRecord trailerRecord = new TrailerRecord();
+    private MDEFTrailerRecord readTrailer(byte[] record) {
+        MDEFTrailerRecord trailerRecord = new MDEFTrailerRecord();
 
         ByteBuffer buffer = ByteBuffer.wrap(record, 0, RECORD_BLOCK_SIZE);
         buffer.order(LITTLE_ENDIAN);

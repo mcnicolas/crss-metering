@@ -1,13 +1,12 @@
 package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
+import com.pemc.crss.metering.dto.mq.FileManifest;
+import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import org.springframework.data.domain.Page;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
 
 public interface MeterService {
 
@@ -15,12 +14,12 @@ public interface MeterService {
 
     void saveTrailer(String transactionID);
 
-    long saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize, String checksum);
-
-    void validateAndSave(long fileID, String fileType, byte[] fileContent, String mspShortName, UploadType uploadType);
+    long saveFileManifest(FileManifest fileManifest);
 
     Page<MeterDataDisplay> getMeterData(PageableRequest pageableRequest);
 
-    void validateAndSave(Collection<MultipartFile> values, UploadType uploadType) throws IOException;
+    void processMeterData(FileManifest fileManifest, byte[] fileContent);
+
+    void saveMeterData(FileManifest fileManifest, List<MeterDataDetail> meterDataDetails);
 
 }

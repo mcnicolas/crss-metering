@@ -1,44 +1,40 @@
 package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dao.MeteringDao;
-import com.pemc.crss.metering.dto.MeterData2;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
-import com.pemc.crss.metering.dto.MeterUploadFile;
-import com.pemc.crss.metering.dto.MeterUploadHeader;
-import com.pemc.crss.metering.parser.QuantityReader;
-import com.pemc.crss.metering.parser.meterquantity.MeterQuantityReaderFactory;
+import com.pemc.crss.metering.dto.mq.FileManifest;
+import com.pemc.crss.metering.dto.mq.MeterData;
+import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.parser.ParseException;
+import com.pemc.crss.metering.parser.meterquantity.MeterQuantityParser;
+import com.pemc.crss.metering.validator.ValidationResult;
+import com.pemc.crss.metering.validator.mq.MQValidationHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 
-import static com.pemc.crss.metering.constants.FileType.MDEF;
-import static com.pemc.crss.metering.constants.FileType.XLS;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
-import static org.apache.commons.lang.StringUtils.equalsIgnoreCase;
+import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 
 @Slf4j
 @Service
 public class DefaultMeterService implements MeterService {
 
     private final MeteringDao meteringDao;
-    private final MeterQuantityReaderFactory readerFactory;
+    private final MeterQuantityParser meterQuantityParser;
+    private final MQValidationHandler validationHandler;
 
     @Autowired
-    public DefaultMeterService(MeteringDao meteringDao, MeterQuantityReaderFactory readerFactory) {
+    public DefaultMeterService(MeteringDao meteringDao, MeterQuantityParser meterQuantityParser, MQValidationHandler validationHandler) {
         this.meteringDao = meteringDao;
-        this.readerFactory = readerFactory;
+        this.meterQuantityParser = meterQuantityParser;
+        this.validationHandler = validationHandler;
     }
 
     @Override
@@ -54,27 +50,65 @@ public class DefaultMeterService implements MeterService {
     }
 
     @Override
-    @Transactional
-    public long saveFileManifest(long headerID, String transactionID, String fileName, String fileType, long fileSize,
-                                 String checksum) {
-        return meteringDao.saveFileManifest(headerID, transactionID, fileName, fileType, fileSize, checksum);
+    public void processMeterData(FileManifest fileManifest, byte[] fileContent) {
+        // NOTE:
+        // 2. Parse data
+        // 3. Validate data
+        // 4. Save data
+        // 5. check for completed records
+        // 6. Send email
+
+        long fileID = saveFileManifest(fileManifest);
+        fileManifest.setFileID(fileID);
+        log.debug("Saved manifest file fileID:{}", fileID);
+
+        // Parse meter data
+        ValidationResult validationResult = new ValidationResult();
+
+        MeterData meterData = new MeterData();
+        try {
+            meterData = meterQuantityParser.parse(fileManifest.getFileType(), fileContent);
+            log.debug("Finished parsing MQ data for {} records", meterData.getMeterDataDetails().size());
+
+            validationResult.setStatus(ACCEPTED);
+            validationResult.setErrorDetail("");
+        } catch (ParseException e) {
+            validationResult.setStatus(REJECTED);
+            validationResult.setErrorDetail(e.getMessage());
+
+            log.error(e.getMessage(), e);
+        }
+
+        // Validate meter data
+        if (validationResult.getStatus() == ACCEPTED) {
+            validationResult = validationHandler.validate(fileManifest, meterData);
+            log.debug("Finished validating MQ data accept_reject:{} status:{}",
+                    validationResult.getStatus(), validationResult.getErrorDetail());
+
+            // Save meter data
+            saveMeterData(fileManifest, meterData.getMeterDataDetails());
+        }
+
+        // Update manifest
+        validationResult.setFileID(fileManifest.getFileID());
+        meteringDao.updateManifestStatus(validationResult);
+
+        // TODO: Check for completed records
+        // 1. Completed records should be sent via email detailing the files with accept/reject status
+        // 2. Find a way to make this efficient
     }
 
     @Override
     @Transactional
-    public void validateAndSave(long fileID, String fileType, byte[] fileContent, String mspShortName, UploadType uploadType) {
-        try {
-            // TODO: Add validation logic here...
+    public long saveFileManifest(FileManifest fileManifest) {
+        return meteringDao.saveFileManifest(fileManifest);
+    }
 
-            QuantityReader<MeterData2> reader = readerFactory.getMeterQuantityReader(fileType);
-            List<MeterData2> meterData = reader.readData(new ByteArrayInputStream(fileContent));
-            log.debug("Finished parsing MQ data for {} records", meterData.size());
-
-            meteringDao.saveMeterData(fileID, meterData, mspShortName, uploadType);
-            log.debug("Finished saving MQ data to the database. fileID:{}", fileID);
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        }
+    @Override
+    @Transactional
+    public void saveMeterData(FileManifest fileManifest, List<MeterDataDetail> meterDataDetails) {
+        meteringDao.saveMeterData(fileManifest, meterDataDetails);
+        log.debug("Finished saving MQ data to the database. fileID:{} records:{}", fileManifest.getFileID(), meterDataDetails.size());
     }
 
     @Override
@@ -87,67 +121,6 @@ public class DefaultMeterService implements MeterService {
                 meterDataList,
                 pageableRequest.getPageable(),
                 totalRecords);
-    }
-
-    @Deprecated // Change in impl
-    @Override
-    @Transactional
-    public void validateAndSave(Collection<MultipartFile> multipartFiles, UploadType uploadType) throws IOException {
-        MeterUploadHeader meterUploadHeader = new MeterUploadHeader();
-
-        // TODO: Retrieve MSP ID from Registration Service
-        meterUploadHeader.setMspID(1L);
-
-        // TODO: Retrieve username from Admin Service
-        meterUploadHeader.setUploadedBy("xx");
-
-        meterUploadHeader.setCategory(uploadType.toString());
-        meterUploadHeader.setUploadedDateTime(new Date());
-        meterUploadHeader.setVersion(1);
-
-        long transactionID = meteringDao.saveMeterUploadHeader(meterUploadHeader);
-
-        for (MultipartFile file : multipartFiles) {
-            MeterUploadFile meterUploadFile = new MeterUploadFile();
-
-            meterUploadFile.setTransactionID(transactionID);
-
-            String filename = file.getOriginalFilename();
-            meterUploadFile.setFileName(filename);
-
-            // TODO: Dirty code consider revising
-            String fileExtension = getExtension(filename);
-            if (equalsIgnoreCase(fileExtension, "MDE") || equalsIgnoreCase(fileExtension, "MDEF")) {
-                meterUploadFile.setFileType(MDEF);
-            } else if (equalsIgnoreCase(fileExtension, "XLS") || equalsIgnoreCase(fileExtension, "XLSX")) {
-                meterUploadFile.setFileType(XLS);
-            }
-
-            meterUploadFile.setFileSize(file.getSize());
-
-            // TODO: Update when validation routine will be implemented
-            meterUploadFile.setStatus(ACCEPTED);
-
-            long fileID = meteringDao.saveMeterUploadFile(transactionID, meterUploadFile);
-
-            // Parse
-//            MeterData meterData = mdefReader.readMDEF(file.getInputStream());
-//            meteringDao.saveMeterUploadMDEF(fileID, meterData);
-        }
-    }
-
-    private String getExtension(String filename) {
-        if (filename == null) {
-            return null;
-        }
-
-        int index = filename.lastIndexOf('.');
-
-        if (index == -1) {
-            return "";
-        } else {
-            return filename.substring(index + 1);
-        }
     }
 
 }

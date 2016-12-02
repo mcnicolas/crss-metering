@@ -1,6 +1,8 @@
 package com.pemc.crss.metering.parser.meterquantity;
 
-import com.pemc.crss.metering.dto.MeterData2;
+import com.pemc.crss.metering.dto.mq.MeterData;
+import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.dto.mq.MeterDataHeader;
 import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -14,34 +16,47 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 
 @Slf4j
-public class MeterQuantityCSVReader implements QuantityReader<MeterData2> {
+public class MeterQuantityCSVReader implements QuantityReader {
 
-    private DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+    private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     @Override
-    public List<MeterData2> readData(InputStream inputStream) throws IOException {
-        List<MeterData2> meterData = new ArrayList<>();
+    public MeterData readData(InputStream inputStream) throws IOException {
+        MeterData meterData = new MeterData();
 
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
-            reader.getHeader(true);
+            List<MeterDataDetail> meterDataDetails = new ArrayList<>();
+
+            MeterDataHeader header = readHeader(reader.getHeader(true));
 
             List<String> row;
             while ((row = reader.read()) != null) {
-                meterData.add(populateBean(row));
+                meterDataDetails.add(populateBean(row));
             }
+
+            meterData.setMeterDataHeader(header);
+            meterData.setMeterDataDetails(meterDataDetails);
         }
 
         return meterData;
     }
 
-    private MeterData2 populateBean(List<String> row) {
-        MeterData2 retVal = new MeterData2();
+    private MeterDataHeader readHeader(String[] header) {
+        MeterDataHeader meterDataHeader = new MeterDataHeader();
+        meterDataHeader.setColumnNames(Arrays.asList(header));
+
+        return meterDataHeader;
+    }
+
+    private MeterDataDetail populateBean(List<String> row) {
+        MeterDataDetail retVal = new MeterDataDetail();
 
         retVal.setSein(row.get(0));
         retVal.setReadingDateTime(parseDateTime(row.get(1), row.get(2)));

@@ -8,10 +8,13 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import static java.util.Calendar.DATE;
 import static java.util.Calendar.DAY_OF_MONTH;
 import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
+import static java.util.Calendar.MONTH;
 import static java.util.Calendar.SECOND;
+import static java.util.Calendar.YEAR;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Slf4j
@@ -92,6 +95,20 @@ public final class DateTimeUtils {
         return calendar.get(HOUR_OF_DAY) == 0
                 && calendar.get(MINUTE) == 0
                 && calendar.get(SECOND) == 0;
+    }
+
+    public static boolean isYesterday(Date now, Date date2) {
+        Calendar calendar1 = Calendar.getInstance();
+        calendar1.setTime(now);
+
+        Calendar calendar2 = Calendar.getInstance();
+        calendar2.setTime(date2);
+
+        calendar1.add(DATE,-1);
+
+        return calendar1.get(YEAR) == calendar2.get(YEAR)
+                && calendar1.get(MONTH) == calendar2.get(MONTH)
+                && calendar1.get(DATE) == calendar2.get(DATE);
     }
 
 }

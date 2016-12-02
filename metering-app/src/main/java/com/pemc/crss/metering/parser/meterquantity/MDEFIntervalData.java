@@ -1,8 +1,8 @@
-package com.pemc.crss.metering.dto;
+package com.pemc.crss.metering.parser.meterquantity;
 
 import java.util.List;
 
-public class IntervalData {
+class MDEFIntervalData {
 
     private int recordLength;
     private int recordCode;
