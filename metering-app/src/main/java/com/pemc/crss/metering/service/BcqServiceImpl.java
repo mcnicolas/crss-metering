@@ -1,9 +1,11 @@
 package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
-import com.pemc.crss.metering.dto.*;
+import com.pemc.crss.metering.dto.BcqData;
+import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.BcqUpdateStatusDetails;
+import com.pemc.crss.metering.dto.BcqUploadFile;
 import com.pemc.crss.metering.event.BcqUploadEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,16 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqNotificationRecipient.BUYER;
 import static com.pemc.crss.metering.constants.BcqNotificationRecipient.SELLER;
+import static com.pemc.crss.metering.constants.BcqNotificationType.CANCEL;
 import static com.pemc.crss.metering.constants.BcqNotificationType.SUBMIT;
-import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_SUBMIT_BUYER;
-import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_SUBMIT_SELLER;
+import static com.pemc.crss.metering.constants.BcqStatus.*;
+import static com.pemc.crss.metering.constants.BcqUploadEventCode.*;
 
 @Slf4j
 @Service
@@ -88,7 +88,29 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     @Transactional
-    public void updateHeaderStatus(long headerId, BcqStatus status) {
-        bcqDao.updateHeaderStatus(headerId, status);
+    public void updateHeaderStatus(long headerId, BcqUpdateStatusDetails updateStatusDetails) {
+        Map<String, Object> payload = new HashMap<>();
+        String format = "MMM. dd, yyyy hh:mm";
+        DateFormat dateFormat = new SimpleDateFormat(format);
+        String respondedDate = dateFormat.format(new Date());
+        String tradingDate = dateFormat.format(updateStatusDetails.getTradingDate());
+
+        payload.put("headerId", headerId);
+        payload.put("buyerId", updateStatusDetails.getBuyerId());
+        payload.put("respondedDate", respondedDate);
+        payload.put("tradingDate", tradingDate);
+
+        if (updateStatusDetails.getStatus() == CANCELLED) {
+            payload.put("sellerName", updateStatusDetails.getSellerName());
+            payload.put("sellerShortName", updateStatusDetails.getSellerShortName());
+            BcqUploadEvent event = new BcqUploadEvent(payload, NTF_BCQ_CANCEL_BUYER, CANCEL, BUYER);
+            eventPublisher.publishEvent(event);
+        } else if (updateStatusDetails.getStatus() == CONFIRMED || updateStatusDetails.getStatus() == NULLIFIED) {
+            payload.put("sellerId", updateStatusDetails.getSellerId());
+            payload.put("buyerName", updateStatusDetails.getBuyerName());
+            payload.put("buyerShortName", updateStatusDetails.getBuyerShortName());
+        }
+
+        bcqDao.updateHeaderStatus(headerId, updateStatusDetails.getStatus());
     }
 }

@@ -98,6 +98,13 @@ public class BcqUploadEventListener implements ApplicationListener<BcqUploadEven
                     payload.put("sellerName", source.get("sellerName"));
                     payload.put("sellerShortName", source.get("sellerShortName"));
                 }
+                break;
+            case CANCEL:
+                payload.put("tradingDate", source.get("tradingDate"));
+                payload.put("respondedDate", source.get("respondedDate"));
+                payload.put("sellerName", source.get("sellerName"));
+                payload.put("sellerShortName", source.get("sellerShortName"));
+                payload.put("headerId", source.get("headerId"));
         }
 
         return payload;
