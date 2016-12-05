@@ -3,6 +3,7 @@ package com.pemc.crss.metering.dao;
 import com.pemc.crss.commons.web.dto.datatable.PageOrder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -98,9 +99,9 @@ public class BcqDisplayQueryBuilder {
     public BcqDisplayQueryBuilder orderBy(List<PageOrder> pageOrderList) {
         if (isNotEmpty(pageOrderList)) {
             for (PageOrder pageOrder : pageOrderList) {
-                sqlBuilder.append(" ORDER BY ?");
+                sqlBuilder.append(" ORDER BY ");
+                sqlBuilder.append(pageOrder.getSortColumn());
                 sqlBuilder.append(" ").append(pageOrder.getSortDirection().toString());
-                arguments.add(pageOrder.getSortColumn());
             }
         }
 
@@ -121,6 +122,8 @@ public class BcqDisplayQueryBuilder {
         BuilderData data = new BuilderData();
         data.setSql(sqlBuilder.toString());
         data.setArguments(arguments.toArray());
+
+        System.out.println("DATA ARGS: " + Arrays.toString(data.getArguments()));
 
         return data;
     }
