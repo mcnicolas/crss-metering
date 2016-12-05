@@ -1,5 +1,7 @@
 package com.pemc.crss.metering.validator.mq;
 
+import com.pemc.crss.metering.constants.FileType;
+import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
@@ -13,6 +15,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import static com.pemc.crss.metering.constants.FileType.CSV;
+import static com.pemc.crss.metering.constants.FileType.XLS;
 import static com.pemc.crss.metering.constants.UploadType.DAILY;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
@@ -20,7 +24,7 @@ import static com.pemc.crss.metering.utils.DateTimeUtils.isYesterday;
 import static org.apache.commons.lang3.time.DateUtils.isSameDay;
 
 @Component
-@Order(value = 4)
+//@Order(value = 4)
 public class OpenTradingDateValidator implements Validator {
 
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -29,7 +33,10 @@ public class OpenTradingDateValidator implements Validator {
     public ValidationResult validate(FileManifest fileManifest, MeterData meterData) {
         ValidationResult retVal = new ValidationResult();
 
-        if (fileManifest.getUploadType() == DAILY) {
+        FileType fileType = fileManifest.getFileType();
+        UploadType uploadType = fileManifest.getUploadType();
+
+        if (uploadType == DAILY && (fileType == XLS || fileType == CSV)) {
             Date now = new Date();
 
             List<MeterDataDetail> meterDataDetails = meterData.getDetails();

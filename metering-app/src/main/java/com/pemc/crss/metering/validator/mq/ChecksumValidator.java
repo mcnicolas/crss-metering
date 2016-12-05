@@ -11,8 +11,9 @@ import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
-@Component
-@Order(value = 1)
+// NOTE: Disable temporarily checksum for demo convenience
+//@Component
+//@Order(value = 1)
 public class ChecksumValidator implements Validator {
 
     @Override

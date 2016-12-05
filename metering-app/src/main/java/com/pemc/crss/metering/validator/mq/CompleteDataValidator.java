@@ -18,7 +18,7 @@ import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 
 @Component
-@Order(value = 3)
+//@Order(value = 3)
 public class CompleteDataValidator implements Validator {
 
     private static final int DEFAULT_INTERVAL = 15;
