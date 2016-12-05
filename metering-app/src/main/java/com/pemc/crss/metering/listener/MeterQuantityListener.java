@@ -60,12 +60,12 @@ public class MeterQuantityListener {
         fileManifest.setHeaderID(headerID);
         fileManifest.setTransactionID(transactionID);
         fileManifest.setFileName(fileName);
-        fileManifest.setFileType(FileType.valueOf(fileType));
+        fileManifest.setFileType(FileType.valueOf(fileType.toUpperCase()));
         fileManifest.setFileSize(fileSize);
         fileManifest.setChecksum(checksum);
         fileManifest.setRecvChecksum(receivedChecksum);
         fileManifest.setMspShortName(mspShortName);
-        fileManifest.setUploadType(UploadType.valueOf(category));
+        fileManifest.setUploadType(UploadType.valueOf(category.toUpperCase()));
 
         try {
             meterService.processMeterData(fileManifest, fileContent);
