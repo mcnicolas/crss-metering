@@ -80,7 +80,7 @@ public class BcqDisplayQueryBuilder {
 
     public BcqDisplayQueryBuilder addBuyingParticipantFilter(String buyingParticipant) {
         if (isNotBlank(buyingParticipant)) {
-            sqlBuilder.append(" AND UPPER(A.BUYING_PARTICIPANT) LIKE ?");
+            sqlBuilder.append(" AND UPPER(A.BUYING_PARTICIPANT_SHORT_NAME) LIKE ?");
             arguments.add("%" + buyingParticipant.toUpperCase() + "%");
         }
 

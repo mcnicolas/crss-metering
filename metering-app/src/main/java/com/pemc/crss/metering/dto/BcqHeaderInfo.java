@@ -26,12 +26,20 @@ public class BcqHeaderInfo extends AbstractWebDto<BcqHeader> {
         target().setSellingMtn(sellingMtn);
     }
 
-    public String getBuyingParticipant() {
-        return target().getBuyingParticipant();
+    public String getBuyingParticipantName() {
+        return target().getBuyingParticipantName();
     }
 
-    public void setBuyingParticipant(String buyingParticipant) {
-        target().setBuyingParticipant(buyingParticipant);
+    public void setBuyingParticipantName(String buyingParticipantName) {
+        target().setBuyingParticipantName(buyingParticipantName);
+    }
+
+    public String getBuyingParticipantShortName() {
+        return target().getBuyingParticipantShortName();
+    }
+
+    public void setBuyingParticipantShortName(String buyingParticipantShortName) {
+        target().setBuyingParticipantShortName(buyingParticipantShortName);
     }
 
     public String getSellingParticipantName() {

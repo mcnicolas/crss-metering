@@ -222,13 +222,13 @@ public class JdbcBcqDao implements BcqDao {
                 PreparedStatement ps = con.prepareStatement(updateHeader);
                 ps.setLong(1, fileId);
                 ps.setString(2, header.getSellingMtn());
-                ps.setString(3, header.getBuyingParticipant());
+                ps.setString(3, header.getBuyingParticipantShortName());
                 ps.setTimestamp(4, new Timestamp(header.getTradingDate().getTime()));
 
                 return ps;
             });
 
-            return getHeaderIdBy(header.getSellingMtn(), header.getBuyingParticipant(), header.getTradingDate());
+            return getHeaderIdBy(header.getSellingMtn(), header.getBuyingParticipantShortName(), header.getTradingDate());
         } else {
             KeyHolder keyHolder = new GeneratedKeyHolder();
             log.debug("New header, doing an insert.");
@@ -237,11 +237,12 @@ public class JdbcBcqDao implements BcqDao {
                 PreparedStatement ps = con.prepareStatement(insertHeader, new String[]{"bcq_header_id"});
                 ps.setLong(1, fileId);
                 ps.setString(2, header.getSellingMtn());
-                ps.setString(3, header.getBuyingParticipant());
-                ps.setString(4, header.getSellingParticipantName());
-                ps.setString(5, header.getSellingParticipantShortName());
-                ps.setString(6, header.getStatus().toString());
-                ps.setTimestamp(7, new Timestamp(header.getTradingDate().getTime()));
+                ps.setString(3, header.getBuyingParticipantName());
+                ps.setString(4, header.getBuyingParticipantShortName());
+                ps.setString(5, header.getSellingParticipantName());
+                ps.setString(6, header.getSellingParticipantShortName());
+                ps.setString(7, header.getStatus().toString());
+                ps.setTimestamp(8, new Timestamp(header.getTradingDate().getTime()));
 
                 return ps;
             }, keyHolder);
@@ -254,16 +255,16 @@ public class JdbcBcqDao implements BcqDao {
         return jdbcTemplate.queryForObject(countHeader,
                 new Object[] {
                         header.getSellingMtn(),
-                        header.getBuyingParticipant(),
+                        header.getBuyingParticipantShortName(),
                         header.getTradingDate()
         }, Integer.class) > 0;
     }
 
-    private long getHeaderIdBy(String sellingMtn, String buyingParticipant, Date tradingDate) {
+    private long getHeaderIdBy(String sellingMtn, String buyingParticipantShortName, Date tradingDate) {
         return jdbcTemplate.queryForObject(selectHeaderId,
                 new Object[] {
                         sellingMtn,
-                        buyingParticipant,
+                        buyingParticipantShortName,
                         tradingDate
                 }, Long.class);
     }
@@ -290,10 +291,6 @@ public class JdbcBcqDao implements BcqDao {
                 Integer.class);
     }
 
-
-
-
-
     private class BcqHeaderRowMapper implements RowMapper<BcqHeader> {
 
         @Override
@@ -302,10 +299,11 @@ public class JdbcBcqDao implements BcqDao {
             BcqUploadFile uploadFile = new BcqUploadFile();
 
             header.setHeaderId(rs.getLong("bcq_header_id"));
+            header.setBuyingParticipantName(rs.getString("buying_participant_name"));
+            header.setBuyingParticipantShortName(rs.getString("buying_participant_short_name"));
             header.setSellingParticipantName(rs.getString("selling_participant_name"));
             header.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
             header.setSellingMtn(rs.getString("selling_mtn"));
-            header.setBuyingParticipant(rs.getString("buying_participant"));
             header.setTradingDate(rs.getDate("trading_date"));
             header.setUpdatedVia("");
             header.setStatus(BcqStatus.fromString(rs.getString("status")));

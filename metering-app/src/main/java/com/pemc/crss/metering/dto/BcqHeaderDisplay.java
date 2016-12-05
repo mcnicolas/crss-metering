@@ -19,16 +19,20 @@ public class BcqHeaderDisplay extends AbstractWebDto<BcqHeader> {
         return target().getSellingParticipantName();
     }
 
+    public String getBuyingParticipantName() {
+        return target().getBuyingParticipantName();
+    }
+
+    public String getBuyingParticipantShortName() {
+        return target().getBuyingParticipantShortName();
+    }
+
     public String getSellingParticipantShortName() {
         return target().getSellingParticipantShortName();
     }
 
     public String getSellingMtn() {
         return target().getSellingMtn();
-    }
-
-    public String getBuyingParticipant() {
-        return target().getBuyingParticipant();
     }
 
     public Date getTradingDate() {

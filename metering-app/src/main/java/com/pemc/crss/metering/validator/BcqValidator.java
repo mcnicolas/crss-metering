@@ -114,7 +114,7 @@ public class BcqValidator {//TODO Cleanup
         Date tradingDate = getAndValidateDate(line.get(3));
 
         header.setSellingMtn(sellingMtn);
-        header.setBuyingParticipant(buyingParticipant);
+        header.setBuyingParticipantShortName(buyingParticipant);
         header.setTradingDate(tradingDate);
 
         if (!uniqueDataSet.add(sellingMtn + "," + buyingParticipant + "," + tradingDate)) {
@@ -122,7 +122,7 @@ public class BcqValidator {//TODO Cleanup
                     String.format(DUPLICATE_DATE.getErrorMessage(),
                             header.getTradingDate(),
                             header.getSellingMtn(),
-                            header.getBuyingParticipant()));
+                            header.getBuyingParticipantShortName()));
         }
 
         header.setTradingDate(getAndValidateTradingDate(header.getTradingDate()));
@@ -246,7 +246,7 @@ public class BcqValidator {//TODO Cleanup
                     String.format(INCOMPLETE_ENTRIES.getErrorMessage(),
                             formatAndGetDate(header.getTradingDate(), false),
                             header.getSellingMtn(),
-                            header.getBuyingParticipant(),
+                            header.getBuyingParticipantShortName(),
                             validBcqSize));
         }
     }

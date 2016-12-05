@@ -13,7 +13,8 @@ public class BcqHeader {
     private long headerId;
     private long fileId;
     private String sellingMtn;
-    private String buyingParticipant;
+    private String buyingParticipantName;
+    private String buyingParticipantShortName;
     private String sellingParticipantName;
     private String sellingParticipantShortName;
     private BcqStatus status;
@@ -36,7 +37,8 @@ public class BcqHeader {
         return Objects.equals(headerId, that.headerId)
                 && Objects.equals(fileId, that.fileId)
                 && Objects.equals(sellingMtn, that.sellingMtn)
-                && Objects.equals(buyingParticipant, that.buyingParticipant)
+                && Objects.equals(buyingParticipantName, that.buyingParticipantName)
+                && Objects.equals(buyingParticipantShortName, that.buyingParticipantShortName)
                 && Objects.equals(sellingParticipantName, that.sellingParticipantName)
                 && Objects.equals(sellingParticipantShortName, that.sellingParticipantShortName)
                 && Objects.equals(status, that.status)
@@ -45,7 +47,7 @@ public class BcqHeader {
 
     @Override
     public int hashCode() {
-        return Objects.hash(headerId, fileId, sellingMtn, buyingParticipant, sellingParticipantName,
-                sellingParticipantShortName, status, tradingDate);
+        return Objects.hash(headerId, fileId, sellingMtn, buyingParticipantName, buyingParticipantShortName,
+                sellingParticipantName, sellingParticipantShortName, status, tradingDate);
     }
 }
