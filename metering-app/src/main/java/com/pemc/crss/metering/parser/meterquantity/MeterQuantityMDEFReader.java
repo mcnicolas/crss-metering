@@ -155,7 +155,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
         meterDataDetails.sort(Comparator.comparing(MeterDataDetail::getReadingDateTime));
 
         MeterData retVal = new MeterData();
-        retVal.setMeterDataDetails(meterDataDetails);
+        retVal.setDetails(meterDataDetails);
 
         return retVal;
     }

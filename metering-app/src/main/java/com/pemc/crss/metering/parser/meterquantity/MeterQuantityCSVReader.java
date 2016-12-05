@@ -41,8 +41,8 @@ public class MeterQuantityCSVReader implements QuantityReader {
                 meterDataDetails.add(populateBean(row));
             }
 
-            meterData.setMeterDataHeader(header);
-            meterData.setMeterDataDetails(meterDataDetails);
+            meterData.setHeader(header);
+            meterData.setDetails(meterDataDetails);
         }
 
         return meterData;

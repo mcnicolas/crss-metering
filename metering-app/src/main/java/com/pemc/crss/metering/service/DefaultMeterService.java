@@ -68,7 +68,7 @@ public class DefaultMeterService implements MeterService {
         MeterData meterData = new MeterData();
         try {
             meterData = meterQuantityParser.parse(fileManifest.getFileType(), fileContent);
-            log.debug("Finished parsing MQ data for {} records", meterData.getMeterDataDetails().size());
+            log.debug("Finished parsing MQ data for {} records", meterData.getDetails().size());
 
             validationResult.setStatus(ACCEPTED);
             validationResult.setErrorDetail("");
@@ -86,7 +86,7 @@ public class DefaultMeterService implements MeterService {
                     validationResult.getStatus(), validationResult.getErrorDetail());
 
             // Save meter data
-            saveMeterData(fileManifest, meterData.getMeterDataDetails());
+            saveMeterData(fileManifest, meterData.getDetails());
         }
 
         // Update manifest

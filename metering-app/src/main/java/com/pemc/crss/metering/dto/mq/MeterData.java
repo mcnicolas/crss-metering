@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class MeterData {
 
-    private MeterDataHeader meterDataHeader;
-    private List<MeterDataDetail> meterDataDetails;
+    private MeterDataHeader header;
+    private List<MeterDataDetail> details;
 
 }

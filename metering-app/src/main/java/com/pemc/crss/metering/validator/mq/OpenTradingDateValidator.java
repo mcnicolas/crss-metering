@@ -32,7 +32,7 @@ public class OpenTradingDateValidator implements Validator {
         if (fileManifest.getUploadType() == DAILY) {
             Date now = new Date();
 
-            List<MeterDataDetail> meterDataDetails = meterData.getMeterDataDetails();
+            List<MeterDataDetail> meterDataDetails = meterData.getDetails();
 
             for (MeterDataDetail meterDataDetail : meterDataDetails) {
                 Date readingDateTime = meterDataDetail.getReadingDateTime();

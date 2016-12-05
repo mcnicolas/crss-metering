@@ -24,7 +24,7 @@ public class MeterQuantityMDEFReaderTest {
                         new File(MeterQuantityMDEFReaderTest.class.getClassLoader().getResource(
                                 "meterdata/daily/Luzon/DT030365.MDE").getFile())));
 
-        assertThat(meterData.getMeterDataDetails().size(), is(equalTo(1090)));
+        assertThat(meterData.getDetails().size(), is(equalTo(1090)));
     }
 
 }

@@ -22,7 +22,7 @@ public class MeterQuantityExcelReaderTest {
                 new File(MeterQuantityExcelReaderTest.class.getClassLoader().getResource(
                         "meterdata/xls/MF3MABAMSUZ01.xls").getFile())));
 
-        assertThat(meterData.getMeterDataDetails().size(), is(equalTo(2976)));
+        assertThat(meterData.getDetails().size(), is(equalTo(2976)));
     }
 
     @Test
@@ -32,7 +32,7 @@ public class MeterQuantityExcelReaderTest {
                 new File(MeterQuantityExcelReaderTest.class.getClassLoader().getResource(
                         "meterdata/xls/MF3MABAMSUZ01.xls").getFile())));
 
-        assertThat(meterData.getMeterDataDetails().size(), is(equalTo(2976)));
+        assertThat(meterData.getDetails().size(), is(equalTo(2976)));
     }
 
 }

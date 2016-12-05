@@ -22,7 +22,7 @@ public class MeterQuantityCSVReaderTest {
                 new File(MeterQuantityCSVReaderTest.class.getClassLoader().getResource(
                         "meterdata/csv/MF3MABAMSUZ01.csv").getFile())));
 
-        assertThat(meterData.getMeterDataDetails().size(), is(equalTo(2976)));
+        assertThat(meterData.getDetails().size(), is(equalTo(2976)));
     }
 
     @Test
@@ -32,7 +32,7 @@ public class MeterQuantityCSVReaderTest {
                 new File(MeterQuantityCSVReaderTest.class.getClassLoader().getResource(
                         "meterdata/csv/MET_CEDCMSP_R3MEXCEDC01TNSC01_20161003.csv").getFile())));
 
-        assertThat(meterData.getMeterDataDetails().size(), is(equalTo(96)));
+        assertThat(meterData.getDetails().size(), is(equalTo(96)));
     }
 
 }

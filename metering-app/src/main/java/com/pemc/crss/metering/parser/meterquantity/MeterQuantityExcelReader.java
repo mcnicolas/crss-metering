@@ -80,8 +80,8 @@ public class MeterQuantityExcelReader implements QuantityReader {
             meterDataList.add(meterData);
         }
 
-        retVal.setMeterDataHeader(header);
-        retVal.setMeterDataDetails(meterDataList);
+        retVal.setHeader(header);
+        retVal.setDetails(meterDataList);
 
         return retVal;
     }

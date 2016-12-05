@@ -39,7 +39,7 @@ public class ColumnHeaderValidator implements Validator {
         ValidationResult retVal = new ValidationResult();
 
         if (fileManifest.getFileType() == XLS || fileManifest.getFileType() == CSV) {
-            MeterDataHeader header = meterData.getMeterDataHeader();
+            MeterDataHeader header = meterData.getHeader();
 
             retVal = checkRequiredColumns(header.getColumnNames());
 
