@@ -1,6 +1,9 @@
 package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
+import com.pemc.crss.metering.constants.BcqNotificationType;
+import com.pemc.crss.metering.constants.BcqStatus;
+import com.pemc.crss.metering.constants.BcqUploadEventCode;
 import com.pemc.crss.metering.dao.BcqDao;
 import com.pemc.crss.metering.dto.BcqData;
 import com.pemc.crss.metering.dto.BcqHeader;
@@ -20,8 +23,7 @@ import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqNotificationRecipient.BUYER;
 import static com.pemc.crss.metering.constants.BcqNotificationRecipient.SELLER;
-import static com.pemc.crss.metering.constants.BcqNotificationType.CANCEL;
-import static com.pemc.crss.metering.constants.BcqNotificationType.SUBMIT;
+import static com.pemc.crss.metering.constants.BcqNotificationType.*;
 import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.BcqUploadEventCode.*;
 
@@ -96,20 +98,25 @@ public class BcqServiceImpl implements BcqService {
         String tradingDate = dateFormat.format(updateStatusDetails.getTradingDate());
 
         payload.put("headerId", headerId);
-        payload.put("buyerId", updateStatusDetails.getBuyerId());
         payload.put("respondedDate", respondedDate);
         payload.put("tradingDate", tradingDate);
 
-        if (updateStatusDetails.getStatus() == CANCELLED) {
+        BcqUploadEvent event = null;
+        BcqStatus status = updateStatusDetails.getStatus();
+        if (status == CANCELLED) {
+            payload.put("buyerId", updateStatusDetails.getBuyerId());
             payload.put("sellerName", updateStatusDetails.getSellerName());
             payload.put("sellerShortName", updateStatusDetails.getSellerShortName());
-            BcqUploadEvent event = new BcqUploadEvent(payload, NTF_BCQ_CANCEL_BUYER, CANCEL, BUYER);
-            eventPublisher.publishEvent(event);
-        } else if (updateStatusDetails.getStatus() == CONFIRMED || updateStatusDetails.getStatus() == NULLIFIED) {
+            event = new BcqUploadEvent(payload, NTF_BCQ_CANCEL_BUYER, CANCEL, BUYER);
+        } else if (status == CONFIRMED || status == NULLIFIED) {
             payload.put("sellerId", updateStatusDetails.getSellerId());
             payload.put("buyerName", updateStatusDetails.getBuyerName());
             payload.put("buyerShortName", updateStatusDetails.getBuyerShortName());
+            BcqUploadEventCode code = status == CONFIRMED ? NTF_BCQ_CONFIRM_SELLER : NTF_BCQ_NULLIFY_SELLER;
+            BcqNotificationType type = status == CONFIRMED ? CONFIRM : NULLIFY;
+            event = new BcqUploadEvent(payload, code, type, SELLER);
         }
+        eventPublisher.publishEvent(event);
 
         bcqDao.updateHeaderStatus(headerId, updateStatusDetails.getStatus());
     }

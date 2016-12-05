@@ -5,5 +5,7 @@ public enum BcqNotificationType {
     SUBMIT,
     VALIDATION,
     CANCEL,
+    CONFIRM,
+    NULLIFY
 
 }

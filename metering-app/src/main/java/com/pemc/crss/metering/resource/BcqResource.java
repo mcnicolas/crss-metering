@@ -100,7 +100,6 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
     @PostMapping("/{headerId}/status")
     public void saveData(@PathVariable long headerId, @RequestBody BcqUpdateStatusDetails updateStatusDetails) {
         bcqService.updateHeaderStatus(headerId, updateStatusDetails);
-        log.debug("RECIPIENTS: {}", updateStatusDetails.getBuyerId());
     }
 
     @PostMapping("/validation-error")

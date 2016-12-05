@@ -16,6 +16,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.pemc.crss.metering.constants.BcqNotificationRecipient.*;
+import static com.pemc.crss.metering.constants.BcqNotificationType.CANCEL;
+import static com.pemc.crss.metering.constants.BcqNotificationType.CONFIRM;
+import static com.pemc.crss.metering.constants.BcqNotificationType.NULLIFY;
 
 @Slf4j
 @Component
@@ -78,6 +81,12 @@ public class BcqUploadEventListener implements ApplicationListener<BcqUploadEven
 
         Map<String, Object> payload = new HashMap<>();
 
+        if (type == CANCEL || type == CONFIRM || type == NULLIFY) {
+            payload.put("tradingDate", source.get("tradingDate"));
+            payload.put("respondedDate", source.get("respondedDate"));
+            payload.put("headerId", source.get("headerId"));
+        }
+
         switch (type) {
             case SUBMIT:
                 payload.put("submittedDate", source.get("submittedDate"));
@@ -100,11 +109,14 @@ public class BcqUploadEventListener implements ApplicationListener<BcqUploadEven
                 }
                 break;
             case CANCEL:
-                payload.put("tradingDate", source.get("tradingDate"));
-                payload.put("respondedDate", source.get("respondedDate"));
                 payload.put("sellerName", source.get("sellerName"));
                 payload.put("sellerShortName", source.get("sellerShortName"));
-                payload.put("headerId", source.get("headerId"));
+                break;
+            case CONFIRM:
+            case NULLIFY:
+                payload.put("buyerName", source.get("buyerName"));
+                payload.put("buyerShortName", source.get("buyerShortName"));
+                break;
         }
 
         return payload;
