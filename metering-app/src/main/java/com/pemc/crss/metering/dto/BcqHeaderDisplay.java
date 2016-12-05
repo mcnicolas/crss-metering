@@ -39,6 +39,10 @@ public class BcqHeaderDisplay extends AbstractWebDto<BcqHeader> {
         return target().getTradingDate();
     }
 
+    public Date getDeadlineDate() {
+        return target().getDeadlineDate();
+    }
+
     public String getTransactionID() {
         return target().getUploadFile().getTransactionID();
     }

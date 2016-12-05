@@ -19,6 +19,7 @@ public class BcqHeader {
     private String sellingParticipantShortName;
     private BcqStatus status;
     private Date tradingDate;
+    private Date deadlineDate;
     private String updatedVia;
     private BcqUploadFile uploadFile;
     private List<BcqData> dataList;
@@ -42,12 +43,13 @@ public class BcqHeader {
                 && Objects.equals(sellingParticipantName, that.sellingParticipantName)
                 && Objects.equals(sellingParticipantShortName, that.sellingParticipantShortName)
                 && Objects.equals(status, that.status)
-                && Objects.equals(tradingDate, that.tradingDate);
+                && Objects.equals(tradingDate, that.tradingDate)
+                && Objects.equals(deadlineDate, that.deadlineDate);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(headerId, fileId, sellingMtn, buyingParticipantName, buyingParticipantShortName,
-                sellingParticipantName, sellingParticipantShortName, status, tradingDate);
+                sellingParticipantName, sellingParticipantShortName, status, tradingDate, deadlineDate);
     }
 }

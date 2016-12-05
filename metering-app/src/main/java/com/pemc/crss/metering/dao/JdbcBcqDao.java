@@ -2,7 +2,9 @@ package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
-import com.pemc.crss.metering.dto.*;
+import com.pemc.crss.metering.dto.BcqData;
+import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.BcqUploadFile;
 import com.pemc.crss.metering.parser.bcq.util.BCQParserUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Repository
 @Slf4j
@@ -230,6 +233,9 @@ public class JdbcBcqDao implements BcqDao {
 
             return getHeaderIdBy(header.getSellingMtn(), header.getBuyingParticipantShortName(), header.getTradingDate());
         } else {
+            Timestamp deadlineDateTimestamp = new Timestamp(header.getTradingDate().getTime() +
+                    TimeUnit.HOURS.toMillis(47) + TimeUnit.MINUTES.toMillis(59));
+
             KeyHolder keyHolder = new GeneratedKeyHolder();
             log.debug("New header, doing an insert.");
 
@@ -243,6 +249,7 @@ public class JdbcBcqDao implements BcqDao {
                 ps.setString(6, header.getSellingParticipantShortName());
                 ps.setString(7, header.getStatus().toString());
                 ps.setTimestamp(8, new Timestamp(header.getTradingDate().getTime()));
+                ps.setTimestamp(9, deadlineDateTimestamp);
 
                 return ps;
             }, keyHolder);
