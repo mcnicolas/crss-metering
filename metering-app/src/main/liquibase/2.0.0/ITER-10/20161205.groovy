@@ -14,4 +14,10 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
         }
     }
 
+    changeSet(id: "${REL}_${ITER}_${FILE}_02", author: 'jlapugot', failOnError: true) {
+        addColumn(tableName: 'txn_bcq_header') {
+            column(name: 'deadline_date', type: 'TIMESTAMP')
+        }
+    }
+
 }
