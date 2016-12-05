@@ -1,6 +1,5 @@
 package com.pemc.crss.metering.dto;
 
-import com.pemc.crss.metering.constants.BcqStatus;
 import lombok.Data;
 
 import java.util.Date;
