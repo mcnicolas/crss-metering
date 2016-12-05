@@ -310,7 +310,7 @@ public class JdbcBcqDao implements BcqDao {
             header.setUpdatedVia("");
             header.setStatus(BcqStatus.fromString(rs.getString("status")));
             uploadFile.setTransactionID(rs.getString("transaction_id"));
-            uploadFile.setSubmittedDate(rs.getDate("submitted_date"));
+            uploadFile.setSubmittedDate(rs.getTimestamp("submitted_date"));
             header.setUploadFile(uploadFile);
 
             return header;
