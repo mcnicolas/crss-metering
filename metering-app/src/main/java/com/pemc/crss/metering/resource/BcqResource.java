@@ -26,6 +26,7 @@ import static com.pemc.crss.metering.constants.BcqNotificationRecipient.SELLER;
 import static com.pemc.crss.metering.constants.BcqNotificationType.VALIDATION;
 import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_VALIDATION_DEPT;
 import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_VALIDATION_SELLER;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @Slf4j
 @RestController
@@ -52,6 +53,11 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
         return new DataTableResponse<BcqHeaderDisplay>()
                 .withData(headerDisplayList)
                 .withRecordsTotal(headerPage.getTotalElements());
+    }
+
+    @PostMapping(value = "/uploadFile", consumes = MULTIPART_FORM_DATA_VALUE)
+    public String uploadFile(@RequestParam("file") MultipartFile file) {
+        return "";
     }
 
     @PostMapping("/upload")
