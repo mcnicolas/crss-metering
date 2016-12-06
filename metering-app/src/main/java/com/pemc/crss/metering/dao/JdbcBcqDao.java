@@ -312,7 +312,7 @@ public class JdbcBcqDao implements BcqDao {
             header.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
             header.setSellingMtn(rs.getString("selling_mtn"));
             header.setTradingDate(rs.getDate("trading_date"));
-            header.setDeadlineDate(rs.getDate("deadline_date"));
+            header.setDeadlineDate(rs.getTimestamp("deadline_date"));
             header.setUpdatedVia("");
             header.setStatus(BcqStatus.fromString(rs.getString("status")));
             uploadFile.setTransactionID(rs.getString("transaction_id"));
