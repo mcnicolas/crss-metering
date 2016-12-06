@@ -3,6 +3,7 @@ package com.pemc.crss.metering.dao;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.mq.FileManifest;
+import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.validator.ValidationResult;
 
@@ -23,4 +24,9 @@ public interface MeteringDao {
     void saveMeterData(FileManifest fileManifest, List<MeterDataDetail> meterDataDetails);
 
     void updateManifestStatus(ValidationResult validationResult);
+
+    HeaderManifest getHeaderManifest(String transactionID);
+
+    List<FileManifest> getFileManifest(String transactionID);
+
 }

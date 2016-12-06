@@ -3,17 +3,20 @@ package com.pemc.crss.metering.dao;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.mq.FileManifest;
+import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.validator.ValidationResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
@@ -22,6 +25,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,14 +39,20 @@ public class JdbcMeteringDao implements MeteringDao {
 
     private final DateFormat readingDateFormat = new SimpleDateFormat("yyyyMMddHHmm");
 
-    @Value("${mq.manifest.header}")
+    @Value("${mq.manifest.header.insert}")
     private String insertHeaderManifest;
+
+    @Value("${mq.manifest.header.query}")
+    private String queryHeaderManifest;
 
     @Value("${mq.manifest.trailer}")
     private String addTrailerManifest;
 
-    @Value("${mq.manifest.file}")
+    @Value("${mq.manifest.file.insert}")
     private String insertFileManifest;
+
+    @Value("${mq.manifest.file.query}")
+    private String queryFileManifest;
 
     @Value("${mq.meter.daily}")
     private String insertDailyMQ;
@@ -343,6 +353,24 @@ public class JdbcMeteringDao implements MeteringDao {
 
         int affectedRows = namedParameterJdbcTemplate.update(updateManifestStatus, paramSource);
         log.debug("Finished updating manifest file fileID:{} affectedRows:{}", validationResult.getFileID(), affectedRows);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public HeaderManifest getHeaderManifest(String transactionID) {
+        Map<String, String> paramMap = new HashMap<>();
+        paramMap.put("txnID", transactionID);
+
+        return namedParameterJdbcTemplate.queryForObject(queryHeaderManifest, paramMap, new BeanPropertyRowMapper<>(HeaderManifest.class));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FileManifest> getFileManifest(String transactionID) {
+        Map<String, String> paramMap = new HashMap<>();
+        paramMap.put("txnID", transactionID);
+
+        return namedParameterJdbcTemplate.query(queryFileManifest, paramMap, new BeanPropertyRowMapper<>(FileManifest.class));
     }
 
 }

@@ -1,16 +1,12 @@
 package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.metering.constants.UploadType;
-import com.pemc.crss.metering.dto.mq.FileManifest;
-import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,12 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.springframework.http.HttpStatus.OK;
 
 @Slf4j
 @RestController
@@ -33,13 +23,11 @@ public class MeteringResource {
 
     private final MeterService meterService;
     private final RabbitTemplate rabbitTemplate;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public MeteringResource(MeterService meterService, RabbitTemplate rabbitTemplate, ApplicationEventPublisher eventPublisher) {
+    public MeteringResource(MeterService meterService, RabbitTemplate rabbitTemplate) {
         this.meterService = meterService;
         this.rabbitTemplate = rabbitTemplate;
-        this.eventPublisher = eventPublisher;
     }
 
     @PostMapping("/uploadheader")
@@ -90,53 +78,6 @@ public class MeteringResource {
         log.debug("Received trailer record txnID:{}", transactionID);
 
         meterService.saveTrailer(transactionID);
-
-        // TODO: Trigger notification event to list down accepted and rejected files based on validation
-//        eventPublisher.publishEvent(new MeterUploadEvent(messagePayload));
-    }
-
-    @Deprecated // Change in impl
-    @PostMapping("/upload")
-    public ResponseEntity<String> uploadMeterData(MultipartHttpServletRequest request,
-                                                  @RequestParam("uploadType") String uploadType,
-                                                  @RequestParam("noOfUploadedFiles") int noOfUploadedFiles) throws IOException {
-
-        Map<String, Object> messagePayload = new HashMap<>();
-        List<String> uploadedFiles = new ArrayList<>();
-
-        messagePayload.put("noOfUploadedFiles", noOfUploadedFiles);
-
-        header(noOfUploadedFiles);
-
-        Map<String, MultipartFile> fileMap = request.getFileMap();
-
-        for (MultipartFile file : fileMap.values()) {
-            log.debug("RABBIT - Send file: " + file.getOriginalFilename());
-
-            Message message = MessageBuilder.withBody(file.getBytes())
-                    .setHeader("File name", file.getOriginalFilename())
-                    .setHeader("Content type", file.getContentType()).build();
-
-            rabbitTemplate.send(message);
-
-            uploadedFiles.add(file.getOriginalFilename());
-        }
-
-        messagePayload.put("uploadedFiles", uploadedFiles);
-
-        trailer(messagePayload);
-
-        return new ResponseEntity<>("Successfully parsed", OK);
-    }
-
-    @Deprecated // Change in impl
-    private void header(int noOfUploadedFiles) {
-        log.debug("HEADER - Number of uploaded files: " + noOfUploadedFiles);
-    }
-
-    @Deprecated // Change in impl
-    private void trailer(Map<String, Object> messagePayload) {
-        eventPublisher.publishEvent(new MeterUploadEvent(messagePayload));
     }
 
 }

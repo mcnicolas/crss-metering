@@ -17,5 +17,9 @@ public class FileManifest {
     private String recvChecksum;
     private String mspShortName;
     private UploadType uploadType;
+    private String uploadDateTime;
+    private String processFlag;
+    private String status;
+    private String errorDetails;
 
 }

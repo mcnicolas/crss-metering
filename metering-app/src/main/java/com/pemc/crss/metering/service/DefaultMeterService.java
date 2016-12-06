@@ -4,23 +4,31 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dao.MeteringDao;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.mq.FileManifest;
+import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.meterquantity.MeterQuantityParser;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.mq.MQValidationHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 @Slf4j
 @Service
@@ -29,12 +37,16 @@ public class DefaultMeterService implements MeterService {
     private final MeteringDao meteringDao;
     private final MeterQuantityParser meterQuantityParser;
     private final MQValidationHandler validationHandler;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public DefaultMeterService(MeteringDao meteringDao, MeterQuantityParser meterQuantityParser, MQValidationHandler validationHandler) {
+    public DefaultMeterService(MeteringDao meteringDao, MeterQuantityParser meterQuantityParser,
+                               MQValidationHandler validationHandler, ApplicationEventPublisher eventPublisher) {
+
         this.meteringDao = meteringDao;
         this.meterQuantityParser = meterQuantityParser;
         this.validationHandler = validationHandler;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -93,9 +105,29 @@ public class DefaultMeterService implements MeterService {
         validationResult.setFileID(fileManifest.getFileID());
         meteringDao.updateManifestStatus(validationResult);
 
-        // TODO: Check for completed records
-        // 1. Completed records should be sent via email detailing the files with accept/reject status
-        // 2. Find a way to make this efficient
+        sendNotification(fileManifest.getTransactionID());
+    }
+
+    private void sendNotification(String transactionID) {
+        HeaderManifest header = meteringDao.getHeaderManifest(transactionID);
+        List<FileManifest> fileList = meteringDao.getFileManifest(transactionID);
+
+        if (isTransactionComplete(header, fileList)) {
+            Map<String, Object> messagePayload = new HashMap<>();
+
+            messagePayload.put("uploadedFiles", fileList);
+            eventPublisher.publishEvent(new MeterUploadEvent(messagePayload));
+        }
+    }
+
+    private boolean isTransactionComplete(HeaderManifest header, List<FileManifest> fileList) {
+        for (FileManifest fileManifest : fileList) {
+            if (!equalsIgnoreCase(fileManifest.getProcessFlag(), "Y")) {
+                return false;
+            }
+        }
+
+        return header.getFileCount() == fileList.size();
     }
 
     @Override

@@ -1,11 +1,12 @@
 package com.pemc.crss.metering.listener;
 
 import com.pemc.crss.commons.notification.dto.NotificationDTO;
+import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.event.MeterUploadEvent;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Slf4j
 @Component
@@ -24,20 +27,14 @@ public class MeterUploadEventListener implements ApplicationListener<MeterUpload
 
     private final RabbitTemplate rabbitTemplate;
 
+    @Autowired
     public MeterUploadEventListener(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
         this.rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
     }
 
-    // TODO: Verify if uploaded file is received here...
     @Override
     public final void onApplicationEvent(MeterUploadEvent event) {
-        // TODO:
-        // 1. Determine file type
-        // 2. Determine category
-        // 3. Parse the file based on type
-        // 4. Save file content to the database
-
         log.debug("Event received: type={}", event.getClass());
         NotificationDTO notificationDTO = generateNotification(event);
 
@@ -46,9 +43,9 @@ public class MeterUploadEventListener implements ApplicationListener<MeterUpload
     }
 
     @Async
-    protected void sendNotification(NotificationDTO notification) {
+    private void sendNotification(NotificationDTO notification) {
         log.debug("NOTIFICATION SENT = {}", notification);
-        if (notification != null && StringUtils.isNotBlank(notification.getCode())) {
+        if (notification != null && isNotBlank(notification.getCode())) {
             rabbitTemplate.convertAndSend(EXCHANGE_TOPIC, RK_METERING, notification);
         }
     }
@@ -58,15 +55,13 @@ public class MeterUploadEventListener implements ApplicationListener<MeterUpload
         Map<String, Object> source = (Map<String, Object>) event.getSource();
         Map<String, Object> payload = new HashMap<>();
 
-        int noOfUploadedFiles = (Integer) source.get("noOfUploadedFiles");
-        List<String> uploadedFiles = (List) source.get("uploadedFiles");
+        List<FileManifest> uploadedFiles = (List) source.get("uploadedFiles");
 
-        payload.put("noOfUploadedFiles", noOfUploadedFiles);
+        payload.put("noOfUploadedFiles", uploadedFiles.size());
 
         int count = 1;
-
-        for(String uploadedFile : uploadedFiles) {
-            payload.put("file" + count, uploadedFile);
+        for (FileManifest uploadedFile : uploadedFiles) {
+            payload.put("file" + count, uploadedFile.getFileName());
             count ++;
         }
 
