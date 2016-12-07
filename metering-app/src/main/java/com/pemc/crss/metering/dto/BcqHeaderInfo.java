@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 
 public class BcqHeaderInfo extends AbstractWebDto<BcqHeader> {
 
+    private boolean headerExists;
+
     public BcqHeaderInfo() {
         super(new BcqHeader());
     }
@@ -87,6 +89,14 @@ public class BcqHeaderInfo extends AbstractWebDto<BcqHeader> {
             dataList.add(dataInfo.target());
         });
         target().setDataList(dataList);
+    }
+
+    public boolean isHeaderExists() {
+        return headerExists;
+    }
+
+    public void setHeaderExists(boolean headerExists) {
+        this.headerExists = headerExists;
     }
 
 }
