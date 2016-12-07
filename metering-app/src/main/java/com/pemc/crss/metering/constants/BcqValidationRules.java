@@ -11,6 +11,7 @@ public enum BcqValidationRules {
     INCORRECT_DATA_TYPE("Incorrect data type. %s should be %s."),
     INCORRECT_FORMAT("Incorrect data format. %s should follow the format %s."),
     CLOSED_TRADING_DATE("Trading date is closed. Submission of BCQ is closed for %s."),
+    INVALID_TRADING_DATE("Trading date is invalid. Only one trading date can be accepted per file."),
     MISSING_SELLING_MTN("Missing selling MTN."),
     MISSING_BUYING_PARTICIPANT("Missing buying participant."),
     MISSING_REFERENCE_MTN("Missing reference MTN."),

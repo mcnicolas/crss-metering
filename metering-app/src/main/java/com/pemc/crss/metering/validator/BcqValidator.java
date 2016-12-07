@@ -21,7 +21,7 @@ import static java.math.BigDecimal.ROUND_HALF_UP;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-public class BcqValidator {//TODO Cleanup
+public class BcqValidator {
 
     private final static int VALID_NO_OF_COLUMNS = 5;
 
@@ -41,14 +41,20 @@ public class BcqValidator {//TODO Cleanup
 
         List<BcqHeader> headerList = new ArrayList<>();
 
+        Date currentTradingDate = null;
+
         for (List<String> line : csv.subList(2, csv.size())) {
-            BcqHeader header = getAndValidateBcqHeader(line);
+            BcqHeader header = getAndValidateBcqHeader(line, currentTradingDate);
             List<BcqData> dataList = new ArrayList<>();
+
 
             if (headerList.contains(header)) {
                 header = headerList.get(headerList.indexOf(header));
                 dataList = header.getDataList();
             } else {
+                if (currentTradingDate == null) {
+                    currentTradingDate = header.getTradingDate();
+                }
                 headerList.add(header);
                 header.setDataList(dataList);
             }
@@ -106,7 +112,7 @@ public class BcqValidator {//TODO Cleanup
         return finalizedDataList;
     }
 
-    private BcqHeader getAndValidateBcqHeader(List<String> line) throws ValidationException {
+    private BcqHeader getAndValidateBcqHeader(List<String> line, Date currentTradingDate) throws ValidationException {
         BcqHeader header = new BcqHeader();
 
         String sellingMtn = getAndValidateSellingMtn(line.get(0));
@@ -126,6 +132,11 @@ public class BcqValidator {//TODO Cleanup
         }
 
         header.setTradingDate(getAndValidateTradingDate(header.getTradingDate()));
+
+        if (currentTradingDate != null && !currentTradingDate.equals(header.getTradingDate())) {
+            System.out.println("TRADING DATE: " + currentTradingDate + " " + header.getTradingDate());
+            throw new ValidationException(INVALID_TRADING_DATE.getErrorMessage());
+        }
 
         return header;
     }
