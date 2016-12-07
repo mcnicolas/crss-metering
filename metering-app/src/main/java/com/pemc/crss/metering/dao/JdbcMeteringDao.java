@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
+import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.pemc.crss.metering.constants.UploadType.CORRECTED_DAILY;
 import static com.pemc.crss.metering.constants.UploadType.DAILY;
 import static java.sql.Types.DOUBLE;
 import static java.sql.Types.VARCHAR;
@@ -211,7 +213,12 @@ public class JdbcMeteringDao implements MeteringDao {
     public void saveMeterData(FileManifest fileManifest, List<MeterDataDetail> meterDataDetails) {
         String insertSQL;
 
-        insertSQL = fileManifest.getUploadType() == DAILY ? insertDailyMQ : insertMonthlyMQ;
+        UploadType uploadType = fileManifest.getUploadType();
+        if (uploadType == DAILY || uploadType == CORRECTED_DAILY) {
+            insertSQL = insertDailyMQ;
+        } else {
+            insertSQL = insertMonthlyMQ;
+        }
 
         jdbcTemplate.batchUpdate(insertSQL, meterDataDetails, 50, (ps, meterData) -> {
             ps.setLong(1, fileManifest.getFileID());
