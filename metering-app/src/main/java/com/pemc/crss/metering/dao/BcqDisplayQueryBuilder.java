@@ -123,8 +123,6 @@ public class BcqDisplayQueryBuilder {
         data.setSql(sqlBuilder.toString());
         data.setArguments(arguments.toArray());
 
-        System.out.println("DATA ARGS: " + Arrays.toString(data.getArguments()));
-
         return data;
     }
 
