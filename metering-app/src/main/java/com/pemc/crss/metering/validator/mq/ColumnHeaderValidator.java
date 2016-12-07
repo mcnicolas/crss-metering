@@ -5,7 +5,6 @@ import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataHeader;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -36,7 +35,7 @@ public class ColumnHeaderValidator implements Validator {
 
     @Override
     public ValidationResult validate(FileManifest fileManifest, MeterData meterData) {
-        ValidationResult retVal = new ValidationResult();
+        ValidationResult retVal = ACCEPTED_STATUS;
 
         if (fileManifest.getFileType() == XLS || fileManifest.getFileType() == CSV) {
             MeterDataHeader header = meterData.getHeader();
@@ -51,9 +50,6 @@ public class ColumnHeaderValidator implements Validator {
                 retVal.setErrorDetail("Incorrect Header Names. Column Header Names and Order should be as follows:"
                         +  " SEIL, BDATE, TIME, KW_DEL, KWH_DEL, KVARH_DEL, KW_REC, KWH_REC, KVARH_REC, ESTIMATION_FLAG");
             }
-        } else {
-            retVal.setStatus(ACCEPTED);
-            retVal.setErrorDetail("");
         }
 
         return retVal;
@@ -61,7 +57,7 @@ public class ColumnHeaderValidator implements Validator {
 
     // TODO: Optimize code structure
     private ValidationResult checkRequiredColumns(List<String> columnNames) {
-        ValidationResult retVal = null;
+        ValidationResult retVal = ACCEPTED_STATUS;
 
         for (int i = 0; i < 3; i++) {
             if (!equalsIgnoreCase(columnNames.get(i), COLUMNS[i])) {
@@ -70,26 +66,18 @@ public class ColumnHeaderValidator implements Validator {
             }
         }
 
-        if (retVal == null) {
-            retVal = ACCEPTED_STATUS;
-        }
-
         return retVal;
     }
 
     // TODO: Optimize code structure
     private ValidationResult checkOptionalColumns(List<String> columnNames) {
-        ValidationResult retVal = null;
+        ValidationResult retVal = ACCEPTED_STATUS;
 
         for (int i = 3; i < columnNames.size(); i++) {
             if (!equalsIgnoreCase(columnNames.get(i), COLUMNS[i])) {
                 retVal = REJECTED_STATUS;
                 break;
             }
-        }
-
-        if (retVal == null) {
-            retVal = ACCEPTED_STATUS;
         }
 
         return retVal;

@@ -63,18 +63,10 @@ public class DefaultMeterService implements MeterService {
 
     @Override
     public void processMeterData(FileManifest fileManifest, byte[] fileContent) {
-        // NOTE:
-        // 2. Parse data
-        // 3. Validate data
-        // 4. Save data
-        // 5. check for completed records
-        // 6. Send email
-
         long fileID = saveFileManifest(fileManifest);
         fileManifest.setFileID(fileID);
         log.debug("Saved manifest file fileID:{}", fileID);
 
-        // Parse meter data
         ValidationResult validationResult = new ValidationResult();
 
         MeterData meterData = new MeterData();
@@ -91,17 +83,16 @@ public class DefaultMeterService implements MeterService {
             log.error(e.getMessage(), e);
         }
 
-        // Validate meter data
         if (validationResult.getStatus() == ACCEPTED) {
             validationResult = validationHandler.validate(fileManifest, meterData);
-            log.debug("Finished validating MQ data accept_reject:{} status:{}",
+            log.debug("Finished validating MQ data status:{} errorDetail:{}",
                     validationResult.getStatus(), validationResult.getErrorDetail());
+        }
 
-            // Save meter data
+        if (validationResult.getStatus() == ACCEPTED) {
             saveMeterData(fileManifest, meterData.getDetails());
         }
 
-        // Update manifest
         validationResult.setFileID(fileManifest.getFileID());
         meteringDao.updateManifestStatus(validationResult);
 
