@@ -22,12 +22,7 @@ public class ApplicationLoader {
         // 3. Initialize components
 
         try {
-            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
             Logger.getLogger(MeterDataUploader.class.getName()).log(SEVERE, null, ex);
         }
@@ -42,10 +37,8 @@ public class ApplicationLoader {
         LoginDialog loginDialog = new LoginDialog(dataUploader, true);
         loginDialog.setVisible(true);
 
-        if (loginDialog.getReturnStatus() == RET_OK
-                && dataUploader.login(loginDialog.getUsername(), loginDialog.getPassword())) {
-
-            dataUploader.configureServices();
+        if (loginDialog.getReturnStatus() == RET_OK) {
+            dataUploader.login(loginDialog.getUsername(), loginDialog.getPassword());
         }
     }
 

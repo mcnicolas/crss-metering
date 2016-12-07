@@ -17,7 +17,6 @@ import javax.swing.border.SoftBevelBorder;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
@@ -43,6 +42,8 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static java.awt.GridBagConstraints.WEST;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
@@ -61,6 +62,7 @@ public class MeterDataUploader extends JFrame {
 
     private HttpHandler httpHandler;
     private String username;
+    private String fullName;
     private String userType;
     private ParticipantName participant;
     private Properties properties;
@@ -106,14 +108,16 @@ public class MeterDataUploader extends JFrame {
     }
 
     public void updateTableDisplay(List<FileBean> selectedFiles) {
-        fileCount.setText(String.valueOf(selectedFiles.size()));
+        fileCount1.setText(String.valueOf(selectedFiles.size()));
+        fileCount2.setText(String.valueOf(selectedFiles.size()));
 
         long totalSize = selectedFiles.stream()
                 .map(FileBean::getSize)
                 .mapToLong(Long::longValue)
                 .sum();
 
-        totalFileSize.setText(byteCountToDisplaySize(totalSize));
+        totalFileSize1.setText(byteCountToDisplaySize(totalSize));
+        totalFileSize2.setText(byteCountToDisplaySize(totalSize));
 
         ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "Status");
 
@@ -143,21 +147,21 @@ public class MeterDataUploader extends JFrame {
                 int counter = 0;
 
                 long headerID = httpHandler.sendHeader(transactionID, username, selectedFiles.size(), category);
-                int progressValue = (100 * ++counter)/totalProgress;
+                int progressValue = (100 * ++counter) / totalProgress;
                 setProgress(progressValue);
 
                 for (FileBean selectedFile : selectedFiles) {
                     httpHandler.sendFile(headerID, transactionID, selectedFile, category, mspShortName);
                     publish(selectedFile);
 
-                    progressValue = (100 * ++counter)/totalProgress;
+                    progressValue = (100 * ++counter) / totalProgress;
                     setProgress(progressValue);
 
                     log.debug("Uploading file:{}", selectedFile.getPath().getFileName().toString());
                 }
 
                 httpHandler.sendTrailer(transactionID);
-                progressValue = (100 * ++counter)/totalProgress;
+                progressValue = (100 * ++counter) / totalProgress;
                 setProgress(progressValue);
 
                 return null;
@@ -174,6 +178,8 @@ public class MeterDataUploader extends JFrame {
                     get();
 
                     long elapsedTime = System.currentTimeMillis() - startTime;
+
+                    uploadTimer.stop();
 
                     log.info("Done uploading files. Upload took: {}", formatDurationHMS(elapsedTime));
 
@@ -204,6 +210,8 @@ public class MeterDataUploader extends JFrame {
 
                     showMessageDialog(MeterDataUploader.this, messagePanel, "Upload Complete", INFORMATION_MESSAGE);
                 } catch (InterruptedException | ExecutionException e) {
+                    uploadTimer.stop();
+
                     log.error(e.getMessage(), e);
 
                     String errorMessage = e.getMessage().substring(e.getMessage().indexOf(":")).trim();
@@ -214,8 +222,6 @@ public class MeterDataUploader extends JFrame {
                 }
 
                 headerPanel.readyToUploadToolbar();
-
-                uploadTimer.stop();
             }
         };
 
@@ -228,46 +234,92 @@ public class MeterDataUploader extends JFrame {
         worker.execute();
     }
 
-    public boolean login(String username, String password) {
-        boolean retVal = false;
+    public void login(String username, String password) {
+        SwingWorker<Boolean, String> worker = new SwingWorker<Boolean, String>() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
 
-        // TODO: Use SwingWorker
+                publish("Authenticating " + username);
+                setProgress(10);
 
-        try {
-            httpHandler.login(username, password);
+                httpHandler.login(username, password);
+                setProgress(35);
 
-            List<String> userData = httpHandler.getUserType();
+                publish("Loading user credentials");
+                List<String> userData = httpHandler.getUserType();
+                setProgress(80);
 
-            if (userData.size() > 1 &&
-                    (!equalsIgnoreCase(userData.get(1), "PEMC") && !equalsIgnoreCase(userData.get(1), "MSP"))) {
-                showMessageDialog(this, "Invalid login", "Error", ERROR_MESSAGE);
+                if (userData.size() > 1 &&
+                        (!equalsIgnoreCase(userData.get(1), "PEMC") && !equalsIgnoreCase(userData.get(1), "MSP"))) {
 
-                return false;
+                    return FALSE;
+                }
+
+                MeterDataUploader.this.username = username;
+                fullName = userData.get(0);
+                userType = userData.get(1);
+
+                // TODO: Avoid redundant rest call
+                if (equalsIgnoreCase(userType, "MSP")) {
+                    participant = httpHandler.getParticipant();
+                }
+
+                publish("Loading MSP Listing");
+                configureServices();
+                setProgress(100);
+
+                Thread.sleep(100);
+
+                return TRUE;
             }
 
-            this.username = username;
-
-            userFullName1.setText(userData.get(0));
-            userFullName2.setText(userData.get(0));
-            ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "LoggedIn");
-
-            userType = userData.get(1);
-
-            // TODO: Avoid redundant rest call
-            if (equalsIgnoreCase(userType, "MSP")) {
-                participant = httpHandler.getParticipant();
+            @Override
+            protected void process(List<String> fileBeans) {
+                initializeProgressBar.setString(fileBeans.get(0));
             }
 
-            headerPanel.loggedInToolbar();
+            @Override
+            protected void done() {
+                try {
+                    Boolean retVal = get();
 
-            retVal = true;
-        } catch (LoginException | HttpConnectionException | HttpResponseException e) {
-            log.error(e.getMessage(), e);
+                    if (retVal == FALSE) {
+                        showMessageDialog(MeterDataUploader.this, "Invalid Login", "Login Error",
+                                ERROR_MESSAGE);
 
-            showMessageDialog(this, e.getMessage(), "Error", ERROR_MESSAGE);
-        }
+                        headerPanel.loggedOutToolbar();
+                        ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "blank");
+                    } else {
+                        userFullName1.setText(fullName);
+                        userFullName2.setText(fullName);
+                        userFullName3.setText(fullName);
 
-        return retVal;
+                        ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "LoggedIn");
+
+                        headerPanel.loggedInToolbar();
+                    }
+
+                } catch (InterruptedException | ExecutionException e) {
+                    log.error(e.getMessage(), e);
+
+                    showMessageDialog(MeterDataUploader.this, e.getMessage(), "Login Error", ERROR_MESSAGE);
+
+                    headerPanel.loggedOutToolbar();
+                    ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "blank");
+                }
+            }
+        };
+
+        worker.addPropertyChangeListener(evt -> {
+            if (equalsIgnoreCase(evt.getPropertyName(), "progress")) {
+                initializeProgressBar.setValue((Integer) evt.getNewValue());
+            }
+        });
+
+        ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "Initialize");
+        headerPanel.disableAllToolbar();
+
+        worker.execute();
     }
 
     public void logout() {
@@ -354,28 +406,29 @@ public class MeterDataUploader extends JFrame {
         lblUser1 = new JLabel();
         userFullName1 = new JLabel();
         statusPanel = new JPanel();
-        centerStatusPanel2 = new JPanel();
         fileStatsPanel = new JPanel();
-        lblTotalFileSize = new JLabel();
-        totalFileSize = new JLabel();
-        lblFileCount = new JLabel();
-        fileCount = new JLabel();
+        lblTotalFileSize1 = new JLabel();
+        totalFileSize1 = new JLabel();
+        lblFileCount1 = new JLabel();
+        fileCount1 = new JLabel();
+        centerBlankPanel = new JPanel();
         userStatusPanel2 = new JPanel();
         lblUser2 = new JLabel();
         userFullName2 = new JLabel();
         uploadProgressPanel = new JPanel();
-        leftUploadPanel = new JPanel();
-        lblTime = new JLabel();
-        uploadTimerValue = new JLabel();
+        fileStatsPanel1 = new JPanel();
+        lblTotalFileSize2 = new JLabel();
+        totalFileSize2 = new JLabel();
+        lblFileCount2 = new JLabel();
+        fileCount2 = new JLabel();
         centerUploadPanel = new JPanel();
         uploadProgressBar = new JProgressBar();
-        rightUploadPanel = new JPanel();
-        lblUploadSpeed = new JLabel();
-        uploadSpeed = new JLabel();
-        lblTimeRemaining = new JLabel();
-        timeRemaining = new JLabel();
+        lblTime = new JLabel();
+        uploadTimerValue = new JLabel();
+        userStatusPanel3 = new JPanel();
+        lblUser3 = new JLabel();
+        userFullName3 = new JLabel();
         initializeProgressPanel = new JPanel();
-        lblUploadStatus = new JLabel();
         initializeProgressBar = new JProgressBar();
 
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -419,42 +472,41 @@ public class MeterDataUploader extends JFrame {
 
         statusPanel.setLayout(new BorderLayout());
 
-        centerStatusPanel2.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
-        centerStatusPanel2.setLayout(new BorderLayout());
-
+        fileStatsPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
         fileStatsPanel.setLayout(new GridBagLayout());
 
-        lblTotalFileSize.setText("Total Size:");
+        lblTotalFileSize1.setText("Total Size:");
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new Insets(0, 5, 0, 0);
-        fileStatsPanel.add(lblTotalFileSize, gridBagConstraints);
+        fileStatsPanel.add(lblTotalFileSize1, gridBagConstraints);
 
-        totalFileSize.setText("50 MB");
+        totalFileSize1.setText("50 MB");
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new Insets(0, 5, 0, 15);
-        fileStatsPanel.add(totalFileSize, gridBagConstraints);
+        fileStatsPanel.add(totalFileSize1, gridBagConstraints);
 
-        lblFileCount.setText("File Count:");
+        lblFileCount1.setText("File Count:");
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new Insets(0, 5, 0, 0);
-        fileStatsPanel.add(lblFileCount, gridBagConstraints);
+        fileStatsPanel.add(lblFileCount1, gridBagConstraints);
 
-        fileCount.setText("100");
+        fileCount1.setText("100");
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 3;
         gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new Insets(0, 5, 0, 0);
-        fileStatsPanel.add(fileCount, gridBagConstraints);
+        gridBagConstraints.insets = new Insets(0, 5, 0, 5);
+        fileStatsPanel.add(fileCount1, gridBagConstraints);
 
-        centerStatusPanel2.add(fileStatsPanel, BorderLayout.WEST);
+        statusPanel.add(fileStatsPanel, BorderLayout.WEST);
 
-        statusPanel.add(centerStatusPanel2, BorderLayout.CENTER);
+        centerBlankPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
+        statusPanel.add(centerBlankPanel, BorderLayout.CENTER);
 
         userStatusPanel2.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
 
@@ -473,27 +525,46 @@ public class MeterDataUploader extends JFrame {
 
         uploadProgressPanel.setLayout(new BorderLayout());
 
-        leftUploadPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
+        fileStatsPanel1.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
+        fileStatsPanel1.setLayout(new GridBagLayout());
 
-        lblTime.setText("Time:");
-        leftUploadPanel.add(lblTime);
+        lblTotalFileSize2.setText("Total Size:");
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new Insets(0, 5, 0, 0);
+        fileStatsPanel1.add(lblTotalFileSize2, gridBagConstraints);
 
-        uploadTimerValue.setHorizontalAlignment(SwingConstants.RIGHT);
-        uploadTimerValue.setText("00:00");
-        uploadTimerValue.setMaximumSize(new Dimension(40, 16));
-        uploadTimerValue.setMinimumSize(new Dimension(40, 16));
-        uploadTimerValue.setPreferredSize(new Dimension(40, 16));
-        leftUploadPanel.add(uploadTimerValue);
+        totalFileSize2.setText("50 MB");
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new Insets(0, 5, 0, 15);
+        fileStatsPanel1.add(totalFileSize2, gridBagConstraints);
 
-        uploadProgressPanel.add(leftUploadPanel, BorderLayout.WEST);
+        lblFileCount2.setText("File Count:");
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new Insets(0, 5, 0, 0);
+        fileStatsPanel1.add(lblFileCount2, gridBagConstraints);
+
+        fileCount2.setText("100");
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new Insets(0, 5, 0, 5);
+        fileStatsPanel1.add(fileCount2, gridBagConstraints);
+
+        uploadProgressPanel.add(fileStatsPanel1, BorderLayout.WEST);
 
         centerUploadPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
         centerUploadPanel.setLayout(new GridBagLayout());
 
         uploadProgressBar.setDoubleBuffered(true);
-        uploadProgressBar.setMaximumSize(new Dimension(400, 20));
-        uploadProgressBar.setMinimumSize(new Dimension(400, 20));
-        uploadProgressBar.setPreferredSize(new Dimension(400, 20));
+        uploadProgressBar.setMaximumSize(new Dimension(350, 20));
+        uploadProgressBar.setMinimumSize(new Dimension(350, 20));
+        uploadProgressBar.setPreferredSize(new Dimension(350, 20));
         uploadProgressBar.setStringPainted(true);
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
@@ -501,41 +572,47 @@ public class MeterDataUploader extends JFrame {
         gridBagConstraints.insets = new Insets(0, 5, 0, 5);
         centerUploadPanel.add(uploadProgressBar, gridBagConstraints);
 
+        lblTime.setText("Time:");
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.insets = new Insets(0, 5, 0, 0);
+        centerUploadPanel.add(lblTime, gridBagConstraints);
+
+        uploadTimerValue.setHorizontalAlignment(SwingConstants.RIGHT);
+        uploadTimerValue.setText("00:00");
+        uploadTimerValue.setMaximumSize(new Dimension(40, 16));
+        uploadTimerValue.setMinimumSize(new Dimension(40, 16));
+        uploadTimerValue.setPreferredSize(new Dimension(40, 16));
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 0;
+        centerUploadPanel.add(uploadTimerValue, gridBagConstraints);
+
         uploadProgressPanel.add(centerUploadPanel, BorderLayout.CENTER);
 
-        rightUploadPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 1, 3, 3), new SoftBevelBorder(BevelBorder.LOWERED)));
+        userStatusPanel3.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
 
-        lblUploadSpeed.setMaximumSize(new Dimension(90, 16));
-        lblUploadSpeed.setMinimumSize(new Dimension(90, 16));
-        lblUploadSpeed.setPreferredSize(new Dimension(90, 16));
-        rightUploadPanel.add(lblUploadSpeed);
+        lblUser3.setText("User:");
+        userStatusPanel3.add(lblUser3);
 
-        uploadSpeed.setMaximumSize(new Dimension(60, 16));
-        uploadSpeed.setMinimumSize(new Dimension(60, 16));
-        uploadSpeed.setPreferredSize(new Dimension(60, 16));
-        rightUploadPanel.add(uploadSpeed);
+        userFullName3.setText("Firstname A. Lastname");
+        userFullName3.setMaximumSize(new Dimension(175, 16));
+        userFullName3.setMinimumSize(new Dimension(175, 16));
+        userFullName3.setPreferredSize(new Dimension(175, 16));
+        userStatusPanel3.add(userFullName3);
 
-        lblTimeRemaining.setMaximumSize(new Dimension(110, 16));
-        lblTimeRemaining.setMinimumSize(new Dimension(110, 16));
-        lblTimeRemaining.setPreferredSize(new Dimension(110, 16));
-        rightUploadPanel.add(lblTimeRemaining);
-
-        timeRemaining.setMaximumSize(new Dimension(40, 16));
-        timeRemaining.setMinimumSize(new Dimension(40, 16));
-        timeRemaining.setPreferredSize(new Dimension(40, 16));
-        rightUploadPanel.add(timeRemaining);
-
-        uploadProgressPanel.add(rightUploadPanel, BorderLayout.EAST);
+        uploadProgressPanel.add(userStatusPanel3, BorderLayout.EAST);
 
         statusBarPanel.add(uploadProgressPanel, "Upload");
 
         initializeProgressPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 1, 3), new SoftBevelBorder(BevelBorder.LOWERED)));
-        initializeProgressPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 0));
 
-        lblUploadStatus.setText("Loading MSP Data");
-        initializeProgressPanel.add(lblUploadStatus);
-
-        initializeProgressBar.setPreferredSize(new Dimension(300, 20));
+        initializeProgressBar.setMaximumSize(new Dimension(350, 20));
+        initializeProgressBar.setMinimumSize(new Dimension(350, 20));
+        initializeProgressBar.setPreferredSize(new Dimension(350, 20));
+        initializeProgressBar.setString("");
+        initializeProgressBar.setStringPainted(true);
         initializeProgressPanel.add(initializeProgressBar);
 
         statusBarPanel.add(initializeProgressPanel, "Initialize");
@@ -565,38 +642,39 @@ public class MeterDataUploader extends JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private JPanel blankPanel;
+    private JPanel centerBlankPanel;
     private JPanel centerStatusPanel1;
-    private JPanel centerStatusPanel2;
     private JPanel centerUploadPanel;
-    private JLabel fileCount;
+    private JLabel fileCount1;
+    private JLabel fileCount2;
     private JPanel fileStatsPanel;
+    private JPanel fileStatsPanel1;
     private HeaderPanel headerPanel;
     private JProgressBar initializeProgressBar;
     private JPanel initializeProgressPanel;
-    private JLabel lblFileCount;
+    private JLabel lblFileCount1;
+    private JLabel lblFileCount2;
     private JLabel lblTime;
-    private JLabel lblTimeRemaining;
-    private JLabel lblTotalFileSize;
-    private JLabel lblUploadSpeed;
-    private JLabel lblUploadStatus;
+    private JLabel lblTotalFileSize1;
+    private JLabel lblTotalFileSize2;
     private JLabel lblUser1;
     private JLabel lblUser2;
-    private JPanel leftUploadPanel;
+    private JLabel lblUser3;
     private JPanel loggedinPanel;
-    private JPanel rightUploadPanel;
     private JPanel statusBarPanel;
     private JPanel statusPanel;
     private TablePanel tablePanel;
-    private JLabel timeRemaining;
-    private JLabel totalFileSize;
+    private JLabel totalFileSize1;
+    private JLabel totalFileSize2;
     private JProgressBar uploadProgressBar;
     private JPanel uploadProgressPanel;
-    private JLabel uploadSpeed;
     private JLabel uploadTimerValue;
     private JLabel userFullName1;
     private JLabel userFullName2;
+    private JLabel userFullName3;
     private JPanel userStatusPanel1;
     private JPanel userStatusPanel2;
+    private JPanel userStatusPanel3;
     // End of variables declaration//GEN-END:variables
 
     private class TimerListener implements ActionListener {

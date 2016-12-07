@@ -214,7 +214,7 @@ public class HeaderPanel extends JPanel {
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
-        gridBagConstraints.insets = new Insets(0, 5, 0, 5);
+        gridBagConstraints.insets = new Insets(5, 5, 0, 5);
         fieldPanel.add(cboCategory, gridBagConstraints);
 
         lblMSP.setText("MSP:");
@@ -231,7 +231,7 @@ public class HeaderPanel extends JPanel {
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
-        gridBagConstraints.insets = new Insets(0, 5, 0, 5);
+        gridBagConstraints.insets = new Insets(5, 5, 5, 5);
         fieldPanel.add(cboMSP, gridBagConstraints);
 
         add(fieldPanel, BorderLayout.EAST);
@@ -328,9 +328,8 @@ public class HeaderPanel extends JPanel {
         LoginDialog loginDialog = new LoginDialog(parent, true);
         loginDialog.setVisible(true);
 
-        if (loginDialog.getReturnStatus() == RET_OK
-                && parent.login(loginDialog.getUsername(), loginDialog.getPassword())) {
-            parent.configureServices();
+        if (loginDialog.getReturnStatus() == RET_OK) {
+            parent.login(loginDialog.getUsername(), loginDialog.getPassword());
         }
     }//GEN-LAST:event_loginActionPerformed
 
@@ -368,6 +367,23 @@ public class HeaderPanel extends JPanel {
 
         cboCategory.setEnabled(true);
         cboMSP.setEnabled(true);
+    }
+
+    public void disableAllToolbar() {
+        btnSelectFiles.setEnabled(false);
+        btnClearTable.setEnabled(false);
+        btnUpload.setEnabled(false);
+
+        btnLogin.setEnabled(false);
+        btnLogin.setVisible(true);
+
+        btnSettings.setEnabled(false);
+
+        btnLogout.setEnabled(false);
+        btnLogout.setVisible(false);
+
+        cboCategory.setEnabled(false);
+        cboMSP.setEnabled(false);
     }
 
     public void loggedInToolbar() {
