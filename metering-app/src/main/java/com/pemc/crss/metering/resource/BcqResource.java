@@ -69,8 +69,14 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
         fileInfo.setFileName(file.getOriginalFilename());
         fileInfo.setFileSize(file.getSize());
 
-        bcqReader.readData(file.getInputStream(), null).forEach(header ->
-                headerInfoList.add(new BcqHeaderInfo(header)));
+        List<BcqHeader> headerList = bcqReader.readData(file.getInputStream(), null);
+
+        headerList.forEach(header -> {
+            boolean headerExists = bcqService.headerExists(header);
+            BcqHeaderInfo headerInfo = new BcqHeaderInfo(header);
+            headerInfo.setHeaderExists(headerExists);
+            headerInfoList.add(headerInfo);
+        });
 
         return new BcqDetails(null, fileInfo, headerInfoList, null);
     }
