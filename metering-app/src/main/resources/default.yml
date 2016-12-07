@@ -58,14 +58,33 @@ security:
 
 mq:
   manifest:
-    header: >
-      INSERT INTO TXN_MQ_MANIFEST_HEADER (header_id, transaction_id, file_count, category,
-      upload_by, upload_datetime) VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?)
+    header:
+      insert: >
+        INSERT INTO TXN_MQ_MANIFEST_HEADER (header_id, transaction_id, file_count, category,
+        upload_by, upload_datetime) VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?)
+      query: >
+        SELECT HEADER_ID AS headerID, FILE_COUNT AS fileCount
+        FROM TXN_MQ_MANIFEST_HEADER WHERE TRANSACTION_ID = :txnID AND TAIL_RECEIVED = 'Y'
     trailer: >
       UPDATE TXN_MQ_MANIFEST_HEADER SET tail_received = 'Y' WHERE transaction_id = ?
-    file: >
-      INSERT INTO TXN_MQ_MANIFEST_FILE (file_id, header_id, transaction_id, filename, filetype,
-      filesize, checksum, upload_datetime) VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?)
+    file:
+      insert: >
+        INSERT INTO TXN_MQ_MANIFEST_FILE (file_id, header_id, transaction_id, filename, filetype,
+        filesize, checksum, upload_datetime) VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?)
+      query: >
+        SELECT A.FILE_ID as fileID,
+               A.HEADER_ID AS headerID,
+               A.TRANSACTION_ID AS transactionID,
+               A.FILENAME,
+               A.FILETYPE,
+               A.FILESIZE,
+               A.CHECKSUM,
+               A.UPLOAD_DATETIME AS uploadDateTime,
+               A.PROCESS_FLAG AS processFlag,
+               A.STATUS,
+               A.ERROR_DETAILS AS errorDetails
+        FROM TXN_MQ_MANIFEST_FILE A INNER JOIN TXN_MQ_MANIFEST_HEADER B ON A.HEADER_ID = B.HEADER_ID
+        WHERE B.TRANSACTION_ID = :txnID
     status: >
       UPDATE TXN_MQ_MANIFEST_FILE SET PROCESS_FLAG = 'Y', STATUS = :status, ERROR_DETAILS = :errorDetail WHERE FILE_ID = :fileID
   meter:
