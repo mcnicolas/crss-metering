@@ -213,6 +213,16 @@ public class JdbcBcqDao implements BcqDao {
         log.debug("Successfully updated status of header with ID: {} to {} ", headerId, status);
     }
 
+    @Override
+    public boolean headerExists(BcqHeader header) {
+        return jdbcTemplate.queryForObject(countHeader,
+                new Object[] {
+                        header.getSellingMtn(),
+                        header.getBuyingParticipantShortName(),
+                        header.getTradingDate()
+                }, Integer.class) > 0;
+    }
+
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/
@@ -256,15 +266,6 @@ public class JdbcBcqDao implements BcqDao {
 
             return keyHolder.getKey().longValue();
         }
-    }
-
-    private boolean headerExists(BcqHeader header) {
-        return jdbcTemplate.queryForObject(countHeader,
-                new Object[] {
-                        header.getSellingMtn(),
-                        header.getBuyingParticipantShortName(),
-                        header.getTradingDate()
-        }, Integer.class) > 0;
     }
 
     private long getHeaderIdBy(String sellingMtn, String buyingParticipantShortName, Date tradingDate) {

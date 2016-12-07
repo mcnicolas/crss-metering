@@ -22,4 +22,6 @@ public interface BcqService {
 
     void updateHeaderStatus(long headerId, BcqUpdateStatusDetails updateStatusDetails);
 
+    boolean headerExists(BcqHeader header);
+
 }

@@ -23,4 +23,6 @@ public interface BcqDao {
 
     void updateHeaderStatus(long headerId, BcqStatus status);
 
+    boolean headerExists(BcqHeader header);
+
 }

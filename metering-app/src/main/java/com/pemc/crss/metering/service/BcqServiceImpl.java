@@ -120,4 +120,10 @@ public class BcqServiceImpl implements BcqService {
 
         bcqDao.updateHeaderStatus(headerId, updateStatusDetails.getStatus());
     }
+
+    @Override
+    public boolean headerExists(BcqHeader header) {
+        return bcqDao.headerExists(header);
+    }
+
 }
