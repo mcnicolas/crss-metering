@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.constants;
 
-public enum BcqUploadEventCode {
+public enum BcqEventCode {
 
     NTF_BCQ_SUBMIT_BUYER,
     NTF_BCQ_SUBMIT_SELLER,

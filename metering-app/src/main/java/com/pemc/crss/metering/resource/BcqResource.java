@@ -4,7 +4,9 @@ import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.dto.*;
-import com.pemc.crss.metering.event.BcqUploadEvent;
+import com.pemc.crss.metering.event.BcqEvent;
+import com.pemc.crss.metering.event.BcqValidationDeptEvent;
+import com.pemc.crss.metering.event.BcqValidationSellerEvent;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.validator.exception.ValidationException;
@@ -21,11 +23,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.pemc.crss.metering.constants.BcqNotificationRecipient.BILLING;
-import static com.pemc.crss.metering.constants.BcqNotificationRecipient.SELLER;
-import static com.pemc.crss.metering.constants.BcqNotificationType.VALIDATION;
-import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_VALIDATION_DEPT;
-import static com.pemc.crss.metering.constants.BcqUploadEventCode.NTF_BCQ_VALIDATION_SELLER;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @Slf4j
@@ -121,17 +118,18 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
         String submittedDate = dateFormat.format(new Date());
 
         Map<String, Object> payload = new HashMap<>();
-        payload.put("sellerId", Long.parseLong(source.get("userId")));
+        payload.put("recipientId", Long.parseLong(source.get("userId")));
         payload.put("submittedDate", submittedDate);
         payload.put("errorMessage", source.get("errorMessage"));
 
-        BcqUploadEvent eventSeller = new BcqUploadEvent(payload, NTF_BCQ_VALIDATION_SELLER, VALIDATION, SELLER);
+        BcqEvent eventSeller = new BcqValidationSellerEvent(payload);
         eventPublisher.publishEvent(eventSeller);
 
+        payload.remove("recipientId");
         payload.put("sellerName", source.get("participantName"));
         payload.put("sellerShortName", source.get("participantShortName"));
 
-        BcqUploadEvent eventDept = new BcqUploadEvent(payload, NTF_BCQ_VALIDATION_DEPT, VALIDATION, BILLING);
+        BcqEvent eventDept = new BcqValidationDeptEvent(payload);
         eventPublisher.publishEvent(eventDept);
     }
 }
