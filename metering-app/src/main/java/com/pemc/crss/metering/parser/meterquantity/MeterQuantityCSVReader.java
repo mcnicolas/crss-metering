@@ -38,6 +38,10 @@ public class MeterQuantityCSVReader implements QuantityReader {
 
             List<String> row;
             while ((row = reader.read()) != null) {
+                if (row.size() == 1) {
+                    throw new IOException("Cannot parse CSV file. It might be an invalid CSV file or malformed.");
+                }
+
                 meterDataDetails.add(populateBean(row));
             }
 
