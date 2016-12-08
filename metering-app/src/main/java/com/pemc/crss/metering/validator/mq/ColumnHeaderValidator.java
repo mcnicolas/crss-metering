@@ -30,7 +30,7 @@ public class ColumnHeaderValidator implements Validator {
             "KW_REC",
             "KWH_REC",
             "KVARH_REC",
-            "ESTIMATED_FLAG"
+            "ESTIMATION_FLAG"
     };
 
     @Override
