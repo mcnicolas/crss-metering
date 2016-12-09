@@ -61,7 +61,7 @@ mq:
     header:
       insert: >
         INSERT INTO TXN_MQ_MANIFEST_HEADER (header_id, transaction_id, file_count, category,
-        upload_by, upload_datetime) VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?)
+        upload_by, upload_datetime) VALUES (NEXTVAL('MQ_MANIFEST_HEADER_SEQ'), ?, ?, ?, ?, ?)
       query: >
         SELECT HEADER_ID AS headerID, FILE_COUNT AS fileCount
         FROM TXN_MQ_MANIFEST_HEADER WHERE TRANSACTION_ID = :txnID AND TAIL_RECEIVED = 'Y'
@@ -70,7 +70,7 @@ mq:
     file:
       insert: >
         INSERT INTO TXN_MQ_MANIFEST_FILE (file_id, header_id, transaction_id, filename, filetype,
-        filesize, checksum, upload_datetime) VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?)
+        filesize, checksum, upload_datetime) VALUES (NEXTVAL('MQ_MANIFEST_FILE_SEQ'), ?, ?, ?, ?, ?, ?, ?)
       query: >
         SELECT A.FILE_ID as fileID,
                A.HEADER_ID AS headerID,
@@ -90,11 +90,11 @@ mq:
   meter:
     daily: >
       INSERT INTO TXN_METER_DATA_DAILY VALUES(
-      NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+      NEXTVAL('MQ_DATA_DAILY_SEQ'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
       ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     monthly: >
       INSERT INTO TXN_METER_DATA_MONTHLY VALUES(
-      NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+      NEXTVAL('MQ_DATA_MONTHLY_SEQ'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
       ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 bcq:
   manifest: >
