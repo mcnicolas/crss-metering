@@ -28,6 +28,10 @@ apply plugin: 'org.liquibase.gradle'
 apply from: 'liquibase.gradle'
 apply from: file('docker.gradle')
 
+bootRun {
+    systemProperties = System.properties
+}
+
 dependencies {
     compile 'org.apache.poi:poi'
     compile 'org.apache.poi:poi-ooxml'
