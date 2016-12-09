@@ -95,8 +95,6 @@ public class DefaultMeterService implements MeterService {
 
         validationResult.setFileID(fileManifest.getFileID());
         meteringDao.updateManifestStatus(validationResult);
-
-        sendNotification(fileManifest.getTransactionID());
     }
 
     private void sendNotification(String transactionID) {
