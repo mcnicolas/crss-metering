@@ -5,6 +5,7 @@ import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataHeader;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,7 +18,7 @@ import static com.pemc.crss.metering.validator.ValidationResult.REJECTED_STATUS;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 @Component
-//@Order(value = 2)
+@Order(value = 1)
 public class ColumnHeaderValidator implements Validator {
 
     private static final String[] COLUMNS = {

@@ -7,6 +7,7 @@ import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.text.DateFormat;
@@ -24,7 +25,7 @@ import static com.pemc.crss.metering.validator.ValidationResult.ACCEPTED_STATUS;
 import static org.apache.commons.lang3.time.DateUtils.isSameDay;
 
 @Component
-//@Order(value = 4)
+@Order(value = 3)
 public class OpenTradingDateValidator implements Validator {
 
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
