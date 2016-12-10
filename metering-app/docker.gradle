@@ -57,13 +57,7 @@ task createDockerfile(type: Dockerfile, dependsOn: copyArtifacts) {
     copyFile('app.jar', 'app.jar')
     label(["${project.group}.build-no"     : revision,
            "${project.group}.service-group": 'metering'])
-    entryPoint("java",
-            "-Djava.security.egd=file:/dev/./urandom",
-            "-server",
-            "-Xms128m",
-            "-Xmx1g",
-            "-XX:MaxMetaspaceSize=768m",
-            "-jar", "/app.jar")
+    entryPoint("java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app.jar")
     exposePort({ 8080 })
 }
 
