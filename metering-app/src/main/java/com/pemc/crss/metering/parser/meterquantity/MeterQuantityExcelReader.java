@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.pemc.crss.metering.utils.DateTimeUtils.READING_DATETIME;
 import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
 import static org.apache.poi.ss.usermodel.DateUtil.getJavaCalendar;
@@ -67,8 +68,7 @@ public class MeterQuantityExcelReader implements QuantityReader {
             readingDateTime.set(HOUR_OF_DAY, time.get(HOUR_OF_DAY));
             readingDateTime.set(MINUTE, time.get(MINUTE));
 
-            meterData.setReadingDateTime(readingDateTime.getTime());
-
+            meterData.setReadingDateTime(Long.parseLong(READING_DATETIME.format(readingDateTime.getTime())));
             meterData.setKwd(getNumericValue(row.getCell(3)));
             meterData.setKwhd(getNumericValue(row.getCell(4)));
             meterData.setKvarhd(getNumericValue(row.getCell(5)));

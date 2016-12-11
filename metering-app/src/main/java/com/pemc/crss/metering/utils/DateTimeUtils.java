@@ -20,8 +20,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Slf4j
 public final class DateTimeUtils {
 
-    private static final DateFormat READING_DATE_TIME_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
-    private static final DateFormat DATE_PARAM_FORMAT = new SimpleDateFormat("MM/dd/yyyy");
+    public static final DateFormat READING_DATETIME = new SimpleDateFormat("yyyyMMddHHmm");
+    public static final DateFormat DATE_PARAM_FORMAT = new SimpleDateFormat("MM/dd/yyyy");
+    public static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     private DateTimeUtils() {
     }
@@ -83,7 +84,7 @@ public final class DateTimeUtils {
     }
 
     public static long dateToLong(Date date) {
-        String formattedDate = READING_DATE_TIME_FORMAT.format(date);
+        String formattedDate = READING_DATETIME.format(date);
 
         return Long.valueOf(formattedDate);
     }
@@ -109,6 +110,19 @@ public final class DateTimeUtils {
         return calendar1.get(YEAR) == calendar2.get(YEAR)
                 && calendar1.get(MONTH) == calendar2.get(MONTH)
                 && calendar1.get(DATE) == calendar2.get(DATE);
+    }
+
+    public static Long parseDateAsLong(String strDate, String time) {
+        Long retVal = null;
+
+        try {
+            Date date = dateFormat.parse(strDate + " " + time);
+            retVal = Long.parseLong(READING_DATETIME.format(date));
+        } catch (ParseException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        return retVal;
     }
 
 }

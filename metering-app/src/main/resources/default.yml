@@ -88,14 +88,52 @@ mq:
     status: >
       UPDATE TXN_MQ_MANIFEST_FILE SET PROCESS_FLAG = 'Y', STATUS = :status, ERROR_DETAILS = :errorDetail WHERE FILE_ID = :fileID
   meter:
-    daily: >
-      INSERT INTO TXN_METER_DATA_DAILY VALUES(
-      NEXTVAL('MQ_DATA_DAILY_SEQ'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    monthly: >
-      INSERT INTO TXN_METER_DATA_MONTHLY VALUES(
-      NEXTVAL('MQ_DATA_MONTHLY_SEQ'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    daily:
+      queryVersion: >
+        SELECT SEIN, READING_DATETIME, MAX(VERSION) AS VERSION
+        FROM TXN_METER_DATA_DAILY
+        WHERE SEIN = :sein AND READING_DATETIME = :readingDateTime
+        GROUP BY SEIN, READING_DATETIME
+      insert: >
+        INSERT INTO TXN_METER_DATA_DAILY VALUES (
+          NEXTVAL('MQ_DATA_DAILY_SEQ'), :fileID, :sein, :interval, :readingDateTime,
+          :kwd, :kwdChannelStatus, :kwdIntervalStatus,
+          :kwhd, :kwhdChannelStatus, :kwhdIntervalStatus,
+          :kvarhd, :kvarhdChannelStatus, :kvarhdIntervalStatus,
+          :kwr, :kwrChannelStatus, :kwrIntervalStatus,
+          :kwhr, :kwhrChannelStatus, :kwhrIntervalStatus,
+          :kvarhr, :kvarhrChannelStatus, :kvarhrIntervalStatus,
+          :van, :vanChannelStatus, :vanIntervalStatus,
+          :vbn, :vbnChannelStatus, :vbnIntervalStatus,
+          :vcn, :vcnChannelStatus, :vcnIntervalStatus,
+          :ian, :ianChannelStatus, :ianIntervalStatus,
+          :ibn, :ibnChannelStatus, :ibnIntervalStatus,
+          :icn, :icnChannelStatus, :icnIntervalStatus,
+          :pf, :pfChannelStatus, :pfIntervalStatus,
+          :estimationFlag, :version, :mspShortName, :uploadType)
+    monthly:
+      queryVersion: >
+        SELECT SEIN, READING_DATETIME, MAX(VERSION) AS VERSION
+        FROM TXN_METER_DATA_MONTHLY
+        WHERE SEIN = :sein AND READING_DATETIME = :readingDateTime
+        GROUP BY SEIN, READING_DATETIME
+      insert: >
+        INSERT INTO TXN_METER_DATA_MONTHLY VALUES (
+          NEXTVAL('MQ_DATA_MONTHLY_SEQ'), :fileID, :sein, :interval, :readingDateTime,
+          :kwd, :kwdChannelStatus, :kwdIntervalStatus,
+          :kwhd, :kwhdChannelStatus, :kwhdIntervalStatus,
+          :kvarhd, :kvarhdChannelStatus, :kvarhdIntervalStatus,
+          :kwr, :kwrChannelStatus, :kwrIntervalStatus,
+          :kwhr, :kwhrChannelStatus, :kwhrIntervalStatus,
+          :kvarhr, :kvarhrChannelStatus, :kvarhrIntervalStatus,
+          :van, :vanChannelStatus, :vanIntervalStatus,
+          :vbn, :vbnChannelStatus, :vbnIntervalStatus,
+          :vcn, :vcnChannelStatus, :vcnIntervalStatus,
+          :ian, :ianChannelStatus, :ianIntervalStatus,
+          :ibn, :ibnChannelStatus, :ibnIntervalStatus,
+          :icn, :icnChannelStatus, :icnIntervalStatus,
+          :pf, :pfChannelStatus, :pfIntervalStatus,
+          :estimationFlag, :version, :mspShortName, :uploadType)
 bcq:
   manifest: >
     INSERT INTO TXN_BCQ_UPLOAD_FILE (

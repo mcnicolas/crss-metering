@@ -32,7 +32,6 @@ import java.util.Map;
 
 import static com.pemc.crss.metering.constants.UploadType.CORRECTED_DAILY;
 import static com.pemc.crss.metering.constants.UploadType.DAILY;
-import static java.sql.Types.DOUBLE;
 import static java.sql.Types.VARCHAR;
 
 @Slf4j
@@ -56,11 +55,17 @@ public class JdbcMeteringDao implements MeteringDao {
     @Value("${mq.manifest.file.query}")
     private String queryFileManifest;
 
-    @Value("${mq.meter.daily}")
+    @Value("${mq.meter.daily.insert}")
     private String insertDailyMQ;
 
-    @Value("${mq.meter.monthly}")
+    @Value("${mq.meter.daily.queryVersion}")
+    private String dailyQueryVersion;
+
+    @Value("${mq.meter.monthly.insert}")
     private String insertMonthlyMQ;
+
+    @Value("${mq.meter.monthly.queryVersion}")
+    private String monthlyQueryVersion;
 
     @Value("${mq.manifest.status}")
     private String updateManifestStatus;
@@ -213,145 +218,41 @@ public class JdbcMeteringDao implements MeteringDao {
     @Override
     public void saveMeterData(FileManifest fileManifest, List<MeterDataDetail> meterDataDetails) {
         String insertSQL;
+        String versionQuery;
 
         UploadType uploadType = fileManifest.getUploadType();
         if (uploadType == DAILY || uploadType == CORRECTED_DAILY) {
             insertSQL = insertDailyMQ;
+            versionQuery = dailyQueryVersion;
         } else {
             insertSQL = insertMonthlyMQ;
+            versionQuery = monthlyQueryVersion;
         }
 
-        jdbcTemplate.batchUpdate(insertSQL, meterDataDetails, 50, (ps, meterData) -> {
-            ps.setLong(1, fileManifest.getFileID());
-            ps.setString(2, meterData.getSein());
-            ps.setInt(3, meterData.getInterval());
+        Map<String, Object> paramMap = new HashMap<>();
 
-            // TODO: Optimize at the parsing level
-            DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm");
-            ps.setLong(4, Long.valueOf(dateFormat.format(meterData.getReadingDateTime())));
+        for (MeterDataDetail meterDataDetail : meterDataDetails) {
+            paramMap.put("sein", meterDataDetail.getSein());
+            paramMap.put("readingDateTime", meterDataDetail.getReadingDateTime());
 
-            if (meterData.getKwd() != null) {
-                ps.setDouble(5, meterData.getKwd());
-            } else {
-                ps.setNull(5, DOUBLE);
-            }
+            Integer version = namedParameterJdbcTemplate.query(versionQuery, paramMap, rs -> {
+                if (rs.next()) {
+                    return rs.getInt(3);
+                }
 
-            ps.setInt(6, meterData.getKwdChannelStatus());
-            ps.setInt(7, meterData.getKwdIntervalStatus());
+                return 0;
+            }) + 1;
 
-            if (meterData.getKwhd() != null) {
-                ps.setDouble(8, meterData.getKwhd());
-            } else {
-                ps.setNull(8, DOUBLE);
-            }
+            meterDataDetail.setFileID(fileManifest.getFileID());
+            meterDataDetail.setUploadType(fileManifest.getUploadType());
+            meterDataDetail.setMspShortName(fileManifest.getMspShortName());
+            meterDataDetail.setVersion(version);
 
-            ps.setInt(9, meterData.getKwhdChannelStatus());
-            ps.setInt(10, meterData.getKwhdIntervalStatus());
+            BeanPropertySqlParameterSource paramSource = new BeanPropertySqlParameterSource(meterDataDetail);
+            paramSource.registerSqlType("uploadType", VARCHAR);
 
-            if (meterData.getKvarhd() != null) {
-                ps.setDouble(11, meterData.getKvarhd());
-            } else {
-                ps.setNull(11, DOUBLE);
-            }
-
-            ps.setInt(12, meterData.getKvarhdChannelStatus());
-            ps.setInt(13, meterData.getKvarhdIntervalStatus());
-
-            if (meterData.getKwr() != null) {
-                ps.setDouble(14, meterData.getKwr());
-            } else {
-                ps.setNull(14, DOUBLE);
-            }
-
-            ps.setInt(15, meterData.getKwrChannelStatus());
-            ps.setInt(16, meterData.getKwrIntervalStatus());
-
-            if (meterData.getKwhr() != null) {
-                ps.setDouble(17, meterData.getKwhr());
-            } else {
-                ps.setNull(17, DOUBLE);
-            }
-
-            ps.setInt(18, meterData.getKwhrChannelStatus());
-            ps.setInt(19, meterData.getKwhrIntervalStatus());
-
-            if (meterData.getKvarhr() != null) {
-                ps.setDouble(20, meterData.getKvarhr());
-            } else {
-                ps.setNull(20, DOUBLE);
-            }
-
-            ps.setInt(21, meterData.getKvarhrChannelStatus());
-            ps.setInt(22, meterData.getKvarhrIntervalStatus());
-
-            if (meterData.getVan() != null) {
-                ps.setDouble(23, meterData.getVan());
-            } else {
-                ps.setNull(23, DOUBLE);
-            }
-
-            ps.setInt(24, meterData.getVanChannelStatus());
-            ps.setInt(25, meterData.getVanIntervalStatus());
-
-            if (meterData.getVbn() != null) {
-                ps.setDouble(26, meterData.getVbn());
-            } else {
-                ps.setNull(26, DOUBLE);
-            }
-
-            ps.setInt(27, meterData.getVbnChannelStatus());
-            ps.setInt(28, meterData.getVbnIntervalStatus());
-
-            if (meterData.getVcn() != null) {
-                ps.setDouble(29, meterData.getVcn());
-            } else {
-                ps.setNull(29, DOUBLE);
-            }
-
-            ps.setInt(30, meterData.getVcnChannelStatus());
-            ps.setInt(31, meterData.getVcnIntervalStatus());
-
-            if (meterData.getIan() != null) {
-                ps.setDouble(32, meterData.getIan());
-            } else {
-                ps.setNull(32, DOUBLE);
-            }
-
-            ps.setInt(33, meterData.getIanChannelStatus());
-            ps.setInt(34, meterData.getIanIntervalStatus());
-
-            if (meterData.getIbn() != null) {
-                ps.setDouble(35, meterData.getIbn());
-            } else {
-                ps.setNull(35, DOUBLE);
-            }
-
-            ps.setInt(36, meterData.getIbnChannelStatus());
-            ps.setInt(37, meterData.getIbnIntervalStatus());
-
-            if (meterData.getIcn() != null) {
-                ps.setDouble(38, meterData.getIcn());
-            } else {
-                ps.setNull(38, DOUBLE);
-            }
-
-            ps.setInt(39, meterData.getIcnChannelStatus());
-            ps.setInt(40, meterData.getIcnIntervalStatus());
-
-            if (meterData.getPf() != null) {
-                ps.setDouble(41, meterData.getPf());
-            } else {
-                ps.setNull(41, DOUBLE);
-            }
-
-            ps.setInt(42, meterData.getPfChannelStatus());
-            ps.setInt(43, meterData.getPfIntervalStatus());
-
-            ps.setString(44, meterData.getEstimationFlag());
-            ps.setInt(45, 1);
-
-            ps.setString(46, fileManifest.getMspShortName());
-        });
+            namedParameterJdbcTemplate.update(insertSQL, paramSource);
+        }
     }
 
     @Override

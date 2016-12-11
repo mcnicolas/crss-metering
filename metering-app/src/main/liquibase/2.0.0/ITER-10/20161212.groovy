@@ -10,4 +10,21 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
         }
     }
 
+    changeSet(id: "${REL}_${ITER}_${FILE}_02", author: 'clim', failOnError: true) {
+        addUniqueConstraint(tableName: 'TXN_METER_DATA_DAILY', constraintName: 'METER_DATA_DAILY_UNIQUE',
+                columnNames: 'SEIN, READING_DATETIME, VERSION')
+        addUniqueConstraint(tableName: 'TXN_METER_DATA_MONTHLY', constraintName: 'METER_DATA_MONTHLY_UNIQUE',
+                columnNames: 'SEIN, READING_DATETIME, VERSION')
+    }
+
+    changeSet(id: "${REL}_${ITER}_${FILE}_03", author: 'clim', failOnError: true) {
+        addUniqueConstraint(tableName: 'TXN_METER_DATA_DAILY',
+                columnNames: 'SEIN, READING_DATETIME, VERSION',
+                constraintName: 'METER_DATA_DAILY_UNIQUE')
+
+        addUniqueConstraint(tableName: 'TXN_METER_DATA_MONTHLY',
+                columnNames: 'SEIN, READING_DATETIME, VERSION',
+                constraintName: 'METER_DATA_MONTHLY_UNIQUE')
+    }
+
 }

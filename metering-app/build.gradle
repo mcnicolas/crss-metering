@@ -36,14 +36,20 @@ dependencies {
     compile 'org.apache.poi:poi'
     compile 'org.apache.poi:poi-ooxml'
     compile 'net.sf.supercsv:super-csv-java8'
+    compile 'com.google.guava:guava'
 
     compile 'org.projectlombok:lombok'
 
+    compile 'org.springframework.boot:spring-boot-starter-web'
     compile 'org.springframework.boot:spring-boot-starter-undertow'
     compile 'org.springframework.boot:spring-boot-starter-actuator'
     compile 'org.springframework.boot:spring-boot-starter-cache'
     compile 'org.springframework.boot:spring-boot-starter-amqp'
     compile 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    // TODO: Tagged for removal. Just for pagination we are downloading Hibernate?
+    compile 'org.springframework.boot:spring-boot-starter-data-jpa'
+
     optional 'org.springframework.boot:spring-boot-configuration-processor'
 
     compile 'org.springframework.cloud:spring-cloud-starter-eureka'
@@ -55,13 +61,12 @@ dependencies {
     runtime 'org.postgresql:postgresql'
     runtime files("$rootDir/libs/ojdbc6-11.2.0.4.jar")
 
-    testCompile 'org.springframework.boot:spring-boot-starter-test'
-
     compile 'commons-io:commons-io'
+    compile 'org.apache.commons:commons-lang3'
 
-    compile project(':commons-service')
-    compile project(':commons-web')
     compile project(':commons-log')
+
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
 }
 
 liquibase {

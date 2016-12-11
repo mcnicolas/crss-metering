@@ -12,20 +12,15 @@ import org.supercsv.io.ICsvListReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
+import static com.pemc.crss.metering.utils.DateTimeUtils.parseDateAsLong;
 import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 
 @Slf4j
 public class MeterQuantityCSVReader implements QuantityReader {
-
-    private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     @Override
     public MeterData readData(InputStream inputStream) throws IOException {
@@ -63,7 +58,7 @@ public class MeterQuantityCSVReader implements QuantityReader {
         MeterDataDetail retVal = new MeterDataDetail();
 
         retVal.setSein(row.get(0));
-        retVal.setReadingDateTime(parseDateTime(row.get(1), row.get(2)));
+        retVal.setReadingDateTime(parseDateAsLong(row.get(1), row.get(2)));
         retVal.setKwd(getNumericValue(row.get(3)));
         retVal.setKwhd(getNumericValue(row.get(4)));
         retVal.setKvarhd(getNumericValue(row.get(5)));
@@ -84,18 +79,6 @@ public class MeterQuantityCSVReader implements QuantityReader {
         } else {
             return null;
         }
-    }
-
-    private Date parseDateTime(String date, String time) {
-        Date retVal = null;
-
-        try {
-            retVal = dateFormat.parse(date + " " + time);
-        } catch (ParseException e) {
-            log.error(e.getMessage(), e);
-        }
-
-        return retVal;
     }
 
 }

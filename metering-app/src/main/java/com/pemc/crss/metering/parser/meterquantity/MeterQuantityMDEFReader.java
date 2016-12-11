@@ -63,13 +63,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
 
                         value.setSein(interval.getCustomerID());
                         value.setInterval(intervalPerHour);
-
-                        try {
-                            value.setReadingDateTime(dateFormat.parse(readingDateList.get(i)));
-                        } catch (ParseException e) {
-                            // TODO: Set date to Jan 1, 1900 00:00?
-                            log.warn(e.getMessage(), e);
-                        }
+                        value.setReadingDateTime(Long.parseLong(readingDateList.get(i)));
 
                         meterDataMap.put(key, value);
                     }
@@ -80,6 +74,8 @@ public class MeterQuantityMDEFReader implements QuantityReader {
                     int intervalStatus = intervalStatusList.get(i);
 
                     UnitOfMeasure uom = UnitOfMeasure.fromCode(channel.getMeterNo());
+
+                    // UOM can be null ?
                     switch (uom) {
                         case KWD:
                             value.setKwd(meterReading);

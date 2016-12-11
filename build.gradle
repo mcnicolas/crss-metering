@@ -76,6 +76,7 @@ subprojects {
             }
 
             dependency 'net.sf.supercsv:super-csv-java8:2.4.0'
+            dependency 'com.google.guava:guava:19.0'
 
             dependency 'commons-io:commons-io:2.5'
             dependency 'org.apache.commons:commons-lang3:3.5'
@@ -112,6 +113,6 @@ subprojects {
 
 }
 
-configure(subprojects - project(':commons-web') - project(':commons-service') - project(':commons-log')) {
+configure(subprojects - project(':commons-log')) {
     apply plugin: 'org.springframework.boot'
 }

@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.dto.mq;
 
+import com.pemc.crss.metering.constants.UploadType;
 import lombok.Data;
 
 import java.util.Date;
@@ -8,9 +9,12 @@ import java.util.Date;
 public class MeterDataDetail {
 
     private long meterDataID;
+    private long fileID;
     private String sein;
-    private Date readingDateTime;
+    private Long readingDateTime;
+    private UploadType uploadType;
     private int interval;
+    private String mspShortName;
 
     private Double kwd;
     private int kwdChannelStatus;

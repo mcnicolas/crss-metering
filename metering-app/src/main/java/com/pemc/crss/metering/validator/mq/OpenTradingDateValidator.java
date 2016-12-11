@@ -7,10 +7,12 @@ import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -24,11 +26,13 @@ import static com.pemc.crss.metering.utils.DateTimeUtils.isYesterday;
 import static com.pemc.crss.metering.validator.ValidationResult.ACCEPTED_STATUS;
 import static org.apache.commons.lang3.time.DateUtils.isSameDay;
 
+@Slf4j
 @Component
 @Order(value = 3)
 public class OpenTradingDateValidator implements Validator {
 
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private static final DateFormat READING_DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
 
     @Override
     public ValidationResult validate(FileManifest fileManifest, MeterData meterData) {
@@ -51,9 +55,7 @@ public class OpenTradingDateValidator implements Validator {
             List<MeterDataDetail> meterDataDetails = meterData.getDetails();
 
             for (MeterDataDetail meterDataDetail : meterDataDetails) {
-                Date readingDateTime = meterDataDetail.getReadingDateTime();
-
-                if (readingDateTime == null) {
+                if (meterDataDetail.getReadingDateTime() == null) {
                     retVal.setStatus(REJECTED);
 
                     String errorMessage = "Malformed trading date format. Should be YYYY-MM-DD HH:MM";
@@ -77,15 +79,20 @@ public class OpenTradingDateValidator implements Validator {
             List<MeterDataDetail> meterDataDetails = meterData.getDetails();
 
             for (MeterDataDetail meterDataDetail : meterDataDetails) {
-                Date readingDateTime = meterDataDetail.getReadingDateTime();
-
-                if (readingDateTime == null) {
+                if (meterDataDetail.getReadingDateTime() == null) {
                     retVal.setStatus(REJECTED);
 
                     String errorMessage = "Malformed trading date format. Should be YYYY-MM-DD HH:MM";
                     retVal.setErrorDetail(errorMessage);
 
                     break;
+                }
+
+                Date readingDateTime = null;
+                try {
+                    readingDateTime = READING_DATE_FORMAT.parse(String.valueOf(meterDataDetail.getReadingDateTime()));
+                } catch (ParseException e) {
+                    log.error(e.getMessage(), e);
                 }
 
                 if (!isSameDay(now, readingDateTime) && !isYesterday(now, readingDateTime)) {
