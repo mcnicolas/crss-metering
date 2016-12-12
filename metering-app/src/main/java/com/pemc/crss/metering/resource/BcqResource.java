@@ -58,7 +58,8 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
     }
 
     @PostMapping("/upload")
-    public BcqDetails uploadData(@RequestParam("file") MultipartFile file)
+    public BcqDetails uploadData(@RequestParam("file") MultipartFile file,
+                                 @RequestParam("sellerShortName") String sellerShortName)
             throws IOException, ValidationException {
 
         List<BcqHeaderInfo> headerInfoList = new ArrayList<>();
@@ -69,6 +70,7 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
         List<BcqHeader> headerList = bcqReader.readData(file.getInputStream(), null);
 
         headerList.forEach(header -> {
+            header.setSellingParticipantShortName(sellerShortName);
             boolean headerExists = bcqService.headerExists(header);
             BcqHeaderInfo headerInfo = new BcqHeaderInfo(header);
             headerInfo.setHeaderExists(headerExists);

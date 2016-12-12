@@ -3,7 +3,6 @@ package com.pemc.crss.metering.dao;
 import com.pemc.crss.commons.web.dto.datatable.PageOrder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -64,6 +63,15 @@ public class BcqDisplayQueryBuilder {
         if (isNotBlank(sellingMtn)) {
             sqlBuilder.append(" AND UPPER(A.SELLING_MTN) LIKE ?");
             arguments.add("%" + sellingMtn.toUpperCase() + "%");
+        }
+
+        return this;
+    }
+
+    public BcqDisplayQueryBuilder addBillingIdFilter(String billingId) {
+        if (isNotBlank(billingId)) {
+            sqlBuilder.append(" AND UPPER(A.BILLING_ID) LIKE ?");
+            arguments.add("%" + billingId.toUpperCase() + "%");
         }
 
         return this;

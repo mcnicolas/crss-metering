@@ -76,12 +76,12 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public long saveUploadFile(String transactionID, BcqUploadFile bcqUploadFile) {
+    public long saveUploadFile(String transactionId, BcqUploadFile bcqUploadFile) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
                     PreparedStatement ps = connection.prepareStatement(insertManifest, new String[]{"file_id"});
-                    ps.setString(1, transactionID);
+                    ps.setString(1, transactionId);
                     ps.setString(2, bcqUploadFile.getFileName());
                     ps.setLong(3, bcqUploadFile.getFileSize());
                     ps.setTimestamp(4, new Timestamp(bcqUploadFile.getSubmittedDate().getTime()));
@@ -94,12 +94,12 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public List<Long> saveBcq(long fileID, List<BcqHeader> headerList) {
+    public List<Long> saveBcq(long fileId, List<BcqHeader> headerList) {
         List<Long> headerIds = new ArrayList<>();
 
         for (BcqHeader header: headerList) {
             boolean headerExists = headerExists(header);
-            long headerId = saveBcqHeader(fileID, header, headerExists);
+            long headerId = saveBcqHeader(fileId, header, headerExists);
             List<BcqData> dataList = header.getDataList();
 
             String sql = headerExists ? updateData : insertData;
@@ -139,17 +139,19 @@ public class JdbcBcqDao implements BcqDao {
     public Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest) {
         int totalRecords = getTotalRecords(pageableRequest);
         Map<String, String> params = pageableRequest.getMapParams();
-        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
-        String sellingParticipant = params.get("sellingParticipant");
         String sellingMtn = params.get("sellingMtn");
+        String billingId = params.get("billingId");
         String buyingParticipant = params.get("buyingParticipant");
+        String sellingParticipant = params.get("sellingParticipant");
         String status = params.get("status");
+        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
 
         BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayPaginate);
         BuilderData query = builder.selectBcqDeclarationsByTradingDate(tradingDate)
+                .addSellingMtnFilter(sellingMtn)
+                .addBillingIdFilter(billingId)
                 .addBuyingParticipantFilter(buyingParticipant)
                 .addSellingParticipantFilter(sellingParticipant)
-                .addSellingMtnFilter(sellingMtn)
                 .addStatusFilter(status)
                 .orderBy(pageableRequest.getOrderList())
                 .paginate(pageableRequest.getPageNo(), pageableRequest.getPageSize())
@@ -218,8 +220,9 @@ public class JdbcBcqDao implements BcqDao {
         return jdbcTemplate.queryForObject(countHeader,
                 new Object[] {
                         header.getSellingMtn(),
-                        header.getBuyingParticipantShortName(),
-                        header.getTradingDate()
+                        header.getBillingId(),
+                        header.getTradingDate(),
+                        header.getSellingParticipantShortName()
                 }, Integer.class) > 0;
     }
 
@@ -235,13 +238,14 @@ public class JdbcBcqDao implements BcqDao {
                 PreparedStatement ps = con.prepareStatement(updateHeader);
                 ps.setLong(1, fileId);
                 ps.setString(2, header.getSellingMtn());
-                ps.setString(3, header.getBuyingParticipantShortName());
+                ps.setString(3, header.getBillingId());
                 ps.setTimestamp(4, new Timestamp(header.getTradingDate().getTime()));
+                ps.setString(5, header.getSellingParticipantShortName());
 
                 return ps;
             });
 
-            return getHeaderIdBy(header.getSellingMtn(), header.getBuyingParticipantShortName(), header.getTradingDate());
+            return getHeaderIdBy(header);
         } else {
             Timestamp deadlineDateTimestamp = new Timestamp(header.getTradingDate().getTime() +
                     TimeUnit.HOURS.toMillis(47) + TimeUnit.MINUTES.toMillis(59));
@@ -253,13 +257,14 @@ public class JdbcBcqDao implements BcqDao {
                 PreparedStatement ps = con.prepareStatement(insertHeader, new String[]{"bcq_header_id"});
                 ps.setLong(1, fileId);
                 ps.setString(2, header.getSellingMtn());
-                ps.setString(3, header.getBuyingParticipantName());
-                ps.setString(4, header.getBuyingParticipantShortName());
-                ps.setString(5, header.getSellingParticipantName());
-                ps.setString(6, header.getSellingParticipantShortName());
-                ps.setString(7, header.getStatus().toString());
-                ps.setTimestamp(8, new Timestamp(header.getTradingDate().getTime()));
-                ps.setTimestamp(9, deadlineDateTimestamp);
+                ps.setString(3, header.getBillingId());
+                ps.setString(4, header.getBuyingParticipantName());
+                ps.setString(5, header.getBuyingParticipantShortName());
+                ps.setString(6, header.getSellingParticipantName());
+                ps.setString(7, header.getSellingParticipantShortName());
+                ps.setString(8, header.getStatus().toString());
+                ps.setTimestamp(9, new Timestamp(header.getTradingDate().getTime()));
+                ps.setTimestamp(10, deadlineDateTimestamp);
 
                 return ps;
             }, keyHolder);
@@ -268,28 +273,31 @@ public class JdbcBcqDao implements BcqDao {
         }
     }
 
-    private long getHeaderIdBy(String sellingMtn, String buyingParticipantShortName, Date tradingDate) {
+    private long getHeaderIdBy(BcqHeader header) {
         return jdbcTemplate.queryForObject(selectHeaderId,
                 new Object[] {
-                        sellingMtn,
-                        buyingParticipantShortName,
-                        tradingDate
+                        header.getSellingMtn(),
+                        header.getBillingId(),
+                        header.getTradingDate(),
+                        header.getSellingParticipantShortName()
                 }, Long.class);
     }
 
     private int getTotalRecords(PageableRequest pageableRequest) {
         Map<String, String> params = pageableRequest.getMapParams();
-        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
-        String sellingParticipant = params.get("sellingParticipant");
         String sellingMtn = params.get("sellingMtn");
+        String billingId = params.get("billingId");
+        String sellingParticipant = params.get("sellingParticipant");
         String buyingParticipant = params.get("buyingParticipant");
+        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
         String status = params.get("status");
 
         BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayPaginate);
         BuilderData query = builder.countBcqDeclarationsByTradingDate(tradingDate)
+                .addSellingMtnFilter(sellingMtn)
+                .addBillingIdFilter(billingId)
                 .addBuyingParticipantFilter(buyingParticipant)
                 .addSellingParticipantFilter(sellingParticipant)
-                .addSellingMtnFilter(sellingMtn)
                 .addStatusFilter(status)
                 .build();
 
@@ -307,16 +315,17 @@ public class JdbcBcqDao implements BcqDao {
             BcqUploadFile uploadFile = new BcqUploadFile();
 
             header.setHeaderId(rs.getLong("bcq_header_id"));
+            header.setSellingMtn(rs.getString("selling_mtn"));
+            header.setBillingId(rs.getString("billing_id"));
             header.setBuyingParticipantName(rs.getString("buying_participant_name"));
             header.setBuyingParticipantShortName(rs.getString("buying_participant_short_name"));
             header.setSellingParticipantName(rs.getString("selling_participant_name"));
             header.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
-            header.setSellingMtn(rs.getString("selling_mtn"));
             header.setTradingDate(rs.getDate("trading_date"));
             header.setDeadlineDate(rs.getTimestamp("deadline_date"));
             header.setUpdatedVia("");
             header.setStatus(BcqStatus.fromString(rs.getString("status")));
-            uploadFile.setTransactionID(rs.getString("transaction_id"));
+            uploadFile.setTransactionId(rs.getString("transaction_id"));
             uploadFile.setSubmittedDate(rs.getTimestamp("submitted_date"));
             header.setUploadFile(uploadFile);
 
