@@ -61,6 +61,11 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
+    public List<BcqHeader> findAllHeaders(Map<String, String> params) {
+        return bcqDao.findAllHeaders(params);
+    }
+
+    @Override
     public Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest) {
         return bcqDao.findAllHeaders(pageableRequest);
     }
