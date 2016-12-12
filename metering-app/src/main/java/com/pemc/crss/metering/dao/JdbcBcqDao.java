@@ -137,6 +137,7 @@ public class JdbcBcqDao implements BcqDao {
 
     @Override
     public List<BcqHeader> findAllHeaders(Map<String, String> params) {
+        Long headerId = Long.parseLong(params.get("headerId"));
         String sellingMtn = params.get("sellingMtn");
         String billingId = params.get("billingId");
         String buyingParticipant = params.get("buyingParticipant");
@@ -146,6 +147,7 @@ public class JdbcBcqDao implements BcqDao {
 
         BcqQueryBuilder builder = new BcqQueryBuilder();
         BuilderData selectQuery = builder.newQuery(displayData)
+                .addHeaderIdFilter(headerId)
                 .addTradingDateFilter(tradingDate)
                 .addSellingMtnFilter(sellingMtn)
                 .addBillingIdFilter(billingId)
