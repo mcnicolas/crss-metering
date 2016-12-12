@@ -146,8 +146,9 @@ public class JdbcBcqDao implements BcqDao {
         String status = params.get("status");
         Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
 
-        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayPaginate);
-        BuilderData query = builder.selectBcqDeclarationsByTradingDate(tradingDate)
+        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayPaginate);
+        BuilderData selectQuery = builder.newQuery(displayData)
+                .addTradingDateFilter(tradingDate)
                 .addSellingMtnFilter(sellingMtn)
                 .addBillingIdFilter(billingId)
                 .addBuyingParticipantFilter(buyingParticipant)
@@ -158,8 +159,8 @@ public class JdbcBcqDao implements BcqDao {
                 .build();
 
         List<BcqHeader> headerList = jdbcTemplate.query(
-                query.getSql(),
-                query.getArguments(),
+                selectQuery.getSql(),
+                selectQuery.getArguments(),
                 new BcqHeaderRowMapper());
 
         return new PageImpl<>(
@@ -171,7 +172,9 @@ public class JdbcBcqDao implements BcqDao {
     @Override
     public BcqHeader findHeader(long headerId) {
         BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData);
-        BuilderData query = builder.selectBcqDeclarationsByHeaderId(headerId).build();
+        BuilderData query = builder.newQuery(displayData)
+                .addHeaderIdFilter(headerId)
+                .build();
 
         return jdbcTemplate.queryForObject(
                 query.getSql(),
@@ -292,8 +295,9 @@ public class JdbcBcqDao implements BcqDao {
         Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
         String status = params.get("status");
 
-        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData, displayCount, displayPaginate);
-        BuilderData query = builder.countBcqDeclarationsByTradingDate(tradingDate)
+        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder();
+        BuilderData countQuery = builder.newQuery(displayCount)
+                .addTradingDateFilter(tradingDate)
                 .addSellingMtnFilter(sellingMtn)
                 .addBillingIdFilter(billingId)
                 .addBuyingParticipantFilter(buyingParticipant)
@@ -302,8 +306,8 @@ public class JdbcBcqDao implements BcqDao {
                 .build();
 
         return jdbcTemplate.queryForObject(
-                query.getSql(),
-                query.getArguments(),
+                countQuery.getSql(),
+                countQuery.getArguments(),
                 Integer.class);
     }
 
