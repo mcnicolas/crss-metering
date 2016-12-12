@@ -136,6 +136,31 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
+    public List<BcqHeader> findAllHeaders(Map<String, String> params) {
+        String sellingMtn = params.get("sellingMtn");
+        String billingId = params.get("billingId");
+        String buyingParticipant = params.get("buyingParticipant");
+        String sellingParticipant = params.get("sellingParticipant");
+        String status = params.get("status");
+        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
+
+        BcqQueryBuilder builder = new BcqQueryBuilder();
+        BuilderData selectQuery = builder.newQuery(displayData)
+                .addTradingDateFilter(tradingDate)
+                .addSellingMtnFilter(sellingMtn)
+                .addBillingIdFilter(billingId)
+                .addBuyingParticipantFilter(buyingParticipant)
+                .addSellingParticipantFilter(sellingParticipant)
+                .addStatusFilter(status)
+                .build();
+
+        return jdbcTemplate.query(
+                selectQuery.getSql(),
+                selectQuery.getArguments(),
+                new BcqHeaderRowMapper());
+    }
+
+    @Override
     public Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest) {
         int totalRecords = getTotalRecords(pageableRequest);
         Map<String, String> params = pageableRequest.getMapParams();
@@ -146,7 +171,7 @@ public class JdbcBcqDao implements BcqDao {
         String status = params.get("status");
         Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
 
-        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayPaginate);
+        BcqQueryBuilder builder = new BcqQueryBuilder(displayPaginate);
         BuilderData selectQuery = builder.newQuery(displayData)
                 .addTradingDateFilter(tradingDate)
                 .addSellingMtnFilter(sellingMtn)
@@ -171,7 +196,7 @@ public class JdbcBcqDao implements BcqDao {
 
     @Override
     public BcqHeader findHeader(long headerId) {
-        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder(displayData);
+        BcqQueryBuilder builder = new BcqQueryBuilder(displayData);
         BuilderData query = builder.newQuery(displayData)
                 .addHeaderIdFilter(headerId)
                 .build();
@@ -295,7 +320,7 @@ public class JdbcBcqDao implements BcqDao {
         Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
         String status = params.get("status");
 
-        BcqDisplayQueryBuilder builder = new BcqDisplayQueryBuilder();
+        BcqQueryBuilder builder = new BcqQueryBuilder();
         BuilderData countQuery = builder.newQuery(displayCount)
                 .addTradingDateFilter(tradingDate)
                 .addSellingMtnFilter(sellingMtn)

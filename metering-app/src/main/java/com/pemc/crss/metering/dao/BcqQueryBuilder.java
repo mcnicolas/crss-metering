@@ -10,7 +10,7 @@ import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-public class BcqDisplayQueryBuilder {
+public class BcqQueryBuilder {
 
     private StringBuilder sqlBuilder = new StringBuilder();
     private List<Object> arguments = new ArrayList<>();
@@ -21,14 +21,14 @@ public class BcqDisplayQueryBuilder {
     private static final String AND = " AND ";
     private static final String WHERE = " WHERE ";
 
-    public BcqDisplayQueryBuilder() {
+    public BcqQueryBuilder() {
     }
 
-    public BcqDisplayQueryBuilder(String paginationWrapper) {
+    public BcqQueryBuilder(String paginationWrapper) {
         this.paginationWrapper = paginationWrapper;
     }
 
-    public BcqDisplayQueryBuilder newQuery(String query) {
+    public BcqQueryBuilder newQuery(String query) {
         if (hasQuery) {
             throw new IllegalArgumentException("Only one query must be present.");
         }
@@ -42,7 +42,7 @@ public class BcqDisplayQueryBuilder {
         return this;
     }
 
-    public BcqDisplayQueryBuilder addHeaderIdFilter(Long headerId) {
+    public BcqQueryBuilder addHeaderIdFilter(Long headerId) {
         if (headerId != null) {
             sqlBuilder.append(formatFilter("A.BCQ_HEADER_ID = ?"));
             arguments.add(headerId);
@@ -50,7 +50,7 @@ public class BcqDisplayQueryBuilder {
         return this;
     }
 
-    public BcqDisplayQueryBuilder addTradingDateFilter(Date tradingDate) {
+    public BcqQueryBuilder addTradingDateFilter(Date tradingDate) {
         if (tradingDate != null) {
             sqlBuilder.append(formatFilter("A.TRADING_DATE = ?"));
             arguments.add(tradingDate);
@@ -58,7 +58,7 @@ public class BcqDisplayQueryBuilder {
         return this;
     }
 
-    public BcqDisplayQueryBuilder addSellingMtnFilter(String sellingMtn) {
+    public BcqQueryBuilder addSellingMtnFilter(String sellingMtn) {
         if (isNotBlank(sellingMtn)) {
             sqlBuilder.append(formatFilter("UPPER(A.SELLING_MTN) LIKE ?"));
             arguments.add("%" + sellingMtn.toUpperCase() + "%");
@@ -66,7 +66,7 @@ public class BcqDisplayQueryBuilder {
         return this;
     }
 
-    public BcqDisplayQueryBuilder addBillingIdFilter(String billingId) {
+    public BcqQueryBuilder addBillingIdFilter(String billingId) {
         if (isNotBlank(billingId)) {
             sqlBuilder.append(formatFilter("UPPER(A.BILLING_ID) LIKE ?"));
             arguments.add("%" + billingId.toUpperCase() + "%");
@@ -74,7 +74,7 @@ public class BcqDisplayQueryBuilder {
         return this;
     }
 
-    public BcqDisplayQueryBuilder addSellingParticipantFilter(String sellingParticipant) {
+    public BcqQueryBuilder addSellingParticipantFilter(String sellingParticipant) {
         if (isNotBlank(sellingParticipant)) {
             sqlBuilder.append(formatFilter("UPPER(A.SELLING_PARTICIPANT_SHORT_NAME) LIKE ?"));
             arguments.add("%" + sellingParticipant.toUpperCase() + "%");
@@ -83,7 +83,7 @@ public class BcqDisplayQueryBuilder {
         return this;
     }
 
-    public BcqDisplayQueryBuilder addBuyingParticipantFilter(String buyingParticipant) {
+    public BcqQueryBuilder addBuyingParticipantFilter(String buyingParticipant) {
         if (isNotBlank(buyingParticipant)) {
             sqlBuilder.append(formatFilter("UPPER(A.BUYING_PARTICIPANT_SHORT_NAME) LIKE ?"));
             arguments.add("%" + buyingParticipant.toUpperCase() + "%");
@@ -92,7 +92,7 @@ public class BcqDisplayQueryBuilder {
         return this;
     }
 
-    public BcqDisplayQueryBuilder addStatusFilter(String status) {
+    public BcqQueryBuilder addStatusFilter(String status) {
         if (isNotBlank(status)) {
             sqlBuilder.append(formatFilter("A.STATUS = ? "));
             arguments.add(status);
@@ -100,7 +100,7 @@ public class BcqDisplayQueryBuilder {
         return this;
     }
 
-    public BcqDisplayQueryBuilder orderBy(List<PageOrder> pageOrderList) {
+    public BcqQueryBuilder orderBy(List<PageOrder> pageOrderList) {
         checkQuery();
         if (isNotEmpty(pageOrderList)) {
             for (PageOrder pageOrder : pageOrderList) {
@@ -112,7 +112,7 @@ public class BcqDisplayQueryBuilder {
         return this;
     }
 
-    public BcqDisplayQueryBuilder paginate(int pageNo, int pageSize) {
+    public BcqQueryBuilder paginate(int pageNo, int pageSize) {
         checkQuery();
         if (isBlank(paginationWrapper)) {
             throw new IllegalArgumentException("Pagination wrapper is blank.");

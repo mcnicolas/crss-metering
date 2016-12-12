@@ -8,12 +8,15 @@ import com.pemc.crss.metering.dto.BcqUploadFile;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.Map;
 
 public interface BcqDao {
 
     long saveUploadFile(String transactionID, BcqUploadFile uploadFile);
 
     List<Long> saveBcq(long fileID, List<BcqHeader> headerList);
+
+    List<BcqHeader> findAllHeaders(Map<String, String> params);
 
     Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest);
 
