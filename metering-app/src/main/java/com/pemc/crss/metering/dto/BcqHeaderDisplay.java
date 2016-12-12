@@ -15,6 +15,10 @@ public class BcqHeaderDisplay extends AbstractWebDto<BcqHeader> {
         return target().getHeaderId();
     }
 
+    public String getBillingId() {
+        return target().getBillingId();
+    }
+
     public String getSellingParticipantName() {
         return target().getSellingParticipantName();
     }

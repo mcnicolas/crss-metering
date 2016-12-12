@@ -20,6 +20,14 @@ public class BcqHeaderInfo extends AbstractWebDto<BcqHeader> {
         super(target);
     }
 
+    public String getBillingId() {
+        return target().getBillingId();
+    }
+
+    public void setBillingId(String billingId) {
+        target().setBillingId(billingId);
+    }
+
     public String getSellingMtn() {
         return target().getSellingMtn();
     }
