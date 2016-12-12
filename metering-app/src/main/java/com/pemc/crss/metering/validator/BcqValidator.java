@@ -116,25 +116,24 @@ public class BcqValidator {
         BcqHeader header = new BcqHeader();
 
         String sellingMtn = getAndValidateSellingMtn(line.get(0));
-        String buyingParticipant = getAndValidateBuyingParticipant(line.get(1));
+        String billingId = getAndValidateBillingId(line.get(1));
         Date tradingDate = getAndValidateDate(line.get(3));
 
         header.setSellingMtn(sellingMtn);
-        header.setBuyingParticipantShortName(buyingParticipant);
+        header.setBillingId(billingId);
         header.setTradingDate(tradingDate);
 
-        if (!uniqueDataSet.add(sellingMtn + "," + buyingParticipant + "," + tradingDate)) {
+        if (!uniqueDataSet.add(sellingMtn + "," + billingId + "," + tradingDate)) {
             throw new ValidationException(
                     String.format(DUPLICATE_DATE.getErrorMessage(),
                             header.getTradingDate(),
                             header.getSellingMtn(),
-                            header.getBuyingParticipantShortName()));
+                            header.getBillingId()));
         }
 
         header.setTradingDate(getAndValidateTradingDate(header.getTradingDate()));
 
         if (currentTradingDate != null && !currentTradingDate.equals(header.getTradingDate())) {
-            System.out.println("TRADING DATE: " + currentTradingDate + " " + header.getTradingDate());
             throw new ValidationException(INVALID_TRADING_DATE.getErrorMessage());
         }
 
@@ -149,12 +148,12 @@ public class BcqValidator {
         return sellingMtn;
     }
 
-    private String getAndValidateBuyingParticipant(String buyingParticipant) throws ValidationException {
-        if (buyingParticipant == null || buyingParticipant.isEmpty()) {
-            throw new ValidationException(MISSING_BUYING_PARTICIPANT.getErrorMessage());
+    private String getAndValidateBillingId(String billingId) throws ValidationException {
+        if (billingId == null || billingId.isEmpty()) {
+            throw new ValidationException(MISSING_BILLING_ID.getErrorMessage());
         }
 
-        return buyingParticipant;
+        return billingId;
     }
 
     private String getAndValidateReferenceMtn(String referenceMtn) throws ValidationException {

@@ -13,7 +13,7 @@ public enum BcqValidationRules {
     CLOSED_TRADING_DATE("Trading date is closed. Submission of BCQ is closed for %s."),
     INVALID_TRADING_DATE("Trading date is invalid. Only one trading date can be accepted per file."),
     MISSING_SELLING_MTN("Missing selling MTN."),
-    MISSING_BUYING_PARTICIPANT("Missing buying participant."),
+    MISSING_BILLING_ID("Missing billing ID."),
     MISSING_REFERENCE_MTN("Missing reference MTN."),
     MISSING_DATE("Missing date."),
     MISSING_BCQ("Missing BCQ.");
