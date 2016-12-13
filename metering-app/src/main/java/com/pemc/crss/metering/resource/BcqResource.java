@@ -68,8 +68,8 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
 
         if (details.getHeaderList() != null) {
             Map<String, String> params = new HashMap<>();
-            params.put("sellerName", sellerShortName);
-            params.put("tradingDate", details.getHeaderList().get(0).getTradingDate().toString());
+            params.put("sellingParticipant", sellerShortName);
+            params.put("tradingDate", formatDate(details.getHeaderList().get(0).getTradingDate()));
             List<BcqHeader> currentHeaderList = bcqService.findAllHeaders(params);
 
             if (currentHeaderList.size() > 0) {
