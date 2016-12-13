@@ -58,41 +58,26 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
     }
 
     @PostMapping("/upload")
-    public BcqDetailsInfo uploadData(@RequestParam("file") MultipartFile file,
+    public BcqDetailsInfo uploadData(@RequestParam("file") MultipartFile multipartFile,
                                      @RequestParam("sellerShortName") String sellerShortName)
             throws IOException, ValidationException {
 
-        List<BcqHeaderInfo> headerInfoList = new ArrayList<>();
-        BcqUploadFileInfo fileInfo = new BcqUploadFileInfo();
-        fileInfo.setFileName(file.getOriginalFilename());
-        fileInfo.setFileSize(file.getSize());
+        BcqUploadFile file = new BcqUploadFile();
+        file.setFileName(multipartFile.getOriginalFilename());
+        file.setFileSize(multipartFile.getSize());
 
-        List<BcqHeader> headerList = bcqReader.readData(file.getInputStream(), null);
-
-        headerList.forEach(header -> {
-            header.setSellingParticipantShortName(sellerShortName);
-            boolean headerExists = bcqService.headerExists(header);
-            BcqHeaderInfo headerInfo = new BcqHeaderInfo(header);
-            headerInfo.setHeaderExists(headerExists);
-            headerInfoList.add(headerInfo);
-        });
-
-        return new BcqDetailsInfo(null, fileInfo, headerInfoList, null);
+        List<BcqHeader> headerList = bcqReader.readData(multipartFile.getInputStream(), null);
+        headerList.forEach(header -> header.setSellingParticipantShortName(sellerShortName));
+        boolean recordExists = headerList.stream().anyMatch(header -> bcqService.headerExists(header));
+        BcqDetailsInfo detailsInfo = new BcqDetailsInfo(new BcqDetails(null, file, headerList, null));
+        detailsInfo.setRecordExists(recordExists);
+        return detailsInfo;
     }
 
     @PostMapping("/save")
-    public void saveData(@RequestBody BcqDetailsInfo details) {
-        BcqUploadFile uploadFile = new BcqUploadFile();
-        uploadFile.setFileName(details.getFileInfo().getFileName());
-        uploadFile.setFileSize(details.getFileInfo().getFileSize());
-        uploadFile.setSubmittedDate(new Date());
-
-        List<BcqHeader> headerList = new ArrayList<>();
-        details.getHeaderInfoList().forEach(headerInfo -> {
-            headerList.add(headerInfo.target());
-        });
-
-        bcqService.saveBcq(uploadFile, headerList, details.getBuyerIds(), details.getSellerId());
+    public void saveData(@RequestBody BcqDetailsInfo detailsInfo) {
+        detailsInfo.getFileInfo().setSubmittedDate(new Date());
+        bcqService.save(detailsInfo.target());
     }
 
     @GetMapping("/declaration/{headerId}")

@@ -3,10 +3,7 @@ package com.pemc.crss.metering.service;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
-import com.pemc.crss.metering.dto.BcqData;
-import com.pemc.crss.metering.dto.BcqHeader;
-import com.pemc.crss.metering.dto.BcqUpdateStatusDetails;
-import com.pemc.crss.metering.dto.BcqUploadFile;
+import com.pemc.crss.metering.dto.*;
 import com.pemc.crss.metering.event.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +34,12 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     @Transactional
-    public void saveBcq(BcqUploadFile file, List<BcqHeader> headerList, List<Long> buyerIds, Long sellerId) {
+    public void save(BcqDetails details) {
+        BcqUploadFile file = details.getFile();
+        List<BcqHeader> headerList = details.getHeaderList();
+        List<Long> buyerIds = details.getBuyerIds();
+        Long sellerId = details.getSellerId();
+
         String transactionId = UUID.randomUUID().toString();
         long fileId = bcqDao.saveUploadFile(transactionId, file);
         List<Long> headerIds = bcqDao.saveBcq(fileId, headerList);
