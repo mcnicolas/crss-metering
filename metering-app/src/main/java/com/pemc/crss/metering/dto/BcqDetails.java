@@ -18,5 +18,6 @@ public class BcqDetails {
     private List<BcqHeader> headerList;
     private List<Long> buyerIds;
     private String errorMessage;
+    private boolean recordExists;
 
 }

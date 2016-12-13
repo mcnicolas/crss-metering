@@ -68,11 +68,12 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
         if (details.getHeaderList() != null) {
             details.getHeaderList().forEach(header -> header.setSellingParticipantShortName(sellerShortName));
             recordExists = details.getHeaderList().stream().anyMatch(header -> bcqService.headerExists(header));
+            details.setRecordExists(recordExists);
         } else {
             details.setHeaderList(new ArrayList<>());
         }
 
-        return new BcqDetailsInfo(details, recordExists);
+        return new BcqDetailsInfo(details);
     }
 
     @PostMapping("/save")

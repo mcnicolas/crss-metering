@@ -18,11 +18,6 @@ public class BcqDetailsInfo extends AbstractWebDto<BcqDetails> {
         super(target);
     }
 
-    public BcqDetailsInfo(BcqDetails target, boolean recordExists) {
-        super(target);
-        this.recordExists = recordExists;
-    }
-
     public Long getSellerId() {
         return target().getSellerId();
     }
@@ -85,10 +80,10 @@ public class BcqDetailsInfo extends AbstractWebDto<BcqDetails> {
     }
 
     public boolean isRecordExists() {
-        return recordExists;
+        return target().isRecordExists();
     }
 
     public void setRecordExists(boolean recordExists) {
-        this.recordExists = recordExists;
+        target().setRecordExists(recordExists);
     }
 }
