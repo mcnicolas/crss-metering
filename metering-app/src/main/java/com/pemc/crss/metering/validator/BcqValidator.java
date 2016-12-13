@@ -6,6 +6,7 @@ import com.pemc.crss.metering.dto.BcqHeader;
 import com.pemc.crss.metering.parser.bcq.BcqInterval;
 import com.pemc.crss.metering.parser.bcq.util.BCQParserUtil;
 import com.pemc.crss.metering.utils.DateTimeUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -15,12 +16,11 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqValidationRules.*;
-import static com.pemc.crss.metering.parser.bcq.BcqInterval.FIVE_MINUTES_PERIOD;
-import static com.pemc.crss.metering.parser.bcq.BcqInterval.HOURLY;
-import static com.pemc.crss.metering.parser.bcq.BcqInterval.QUARTERLY;
+import static com.pemc.crss.metering.parser.bcq.BcqInterval.*;
 import static java.math.BigDecimal.ROUND_HALF_UP;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class BcqValidator {
 
@@ -49,21 +49,23 @@ public class BcqValidator {
 
         for (List<String> line : csv.subList(2, csv.size())) {
             BcqHeader header = getAndValidateBcqHeader(line, currentTradingDate);
-            List<BcqData> dataList = new ArrayList<>();
+            if (header != null) {
+                List<BcqData> dataList = new ArrayList<>();
 
-            if (headerList.contains(header)) {
-                header = headerList.get(headerList.indexOf(header));
-                dataList = header.getDataList();
-            } else {
-                if (currentTradingDate == null) {
-                    currentTradingDate = header.getTradingDate();
+                if (headerList.contains(header)) {
+                    header = headerList.get(headerList.indexOf(header));
+                    dataList = header.getDataList();
+                } else {
+                    if (currentTradingDate == null) {
+                        currentTradingDate = header.getTradingDate();
+                    }
+                    headerList.add(header);
+                    header.setDataList(dataList);
                 }
-                headerList.add(header);
-                header.setDataList(dataList);
-            }
 
-            BcqData data = getAndValidateData(line, interval);
-            dataList.add(data);
+                BcqData data = getAndValidateData(line, interval);
+                dataList.add(data);
+            }
 
             if (errorMessage != null) {
                 details.setErrorMessage(errorMessage);
@@ -118,6 +120,11 @@ public class BcqValidator {
     }
 
     private BcqHeader getAndValidateBcqHeader(List<String> line, Date currentTradingDate) {
+        if (line.stream().allMatch(StringUtils::isBlank)) {
+            setErrorMessage(EMPTY_LINE.getErrorMessage());
+            return null;
+        }
+
         BcqHeader header = new BcqHeader();
 
         String sellingMtn = getAndValidateSellingMtn(line.get(0));
@@ -169,8 +176,12 @@ public class BcqValidator {
     }
 
     private Date getAndValidateDate(String dateString) {
-        Date date = BCQParserUtil.parseDateTime(dateString);
+        if (isBlank(dateString)) {
+            setErrorMessage(MISSING_DATE.getErrorMessage());
+            return null;
+        }
 
+        Date date = BCQParserUtil.parseDateTime(dateString);
         if (date == null) {
             setErrorMessage(String.format(INCORRECT_FORMAT.getErrorMessage(), "Date ",
                     BCQParserUtil.DATE_TIME_FORMATS[0]));
@@ -180,8 +191,11 @@ public class BcqValidator {
     }
 
     private Date getAndValidateTradingDate(Date tradingDate) {
-        Date tradingDateNoTime;
+        if (tradingDate == null) {
+            return null;
+        }
 
+        Date tradingDateNoTime;
         if (DateTimeUtils.isStartOfDay(tradingDate)) {
             tradingDateNoTime = DateUtils.addDays(tradingDate, -1);
         } else {
@@ -220,8 +234,19 @@ public class BcqValidator {
     }
 
     private BigDecimal getAndValidateBcq(String bcqString) {
+        if (isBlank(bcqString)) {
+            setErrorMessage(MISSING_BCQ.getErrorMessage());
+            return null;
+        }
+
         if (!NumberUtils.isParsable(bcqString)) {
             setErrorMessage(String.format(INCORRECT_FORMAT.getErrorMessage(), bcqString, "of decimal"));
+        }
+
+        BigDecimal bcq = new BigDecimal(bcqString);
+
+        if (bcq.signum() == -1) {
+            setErrorMessage(NEGATIVE_BCQ.getErrorMessage());
         }
 
         return new BigDecimal(bcqString);
@@ -245,6 +270,9 @@ public class BcqValidator {
     }
 
     private Date getStartTime(Date date, BcqInterval interval) {
+        if (date == null) {
+            return null;
+        }
         return new Date(date.getTime() - interval.getTimeInMillis());
     }
 
