@@ -23,7 +23,7 @@ public class MQDisplayQueryBuilder {
     private List arguments = new ArrayList();
 
     public MQDisplayQueryBuilder selectMeterData(String category, String readingDate) {
-        String selectSQL = "SELECT B.*" +
+        String selectSQL = "SELECT A.TRANSACTION_ID, B.*" +
                 " FROM TXN_MQ_MANIFEST_FILE A" +
                 " INNER JOIN ${MQ_TABLE} B ON A.FILE_ID = B.FILE_ID";
 

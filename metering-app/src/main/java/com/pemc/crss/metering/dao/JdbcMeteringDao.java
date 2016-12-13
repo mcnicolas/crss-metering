@@ -159,6 +159,7 @@ public class JdbcMeteringDao implements MeteringDao {
                             MeterDataDisplay meterData = new MeterDataDisplay();
 
                             meterData.setMeterDataID(rs.getLong("meter_data_id"));
+                            meterData.setTransactionID(rs.getString("transaction_id"));
                             meterData.setSein(rs.getString("sein"));
 
                             try {

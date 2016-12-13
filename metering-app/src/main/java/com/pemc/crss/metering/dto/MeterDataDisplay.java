@@ -12,6 +12,7 @@ public class MeterDataDisplay {
     private static final DateFormat readingDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm a");
 
     private long meterDataID;
+    private String transactionID;
     private String sein;
     private Date readingDateTime;
     private String kwd;
