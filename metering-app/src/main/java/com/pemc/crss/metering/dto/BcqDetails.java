@@ -12,8 +12,11 @@ import java.util.List;
 public class BcqDetails {
 
     private Long sellerId;
+    private String sellerName;
+    private String sellerShortName;
     private BcqUploadFile file;
     private List<BcqHeader> headerList;
     private List<Long> buyerIds;
+    private String errorMessage;
 
 }

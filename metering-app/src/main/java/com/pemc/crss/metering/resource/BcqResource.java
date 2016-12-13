@@ -4,12 +4,8 @@ import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.dto.*;
-import com.pemc.crss.metering.event.BcqEvent;
-import com.pemc.crss.metering.event.BcqValidationDeptEvent;
-import com.pemc.crss.metering.event.BcqValidationSellerEvent;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
 import com.pemc.crss.metering.service.BcqService;
-import com.pemc.crss.metering.validator.exception.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -18,9 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -59,19 +55,24 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
 
     @PostMapping("/upload")
     public BcqDetailsInfo uploadData(@RequestParam("file") MultipartFile multipartFile,
-                                     @RequestParam("sellerShortName") String sellerShortName)
-            throws IOException, ValidationException {
+                                     @RequestParam("sellerShortName") String sellerShortName) throws IOException {
 
+        boolean recordExists = false;
         BcqUploadFile file = new BcqUploadFile();
         file.setFileName(multipartFile.getOriginalFilename());
         file.setFileSize(multipartFile.getSize());
 
-        List<BcqHeader> headerList = bcqReader.readData(multipartFile.getInputStream(), null);
-        headerList.forEach(header -> header.setSellingParticipantShortName(sellerShortName));
-        boolean recordExists = headerList.stream().anyMatch(header -> bcqService.headerExists(header));
-        BcqDetailsInfo detailsInfo = new BcqDetailsInfo(new BcqDetails(null, file, headerList, null));
-        detailsInfo.setRecordExists(recordExists);
-        return detailsInfo;
+        BcqDetails details = bcqReader.readData(multipartFile.getInputStream());
+        details.setFile(file);
+
+        if (details.getHeaderList() != null) {
+            details.getHeaderList().forEach(header -> header.setSellingParticipantShortName(sellerShortName));
+            recordExists = details.getHeaderList().stream().anyMatch(header -> bcqService.headerExists(header));
+        } else {
+            details.setHeaderList(new ArrayList<>());
+        }
+
+        return new BcqDetailsInfo(details, recordExists);
     }
 
     @PostMapping("/save")
@@ -96,27 +97,5 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
     @PostMapping("/{headerId}/status")
     public void saveData(@PathVariable long headerId, @RequestBody BcqUpdateStatusDetails updateStatusDetails) {
         bcqService.updateHeaderStatus(headerId, updateStatusDetails);
-    }
-
-    @PostMapping("/validation-error")
-    public void validationError(@RequestBody Map<String, String> source) {
-        String format = "MMM. dd, yyyy hh:mm";
-        DateFormat dateFormat = new SimpleDateFormat(format);
-        String submittedDate = dateFormat.format(new Date());
-
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("recipientId", Long.parseLong(source.get("userId")));
-        payload.put("submittedDate", submittedDate);
-        payload.put("errorMessage", source.get("errorMessage"));
-
-        BcqEvent eventSeller = new BcqValidationSellerEvent(payload);
-        eventPublisher.publishEvent(eventSeller);
-
-        payload.remove("recipientId");
-        payload.put("sellerName", source.get("participantName"));
-        payload.put("sellerShortName", source.get("participantShortName"));
-
-        BcqEvent eventDept = new BcqValidationDeptEvent(payload);
-        eventPublisher.publishEvent(eventDept);
     }
 }

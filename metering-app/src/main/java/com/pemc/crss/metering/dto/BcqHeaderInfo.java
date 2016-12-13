@@ -66,12 +66,14 @@ public class BcqHeaderInfo extends AbstractWebDto<BcqHeader> {
         target().setSellingParticipantShortName(sellingParticipantShortName);
     }
 
-    public BcqStatus getStatus() {
-        return target().getStatus();
+    public String getStatus() {
+        return target().getStatus() != null ? target().getStatus().toString() : null;
     }
 
     public void setStatus(String status) {
-        target().setStatus(BcqStatus.fromString(status));
+        if (status != null) {
+            target().setStatus(BcqStatus.fromString(status));
+        }
     }
 
     public Date getTradingDate() {

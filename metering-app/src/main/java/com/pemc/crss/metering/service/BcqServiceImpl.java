@@ -36,29 +36,42 @@ public class BcqServiceImpl implements BcqService {
     @Transactional
     public void save(BcqDetails details) {
         BcqUploadFile file = details.getFile();
-        List<BcqHeader> headerList = details.getHeaderList();
-        List<Long> buyerIds = details.getBuyerIds();
-        Long sellerId = details.getSellerId();
-
-        String transactionId = UUID.randomUUID().toString();
-        long fileId = bcqDao.saveUploadFile(transactionId, file);
-        List<Long> headerIds = bcqDao.saveBcq(fileId, headerList);
-
         String format = "MMM. dd, yyyy hh:mm a";
         DateFormat dateFormat = new SimpleDateFormat(format);
         String submittedDate = dateFormat.format(file.getSubmittedDate());
-        int recordCount = headerList.size() * headerList.get(0).getDataList().size();
 
-        BcqHeader header = headerList.get(0);
-        for (int i = 0; i < headerIds.size(); i ++) {
-            notificationService.send(NTF_BCQ_SUBMIT_BUYER,
+        if (details.getErrorMessage() != null) {
+            notificationService.send(NTF_BCQ_VALIDATION_SELLER,
                     submittedDate,
-                    header.getSellingParticipantName(),
-                    header.getSellingParticipantShortName(),
-                    headerIds.get(i),
-                    buyerIds.get(i));
+                    details.getErrorMessage(),
+                    details.getSellerId());
+
+            notificationService.send(NTF_BCQ_VALIDATION_DEPT,
+                    submittedDate,
+                    details.getSellerName(),
+                    details.getSellerShortName(),
+                    details.getErrorMessage());
+        } else {
+            List<BcqHeader> headerList = details.getHeaderList();
+            List<Long> buyerIds = details.getBuyerIds();
+            Long sellerId = details.getSellerId();
+
+            String transactionId = UUID.randomUUID().toString();
+            long fileId = bcqDao.saveUploadFile(transactionId, file);
+            List<Long> headerIds = bcqDao.saveBcq(fileId, headerList);
+            int recordCount = headerList.size() * headerList.get(0).getDataList().size();
+
+            BcqHeader header = headerList.get(0);
+            for (int i = 0; i < headerIds.size(); i ++) {
+                notificationService.send(NTF_BCQ_SUBMIT_BUYER,
+                        submittedDate,
+                        header.getSellingParticipantName(),
+                        header.getSellingParticipantShortName(),
+                        headerIds.get(i),
+                        buyerIds.get(i));
+            }
+            notificationService.send(NTF_BCQ_SUBMIT_SELLER, submittedDate, recordCount, sellerId);
         }
-        notificationService.send(NTF_BCQ_SUBMIT_SELLER, submittedDate, recordCount, sellerId);
     }
 
     @Override

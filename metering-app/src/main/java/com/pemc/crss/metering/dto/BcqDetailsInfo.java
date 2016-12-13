@@ -18,6 +18,35 @@ public class BcqDetailsInfo extends AbstractWebDto<BcqDetails> {
         super(target);
     }
 
+    public BcqDetailsInfo(BcqDetails target, boolean recordExists) {
+        super(target);
+        this.recordExists = recordExists;
+    }
+
+    public Long getSellerId() {
+        return target().getSellerId();
+    }
+
+    public void setSellerId(Long sellerId) {
+        target().setSellerId(sellerId);
+    }
+
+    public String getSellerName() {
+        return target().getSellerName();
+    }
+
+    public void setSellerName(String sellerName) {
+        target().setSellerName(sellerName);
+    }
+
+    public String getSellerShortName() {
+        return target().getSellerShortName();
+    }
+
+    public void setSellerShortName(String sellerShortName) {
+        target().setSellerShortName(sellerShortName);
+    }
+
     public BcqUploadFileInfo getFileInfo() {
         return new BcqUploadFileInfo(target().getFile());
     }
@@ -47,12 +76,12 @@ public class BcqDetailsInfo extends AbstractWebDto<BcqDetails> {
         target().setBuyerIds(buyerIds);
     }
 
-    public Long getSellerId() {
-        return target().getSellerId();
+    public String getErrorMessage() {
+        return target().getErrorMessage();
     }
 
-    public void setSellerId(Long sellerId) {
-        target().setSellerId(sellerId);
+    public void setErrorMessage(String errorMessage) {
+        target().setErrorMessage(errorMessage);
     }
 
     public boolean isRecordExists() {
