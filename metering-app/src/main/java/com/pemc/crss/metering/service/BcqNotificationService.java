@@ -36,6 +36,8 @@ public class BcqNotificationService {
                 return new BcqSubmitBuyerEvent(payload);
             case NTF_BCQ_SUBMIT_SELLER:
                 return new BcqSubmitSellerEvent(payload);
+            case NTF_BCQ_UPDATE_BUYER:
+                return new BcqUpdateBuyerEvent(payload);
             case NTF_BCQ_VALIDATION_SELLER:
                 return new BcqValidationSellerEvent(payload);
             case NTF_BCQ_VALIDATION_DEPT:

@@ -14,11 +14,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_REDECLARATION_ENTRIES;
+import static com.pemc.crss.metering.parser.bcq.util.BCQParserUtil.DATE_FORMATS;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @Slf4j
@@ -57,7 +59,6 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
     public BcqDetailsInfo uploadData(@RequestParam("file") MultipartFile multipartFile,
                                      @RequestParam("sellerShortName") String sellerShortName) throws IOException {
 
-        boolean recordExists = false;
         BcqUploadFile file = new BcqUploadFile();
         file.setFileName(multipartFile.getOriginalFilename());
         file.setFileSize(multipartFile.getSize());
@@ -66,9 +67,35 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
         details.setFile(file);
 
         if (details.getHeaderList() != null) {
-            details.getHeaderList().forEach(header -> header.setSellingParticipantShortName(sellerShortName));
-            recordExists = details.getHeaderList().stream().anyMatch(header -> bcqService.headerExists(header));
-            details.setRecordExists(recordExists);
+            Map<String, String> params = new HashMap<>();
+            params.put("sellerName", sellerShortName);
+            params.put("tradingDate", details.getHeaderList().get(0).getTradingDate().toString());
+            List<BcqHeader> currentHeaderList = bcqService.findAllHeaders(params);
+
+            if (currentHeaderList.size() > 0) {
+                details.setRecordExists(true);
+
+                List<BcqHeader> missingHeaderList = currentHeaderList
+                        .stream()
+                        .filter(header -> !bcqService.isHeaderInList(header, details.getHeaderList()))
+                        .collect(Collectors.toList());
+
+                if (missingHeaderList.size() > 0) {
+                    final StringBuilder pairList = new StringBuilder();
+                    missingHeaderList.forEach(missingHeader -> {
+                        if (!pairList.toString().isEmpty()) {
+                            pairList.append("\n");
+                        }
+                        pairList.append(missingHeader.getSellingMtn())
+                                .append(", ")
+                                .append(missingHeader.getBillingId());
+                    });
+                    String tradingDate = formatDate(missingHeaderList.get(0).getTradingDate());
+                    String errorMessage = String.format(INCOMPLETE_REDECLARATION_ENTRIES.getErrorMessage(),
+                            tradingDate, pairList.toString());
+                    details.setErrorMessage(errorMessage);
+                }
+            }
         } else {
             details.setHeaderList(new ArrayList<>());
         }
@@ -98,5 +125,12 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
     @PostMapping("/{headerId}/status")
     public void saveData(@PathVariable long headerId, @RequestBody BcqUpdateStatusDetails updateStatusDetails) {
         bcqService.updateHeaderStatus(headerId, updateStatusDetails);
+    }
+
+
+
+    private String formatDate(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat(DATE_FORMATS[0]);
+        return dateFormat.format(date);
     }
 }

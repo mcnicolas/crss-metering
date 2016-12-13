@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
+import com.pemc.crss.metering.constants.BcqEventCode;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
 import com.pemc.crss.metering.dto.*;
@@ -18,6 +19,7 @@ import static com.pemc.crss.metering.constants.BcqEventCode.*;
 import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
+import static com.pemc.crss.metering.parser.bcq.util.BCQParserUtil.DATE_FORMATS;
 import static java.util.Arrays.asList;
 
 @Slf4j
@@ -53,18 +55,41 @@ public class BcqServiceImpl implements BcqService {
             List<BcqHeader> headerList = details.getHeaderList();
             List<Long> buyerIds = details.getBuyerIds();
             Long sellerId = details.getSellerId();
-            BcqHeader header = headerList.get(0);
+            BcqHeader firstHeader = headerList.get(0);
             long fileId = bcqDao.saveUploadFile(transactionId, file);
+            int recordCount = headerList.size() * firstHeader.getDataList().size();
+            List<BcqEventCode> eventCodeList = new ArrayList<>();
+
+            if (details.isRecordExists()) {
+                Map<String, String> params = new HashMap<>();
+                params.put("sellingParticipant", details.getSellerShortName());
+                params.put("tradingDate", firstHeader.getTradingDate().toString());
+                List<BcqHeader> currentHeaderList = findAllHeaders(params);
+                headerList.forEach(header -> {
+                    if (isHeaderInList(header, currentHeaderList)) {
+                        eventCodeList.add(NTF_BCQ_UPDATE_BUYER);
+                        header.setUpdatedVia("REDECLARATION");
+                    } else {
+                        eventCodeList.add(NTF_BCQ_SUBMIT_BUYER);
+                    }
+                });
+            }
+
             List<Long> headerIds = bcqDao.saveBcq(fileId, headerList);
-            int recordCount = headerList.size() * header.getDataList().size();
 
             for (int i = 0; i < headerIds.size(); i ++) {
-                notificationService.send(NTF_BCQ_SUBMIT_BUYER,
-                        submittedDate,
-                        header.getSellingParticipantName(),
-                        header.getSellingParticipantShortName(),
+                BcqEventCode code = eventCodeList.size() > 0 ? eventCodeList.get(i) : NTF_BCQ_SUBMIT_BUYER;
+                List<Object> payloadObjectList = new ArrayList<>();
+                if (code == NTF_BCQ_UPDATE_BUYER) {
+                    payloadObjectList.add(formatDate(firstHeader.getTradingDate()));
+                }
+                payloadObjectList.addAll(asList(submittedDate,
+                        firstHeader.getSellingParticipantName(),
+                        firstHeader.getSellingParticipantShortName(),
                         headerIds.get(i),
-                        buyerIds.get(i));
+                        buyerIds.get(i)));
+
+                notificationService.send(code, payloadObjectList.toArray());
             }
             notificationService.send(NTF_BCQ_SUBMIT_SELLER, submittedDate, recordCount, sellerId);
         }
@@ -125,6 +150,21 @@ public class BcqServiceImpl implements BcqService {
         return bcqDao.headerExists(header);
     }
 
+    @Override
+    public boolean isHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList) {
+        for(BcqHeader header : headerList) {
+            if (isSameHeader(header, headerToFind)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    /****************************************************
+     * SUPPORT METHODS
+     ****************************************************/
     private void sendValidationError(BcqDetails details, String submittedDate) {
         notificationService.send(NTF_BCQ_VALIDATION_SELLER,
                 submittedDate,
@@ -136,6 +176,17 @@ public class BcqServiceImpl implements BcqService {
                 details.getSellerName(),
                 details.getSellerShortName(),
                 details.getErrorMessage());
+    }
+
+    private boolean isSameHeader(BcqHeader header1, BcqHeader header2) {
+        return header1.getSellingMtn().equals(header2.getSellingMtn()) &&
+                header1.getBillingId().equals(header2.getBillingId()) &&
+                header1.getTradingDate().equals(header2.getTradingDate());
+    }
+
+    private String formatDate(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat(DATE_FORMATS[0]);
+        return dateFormat.format(date);
     }
 
 }

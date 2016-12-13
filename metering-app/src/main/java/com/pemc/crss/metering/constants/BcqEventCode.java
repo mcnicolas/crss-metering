@@ -15,7 +15,8 @@ public enum BcqEventCode {
     NTF_BCQ_VALIDATION_DEPT,
     NTF_BCQ_CANCEL_BUYER,
     NTF_BCQ_CONFIRM_SELLER,
-    NTF_BCQ_NULLIFY_SELLER;
+    NTF_BCQ_NULLIFY_SELLER,
+    NTF_BCQ_UPDATE_BUYER;
 
     private static final Map<BcqEventCode, List<String>> PAYLOAD_NAME_MAP = new HashMap<>();
 
@@ -27,6 +28,8 @@ public enum BcqEventCode {
         for (BcqEventCode code : values()) {
             List<String> payloadNameList = new ArrayList<>();
             switch (code) {
+                case NTF_BCQ_UPDATE_BUYER:
+                    payloadNameList.add("tradingDate");
                 case NTF_BCQ_SUBMIT_BUYER:
                     payloadNameList.add("submittedDate");
                     payloadNameList.addAll(sellerPayloadNameList);

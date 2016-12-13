@@ -138,7 +138,7 @@ public class JdbcBcqDao implements BcqDao {
 
     @Override
     public List<BcqHeader> findAllHeaders(Map<String, String> params) {
-        Long headerId = Long.parseLong(params.get("headerId"));
+        Long headerId = params.get("headerId") == null ? null : Long.parseLong(params.get("headerId"));
         String sellingMtn = params.get("sellingMtn");
         String billingId = params.get("billingId");
         String buyingParticipant = params.get("buyingParticipant");
@@ -268,10 +268,12 @@ public class JdbcBcqDao implements BcqDao {
             jdbcTemplate.update(con -> {
                 PreparedStatement ps = con.prepareStatement(updateHeader);
                 ps.setLong(1, fileId);
-                ps.setString(2, header.getSellingMtn());
-                ps.setString(3, header.getBillingId());
-                ps.setTimestamp(4, new Timestamp(header.getTradingDate().getTime()));
-                ps.setString(5, header.getSellingParticipantShortName());
+                ps.setString(2, header.getStatus().toString());
+                ps.setString(3, header.getUpdatedVia());
+                ps.setString(4, header.getSellingMtn());
+                ps.setString(5, header.getBillingId());
+                ps.setTimestamp(6, new Timestamp(header.getTradingDate().getTime()));
+                ps.setString(7, header.getSellingParticipantShortName());
 
                 return ps;
             });
@@ -355,7 +357,7 @@ public class JdbcBcqDao implements BcqDao {
             header.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
             header.setTradingDate(rs.getDate("trading_date"));
             header.setDeadlineDate(rs.getTimestamp("deadline_date"));
-            header.setUpdatedVia("");
+            header.setUpdatedVia(rs.getString("updated_via"));
             header.setStatus(BcqStatus.fromString(rs.getString("status")));
             uploadFile.setTransactionId(rs.getString("transaction_id"));
             uploadFile.setSubmittedDate(rs.getTimestamp("submitted_date"));

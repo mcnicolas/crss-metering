@@ -23,4 +23,6 @@ public interface BcqService {
 
     boolean headerExists(BcqHeader header);
 
+    boolean isHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList);
+
 }
