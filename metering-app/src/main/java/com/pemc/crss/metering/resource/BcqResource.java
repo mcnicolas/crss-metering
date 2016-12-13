@@ -84,11 +84,13 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
                     final StringBuilder pairList = new StringBuilder();
                     missingHeaderList.forEach(missingHeader -> {
                         if (!pairList.toString().isEmpty()) {
-                            pairList.append("\n");
+                            pairList.append(", ");
                         }
-                        pairList.append(missingHeader.getSellingMtn())
-                                .append(", ")
-                                .append(missingHeader.getBillingId());
+                        pairList.append("[")
+                                .append(missingHeader.getSellingMtn())
+                                .append(" - ")
+                                .append(missingHeader.getBillingId())
+                                .append("]");
                     });
                     String tradingDate = formatDate(missingHeaderList.get(0).getTradingDate());
                     String errorMessage = String.format(INCOMPLETE_REDECLARATION_ENTRIES.getErrorMessage(),
