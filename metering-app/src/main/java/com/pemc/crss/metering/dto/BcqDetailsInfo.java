@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class BcqDetails {
+public class BcqDetailsInfo {
 
     private Long sellerId;
     private BcqUploadFileInfo fileInfo;
