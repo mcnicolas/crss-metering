@@ -141,8 +141,9 @@ bcq:
       TRANSACTION_ID,
       FILE_NAME,
       FILE_SIZE,
-      SUBMITTED_DATE)
-    VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?)
+      SUBMITTED_DATE,
+      VALIDATION_STATUS)
+    VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?)
   header:
     insert: >
       INSERT INTO TXN_BCQ_HEADER (

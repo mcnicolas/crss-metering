@@ -16,6 +16,8 @@ import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqEventCode.*;
 import static com.pemc.crss.metering.constants.BcqStatus.*;
+import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
+import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static java.util.Arrays.asList;
 
 @Slf4j
@@ -39,16 +41,19 @@ public class BcqServiceImpl implements BcqService {
         String format = "MMM. dd, yyyy hh:mm a";
         DateFormat dateFormat = new SimpleDateFormat(format);
         String submittedDate = dateFormat.format(file.getSubmittedDate());
+        String transactionId = UUID.randomUUID().toString();
 
         if (details.getErrorMessage() != null) {
+            file.setValidationStatus(REJECTED);
             sendValidationError(details, submittedDate);
+            bcqDao.saveUploadFile(transactionId, file);
         } else {
+            file.setValidationStatus(ACCEPTED);
+
             List<BcqHeader> headerList = details.getHeaderList();
             List<Long> buyerIds = details.getBuyerIds();
             Long sellerId = details.getSellerId();
             BcqHeader header = headerList.get(0);
-
-            String transactionId = UUID.randomUUID().toString();
             long fileId = bcqDao.saveUploadFile(transactionId, file);
             List<Long> headerIds = bcqDao.saveBcq(fileId, headerList);
             int recordCount = headerList.size() * header.getDataList().size();

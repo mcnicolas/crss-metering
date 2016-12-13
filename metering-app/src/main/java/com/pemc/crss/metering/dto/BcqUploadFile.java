@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.dto;
 
+import com.pemc.crss.metering.constants.ValidationStatus;
 import lombok.Data;
 
 import java.util.Date;
@@ -12,5 +13,6 @@ public class BcqUploadFile {
     private String fileName;
     private long fileSize;
     private Date submittedDate;
+    private ValidationStatus validationStatus;
 
 }

@@ -85,6 +85,7 @@ public class JdbcBcqDao implements BcqDao {
                     ps.setString(2, bcqUploadFile.getFileName());
                     ps.setLong(3, bcqUploadFile.getFileSize());
                     ps.setTimestamp(4, new Timestamp(bcqUploadFile.getSubmittedDate().getTime()));
+                    ps.setString(5, bcqUploadFile.getValidationStatus().toString());
 
                     return ps;
                 },
