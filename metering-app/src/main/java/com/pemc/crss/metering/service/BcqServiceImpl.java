@@ -41,27 +41,18 @@ public class BcqServiceImpl implements BcqService {
         String submittedDate = dateFormat.format(file.getSubmittedDate());
 
         if (details.getErrorMessage() != null) {
-            notificationService.send(NTF_BCQ_VALIDATION_SELLER,
-                    submittedDate,
-                    details.getErrorMessage(),
-                    details.getSellerId());
-
-            notificationService.send(NTF_BCQ_VALIDATION_DEPT,
-                    submittedDate,
-                    details.getSellerName(),
-                    details.getSellerShortName(),
-                    details.getErrorMessage());
+            sendValidationError(details, submittedDate);
         } else {
             List<BcqHeader> headerList = details.getHeaderList();
             List<Long> buyerIds = details.getBuyerIds();
             Long sellerId = details.getSellerId();
+            BcqHeader header = headerList.get(0);
 
             String transactionId = UUID.randomUUID().toString();
             long fileId = bcqDao.saveUploadFile(transactionId, file);
             List<Long> headerIds = bcqDao.saveBcq(fileId, headerList);
-            int recordCount = headerList.size() * headerList.get(0).getDataList().size();
+            int recordCount = headerList.size() * header.getDataList().size();
 
-            BcqHeader header = headerList.get(0);
             for (int i = 0; i < headerIds.size(); i ++) {
                 notificationService.send(NTF_BCQ_SUBMIT_BUYER,
                         submittedDate,
@@ -127,6 +118,19 @@ public class BcqServiceImpl implements BcqService {
     @Override
     public boolean headerExists(BcqHeader header) {
         return bcqDao.headerExists(header);
+    }
+
+    private void sendValidationError(BcqDetails details, String submittedDate) {
+        notificationService.send(NTF_BCQ_VALIDATION_SELLER,
+                submittedDate,
+                details.getErrorMessage(),
+                details.getSellerId());
+
+        notificationService.send(NTF_BCQ_VALIDATION_DEPT,
+                submittedDate,
+                details.getSellerName(),
+                details.getSellerShortName(),
+                details.getErrorMessage());
     }
 
 }
