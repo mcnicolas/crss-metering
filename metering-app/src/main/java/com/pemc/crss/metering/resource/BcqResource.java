@@ -26,7 +26,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 @Slf4j
 @RestController
 @RequestMapping("/bcq")
-public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Use DTO mapper
+public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
 
     private BcqReader bcqReader;
     private BcqService bcqService;
