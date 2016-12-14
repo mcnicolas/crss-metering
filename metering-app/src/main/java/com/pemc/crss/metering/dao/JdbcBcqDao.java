@@ -8,6 +8,8 @@ import com.pemc.crss.metering.dto.BcqUploadFile;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -25,9 +27,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
+import static com.pemc.crss.metering.constants.ConfigKeys.BCQ_NULLIFICATION_DEADLINE;
 import static com.pemc.crss.metering.parser.bcq.util.BcqDateUtils.parseDate;
+import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Repository
 @Slf4j
@@ -71,9 +75,12 @@ public class JdbcBcqDao implements BcqDao {
 
     private final JdbcTemplate jdbcTemplate;
 
+    private final CacheManager cacheManager;
+
     @Autowired
-    public JdbcBcqDao(JdbcTemplate jdbcTemplate) {
+    public JdbcBcqDao(JdbcTemplate jdbcTemplate, CacheManager cacheManager) {
         this.jdbcTemplate = jdbcTemplate;
+        this.cacheManager = cacheManager;
     }
 
     @Override
@@ -281,8 +288,11 @@ public class JdbcBcqDao implements BcqDao {
 
             return getHeaderIdBy(header);
         } else {
+            Cache configCache = cacheManager.getCache("config");
+            int deadlineConfig = Integer.parseInt(configCache.get(BCQ_NULLIFICATION_DEADLINE.toString()).get().toString());
+            long deadlineConfigInSeconds = DAYS.toSeconds(deadlineConfig);
             Timestamp deadlineDateTimestamp = new Timestamp(header.getTradingDate().getTime() +
-                    TimeUnit.HOURS.toMillis(47) + TimeUnit.MINUTES.toMillis(59));
+                    SECONDS.toMillis(deadlineConfigInSeconds - 1));
 
             KeyHolder keyHolder = new GeneratedKeyHolder();
             log.debug("New header, doing an insert.");
