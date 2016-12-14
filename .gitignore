@@ -24,8 +24,6 @@ dist/
 *.ipr
 *.iws
 
-*.sql
-
 *.DS_Store
 
 # File Upload Directory
