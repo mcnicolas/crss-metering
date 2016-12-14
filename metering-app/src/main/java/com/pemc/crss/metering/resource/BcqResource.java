@@ -8,7 +8,6 @@ import com.pemc.crss.metering.parser.bcq.BcqReader;
 import com.pemc.crss.metering.service.BcqService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +20,7 @@ import java.util.stream.Collectors;
 
 import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_REDECLARATION_ENTRIES;
 import static com.pemc.crss.metering.parser.bcq.util.BCQParserUtil.DATE_FORMATS;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @Slf4j
@@ -30,13 +30,11 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
 
     private BcqReader bcqReader;
     private BcqService bcqService;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public BcqResource(BcqReader bcqReader, BcqService bcqService, ApplicationEventPublisher eventPublisher) {
+    public BcqResource(BcqReader bcqReader, BcqService bcqService) {
         this.bcqReader = bcqReader;
         this.bcqService = bcqService;
-        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -71,31 +69,14 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
             params.put("sellingParticipant", sellerShortName);
             params.put("tradingDate", formatDate(details.getHeaderList().get(0).getTradingDate()));
             List<BcqHeader> currentHeaderList = bcqService.findAllHeaders(params);
+            boolean recordExists = currentHeaderList.size() > 0;
 
-            if (currentHeaderList.size() > 0) {
+            if (recordExists) {
                 details.setRecordExists(true);
 
-                List<BcqHeader> missingHeaderList = currentHeaderList
-                        .stream()
-                        .filter(header -> !bcqService.isHeaderInList(header, details.getHeaderList()))
-                        .collect(Collectors.toList());
-
-                if (missingHeaderList.size() > 0) {
-                    final StringBuilder pairList = new StringBuilder();
-                    missingHeaderList.forEach(missingHeader -> {
-                        if (!pairList.toString().isEmpty()) {
-                            pairList.append(", ");
-                        }
-                        pairList.append("[")
-                                .append(missingHeader.getSellingMtn())
-                                .append(" - ")
-                                .append(missingHeader.getBillingId())
-                                .append("]");
-                    });
-                    String tradingDate = formatDate(missingHeaderList.get(0).getTradingDate());
-                    String errorMessage = String.format(INCOMPLETE_REDECLARATION_ENTRIES.getErrorMessage(),
-                            tradingDate, pairList.toString());
-                    details.setErrorMessage(errorMessage);
+                String validateHeaderErrorMessage = validateHeaders(details.getHeaderList(), currentHeaderList);
+                if (isNotBlank(validateHeaderErrorMessage)) {
+                    details.setErrorMessage(validateHeaderErrorMessage);
                 }
             }
         } else {
@@ -130,6 +111,34 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> { //TODO: Us
     }
 
 
+    /****************************************************
+     * SUPPORT METHODS
+     ****************************************************/
+    private String validateHeaders(List<BcqHeader> headerList, List<BcqHeader> existingHeaderList) {
+        List<BcqHeader> missingHeaderList = existingHeaderList
+                .stream()
+                .filter(header -> !bcqService.isHeaderInList(header, headerList))
+                .collect(Collectors.toList());
+
+        if (missingHeaderList.size() > 0) {
+            final StringBuilder pairList = new StringBuilder();
+            missingHeaderList.forEach(missingHeader -> {
+                if (!pairList.toString().isEmpty()) {
+                    pairList.append(", ");
+                }
+                pairList.append("[")
+                        .append(missingHeader.getSellingMtn())
+                        .append(" - ")
+                        .append(missingHeader.getBillingId())
+                        .append("]");
+            });
+            String tradingDate = formatDate(missingHeaderList.get(0).getTradingDate());
+            return String.format(INCOMPLETE_REDECLARATION_ENTRIES.getErrorMessage(),
+                    tradingDate, pairList.toString());
+        }
+
+        return "";
+    }
 
     private String formatDate(Date date) {
         DateFormat dateFormat = new SimpleDateFormat(DATE_FORMATS[0]);
