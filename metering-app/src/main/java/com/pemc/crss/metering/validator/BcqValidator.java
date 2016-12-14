@@ -4,19 +4,17 @@ import com.pemc.crss.metering.dto.BcqData;
 import com.pemc.crss.metering.dto.BcqDetails;
 import com.pemc.crss.metering.dto.BcqHeader;
 import com.pemc.crss.metering.parser.bcq.BcqInterval;
-import com.pemc.crss.metering.parser.bcq.util.BCQParserUtil;
 import com.pemc.crss.metering.utils.DateTimeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
 import java.math.BigDecimal;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqValidationRules.*;
 import static com.pemc.crss.metering.parser.bcq.BcqInterval.*;
+import static com.pemc.crss.metering.parser.bcq.util.BcqDateUtils.*;
 import static java.math.BigDecimal.ROUND_HALF_UP;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -181,10 +179,9 @@ public class BcqValidator {
             return null;
         }
 
-        Date date = BCQParserUtil.parseDateTime(dateString);
+        Date date = parseDateTime(dateString);
         if (date == null) {
-            setErrorMessage(String.format(INCORRECT_FORMAT.getErrorMessage(), "Date ",
-                    BCQParserUtil.DATE_TIME_FORMATS[0]));
+            setErrorMessage(String.format(INCORRECT_FORMAT.getErrorMessage(), "Date ", DATE_TIME_FORMAT));
         }
 
         return date;
@@ -289,10 +286,7 @@ public class BcqValidator {
     }
 
     private String formatAndGetDate(Date date, boolean withTime) {
-        String format = withTime ? BCQParserUtil.DATE_TIME_FORMATS[0] : BCQParserUtil.DATE_FORMATS[0];
-        DateFormat dateFormat = new SimpleDateFormat(format);
-
-        return dateFormat.format(date);
+        return withTime ? formatDateTime(date) : formatDate(date);
     }
 
     private List<BcqData> divideDataByInterval(BcqData data, BcqInterval interval) {

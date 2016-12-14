@@ -5,7 +5,6 @@ import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.BcqData;
 import com.pemc.crss.metering.dto.BcqHeader;
 import com.pemc.crss.metering.dto.BcqUploadFile;
-import com.pemc.crss.metering.parser.bcq.util.BCQParserUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +26,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static com.pemc.crss.metering.parser.bcq.util.BcqDateUtils.parseDate;
 
 @Repository
 @Slf4j
@@ -144,7 +145,7 @@ public class JdbcBcqDao implements BcqDao {
         String buyingParticipant = params.get("buyingParticipant");
         String sellingParticipant = params.get("sellingParticipant");
         String status = params.get("status");
-        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
+        Date tradingDate = parseDate(params.get("tradingDate"));
 
         BcqQueryBuilder builder = new BcqQueryBuilder();
         BuilderData selectQuery = builder.newQuery(displayData)
@@ -172,7 +173,7 @@ public class JdbcBcqDao implements BcqDao {
         String buyingParticipant = params.get("buyingParticipant");
         String sellingParticipant = params.get("sellingParticipant");
         String status = params.get("status");
-        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
+        Date tradingDate = parseDate(params.get("tradingDate"));
 
         BcqQueryBuilder builder = new BcqQueryBuilder(displayPaginate);
         BuilderData selectQuery = builder.newQuery(displayData)
@@ -257,10 +258,10 @@ public class JdbcBcqDao implements BcqDao {
                 }, Integer.class) > 0;
     }
 
+
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/
-
     private long saveBcqHeader(long fileId, BcqHeader header, boolean update) {
         if (update) {
             log.debug("Header exists, doing an update.");
@@ -322,7 +323,7 @@ public class JdbcBcqDao implements BcqDao {
         String billingId = params.get("billingId");
         String sellingParticipant = params.get("sellingParticipant");
         String buyingParticipant = params.get("buyingParticipant");
-        Date tradingDate = BCQParserUtil.parseDate(params.get("tradingDate"));
+        Date tradingDate = parseDate(params.get("tradingDate"));
         String status = params.get("status");
 
         BcqQueryBuilder builder = new BcqQueryBuilder();

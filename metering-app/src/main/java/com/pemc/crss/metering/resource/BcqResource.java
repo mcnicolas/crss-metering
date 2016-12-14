@@ -13,13 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_REDECLARATION_ENTRIES;
-import static com.pemc.crss.metering.parser.bcq.util.BCQParserUtil.DATE_FORMATS;
+import static com.pemc.crss.metering.parser.bcq.util.BcqDateUtils.formatDate;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
@@ -138,10 +136,5 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
         }
 
         return "";
-    }
-
-    private String formatDate(Date date) {
-        DateFormat dateFormat = new SimpleDateFormat(DATE_FORMATS[0]);
-        return dateFormat.format(date);
     }
 }

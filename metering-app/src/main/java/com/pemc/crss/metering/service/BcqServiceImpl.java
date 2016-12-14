@@ -11,15 +11,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqEventCode.*;
 import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
-import static com.pemc.crss.metering.parser.bcq.util.BCQParserUtil.DATE_FORMATS;
+import static com.pemc.crss.metering.parser.bcq.util.BcqDateUtils.*;
 import static java.util.Arrays.asList;
 
 @Slf4j
@@ -40,9 +38,7 @@ public class BcqServiceImpl implements BcqService {
     @Transactional
     public void save(BcqDetails details) {
         BcqUploadFile file = details.getFile();
-        String format = "MMM. dd, yyyy hh:mm a";
-        DateFormat dateFormat = new SimpleDateFormat(format);
-        String submittedDate = dateFormat.format(file.getSubmittedDate());
+        String submittedDate = formatLongDateTime(file.getSubmittedDate());
         String transactionId = UUID.randomUUID().toString();
 
         if (details.getErrorMessage() != null) {
@@ -76,7 +72,6 @@ public class BcqServiceImpl implements BcqService {
             }
 
             List<Long> headerIds = bcqDao.saveBcq(fileId, headerList);
-
             for (int i = 0; i < headerIds.size(); i ++) {
                 BcqEventCode code = eventCodeList.size() > 0 ? eventCodeList.get(i) : NTF_BCQ_SUBMIT_BUYER;
                 List<Object> payloadObjectList = new ArrayList<>();
@@ -119,10 +114,8 @@ public class BcqServiceImpl implements BcqService {
     @Transactional
     public void updateHeaderStatus(long headerId, BcqUpdateStatusDetails updateStatusDetails) {
         bcqDao.updateHeaderStatus(headerId, updateStatusDetails.getStatus());
-        DateFormat dateTimeFormat = new SimpleDateFormat("MMM. dd, yyyy hh:mm a");
-        DateFormat dateFormat = new SimpleDateFormat("MMM. dd, yyyy");
-        String respondedDate = dateTimeFormat.format(new Date());
-        String tradingDate = dateFormat.format(updateStatusDetails.getTradingDate());
+        String respondedDate = formatLongDateTime(new Date());
+        String tradingDate = formatLongDate(updateStatusDetails.getTradingDate());
 
         List<Object> payloadObjectList = new ArrayList<>();
         payloadObjectList.addAll(asList(tradingDate, respondedDate, headerId));
@@ -182,11 +175,6 @@ public class BcqServiceImpl implements BcqService {
         return header1.getSellingMtn().equals(header2.getSellingMtn()) &&
                 header1.getBillingId().equals(header2.getBillingId()) &&
                 header1.getTradingDate().equals(header2.getTradingDate());
-    }
-
-    private String formatDate(Date date) {
-        DateFormat dateFormat = new SimpleDateFormat(DATE_FORMATS[0]);
-        return dateFormat.format(date);
     }
 
 }
