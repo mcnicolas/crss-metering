@@ -23,14 +23,14 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 public class BcqValidator {
 
     private static final int VALID_NO_OF_COLUMNS = 5;
-    private static final int DEFAULT_INTERVAL_CONFIG_IN_MINUTES = 5;
 
-    private int intervalConfig = DEFAULT_INTERVAL_CONFIG_IN_MINUTES;
+    private int intervalConfig;
     private Date validTradingDate;
     private Set<String> uniqueDataSet = new HashSet<>();
     private String errorMessage;
 
-    public BcqValidator() {
+    public BcqValidator(int intervalConfig) {
+        this.intervalConfig = intervalConfig;
         validTradingDate = null;
     }
 

@@ -3,6 +3,9 @@ package com.pemc.crss.metering.parser.bcq;
 import com.pemc.crss.metering.dto.BcqDetails;
 import com.pemc.crss.metering.validator.BcqValidator;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.io.ICsvListReader;
@@ -13,16 +16,24 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.pemc.crss.metering.constants.ConfigKeys.BCQ_INTERVAL;
 import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 
 @Slf4j
 @Component
 public class BcqReader {
 
-    private static final int DEFAULT_INTERVAL_CONFIG_IN_MINUTES = 5;
+    private final CacheManager cacheManager;
+
+    @Autowired
+    public BcqReader(CacheManager cacheManager) {
+        this.cacheManager = cacheManager;
+    }
 
     public BcqDetails readData(InputStream inputStream) throws IOException {
-        BcqValidator validator = new BcqValidator();
+        Cache configCache = cacheManager.getCache("config");
+        int intervalConfig = Integer.parseInt(configCache.get(BCQ_INTERVAL.toString()).get().toString());
+        BcqValidator validator = new BcqValidator(intervalConfig);
         List<List<String>> csv = new ArrayList<>();
 
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
