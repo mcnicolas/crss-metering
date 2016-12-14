@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static java.awt.GridBagConstraints.WEST;
@@ -129,53 +128,56 @@ public class MeterDataUploader extends JFrame {
 
         ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "Upload");
 
+        List<FileBean> selectedFiles = tablePanel.getSelectedFiles();
+
+        FileBucketFactory fileBucketFactory = new FileBucketFactory();
+        FileBucket fileBucket = fileBucketFactory.createBucket(selectedFiles);
+
         startTime = System.currentTimeMillis();
         uploadTimer.start();
 
-        String transactionID = UUID.randomUUID().toString();
-        List<FileBean> selectedFiles = tablePanel.getSelectedFiles();
         uploadProgressBar.setValue(0);
         uploadProgressBar.setMinimum(0);
         uploadProgressBar.setMaximum(100);
 
         int totalProgress = selectedFiles.size() + 2;
 
-        SwingWorker<Void, FileBean> worker = new SwingWorker<Void, FileBean>() {
+        SwingWorker<String, List<FileBean>> worker = new SwingWorker<String, List<FileBean>>() {
             @Override
-            protected Void doInBackground() throws Exception {
+            protected String doInBackground() throws Exception {
 
                 int counter = 0;
 
-                long headerID = httpHandler.sendHeader(transactionID, username, selectedFiles.size(), category);
+                long headerID = httpHandler.sendHeader(selectedFiles.size(), category);
                 int progressValue = (100 * ++counter) / totalProgress;
                 setProgress(progressValue);
 
-                for (FileBean selectedFile : selectedFiles) {
-                    httpHandler.sendFile(headerID, transactionID, selectedFile, category, mspShortName);
-                    publish(selectedFile);
+                while (fileBucket.hasMoreElements()) {
+                    List<FileBean> fileList = fileBucket.getFiles();
+                    httpHandler.sendFiles(headerID, mspShortName, fileList);
+                    publish(fileList);
 
-                    progressValue = (100 * ++counter) / totalProgress;
+                    counter = counter + fileList.size();
+                    progressValue = (100 * counter) / totalProgress;
                     setProgress(progressValue);
-
-                    log.debug("Uploading file:{}", selectedFile.getPath().getFileName().toString());
                 }
 
-                httpHandler.sendTrailer(transactionID);
+                String transactionID = httpHandler.sendTrailer(headerID);
                 progressValue = (100 * ++counter) / totalProgress;
                 setProgress(progressValue);
 
-                return null;
+                return transactionID;
             }
 
             @Override
-            protected void process(List<FileBean> fileBeans) {
-                tablePanel.updateRecordStatus(fileBeans.get(0).getKey());
+            protected void process(List<List<FileBean>> chunks) {
+                tablePanel.updateRecordStatus(chunks.get(0));
             }
 
             @Override
             protected void done() {
                 try {
-                    get();
+                    String transactionID = get();
 
                     long elapsedTime = System.currentTimeMillis() - startTime;
 
@@ -201,6 +203,7 @@ public class MeterDataUploader extends JFrame {
                     constraints.gridy = 1;
                     messagePanel.add(transactionLabel, constraints);
 
+                    // TODO: transactionID should be coming from the return value of the sendTrailer method
                     JTextField txtTransaction = new JTextField(transactionID);
                     constraints = new GridBagConstraints();
                     constraints.gridx = 1;

@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.parser;
 
+import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.parser.meterquantity.MeterQuantityCSVReader;
 import org.junit.Test;
@@ -18,7 +19,8 @@ public class MeterQuantityCSVReaderTest {
     @Test
     public void parseCSVWithMissingColumns() throws IOException {
         QuantityReader reader = new MeterQuantityCSVReader();
-        MeterData meterData = reader.readData(new FileInputStream(
+        FileManifest fileManifest = new FileManifest();
+        MeterData meterData = reader.readData(fileManifest, new FileInputStream(
                 new File(MeterQuantityCSVReaderTest.class.getClassLoader().getResource(
                         "meterdata/csv/MF3MABAMSUZ01.csv").getFile())));
 
@@ -28,7 +30,8 @@ public class MeterQuantityCSVReaderTest {
     @Test
     public void parseCSVWithExtraColumns() throws IOException {
         QuantityReader reader = new MeterQuantityCSVReader();
-        MeterData meterData = reader.readData(new FileInputStream(
+        FileManifest fileManifest = new FileManifest();
+        MeterData meterData = reader.readData(fileManifest, new FileInputStream(
                 new File(MeterQuantityCSVReaderTest.class.getClassLoader().getResource(
                         "meterdata/csv/MET_CEDCMSP_R3MEXCEDC01TNSC01_20161003.csv").getFile())));
 

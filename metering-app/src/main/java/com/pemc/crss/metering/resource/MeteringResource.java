@@ -1,19 +1,27 @@
 package com.pemc.crss.metering.resource;
 
-import com.pemc.crss.metering.constants.UploadType;
+import com.pemc.crss.metering.dto.mq.HeaderParam;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import javax.validation.Valid;
 import java.io.IOException;
+
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @Slf4j
 @RestController
@@ -26,58 +34,60 @@ public class MeteringResource {
 
     @Autowired
     public MeteringResource(MeterService meterService, RabbitTemplate rabbitTemplate) {
+
         this.meterService = meterService;
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    @PostMapping("/uploadheader")
-    public long sendHeader(@RequestParam("transactionID") String transactionID,
-                           @RequestParam("fileCount") int fileCount,
-                           @RequestParam("category") String category,
-                           @RequestParam("username") String username) {
-        // TODO: Should the file manifest be initialized?
+    //    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
+    @PostMapping(value = "/uploadHeader",
+            consumes = APPLICATION_JSON_VALUE,
+            produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<Long> uploadHeader(@Valid @RequestBody HeaderParam headerParam) {
+        log.debug("Received header record fileCount:{} category:{}", headerParam.getFileCount(), headerParam.getCategory());
 
-        log.debug("Received header record txnID:{} fileCount:{} category:{} username:{}", transactionID, fileCount, category, username);
+        // TODO: Validation
+        // 2. category should be a valid value refer to UploadType enumeration
+        long headerID = meterService.saveHeader(headerParam.getFileCount(), headerParam.getCategory());
+        log.debug("Saved manifest header: {}", headerID);
 
-        return meterService.saveHeader(transactionID, fileCount, category, username);
+        return ResponseEntity.ok(headerID);
     }
 
-    @PostMapping("/uploadfile")
-    public void sendFile(MultipartHttpServletRequest request,
-                         @RequestParam("headerID") int headerID,
-                         @RequestParam("transactionID") String transactionID,
-                         @RequestParam("fileName") String fileName,
-                         @RequestParam("fileType") String fileType,
-                         @RequestParam("fileSize") long fileSize,
-                         @RequestParam("checksum") String checksum,
-                         @RequestParam("mspShortName") String mspShortName,
-                         @RequestParam("category") String category) throws IOException {
+//    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
+    @PostMapping(value = "/uploadFile",
+            consumes = MULTIPART_FORM_DATA_VALUE,
+            produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> uploadFile(@RequestParam("headerID") Long headerID,
+                                         @RequestParam("mspShortName") String mspShortName,
+                                         @RequestPart("file") MultipartFile[] multipartFiles) throws IOException {
+        log.debug("Received file/s headerID:{} mspShortName:{} fileCount:{}", headerID, mspShortName, multipartFiles.length);
 
-        MultipartFile file = request.getFile("file");
+        // TODO: Validate
 
-        // TODO: Pass a FileManifest bean instead. Could use a json converter
-        Message message = MessageBuilder.withBody(file.getBytes())
-                .setHeader("headerID", headerID)
-                .setHeader("transactionID", transactionID)
-                .setHeader("fileName", fileName)
-                .setHeader("fileType", fileType)
-                .setHeader("fileSize", fileSize)
-                .setHeader("checksum", checksum)
-                .setHeader("mspShortName", mspShortName)
-                .setHeader("category", UploadType.valueOf(category))
-                .setHeaderIfAbsent("Content type", file.getContentType())
-                .build();
+        for (MultipartFile file : multipartFiles) {
+            // TODO: Pass a FileManifest bean instead. Could use a json converter
+            Message message = MessageBuilder.withBody(file.getBytes())
+                    .setHeader("headerID", headerID)
+                    .setHeader("fileName", file.getOriginalFilename())
+                    .setHeader("mspShortName", mspShortName)
+                    .setHeaderIfAbsent("Content type", file.getContentType())
+                    .build();
 
-        log.debug("Received file {} headerID:{} txnID:{} category:{} delegating to queue", fileName, headerID, transactionID, category);
+            log.debug("Received file {} headerID:{} delegating to queue", file.getOriginalFilename(), headerID);
 
-        rabbitTemplate.send("crss.mq", ROUTING_KEY, message);
+            rabbitTemplate.send("crss.mq", ROUTING_KEY, message);
+        }
+
+        return new ResponseEntity<>(null, OK);
     }
 
-    @PostMapping("/uploadtrailer")
-    public void sendTrailer(@RequestParam("transactionID") String transactionID) {
-        log.debug("Received trailer record txnID:{}", transactionID);
+    //    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
+    @PostMapping("/uploadTrailer")
+    public ResponseEntity<String> uploadTrailer(@RequestParam("headerID") long headerID) {
+        log.debug("Received trailer record headerID:{}", headerID);
 
-        meterService.saveTrailer(transactionID);
+        return ResponseEntity.ok(meterService.saveTrailer(headerID));
     }
 
 }

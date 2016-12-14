@@ -1,7 +1,6 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
@@ -13,20 +12,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.PreparedStatement;
-import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +42,7 @@ public class JdbcMeteringDao implements MeteringDao {
     @Value("${mq.manifest.header.query}")
     private String queryHeaderManifest;
 
-    @Value("${mq.manifest.trailer}")
+    @Value("${mq.manifest.trailer.update}")
     private String addTrailerManifest;
 
     @Value("${mq.manifest.file.insert}")
@@ -58,14 +54,8 @@ public class JdbcMeteringDao implements MeteringDao {
     @Value("${mq.meter.daily.insert}")
     private String insertDailyMQ;
 
-    @Value("${mq.meter.daily.queryVersion}")
-    private String dailyQueryVersion;
-
     @Value("${mq.meter.monthly.insert}")
     private String insertMonthlyMQ;
-
-    @Value("${mq.meter.monthly.queryVersion}")
-    private String monthlyQueryVersion;
 
     @Value("${mq.manifest.status}")
     private String updateManifestStatus;
@@ -75,58 +65,46 @@ public class JdbcMeteringDao implements MeteringDao {
 
     @Autowired
     public JdbcMeteringDao(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+        JdbcExceptionTranslator exceptionTranslator = new JdbcExceptionTranslator();
+
         this.jdbcTemplate = jdbcTemplate;
+        this.jdbcTemplate.setExceptionTranslator(exceptionTranslator);
+
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+        ((JdbcTemplate)this.namedParameterJdbcTemplate.getJdbcOperations()).setExceptionTranslator(exceptionTranslator);
     }
 
     @Override
-    public long saveHeader(String transactionID, int fileCount, String category, String username) {
+    public long saveHeader(HeaderManifest manifest) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(
-                connection -> {
-                    PreparedStatement ps = connection.prepareStatement(insertHeaderManifest, new String[]{"header_id"});
-                    ps.setString(1, transactionID);
-                    ps.setInt(2, fileCount);
-                    ps.setString(3, category);
-                    ps.setString(4, username);
-                    ps.setTimestamp(5, new Timestamp(new Date().getTime()));
 
-                    return ps;
-                },
-                keyHolder);
+        namedParameterJdbcTemplate.update(insertHeaderManifest,
+                new BeanPropertySqlParameterSource(manifest), keyHolder, new String[]{"header_id"});
 
         return keyHolder.getKey().longValue();
     }
 
     @Override
-    public void saveTrailer(String transactionID) {
-        jdbcTemplate.update(
-                connection -> {
-                    PreparedStatement ps = connection.prepareStatement(addTrailerManifest);
-                    ps.setString(1, transactionID);
+    public String saveTrailer(long headerID) {
+        namedParameterJdbcTemplate.update(addTrailerManifest, new MapSqlParameterSource("headerID", headerID));
 
-                    return ps;
-                });
+        HeaderManifest headerManifest = namedParameterJdbcTemplate.queryForObject(queryHeaderManifest,
+                new MapSqlParameterSource("headerID", headerID),
+                new BeanPropertyRowMapper<>(HeaderManifest.class));
+
+        return headerManifest.getTransactionID();
     }
 
     @Override
     public long saveFileManifest(FileManifest fileManifest) {
-        // TODO: Use named query
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(
-                connection -> {
-                    PreparedStatement ps = connection.prepareStatement(insertFileManifest, new String[]{"file_id"});
-                    ps.setLong(1, fileManifest.getHeaderID());
-                    ps.setString(2, fileManifest.getTransactionID());
-                    ps.setString(3, fileManifest.getFileName());
-                    ps.setString(4, fileManifest.getFileType().toString());
-                    ps.setLong(5, fileManifest.getFileSize());
-                    ps.setString(6, fileManifest.getChecksum());
-                    ps.setTimestamp(7, new Timestamp(new Date().getTime()));
 
-                    return ps;
-                },
-                keyHolder);
+        BeanPropertySqlParameterSource source = new BeanPropertySqlParameterSource(fileManifest);
+        source.registerSqlType("fileType", VARCHAR);
+
+        namedParameterJdbcTemplate.update(insertFileManifest,
+                source,
+                keyHolder, new String[]{"file_id"});
 
         return keyHolder.getKey().longValue();
     }
@@ -218,41 +196,22 @@ public class JdbcMeteringDao implements MeteringDao {
     @Override
     public void saveMeterData(FileManifest fileManifest, List<MeterDataDetail> meterDataDetails) {
         String insertSQL;
-        String versionQuery;
 
-        UploadType uploadType = fileManifest.getUploadType();
-        if (uploadType == DAILY || uploadType == CORRECTED_DAILY) {
+        if (fileManifest.getUploadType() == DAILY || fileManifest.getUploadType() == CORRECTED_DAILY) {
             insertSQL = insertDailyMQ;
-            versionQuery = dailyQueryVersion;
         } else {
             insertSQL = insertMonthlyMQ;
-            versionQuery = monthlyQueryVersion;
         }
 
-        Map<String, Object> paramMap = new HashMap<>();
-
+        List<BeanPropertySqlParameterSource> sourceList = new ArrayList<>();
         for (MeterDataDetail meterDataDetail : meterDataDetails) {
-            paramMap.put("sein", meterDataDetail.getSein());
-            paramMap.put("readingDateTime", meterDataDetail.getReadingDateTime());
+            BeanPropertySqlParameterSource source = new BeanPropertySqlParameterSource(meterDataDetail);
+            source.registerSqlType("uploadType", VARCHAR);
 
-            Integer version = namedParameterJdbcTemplate.query(versionQuery, paramMap, rs -> {
-                if (rs.next()) {
-                    return rs.getInt(3);
-                }
-
-                return 0;
-            }) + 1;
-
-            meterDataDetail.setFileID(fileManifest.getFileID());
-            meterDataDetail.setUploadType(fileManifest.getUploadType());
-            meterDataDetail.setMspShortName(fileManifest.getMspShortName());
-            meterDataDetail.setVersion(version);
-
-            BeanPropertySqlParameterSource paramSource = new BeanPropertySqlParameterSource(meterDataDetail);
-            paramSource.registerSqlType("uploadType", VARCHAR);
-
-            namedParameterJdbcTemplate.update(insertSQL, paramSource);
+            sourceList.add(source);
         }
+
+        namedParameterJdbcTemplate.batchUpdate(insertSQL, sourceList.toArray(new BeanPropertySqlParameterSource[]{}));
     }
 
     @Override
@@ -266,20 +225,18 @@ public class JdbcMeteringDao implements MeteringDao {
 
     @Override
     @Transactional(readOnly = true)
-    public HeaderManifest getHeaderManifest(String transactionID) {
-        Map<String, String> paramMap = new HashMap<>();
-        paramMap.put("txnID", transactionID);
-
-        return namedParameterJdbcTemplate.queryForObject(queryHeaderManifest, paramMap, new BeanPropertyRowMapper<>(HeaderManifest.class));
+    public HeaderManifest getHeaderManifest(long headerID) {
+        return namedParameterJdbcTemplate.queryForObject(queryHeaderManifest,
+                new MapSqlParameterSource("headerID", headerID),
+                new BeanPropertyRowMapper<>(HeaderManifest.class));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<FileManifest> getFileManifest(String transactionID) {
-        Map<String, String> paramMap = new HashMap<>();
-        paramMap.put("txnID", transactionID);
-
-        return namedParameterJdbcTemplate.query(queryFileManifest, paramMap, new BeanPropertyRowMapper<>(FileManifest.class));
+    public List<FileManifest> getFileManifest(long headerID) {
+        return namedParameterJdbcTemplate.query(queryFileManifest,
+                new MapSqlParameterSource("headerID", headerID),
+                new BeanPropertyRowMapper<>(FileManifest.class));
     }
 
 }

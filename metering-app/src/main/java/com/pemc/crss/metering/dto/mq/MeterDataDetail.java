@@ -56,6 +56,6 @@ public class MeterDataDetail {
     private int pfChannelStatus;
     private int pfIntervalStatus;
     private String estimationFlag;
-    private int version;
+    private Date createdDateTime;
 
 }

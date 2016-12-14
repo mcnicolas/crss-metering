@@ -4,6 +4,8 @@ import com.pemc.crss.metering.constants.FileType;
 import com.pemc.crss.metering.constants.UploadType;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 public class FileManifest {
 
@@ -14,10 +16,11 @@ public class FileManifest {
     private FileType fileType;
     private long fileSize;
     private String checksum;
-    private String recvChecksum;
     private String mspShortName;
+
+    // TODO: Rename to categoryType
     private UploadType uploadType;
-    private String uploadDateTime;
+    private Date uploadDateTime;
     private String processFlag;
     private String status;
     private String errorDetails;

@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.parser;
 
+import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.parser.meterquantity.MeterQuantityExcelReader;
 import org.junit.Test;
@@ -18,7 +19,8 @@ public class MeterQuantityExcelReaderTest {
     @Test
     public void shouldParseXLS() throws IOException {
         QuantityReader reader = new MeterQuantityExcelReader();
-        MeterData meterData = reader.readData(new FileInputStream(
+        FileManifest fileManifest = new FileManifest();
+        MeterData meterData = reader.readData(fileManifest, new FileInputStream(
                 new File(MeterQuantityExcelReaderTest.class.getClassLoader().getResource(
                         "meterdata/xls/MF3MABAMSUZ01.xls").getFile())));
 
@@ -28,7 +30,8 @@ public class MeterQuantityExcelReaderTest {
     @Test
     public void shouldParseXLSX() throws IOException {
         QuantityReader reader = new MeterQuantityExcelReader();
-        MeterData meterData = reader.readData(new FileInputStream(
+        FileManifest fileManifest = new FileManifest();
+        MeterData meterData = reader.readData(fileManifest, new FileInputStream(
                 new File(MeterQuantityExcelReaderTest.class.getClassLoader().getResource(
                         "meterdata/xls/MF3MABAMSUZ01.xls").getFile())));
 

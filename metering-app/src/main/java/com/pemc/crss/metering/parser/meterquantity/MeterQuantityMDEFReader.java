@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.parser.meterquantity;
 
 import com.pemc.crss.metering.constants.UnitOfMeasure;
+import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.parser.QuantityReader;
@@ -16,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +40,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
 
     // TODO: UGLY CODE. NEED TO OPTIMIZE!
     @Override
-    public MeterData readData(InputStream inputStream) throws IOException {
+    public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws IOException {
         MDEFMeterData mdefMeterData = readMDEF(inputStream);
 
         Map<String, MeterDataDetail> meterDataMap = new HashMap<>();
@@ -60,6 +62,10 @@ public class MeterQuantityMDEFReader implements QuantityReader {
                         value = meterDataMap.get(key);
                     } else {
                         value = new MeterDataDetail();
+                        value.setFileID(fileManifest.getFileID());
+                        value.setUploadType(fileManifest.getUploadType());
+                        value.setMspShortName(fileManifest.getMspShortName());
+                        value.setCreatedDateTime(new Date());
 
                         value.setSein(interval.getCustomerID());
                         value.setInterval(intervalPerHour);

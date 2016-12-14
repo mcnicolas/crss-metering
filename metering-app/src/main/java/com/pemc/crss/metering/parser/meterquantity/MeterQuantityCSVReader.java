@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.parser.meterquantity;
 
+import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterDataHeader;
@@ -14,6 +15,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import static com.pemc.crss.metering.utils.DateTimeUtils.parseDateAsLong;
@@ -23,7 +25,7 @@ import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 public class MeterQuantityCSVReader implements QuantityReader {
 
     @Override
-    public MeterData readData(InputStream inputStream) throws IOException {
+    public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws IOException {
         MeterData meterData = new MeterData();
 
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
@@ -37,7 +39,13 @@ public class MeterQuantityCSVReader implements QuantityReader {
                     throw new IOException("Cannot parse CSV file. It might be an invalid CSV file or malformed.");
                 }
 
-                meterDataDetails.add(populateBean(row));
+                MeterDataDetail detail = populateBean(row);
+                detail.setFileID(fileManifest.getFileID());
+                detail.setUploadType(fileManifest.getUploadType());
+                detail.setMspShortName(fileManifest.getMspShortName());
+                detail.setCreatedDateTime(new Date());
+
+                meterDataDetails.add(detail);
             }
 
             meterData.setHeader(header);

@@ -5,6 +5,7 @@ import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -19,11 +20,15 @@ import org.springframework.stereotype.Component;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import static com.pemc.crss.metering.constants.FileType.MDEF;
+import static com.pemc.crss.metering.constants.FileType.XLS;
 import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.springframework.amqp.core.ExchangeTypes.DIRECT;
 
 @Slf4j
@@ -42,30 +47,22 @@ public class MeterQuantityListener {
             exchange = @Exchange(type = DIRECT, value = "crss.mq"),
             key = "crss.mq.data"))
     public void processMeterQuantityFile(@Header int headerID,
-                                         @Header String transactionID,
                                          @Header String fileName,
-                                         @Header String fileType,
-                                         @Header long fileSize,
-                                         @Header(name = "checksum") String receivedChecksum,
                                          @Header String mspShortName,
-                                         @Header String category,
                                          @Payload byte[] fileContent) {
-        log.debug("Received MQ File. fileName:{} headerID:{} txnID:{} checksum:{} mspShortName:{} category:{}",
-                fileName, headerID, transactionID, receivedChecksum, mspShortName, category);
+        log.debug("Received MQ File. fileName:{} headerID:{} mspShortName:{}",
+                fileName, headerID, mspShortName);
 
         String checksum = getChecksum(fileContent);
 
         // TODO: Should be coming from the controller instead
         FileManifest fileManifest = new FileManifest();
         fileManifest.setHeaderID(headerID);
-        fileManifest.setTransactionID(transactionID);
         fileManifest.setFileName(fileName);
-        fileManifest.setFileType(FileType.valueOf(fileType.toUpperCase()));
-        fileManifest.setFileSize(fileSize);
+        fileManifest.setFileType(getFileType(fileName));
+        fileManifest.setFileSize(fileContent.length);
         fileManifest.setChecksum(checksum);
-        fileManifest.setRecvChecksum(receivedChecksum);
         fileManifest.setMspShortName(mspShortName);
-        fileManifest.setUploadType(UploadType.valueOf(category.toUpperCase()));
 
         try {
             meterService.processMeterData(fileManifest, fileContent);
@@ -99,6 +96,22 @@ public class MeterQuantityListener {
             hexString.append(byteValue.length() == 2 ? byteValue : "0" + byteValue);
         }
         return hexString.toString();
+    }
+
+    private FileType getFileType(String filename) {
+        FileType retVal = null;
+
+        String fileExt = FilenameUtils.getExtension(filename);
+
+        if (equalsIgnoreCase(fileExt, "XLS") || equalsIgnoreCase(fileExt, "XLSX")) {
+            retVal = XLS;
+        } else if (equalsIgnoreCase(fileExt, "MDE") || equalsIgnoreCase(fileExt, "MDEF")) {
+            retVal = MDEF;
+        } else if (equalsIgnoreCase(fileExt, "CSV")) {
+            retVal = FileType.CSV;
+        }
+
+        return retVal;
     }
 
 }

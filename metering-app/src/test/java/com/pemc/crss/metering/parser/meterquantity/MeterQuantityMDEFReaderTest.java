@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.parser.meterquantity;
 
+import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.parser.QuantityReader;
 import org.junit.Test;
@@ -19,8 +20,9 @@ public class MeterQuantityMDEFReaderTest {
     public void shouldParseMDEF() throws IOException {
         QuantityReader meterReader = new MeterQuantityMDEFReader();
 
+        FileManifest fileManifest = new FileManifest();
         MeterData meterData = meterReader.readData(
-                new FileInputStream(
+                fileManifest, new FileInputStream(
                         new File(MeterQuantityMDEFReaderTest.class.getClassLoader().getResource(
                                 "meterdata/daily/Luzon/DT030365.MDE").getFile())));
 

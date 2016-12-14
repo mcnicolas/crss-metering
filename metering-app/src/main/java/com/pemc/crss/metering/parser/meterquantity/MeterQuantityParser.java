@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.parser.meterquantity;
 
 import com.pemc.crss.metering.constants.FileType;
+import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.QuantityReader;
@@ -16,11 +17,11 @@ import static com.pemc.crss.metering.constants.FileType.XLS;
 @Component
 public class MeterQuantityParser {
 
-    public MeterData parse(FileType fileType, byte[] fileContent) throws ParseException {
+    public MeterData parse(FileManifest fileManifest, byte[] fileContent) throws ParseException {
         try {
-            QuantityReader reader = getMeterQuantityReader(fileType);
+            QuantityReader reader = getMeterQuantityReader(fileManifest.getFileType());
 
-            return reader.readData(new ByteArrayInputStream(fileContent));
+            return reader.readData(fileManifest, new ByteArrayInputStream(fileContent));
         } catch (IOException e) {
             // TODO: Improve error message. If it is possible to capture culprit record
             throw new ParseException(e.getMessage(), e);

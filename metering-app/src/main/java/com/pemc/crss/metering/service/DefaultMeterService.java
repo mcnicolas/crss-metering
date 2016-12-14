@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
+import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dao.MeteringDao;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.mq.FileManifest;
@@ -13,18 +14,22 @@ import com.pemc.crss.metering.parser.meterquantity.MeterQuantityParser;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.mq.MQValidationHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
@@ -51,18 +56,55 @@ public class DefaultMeterService implements MeterService {
 
     @Override
     @Transactional
-    public long saveHeader(String transactionID, int fileCount, String category, String username) {
-        return meteringDao.saveHeader(transactionID, fileCount, category, username);
+    public long saveHeader(int fileCount, String category) {
+        String userName = getUserName();
+
+        HeaderManifest manifest = new HeaderManifest();
+        manifest.setTransactionID(UUID.randomUUID().toString());
+        manifest.setFileCount(fileCount);
+        manifest.setCategory(category);
+        manifest.setUploadedBy(userName);
+        manifest.setUploadDateTime(new Date());
+
+        return meteringDao.saveHeader(manifest);
+    }
+
+    private String getUserName() {
+        String retVal = "";
+
+        if (SecurityContextHolder.getContext() == null) {
+            return null;
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return null;
+        }
+
+        if (auth.getPrincipal() != null && auth.getPrincipal() instanceof LinkedHashMap) {
+            LinkedHashMap<String, Object> oAuthPrincipal = (LinkedHashMap) auth.getPrincipal();
+
+            retVal = (String) oAuthPrincipal.get("name");
+        }
+
+        return retVal;
     }
 
     @Override
     @Transactional
-    public void saveTrailer(String transactionID) {
-        meteringDao.saveTrailer(transactionID);
+    public String saveTrailer(long headerID) {
+        return meteringDao.saveTrailer(headerID);
     }
 
     @Override
     public void processMeterData(FileManifest fileManifest, byte[] fileContent) {
+        HeaderManifest headerManifest = meteringDao.getHeaderManifest(fileManifest.getHeaderID());
+
+        fileManifest.setTransactionID(headerManifest.getTransactionID());
+
+        UploadType uploadType = UploadType.valueOf(headerManifest.getCategory().toUpperCase());
+        fileManifest.setUploadType(uploadType);
+
         long fileID = saveFileManifest(fileManifest);
         fileManifest.setFileID(fileID);
         log.debug("Saved manifest file fileID:{}", fileID);
@@ -71,8 +113,8 @@ public class DefaultMeterService implements MeterService {
 
         MeterData meterData = new MeterData();
         try {
-            meterData = meterQuantityParser.parse(fileManifest.getFileType(), fileContent);
-            log.debug("Finished parsing MQ data for {} records", meterData.getDetails().size());
+            meterData = meterQuantityParser.parse(fileManifest, fileContent);
+            log.debug("Finished parsing MQ file {} for {} records", fileManifest.getFileName(), meterData.getDetails().size());
 
             validationResult.setStatus(ACCEPTED);
             validationResult.setErrorDetail("");
@@ -83,23 +125,23 @@ public class DefaultMeterService implements MeterService {
             log.error(e.getMessage(), e);
         }
 
-//        if (validationResult.getStatus() == ACCEPTED) {
-//            validationResult = validationHandler.validate(fileManifest, meterData);
-//            log.debug("Finished validating MQ data status:{} errorDetail:{}",
-//                    validationResult.getStatus(), validationResult.getErrorDetail());
-//        }
+        if (validationResult.getStatus() == ACCEPTED) {
+            validationResult = validationHandler.validate(fileManifest, meterData);
+            log.debug("Finished validating MQ data status:{} errorDetail:{}",
+                    validationResult.getStatus(), validationResult.getErrorDetail());
+        }
 
         if (validationResult.getStatus() == ACCEPTED) {
-            saveMeterData(fileManifest, meterData.getDetails());
+            validationResult = saveMeterData(fileManifest, meterData.getDetails());
         }
 
         validationResult.setFileID(fileManifest.getFileID());
         meteringDao.updateManifestStatus(validationResult);
     }
 
-    private void sendNotification(String transactionID) {
-        HeaderManifest header = meteringDao.getHeaderManifest(transactionID);
-        List<FileManifest> fileList = meteringDao.getFileManifest(transactionID);
+    private void sendNotification(long headerID) {
+        HeaderManifest header = meteringDao.getHeaderManifest(headerID);
+        List<FileManifest> fileList = meteringDao.getFileManifest(headerID);
 
         if (isTransactionComplete(header, fileList)) {
             Map<String, Object> messagePayload = new HashMap<>();
@@ -127,9 +169,23 @@ public class DefaultMeterService implements MeterService {
 
     @Override
     @Transactional
-    public void saveMeterData(FileManifest fileManifest, List<MeterDataDetail> meterDataDetails) {
-        meteringDao.saveMeterData(fileManifest, meterDataDetails);
-        log.debug("Finished saving MQ data to the database. fileID:{} records:{}", fileManifest.getFileID(), meterDataDetails.size());
+    public ValidationResult saveMeterData(FileManifest fileManifest, List<MeterDataDetail> meterDataDetails) {
+        ValidationResult retVal = new ValidationResult();
+        retVal.setFileID(fileManifest.getFileID());
+        retVal.setStatus(ACCEPTED);
+
+        try {
+            meteringDao.saveMeterData(fileManifest, meterDataDetails);
+            log.debug("Finished saving MQ data to the database. fileID:{} fileName:{} records:{}",
+                    fileManifest.getFileID(), fileManifest.getFileName(), meterDataDetails.size());
+        } catch (DataAccessException e) {
+            log.error(e.getMessage(), e);
+
+            retVal.setStatus(REJECTED);
+            retVal.setErrorDetail(e.getMessage());
+        }
+
+        return retVal;
     }
 
     @Override

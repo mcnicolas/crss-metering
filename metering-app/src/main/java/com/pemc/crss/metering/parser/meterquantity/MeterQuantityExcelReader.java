@@ -1,10 +1,12 @@
 package com.pemc.crss.metering.parser.meterquantity;
 
+import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterDataHeader;
 import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -32,8 +34,10 @@ import static org.apache.poi.ss.usermodel.DateUtil.getJavaCalendar;
 public class MeterQuantityExcelReader implements QuantityReader {
 
     @Override
-    public MeterData readData(InputStream inputStream) throws IOException {
+    public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws IOException {
         MeterData retVal = new MeterData();
+
+        Date parseDate = new Date();
 
         // TODO: Use poi eventmodel for faster processing
         Workbook workbook;
@@ -54,11 +58,15 @@ public class MeterQuantityExcelReader implements QuantityReader {
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
 
-            if (row.getCell(0) == null) {
+            if (isBlank(row)) {
                 continue;
             }
 
             MeterDataDetail meterData = new MeterDataDetail();
+            meterData.setFileID(fileManifest.getFileID());
+            meterData.setUploadType(fileManifest.getUploadType());
+            meterData.setMspShortName(fileManifest.getMspShortName());
+            meterData.setCreatedDateTime(parseDate);
 
             meterData.setSein(row.getCell(0).getStringCellValue());
 
@@ -86,13 +94,51 @@ public class MeterQuantityExcelReader implements QuantityReader {
         return retVal;
     }
 
+    private boolean isBlank(Row row) {
+        boolean retVal = false;
+
+        Cell firstCell = row.getCell(0);
+        if (firstCell == null || StringUtils.isBlank(firstCell.getStringCellValue())) {
+            retVal = true;
+        }
+
+        return retVal;
+    }
+
     private MeterDataHeader readHeader(Row row) {
         MeterDataHeader retVal = new MeterDataHeader();
 
         List<String> columns = new ArrayList<>();
-        row.forEach(cell -> columns.add(cell.getStringCellValue()));
+        row.forEach(cell -> columns.add(getCellValueAsString(cell)));
 
         retVal.setColumnNames(columns);
+
+        return retVal;
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        String retVal = "";
+
+        if (cell != null) {
+            switch (cell.getCellTypeEnum()) {
+                case NUMERIC:
+                    retVal = String.valueOf(cell.getNumericCellValue());
+                    break;
+                case FORMULA:
+                    retVal = cell.getCellFormula();
+                    break;
+                case BOOLEAN:
+                    retVal = String.valueOf(cell.getBooleanCellValue());
+                    break;
+                case ERROR:
+                    retVal = new String(new byte[] {cell.getErrorCellValue()});
+                    break;
+                case BLANK:
+                case STRING:
+                default:
+                    retVal = cell.getStringCellValue();
+            }
+        }
 
         return retVal;
     }

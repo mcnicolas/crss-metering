@@ -84,10 +84,14 @@ public class TablePanel extends JPanel {
         fileTable.scrollRectToVisible(rectangle);
     }
 
-    public void updateRecordStatus(int key) {
+    public void updateRecordStatus(List<FileBean> fileList) {
         FileTableModel tableModel = (FileTableModel) fileTable.getModel();
 
-        tableModel.updateUploadedStatus(key);
+        int key = 0;
+        for (FileBean fileBean : fileList) {
+            key = fileBean.getKey();
+            tableModel.updateUploadedStatus(key);
+        }
 
         Rectangle rectangle = fileTable.getCellRect(key - 1, 0, true);
         fileTable.scrollRectToVisible(rectangle);

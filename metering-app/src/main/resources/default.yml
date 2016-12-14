@@ -60,17 +60,23 @@ mq:
   manifest:
     header:
       insert: >
-        INSERT INTO TXN_MQ_MANIFEST_HEADER (header_id, transaction_id, file_count, category,
-        upload_by, upload_datetime) VALUES (NEXTVAL('MQ_MANIFEST_HEADER_SEQ'), ?, ?, ?, ?, ?)
+        INSERT INTO TXN_MQ_MANIFEST_HEADER (HEADER_ID, TRANSACTION_ID, FILE_COUNT, TAIL_RECEIVED, CATEGORY, UPLOAD_BY, UPLOAD_DATETIME)
+        VALUES (
+          NEXTVAL('MQ_MANIFEST_HEADER_SEQ'), :transactionID, :fileCount, 'N', :category, :uploadedBy, :uploadDateTime
+        )
       query: >
-        SELECT HEADER_ID AS headerID, FILE_COUNT AS fileCount
-        FROM TXN_MQ_MANIFEST_HEADER WHERE TRANSACTION_ID = :txnID AND TAIL_RECEIVED = 'Y'
-    trailer: >
-      UPDATE TXN_MQ_MANIFEST_HEADER SET tail_received = 'Y' WHERE transaction_id = ?
+        SELECT HEADER_ID AS headerID, TRANSACTION_ID AS transactionID, FILE_COUNT AS fileCount, CATEGORY AS category,
+        TAIL_RECEIVED AS tailReceived
+        FROM TXN_MQ_MANIFEST_HEADER WHERE HEADER_ID = :headerID
+    trailer:
+      update: >
+        UPDATE TXN_MQ_MANIFEST_HEADER SET TAIL_RECEIVED = 'Y' WHERE HEADER_ID = :headerID
     file:
       insert: >
-        INSERT INTO TXN_MQ_MANIFEST_FILE (file_id, header_id, transaction_id, filename, filetype,
-        filesize, checksum, upload_datetime) VALUES (NEXTVAL('MQ_MANIFEST_FILE_SEQ'), ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO TXN_MQ_MANIFEST_FILE (file_id, header_id, transaction_id, filename, filetype, filesize, checksum, upload_datetime)
+        VALUES (
+          NEXTVAL('MQ_MANIFEST_FILE_SEQ'), :headerID, :transactionID, :fileName, :fileType, :fileSize, :checksum, :uploadDateTime
+        )
       query: >
         SELECT A.FILE_ID as fileID,
                A.HEADER_ID AS headerID,
@@ -84,18 +90,30 @@ mq:
                A.STATUS,
                A.ERROR_DETAILS AS errorDetails
         FROM TXN_MQ_MANIFEST_FILE A INNER JOIN TXN_MQ_MANIFEST_HEADER B ON A.HEADER_ID = B.HEADER_ID
-        WHERE B.TRANSACTION_ID = :txnID
+        WHERE B.HEADER_ID = :headerID
     status: >
       UPDATE TXN_MQ_MANIFEST_FILE SET PROCESS_FLAG = 'Y', STATUS = :status, ERROR_DETAILS = :errorDetail WHERE FILE_ID = :fileID
+
   meter:
     daily:
-      queryVersion: >
-        SELECT SEIN, READING_DATETIME, MAX(VERSION) AS VERSION
-        FROM TXN_METER_DATA_DAILY
-        WHERE SEIN = :sein AND READING_DATETIME = :readingDateTime
-        GROUP BY SEIN, READING_DATETIME
       insert: >
-        INSERT INTO TXN_METER_DATA_DAILY VALUES (
+        INSERT INTO TXN_METER_DATA_DAILY (
+          METER_DATA_ID, FILE_ID, SEIN, INTERVAL, READING_DATETIME,
+          KWD, KWD_CHANNEL_STATUS, KWD_INTERVAL_STATUS,
+          KWHD, KWHD_CHANNEL_STATUS, KWHD_INTERVAL_STATUS,
+          KVARHD, KVARHD_CHANNEL_STATUS, KVARHD_INTERVAL_STATUS,
+          KWR, KWR_CHANNEL_STATUS, KWR_INTERVAL_STATUS,
+          KWHR, KWHR_CHANNEL_STATUS, KWHR_INTERVAL_STATUS,
+          KVARHR, KVARHR_CHANNEL_STATUS, KVARHR_INTERVAL_STATUS,
+          VAN, VAN_CHANNEL_STATUS, VAN_INTERVAL_STATUS,
+          VBN, VBN_CHANNEL_STATUS, VBN_INTERVAL_STATUS,
+          VCN, VCN_CHANNEL_STATUS, VCN_INTERVAL_STATUS,
+          IAN, IAN_CHANNEL_STATUS, IAN_INTERVAL_STATUS,
+          IBN, IBN_CHANNEL_STATUS, IBN_INTERVAL_STATUS,
+          ICN, ICN_CHANNEL_STATUS, ICN_INTERVAL_STATUS,
+          PF, PF_CHANNEL_STATUS, PF_INTERVAL_STATUS,
+          ESTIMATION_FLAG, MSP_SHORTNAME, CATEGORY, CREATED_DATE_TIME)
+        VALUES (
           NEXTVAL('MQ_DATA_DAILY_SEQ'), :fileID, :sein, :interval, :readingDateTime,
           :kwd, :kwdChannelStatus, :kwdIntervalStatus,
           :kwhd, :kwhdChannelStatus, :kwhdIntervalStatus,
@@ -110,15 +128,26 @@ mq:
           :ibn, :ibnChannelStatus, :ibnIntervalStatus,
           :icn, :icnChannelStatus, :icnIntervalStatus,
           :pf, :pfChannelStatus, :pfIntervalStatus,
-          :estimationFlag, :version, :mspShortName, :uploadType)
+          :estimationFlag, :mspShortName, :uploadType, :createdDateTime)
     monthly:
-      queryVersion: >
-        SELECT SEIN, READING_DATETIME, MAX(VERSION) AS VERSION
-        FROM TXN_METER_DATA_MONTHLY
-        WHERE SEIN = :sein AND READING_DATETIME = :readingDateTime
-        GROUP BY SEIN, READING_DATETIME
       insert: >
-        INSERT INTO TXN_METER_DATA_MONTHLY VALUES (
+        INSERT INTO TXN_METER_DATA_MONTHLY (
+          METER_DATA_ID, FILE_ID, SEIN, INTERVAL, READING_DATETIME,
+          KWD, KWD_CHANNEL_STATUS, KWD_INTERVAL_STATUS,
+          KWHD, KWHD_CHANNEL_STATUS, KWHD_INTERVAL_STATUS,
+          KVARHD, KVARHD_CHANNEL_STATUS, KVARHD_INTERVAL_STATUS,
+          KWR, KWR_CHANNEL_STATUS, KWR_INTERVAL_STATUS,
+          KWHR, KWHR_CHANNEL_STATUS, KWHR_INTERVAL_STATUS,
+          KVARHR, KVARHR_CHANNEL_STATUS, KVARHR_INTERVAL_STATUS,
+          VAN, VAN_CHANNEL_STATUS, VAN_INTERVAL_STATUS,
+          VBN, VBN_CHANNEL_STATUS, VBN_INTERVAL_STATUS,
+          VCN, VCN_CHANNEL_STATUS, VCN_INTERVAL_STATUS,
+          IAN, IAN_CHANNEL_STATUS, IAN_INTERVAL_STATUS,
+          IBN, IBN_CHANNEL_STATUS, IBN_INTERVAL_STATUS,
+          ICN, ICN_CHANNEL_STATUS, ICN_INTERVAL_STATUS,
+          PF, PF_CHANNEL_STATUS, PF_INTERVAL_STATUS,
+          ESTIMATION_FLAG, MSP_SHORTNAME, CATEGORY, CREATED_DATE_TIME)
+        VALUES (
           NEXTVAL('MQ_DATA_MONTHLY_SEQ'), :fileID, :sein, :interval, :readingDateTime,
           :kwd, :kwdChannelStatus, :kwdIntervalStatus,
           :kwhd, :kwhdChannelStatus, :kwhdIntervalStatus,
@@ -133,7 +162,7 @@ mq:
           :ibn, :ibnChannelStatus, :ibnIntervalStatus,
           :icn, :icnChannelStatus, :icnIntervalStatus,
           :pf, :pfChannelStatus, :pfIntervalStatus,
-          :estimationFlag, :version, :mspShortName, :uploadType)
+          :estimationFlag, :mspShortName, :uploadType, :createdDateTime)
 bcq:
   manifest: >
     INSERT INTO TXN_BCQ_UPLOAD_FILE (

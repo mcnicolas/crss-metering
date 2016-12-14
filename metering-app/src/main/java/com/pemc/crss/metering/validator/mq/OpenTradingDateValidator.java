@@ -36,11 +36,16 @@ public class OpenTradingDateValidator implements Validator {
 
     @Override
     public ValidationResult validate(FileManifest fileManifest, MeterData meterData) {
+        ValidationResult retVal = ACCEPTED_STATUS;
 
-        ValidationResult retVal = validateNullDate(fileManifest, meterData);
+        FileType fileType = fileManifest.getFileType();
 
-        if (retVal.getStatus() == ACCEPTED) {
-            retVal = validateOpenTradingDate(fileManifest, meterData);
+        if (fileType == XLS || fileType == CSV) {
+            retVal = validateNullDate(fileManifest, meterData);
+
+            if (retVal.getStatus() == ACCEPTED) {
+                retVal = validateOpenTradingDate(fileManifest, meterData);
+            }
         }
 
         return retVal;
@@ -49,20 +54,16 @@ public class OpenTradingDateValidator implements Validator {
     private ValidationResult validateNullDate(FileManifest fileManifest, MeterData meterData) {
         ValidationResult retVal = ACCEPTED_STATUS;
 
-        FileType fileType = fileManifest.getFileType();
+        List<MeterDataDetail> meterDataDetails = meterData.getDetails();
 
-        if (fileType == XLS || fileType == CSV) {
-            List<MeterDataDetail> meterDataDetails = meterData.getDetails();
+        for (MeterDataDetail meterDataDetail : meterDataDetails) {
+            if (meterDataDetail.getReadingDateTime() == null) {
+                retVal.setStatus(REJECTED);
 
-            for (MeterDataDetail meterDataDetail : meterDataDetails) {
-                if (meterDataDetail.getReadingDateTime() == null) {
-                    retVal.setStatus(REJECTED);
+                String errorMessage = "Malformed trading date format. Should be YYYY-MM-DD HH:MM";
+                retVal.setErrorDetail(errorMessage);
 
-                    String errorMessage = "Malformed trading date format. Should be YYYY-MM-DD HH:MM";
-                    retVal.setErrorDetail(errorMessage);
-
-                    break;
-                }
+                break;
             }
         }
 

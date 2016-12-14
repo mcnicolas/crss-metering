@@ -11,9 +11,9 @@ import java.util.List;
 
 public interface MeteringDao {
 
-    long saveHeader(String transactionID, int fileCount, String category, String username);
+    long saveHeader(HeaderManifest manifest);
 
-    void saveTrailer(String transactionID);
+    String saveTrailer(long headerID);
 
     long saveFileManifest(FileManifest fileManifest);
 
@@ -25,8 +25,8 @@ public interface MeteringDao {
 
     void updateManifestStatus(ValidationResult validationResult);
 
-    HeaderManifest getHeaderManifest(String transactionID);
+    HeaderManifest getHeaderManifest(long transactionID);
 
-    List<FileManifest> getFileManifest(String transactionID);
+    List<FileManifest> getFileManifest(long headerID);
 
 }
