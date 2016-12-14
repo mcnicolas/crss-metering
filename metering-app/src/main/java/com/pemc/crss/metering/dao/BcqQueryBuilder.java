@@ -100,6 +100,14 @@ public class BcqQueryBuilder {
         return this;
     }
 
+    public BcqQueryBuilder addExpiredFilter(boolean expired) {
+        if (expired) {
+            sqlBuilder.append(formatFilter("A.DEADLINE_DATE <= ?"));
+            arguments.add(new Date().getTime());
+        }
+        return this;
+    }
+
     public BcqQueryBuilder orderBy(List<PageOrder> pageOrderList) {
         checkQuery();
         if (isNotEmpty(pageOrderList)) {

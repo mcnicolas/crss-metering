@@ -153,6 +153,7 @@ public class JdbcBcqDao implements BcqDao {
         String sellingParticipant = params.get("sellingParticipant");
         String status = params.get("status");
         Date tradingDate = parseDate(params.get("tradingDate"));
+        boolean expired = params.get("expired") != null;
 
         BcqQueryBuilder builder = new BcqQueryBuilder();
         BuilderData selectQuery = builder.newQuery(displayData)
@@ -163,6 +164,7 @@ public class JdbcBcqDao implements BcqDao {
                 .addBuyingParticipantFilter(buyingParticipant)
                 .addSellingParticipantFilter(sellingParticipant)
                 .addStatusFilter(status)
+                .addExpiredFilter(expired)
                 .build();
 
         return jdbcTemplate.query(
