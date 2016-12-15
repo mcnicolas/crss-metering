@@ -34,12 +34,17 @@ public class BcqValidator {
         validTradingDate = null;
     }
 
-    public BcqDetails getAndValidateBcq(List<List<String>> csv) {
+    public BcqDetails getAndValidateBcq(List<List<String>> csv) { //TODO Refactor
         BcqDetails details = new BcqDetails();
 
         validateNotEmpty(csv);
         BcqInterval interval = getAndValidateInterval(csv.get(0));
         validateColumnHeader(csv.get(1));
+
+        if (errorMessage != null) {
+            details.setErrorMessage(errorMessage);
+            return details;
+        }
 
         List<BcqHeader> headerList = new ArrayList<>();
 
