@@ -292,7 +292,7 @@ public class BcqValidator {
             setErrorMessage(String.format(INCOMPLETE_ENTRIES.getErrorMessage(),
                             formatAndGetDate(header.getTradingDate(), false),
                             header.getSellingMtn(),
-                            header.getBuyingParticipantShortName(),
+                            header.getBillingId(),
                             validBcqSize));
         }
     }
