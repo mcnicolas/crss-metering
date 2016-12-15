@@ -76,6 +76,11 @@ public class BcqValidator {
             List<BcqData> dataList = header.getDataList();
             dataList.sort((d1, d2) -> d1.getEndTime().compareTo(d2.getEndTime()));
             header.setDataList(getAndValidateDataList(dataList, interval));
+
+            if (errorMessage != null) {
+                details.setErrorMessage(errorMessage);
+                return details;
+            }
         }
         details.setHeaderList(headerList);
         return details;
