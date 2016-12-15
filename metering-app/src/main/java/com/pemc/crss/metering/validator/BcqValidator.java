@@ -107,7 +107,9 @@ public class BcqValidator {
         String intervalString = line.get(1);
         BcqInterval interval = BcqInterval.fromDescription(intervalString);
 
-        if (interval == null || (interval == FIVE_MINUTES_PERIOD && intervalConfig != 5)) {
+        if (interval == null ||
+                intervalConfig == 5 && interval == QUARTERLY ||
+                intervalConfig == 15 && interval == FIVE_MINUTES_PERIOD) {
             setErrorMessage(String.format(INCORRECT_DECLARED_INTERVAL.getErrorMessage(), intervalString));
         }
 
