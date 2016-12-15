@@ -135,7 +135,7 @@ public class BcqValidator {
 
         if (!uniqueDataSet.add(sellingMtn + "," + billingId + "," + tradingDate)) {
             setErrorMessage(String.format(DUPLICATE_DATE.getErrorMessage(),
-                            header.getTradingDate(),
+                            formatAndGetDate(header.getTradingDate(), false),
                             header.getSellingMtn(),
                             header.getBillingId()));
         }
