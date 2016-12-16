@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
+import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -291,7 +292,9 @@ public class JdbcBcqDao implements BcqDao {
             return getHeaderIdBy(header);
         } else {
             Cache configCache = cacheManager.getCache("config");
-            int deadlineConfig = Integer.parseInt(configCache.get(BCQ_NULLIFICATION_DEADLINE.toString()).get().toString());
+            ValueWrapper deadlineWrapper = configCache.get(BCQ_NULLIFICATION_DEADLINE.toString());
+            int deadlineConfig = deadlineWrapper == null ? 2 :
+                    Integer.parseInt(configCache.get(BCQ_NULLIFICATION_DEADLINE.toString()).get().toString());
             long deadlineConfigInSeconds = DAYS.toSeconds(deadlineConfig);
             Timestamp deadlineDateTimestamp = new Timestamp(header.getTradingDate().getTime() +
                     SECONDS.toMillis(deadlineConfigInSeconds - 1));

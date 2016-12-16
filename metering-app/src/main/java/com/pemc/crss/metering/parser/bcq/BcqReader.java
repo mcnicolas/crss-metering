@@ -5,6 +5,7 @@ import com.pemc.crss.metering.validator.BcqValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
+import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 import org.supercsv.io.CsvListReader;
@@ -32,7 +33,9 @@ public class BcqReader {
 
     public BcqDetails readData(InputStream inputStream) throws IOException {
         Cache configCache = cacheManager.getCache("config");
-        int intervalConfig = Integer.parseInt(configCache.get(BCQ_INTERVAL.toString()).get().toString());
+        ValueWrapper intervalWrapper = configCache.get(BCQ_INTERVAL.toString());
+        int intervalConfig = intervalWrapper == null ? 15 :
+                Integer.parseInt(configCache.get(BCQ_INTERVAL.toString()).get().toString());
         BcqValidator validator = new BcqValidator(intervalConfig);
         List<List<String>> csv = new ArrayList<>();
 
