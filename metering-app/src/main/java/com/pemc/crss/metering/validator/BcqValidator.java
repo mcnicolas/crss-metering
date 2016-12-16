@@ -250,6 +250,7 @@ public class BcqValidator {
 
         if (!NumberUtils.isParsable(bcqString)) {
             setErrorMessage(String.format(INCORRECT_FORMAT.getErrorMessage(), bcqString, "of decimal"));
+            return BigDecimal.ZERO;
         }
 
         BigDecimal bcq = new BigDecimal(bcqString);
@@ -258,7 +259,7 @@ public class BcqValidator {
             setErrorMessage(NEGATIVE_BCQ.getErrorMessage());
         }
 
-        return new BigDecimal(bcqString);
+        return bcq;
     }
 
     private void validateTimeInterval(Date date, Date previousDate, BcqInterval interval) {
