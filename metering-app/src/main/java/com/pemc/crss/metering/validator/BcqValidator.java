@@ -249,7 +249,7 @@ public class BcqValidator {
         }
 
         if (!NumberUtils.isParsable(bcqString)) {
-            setErrorMessage(String.format(INCORRECT_FORMAT.getErrorMessage(), bcqString, "of decimal"));
+            setErrorMessage(String.format(INCORRECT_FORMAT.getErrorMessage(), bcqString, "decimal"));
             return BigDecimal.ZERO;
         }
 
