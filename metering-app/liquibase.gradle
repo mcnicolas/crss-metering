@@ -10,7 +10,7 @@ ext {
     switch (profile) {
         case 'staging':
             dbEnv = "staging"
-            dbUrl = "jdbc:oracle:thin:@192.168.241.62:1521:XE"
+            dbUrl = "jdbc:oracle:thin:@192.168.241.62:1521:ORCL"
             dbDriver = "oracle.jdbc.OracleDriver"
             dbUser = "crss_metering"
             dbPassword = "crss_metering"
