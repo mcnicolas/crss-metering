@@ -1,4 +1,4 @@
-def allowableProfiles = ['staging', 'uat', 'staging-localdb']
+def allowableProfiles = ['staging', 'uat']
 
 if (project.hasProperty('env') && !allowableProfiles.contains(project.env)) {
     throw new IllegalArgumentException("Unknown environment supplied: ${project.env}")
@@ -10,14 +10,6 @@ ext {
     switch (profile) {
         case 'staging':
             dbEnv = "staging"
-            dbUrl = "jdbc:oracle:thin:@192.168.235.6:1521:ORCL"
-            dbDriver = "oracle.jdbc.OracleDriver"
-            dbUser = "crss_metering"
-            dbPassword = "crss_metering"
-            dbDialect = "org.hibernate.dialect.Oracle10gDialect"
-            break
-        case 'staging-localdb':
-            dbEnv = "staging-localdb"
             dbUrl = "jdbc:oracle:thin:@192.168.241.62:1521:ORCL"
             dbDriver = "oracle.jdbc.OracleDriver"
             dbUser = "crss_metering"
@@ -28,10 +20,9 @@ ext {
             dbEnv = "uat"
             dbUrl = "jdbc:oracle:thin:@192.168.235.6:1521:ORCL"
             dbDriver = "oracle.jdbc.OracleDriver"
-            dbUser = "crss_metering_uat"
-            dbPassword = "crss_metering_uat"
+            dbUser = "crss_metering"
+            dbPassword = "crss_metering"
             dbDialect = "org.hibernate.dialect.Oracle10gDialect"
-
             break
         default:
             dbEnv = "local"
