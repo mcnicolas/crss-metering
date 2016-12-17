@@ -28,9 +28,9 @@ public class BcqConfirmationListener {
     }
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = "crss.bcq.confirmation", durable = "true"),
-            exchange = @Exchange(type = DIRECT, value = "crss.bcq"),
-            key = "crss.bcq.confirmation"))
+            value = @Queue(value = "crss.scheduler.bcq.de_confirmation", durable = "true"),
+            exchange = @Exchange(type = DIRECT, value = "crss.scheduler"),
+            key = "crss.scheduler.bcq.de_confirmation"))
     public void processConfirmation() {
         log.debug("Received BCQ confirmation expiration trigger.");
 

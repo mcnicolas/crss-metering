@@ -28,9 +28,9 @@ public class BcqNullificationListener {
     }
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = "crss.bcq.nullification", durable = "true"),
-            exchange = @Exchange(type = DIRECT, value = "crss.bcq"),
-            key = "crss.bcq.nullification"))
+            value = @Queue(value = "crss.scheduler.bcq.de_nullification", durable = "true"),
+            exchange = @Exchange(type = DIRECT, value = "crss.scheduler"),
+            key = "crss.scheduler.bcq.de_nullification"))
     public void processNullification() {
         log.debug("Received BCQ nullification expiration trigger.");
 
