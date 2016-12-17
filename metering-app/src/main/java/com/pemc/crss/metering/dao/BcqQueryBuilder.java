@@ -103,7 +103,7 @@ public class BcqQueryBuilder {
     public BcqQueryBuilder addExpiredFilter(boolean expired) {
         if (expired) {
             sqlBuilder.append(formatFilter("A.DEADLINE_DATE <= ?"));
-            arguments.add(new Date().getTime());
+            arguments.add(new Date());
         }
         return this;
     }
