@@ -152,7 +152,7 @@ public class JdbcBcqDao implements BcqDao {
         String buyingParticipant = params.get("buyingParticipant");
         String sellingParticipant = params.get("sellingParticipant");
         String status = params.get("status");
-        Date tradingDate = parseDate(params.get("tradingDate"));
+        Date tradingDate = params.get("tradingDate") == null ? null : parseDate(params.get("tradingDate"));
         boolean expired = params.get("expired") != null;
 
         BcqQueryBuilder builder = new BcqQueryBuilder();
