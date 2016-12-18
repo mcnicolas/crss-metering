@@ -117,17 +117,21 @@ public class JdbcMeteringDao implements MeteringDao {
         String readingDate = params.get("readingDate");
         String sein = params.get("sein");
         String transactionID = params.get("transactionID");
+        String mspShortName = params.get("shortName");
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
         BuilderData query = queryBuilder.selectMeterData(category, readingDate)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
+                .addMSPFilter(mspShortName)
                 .orderBy(pageableRequest.getOrderList())
                 .build();
 
         int pageNo = pageableRequest.getPageNo();
         int pageSize = pageableRequest.getPageSize();
         int startRow = pageNo * pageSize;
+
+        log.debug("Select sql: {}", query.getSql());
 
         return jdbcTemplate.query(
                 query.getSql(),
@@ -179,12 +183,16 @@ public class JdbcMeteringDao implements MeteringDao {
         String readingDate = params.get("readingDate");
         String sein = params.get("sein");
         String transactionID = params.get("transactionID");
+        String mspShortName = params.get("shortName");
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
         BuilderData query = queryBuilder.countMeterData(category, readingDate)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
+                .addMSPFilter(mspShortName)
                 .build();
+
+        log.debug("Total records sql: {}", query.getSql());
 
         return jdbcTemplate.queryForObject(
                 query.getSql(),

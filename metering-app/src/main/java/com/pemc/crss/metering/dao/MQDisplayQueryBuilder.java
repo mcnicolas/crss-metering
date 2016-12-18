@@ -68,6 +68,15 @@ public class MQDisplayQueryBuilder {
         return this;
     }
 
+    public MQDisplayQueryBuilder addMSPFilter(String mspShortName) {
+        if (isNotBlank(mspShortName)) {
+            sqlBuilder.append(" AND B.MSP_SHORTNAME LIKE ?");
+            arguments.add("%" + mspShortName + "%");
+        }
+
+        return this;
+    }
+
     public MQDisplayQueryBuilder orderBy(List<PageOrder> pageOrderList) {
         if (isNotEmpty(pageOrderList)) {
             sqlBuilder.append(" ORDER BY ");
