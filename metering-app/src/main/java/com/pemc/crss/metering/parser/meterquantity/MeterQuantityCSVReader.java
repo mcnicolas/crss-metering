@@ -6,6 +6,7 @@ import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterDataHeader;
 import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.io.ICsvListReader;
@@ -31,6 +32,8 @@ public class MeterQuantityCSVReader implements QuantityReader {
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
             List<MeterDataDetail> meterDataDetails = new ArrayList<>();
 
+            Date parseDate = new Date();
+
             MeterDataHeader header = readHeader(reader.getHeader(true));
 
             List<String> row;
@@ -39,11 +42,15 @@ public class MeterQuantityCSVReader implements QuantityReader {
                     throw new IOException("Cannot parse CSV file. It might be an invalid CSV file or malformed.");
                 }
 
+                if (isBlank(row)) {
+                    continue;
+                }
+
                 MeterDataDetail detail = populateBean(row);
                 detail.setFileID(fileManifest.getFileID());
                 detail.setUploadType(fileManifest.getUploadType());
                 detail.setMspShortName(fileManifest.getMspShortName());
-                detail.setCreatedDateTime(new Date());
+                detail.setCreatedDateTime(parseDate);
 
                 meterDataDetails.add(detail);
             }
@@ -53,6 +60,16 @@ public class MeterQuantityCSVReader implements QuantityReader {
         }
 
         return meterData;
+    }
+
+    private boolean isBlank(List<String> row) {
+        boolean retVal = false;
+
+        if (StringUtils.isBlank(row.get(0))) {
+            retVal = true;
+        }
+
+        return retVal;
     }
 
     private MeterDataHeader readHeader(String[] header) {

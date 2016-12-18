@@ -11,6 +11,7 @@ import java.util.Date;
 import static java.util.Calendar.DATE;
 import static java.util.Calendar.DAY_OF_MONTH;
 import static java.util.Calendar.HOUR_OF_DAY;
+import static java.util.Calendar.MILLISECOND;
 import static java.util.Calendar.MINUTE;
 import static java.util.Calendar.MONTH;
 import static java.util.Calendar.SECOND;
@@ -69,6 +70,7 @@ public final class DateTimeUtils {
         retVal.set(HOUR_OF_DAY, 0);
         retVal.set(MINUTE, 0);
         retVal.set(SECOND, 0);
+        retVal.set(MILLISECOND, 0);
 
         return retVal.getTime();
     }
@@ -76,9 +78,11 @@ public final class DateTimeUtils {
     public static Date endOfDay(Date date) {
         Calendar retVal = Calendar.getInstance();
         retVal.setTime(date);
-        retVal.set(HOUR_OF_DAY, 23);
-        retVal.set(MINUTE, 59);
-        retVal.set(SECOND, 59);
+        retVal.add(DAY_OF_MONTH, 1);
+        retVal.set(HOUR_OF_DAY, 0);
+        retVal.set(MINUTE, 0);
+        retVal.set(SECOND, 0);
+        retVal.set(MILLISECOND, 0);
 
         return retVal.getTime();
     }

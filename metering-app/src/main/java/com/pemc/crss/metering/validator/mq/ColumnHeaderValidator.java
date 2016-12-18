@@ -16,6 +16,7 @@ import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.validator.ValidationResult.ACCEPTED_STATUS;
 import static com.pemc.crss.metering.validator.ValidationResult.REJECTED_STATUS;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Component
 @Order(value = 1)
@@ -75,7 +76,9 @@ public class ColumnHeaderValidator implements Validator {
         ValidationResult retVal = ACCEPTED_STATUS;
 
         for (int i = 3; i < columnNames.size(); i++) {
-            if (!equalsIgnoreCase(columnNames.get(i), COLUMNS[i])) {
+            String column = columnNames.get(i);
+
+            if (isNotBlank(column) && !equalsIgnoreCase(columnNames.get(i), COLUMNS[i])) {
                 retVal = REJECTED_STATUS;
                 break;
             }
