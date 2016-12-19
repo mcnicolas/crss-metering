@@ -25,12 +25,14 @@ public class BcqValidator {
     private static final int VALID_NO_OF_COLUMNS = 5;
 
     private int intervalConfig;
+    private int declarationConfig;
     private Date validTradingDate;
     private Set<String> uniqueDataSet = new HashSet<>();
     private String errorMessage;
 
-    public BcqValidator(int intervalConfig) {
+    public BcqValidator(int intervalConfig, int declarationConfig) {
         this.intervalConfig = intervalConfig;
+        this.declarationConfig = declarationConfig;
         validTradingDate = null;
     }
 
@@ -213,10 +215,10 @@ public class BcqValidator {
 
         if (validTradingDate == null) {
             Date today = new Date();
-            Date yesterday = DateTimeUtils.startOfDay(DateUtils.addDays(today, -1));
-            Date tomorrow = DateTimeUtils.startOfDay(DateUtils.addDays(today, 1));
+            Date minDate = DateTimeUtils.startOfDay(DateUtils.addDays(today, -declarationConfig));
+            Date maxDate = DateTimeUtils.startOfDay(DateUtils.addDays(today, 1));
 
-            if (tradingDate.after(tomorrow) || tradingDate.before(yesterday)) {
+            if (tradingDate.after(maxDate) || tradingDate.before(minDate)) {
                 setErrorMessage(String.format(CLOSED_TRADING_DATE.getErrorMessage(),
                                 formatAndGetDate(tradingDateNoTime, false)));
             }

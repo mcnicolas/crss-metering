@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.pemc.crss.metering.constants.ConfigKeys.BCQ_DECLARATION_DEADLINE;
 import static com.pemc.crss.metering.constants.ConfigKeys.BCQ_INTERVAL;
 import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 
@@ -32,11 +33,7 @@ public class BcqReader {
     }
 
     public BcqDetails readData(InputStream inputStream) throws IOException {
-        Cache configCache = cacheManager.getCache("config");
-        ValueWrapper intervalWrapper = configCache.get(BCQ_INTERVAL.toString());
-        int intervalConfig = intervalWrapper == null ? 15 :
-                Integer.parseInt(configCache.get(BCQ_INTERVAL.toString()).get().toString());
-        BcqValidator validator = new BcqValidator(intervalConfig);
+        BcqValidator validator = new BcqValidator(getIntervalConfig(), getDeclarationConfig());
         List<List<String>> csv = new ArrayList<>();
 
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
@@ -48,6 +45,20 @@ public class BcqReader {
         }
 
         return validator.getAndValidateBcq(csv);
+    }
+
+    private int getIntervalConfig() {
+        Cache configCache = cacheManager.getCache("config");
+        ValueWrapper intervalWrapper = configCache.get(BCQ_INTERVAL.toString());
+        return intervalWrapper == null ? 15 :
+                Integer.parseInt(configCache.get(BCQ_INTERVAL.toString()).get().toString());
+    }
+
+    private int getDeclarationConfig() {
+        Cache configCache = cacheManager.getCache("config");
+        ValueWrapper intervalWrapper = configCache.get(BCQ_DECLARATION_DEADLINE.toString());
+        return intervalWrapper == null ? 1 :
+                Integer.parseInt(configCache.get(BCQ_DECLARATION_DEADLINE.toString()).get().toString());
     }
 
 }
