@@ -176,7 +176,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
         createTable(tableName: 'TXN_BCQ_UPLOAD_FILE', remarks: 'BCQ upload file') {
             column(name: 'FILE_ID',             type: 'BIGINT')  { constraints(primaryKey: true, nullable: false) }
             column(name: 'TRANSACTION_ID',      type: 'VARCHAR(36)') { constraints(nullable: false) }
-            column(name: 'FILE_NAME',           type: 'VARCHAR(50)')
+            column(name: 'FILE_NAME',           type: 'VARCHAR(255)')
             column(name: 'FILE_SIZE',           type: 'BIGINT')
             column(name: 'SUBMITTED_DATE',      type: 'TIMESTAMP')
             column(name: 'VALIDATION_STATUS',   type: 'VARCHAR(8)')
@@ -191,7 +191,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
             column(name: 'BUYING_PARTICIPANT_SHORT_NAME',   type: 'VARCHAR(255)')
             column(name: 'SELLING_PARTICIPANT_NAME',        type: 'VARCHAR(255)')
             column(name: 'SELLING_PARTICIPANT_SHORT_NAME',  type: 'VARCHAR(255)')
-            column(name: 'STATUS',                          type: 'VARCHAR(17)',)
+            column(name: 'STATUS',                          type: 'VARCHAR(17)')
             column(name: 'TRADING_DATE',                    type: 'TIMESTAMP')
             column(name: 'DEADLINE_DATE',                   type: 'TIMESTAMP')
             column(name: 'UPDATED_VIA',                     type: 'VARCHAR(50)')
@@ -214,7 +214,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
                 deferrable: false, initiallyDeferred: false,
                 referencedColumnNames: 'BCQ_HEADER_ID', referencedTableName: 'TXN_BCQ_HEADER')
 
-        addUniqueConstraint(columnNames: 'SELLING_MTN, BUYING_PARTICIPANT_SHORT_NAME, TRADING_DATE',
+        addUniqueConstraint(columnNames: 'SELLING_MTN, BILLING_ID, TRADING_DATE',
                 constraintName: 'UK_BCQ_HEADER',
                 tableName: 'TXN_BCQ_HEADER')
 
