@@ -214,7 +214,7 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
                 deferrable: false, initiallyDeferred: false,
                 referencedColumnNames: 'BCQ_HEADER_ID', referencedTableName: 'TXN_BCQ_HEADER')
 
-        addUniqueConstraint(columnNames: 'SELLING_MTN, BILLING_ID, TRADING_DATE',
+        addUniqueConstraint(columnNames: 'SELLING_MTN, BILLING_ID, TRADING_DATE, SELLING_PARTICIPANT_SHORT_NAME',
                 constraintName: 'UK_BCQ_HEADER',
                 tableName: 'TXN_BCQ_HEADER')
 
