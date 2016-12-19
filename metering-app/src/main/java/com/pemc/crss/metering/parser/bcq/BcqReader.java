@@ -19,6 +19,7 @@ import java.util.List;
 
 import static com.pemc.crss.metering.constants.ConfigKeys.BCQ_DECLARATION_DEADLINE;
 import static com.pemc.crss.metering.constants.ConfigKeys.BCQ_INTERVAL;
+import static java.lang.Integer.parseInt;
 import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 
 @Slf4j
@@ -49,16 +50,14 @@ public class BcqReader {
 
     private int getIntervalConfig() {
         Cache configCache = cacheManager.getCache("config");
-        ValueWrapper intervalWrapper = configCache.get(BCQ_INTERVAL.toString());
-        return intervalWrapper == null ? 15 :
-                Integer.parseInt(configCache.get(BCQ_INTERVAL.toString()).get().toString());
+        ValueWrapper wrapper = configCache.get(BCQ_INTERVAL.toString());
+        return wrapper == null ? 15 : parseInt(configCache.get(BCQ_INTERVAL.toString()).get().toString());
     }
 
     private int getDeclarationConfig() {
         Cache configCache = cacheManager.getCache("config");
-        ValueWrapper intervalWrapper = configCache.get(BCQ_DECLARATION_DEADLINE.toString());
-        return intervalWrapper == null ? 1 :
-                Integer.parseInt(configCache.get(BCQ_DECLARATION_DEADLINE.toString()).get().toString());
+        ValueWrapper wrapper = configCache.get(BCQ_DECLARATION_DEADLINE.toString());
+        return wrapper == null ? 1 : parseInt(configCache.get(BCQ_DECLARATION_DEADLINE.toString()).get().toString());
     }
 
 }
