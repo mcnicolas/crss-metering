@@ -1,8 +1,8 @@
 package com.pemc.crss.metering.validator.bcq.helper;
 
 import com.pemc.crss.metering.constants.BcqInterval;
-import com.pemc.crss.metering.validator.bcq.validation.BcqCsvValidation;
-import com.pemc.crss.metering.validator.bcq.validation.BcqValidation;
+import com.pemc.crss.metering.validator.bcq.validation.CsvValidation;
+import com.pemc.crss.metering.validator.bcq.validation.Validation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -16,8 +16,8 @@ import static com.pemc.crss.metering.constants.BcqValidationRules.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDateTime;
 import static com.pemc.crss.metering.utils.DateTimeUtils.isStartOfDay;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
-import static com.pemc.crss.metering.validator.bcq.validation.BcqCsvValidation.emptyInst;
-import static com.pemc.crss.metering.validator.bcq.validation.BcqCsvValidation.from;
+import static com.pemc.crss.metering.validator.bcq.validation.CsvValidation.emptyInst;
+import static com.pemc.crss.metering.validator.bcq.validation.CsvValidation.from;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.math.NumberUtils.isParsable;
@@ -25,7 +25,7 @@ import static org.apache.commons.lang3.time.DateUtils.addDays;
 
 @Slf4j
 @Component
-public class BcqCsvValidationHelper {
+public class CsvValidationHelper {
 
     private static final int SELLING_MTN_INDEX = 0;
     private static final int BILLING_ID_INDEX = 1;
@@ -36,7 +36,7 @@ public class BcqCsvValidationHelper {
     private static final int VALID_NO_OF_LINES = 2;
     private static final int START_LINE_OF_DATA = 2;
 
-    public BcqValidation<List<List<String>>> validCsv(int intervalConfig) {
+    public Validation<List<List<String>>> validCsv(int intervalConfig) {
         return nonEmpty().
                 and(validColumnHeaders()).
                 and(noEmptyLines()).
@@ -57,28 +57,28 @@ public class BcqCsvValidationHelper {
     /****************************************************
      * VALIDATIONS
      ****************************************************/
-    private BcqCsvValidation nonEmpty() {
+    private CsvValidation nonEmpty() {
         return from(csv -> csv.size() > VALID_NO_OF_LINES, EMPTY.getErrorMessage());
     }
 
-    private BcqCsvValidation validColumnHeaders() {
+    private CsvValidation validColumnHeaders() {
         return from(csv -> !csv.get(1).stream().anyMatch(StringUtils::isBlank)
                 && csv.get(1).size() == VALID_NO_OF_COLUMNS,
             INCORRECT_COLUMN_HEADER_COUNT.getErrorMessage());
     }
 
-    private BcqCsvValidation noEmptyLines() {
+    private CsvValidation noEmptyLines() {
         return from(csv -> csv.stream().
                         allMatch(line -> !line.stream().allMatch(StringUtils::isBlank)),
                 EMPTY_LINE.getErrorMessage());
     }
 
-    private BcqCsvValidation intervalIsSet() {
+    private CsvValidation intervalIsSet() {
         return from(csv -> !isBlank(getInterval(csv)), MISSING_INTERVAL.getErrorMessage());
     }
 
-    private BcqCsvValidation validInterval(int intervalConfig) {
-        BcqCsvValidation validation = emptyInst();
+    private CsvValidation validInterval(int intervalConfig) {
+        CsvValidation validation = emptyInst();
         Predicate<List<List<String>>> predicate = csv -> {
             String intervalString = getInterval(csv);
             BcqInterval interval = fromDescription(intervalString);
@@ -92,48 +92,48 @@ public class BcqCsvValidationHelper {
         return validation;
     }
 
-    private BcqCsvValidation sellingMtnIsSet() {
+    private CsvValidation sellingMtnIsSet() {
         return from(csv -> !getDataList(csv).stream().
                 anyMatch(line -> isBlank(line.get(SELLING_MTN_INDEX))), MISSING_SELLING_MTN.getErrorMessage());
     }
 
-    private BcqCsvValidation billingIdIsSet() {
+    private CsvValidation billingIdIsSet() {
         return from(csv -> !getDataList(csv).stream().
                 anyMatch(line -> isBlank(line.get(BILLING_ID_INDEX))), MISSING_BILLING_ID.getErrorMessage());
     }
 
-    private BcqCsvValidation referenceMtnIsSet() {
+    private CsvValidation referenceMtnIsSet() {
         return from(csv -> !getDataList(csv).stream().
                 anyMatch(line -> isBlank(line.get(REFERENCE_MTN_INDEX))), MISSING_REFERENCE_MTN.getErrorMessage());
     }
 
-    private BcqCsvValidation dateIsSet() {
+    private CsvValidation dateIsSet() {
         return from(csv -> !getDataList(csv).stream().
                 anyMatch(line -> isBlank(line.get(DATE_INDEX))), MISSING_DATE.getErrorMessage());
     }
 
-    private BcqCsvValidation bcqIsSet() {
+    private CsvValidation bcqIsSet() {
         return from(csv -> !getDataList(csv).stream().
                 anyMatch(line -> isBlank(line.get(BCQ_INDEX))), MISSING_BCQ.getErrorMessage());
     }
 
-    private BcqCsvValidation validDate() {
+    private CsvValidation validDate() {
         return from(csv -> !getDataList(csv).stream().
                 anyMatch(line -> parseDateTime(line.get(DATE_INDEX)) == null), INCORRECT_DATE_FORMAT.getErrorMessage());
     }
 
-    private BcqCsvValidation validBcq() {
+    private CsvValidation validBcq() {
         return from(csv -> !getDataList(csv).stream().
                 anyMatch(line -> !isParsable(line.get(BCQ_INDEX))), INCORRECT_DATA_TYPE.getErrorMessage());
     }
 
-    private BcqCsvValidation positiveBcq() {
+    private CsvValidation positiveBcq() {
         return from(csv -> !getDataList(csv).stream().
                 anyMatch(line -> new BigDecimal(line.get(BCQ_INDEX)).signum() == -1), NEGATIVE_BCQ.getErrorMessage());
     }
 
-    private BcqCsvValidation noDuplicates() {
-        BcqCsvValidation validation = emptyInst();
+    private CsvValidation noDuplicates() {
+        CsvValidation validation = emptyInst();
         Predicate<List<List<String>>> predicate =  csv -> {
             Set<List<String>> uniqueSet = new HashSet<>();
             return !csv.subList(2, csv.size()).stream().anyMatch(line -> {
@@ -150,7 +150,7 @@ public class BcqCsvValidationHelper {
         return validation;
     }
 
-    private BcqCsvValidation sameTradingDate() {
+    private CsvValidation sameTradingDate() {
         return from(csv -> {
             Date firstTradingDate = getTradingDate(getDataList(csv).get(0).get(DATE_INDEX));
             return !getDataList(csv).stream().

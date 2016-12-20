@@ -2,7 +2,7 @@ package com.pemc.crss.metering.validator.bcq;
 
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.dto.BcqHeader;
-import com.pemc.crss.metering.validator.bcq.helper.BcqHeaderListValidationHelper;
+import com.pemc.crss.metering.validator.bcq.helper.HeaderListValidationHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -15,13 +15,13 @@ import static java.lang.Integer.parseInt;
 
 @Slf4j
 @Component
-public class BcqHeaderListValidator {
+public class HeaderListValidator {
 
     private CacheManager cacheManager;
-    private BcqHeaderListValidationHelper validationHelper;
+    private HeaderListValidationHelper validationHelper;
 
     @Autowired
-    public BcqHeaderListValidator(CacheManager cacheManager, BcqHeaderListValidationHelper validationHelper) {
+    public HeaderListValidator(CacheManager cacheManager, HeaderListValidationHelper validationHelper) {
         this.cacheManager = cacheManager;
         this.validationHelper = validationHelper;
     }

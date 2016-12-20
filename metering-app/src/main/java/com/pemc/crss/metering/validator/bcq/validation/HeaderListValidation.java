@@ -9,12 +9,12 @@ import java.util.function.Predicate;
 import static com.pemc.crss.metering.validator.bcq.BcqValidationResult.accepted;
 import static com.pemc.crss.metering.validator.bcq.BcqValidationResult.rejected;
 
-public class BcqHeaderListValidation implements BcqValidation<List<BcqHeader>> {
+public class HeaderListValidation implements Validation<List<BcqHeader>> {
 
     private Predicate<List<BcqHeader>> predicate;
     private String errorMessage;
 
-    private BcqHeaderListValidation(Predicate<List<BcqHeader>> predicate, String errorMessage) {
+    private HeaderListValidation(Predicate<List<BcqHeader>> predicate, String errorMessage) {
         this.predicate = predicate;
         this.errorMessage = errorMessage;
     }
@@ -24,16 +24,16 @@ public class BcqHeaderListValidation implements BcqValidation<List<BcqHeader>> {
         return predicate.test(csvLines) ? accepted() : rejected(errorMessage);
     }
 
-    public static BcqHeaderListValidation emptyInst() {
-        return new BcqHeaderListValidation(null, null);
+    public static HeaderListValidation emptyInst() {
+        return new HeaderListValidation(null, null);
     }
 
-    public static BcqHeaderListValidation from(Predicate<List<BcqHeader>> predicate) {
-        return new BcqHeaderListValidation(predicate, null);
+    public static HeaderListValidation from(Predicate<List<BcqHeader>> predicate) {
+        return new HeaderListValidation(predicate, null);
     }
 
-    public static BcqHeaderListValidation from(Predicate<List<BcqHeader>> predicate, String onErrorMessage) {
-        return new BcqHeaderListValidation(predicate, onErrorMessage);
+    public static HeaderListValidation from(Predicate<List<BcqHeader>> predicate, String onErrorMessage) {
+        return new HeaderListValidation(predicate, onErrorMessage);
     }
 
     public void setPredicate(Predicate<List<BcqHeader>> predicate) {

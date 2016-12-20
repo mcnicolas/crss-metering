@@ -3,8 +3,8 @@ package com.pemc.crss.metering.validator.bcq.helper;
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.dto.BcqData;
 import com.pemc.crss.metering.dto.BcqHeader;
-import com.pemc.crss.metering.validator.bcq.validation.BcqHeaderListValidation;
-import com.pemc.crss.metering.validator.bcq.validation.BcqValidation;
+import com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation;
+import com.pemc.crss.metering.validator.bcq.validation.Validation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -16,22 +16,22 @@ import static com.pemc.crss.metering.constants.BcqValidationRules.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDateTime;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
-import static com.pemc.crss.metering.validator.bcq.validation.BcqHeaderListValidation.emptyInst;
+import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation.emptyInst;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 
 @Slf4j
 @Component
-public class BcqHeaderListValidationHelper {
+public class HeaderListValidationHelper {
 
-    public BcqValidation<List<BcqHeader>> validHeaderList(int declarationDateConfig, BcqInterval interval) {
+    public Validation<List<BcqHeader>> validHeaderList(int declarationDateConfig, BcqInterval interval) {
         return openTradingDate(declarationDateConfig).
                 and(validDataSize(interval)).
                 and(validTimeIntervals(interval));
     }
 
-    private BcqHeaderListValidation openTradingDate(int declarationDateConfig) {
-        BcqHeaderListValidation headerListValidation = emptyInst();
+    private HeaderListValidation openTradingDate(int declarationDateConfig) {
+        HeaderListValidation headerListValidation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             Date tradingDate = headerList.get(0).getTradingDate();
             Date today = new Date();
@@ -49,9 +49,9 @@ public class BcqHeaderListValidationHelper {
         return headerListValidation;
     }
 
-    private BcqHeaderListValidation validDataSize(BcqInterval interval) {
+    private HeaderListValidation validDataSize(BcqInterval interval) {
         int validBcqSize = interval.getValidNoOfRecords();
-        BcqHeaderListValidation headerListValidation = emptyInst();
+        HeaderListValidation headerListValidation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList ->
                 !headerList.stream().anyMatch(header -> {
                     if (header.getDataList().size() != validBcqSize) {
@@ -68,8 +68,8 @@ public class BcqHeaderListValidationHelper {
         return headerListValidation;
     }
 
-    private BcqHeaderListValidation validTimeIntervals(BcqInterval interval) {
-        BcqHeaderListValidation headerListValidation = emptyInst();
+    private HeaderListValidation validTimeIntervals(BcqInterval interval) {
+        HeaderListValidation headerListValidation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList ->
                 !headerList.stream().anyMatch(header -> {
                     Date previousDate = null;

@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.validator.bcq;
 
-import com.pemc.crss.metering.validator.bcq.helper.BcqCsvValidationHelper;
+import com.pemc.crss.metering.validator.bcq.helper.CsvValidationHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -13,13 +13,13 @@ import static java.lang.Integer.parseInt;
 
 @Slf4j
 @Component
-public class BcqCsvValidator {
+public class CsvValidator {
 
     private CacheManager cacheManager;
-    private BcqCsvValidationHelper validationHelper;
+    private CsvValidationHelper validationHelper;
 
     @Autowired
-    public BcqCsvValidator(CacheManager cacheManager, BcqCsvValidationHelper validationHelper) {
+    public CsvValidator(CacheManager cacheManager, CsvValidationHelper validationHelper) {
         this.cacheManager = cacheManager;
         this.validationHelper = validationHelper;
     }
