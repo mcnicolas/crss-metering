@@ -5,6 +5,7 @@ import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataHeader;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,7 @@ import static com.pemc.crss.metering.validator.ValidationResult.REJECTED_STATUS;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+@Slf4j
 @Component
 @Order(value = 1)
 public class ColumnHeaderValidator implements Validator {
@@ -40,6 +42,8 @@ public class ColumnHeaderValidator implements Validator {
         ValidationResult retVal = ACCEPTED_STATUS;
 
         if (fileManifest.getFileType() == XLS || fileManifest.getFileType() == CSV) {
+            log.debug("Validating header for {}", fileManifest.getFileName());
+
             MeterDataHeader header = meterData.getHeader();
 
             retVal = checkRequiredColumns(header.getColumnNames());
