@@ -18,11 +18,11 @@ ext {
             break
         case 'uat':
             dbEnv = "uat"
-            dbUrl = "jdbc:oracle:thin:@192.168.235.6:1521:ORCL"
-            dbDriver = "oracle.jdbc.OracleDriver"
+            dbUrl = "jdbc:postgresql://192.168.235.6:5432/crss_metering"
+            dbDriver = "org.postgresql.Driver"
             dbUser = "crss_metering"
             dbPassword = "crss_metering"
-            dbDialect = "org.hibernate.dialect.Oracle10gDialect"
+            dbDialect = "org.hibernate.dialect.PostgreSQL9Dialect"
             break
         default:
             dbEnv = "local"
