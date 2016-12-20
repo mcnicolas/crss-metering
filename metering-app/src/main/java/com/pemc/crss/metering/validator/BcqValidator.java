@@ -3,7 +3,7 @@ package com.pemc.crss.metering.validator;
 import com.pemc.crss.metering.dto.BcqData;
 import com.pemc.crss.metering.dto.BcqDetails;
 import com.pemc.crss.metering.dto.BcqHeader;
-import com.pemc.crss.metering.parser.bcq.BcqInterval;
+import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.utils.DateTimeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -13,8 +13,8 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqValidationRules.*;
-import static com.pemc.crss.metering.parser.bcq.BcqInterval.*;
-import static com.pemc.crss.metering.parser.bcq.util.BcqDateUtils.*;
+import static com.pemc.crss.metering.constants.BcqInterval.*;
+import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 import static java.math.BigDecimal.ROUND_HALF_UP;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -195,7 +195,7 @@ public class BcqValidator {
 
         Date date = parseDateTime(dateString);
         if (date == null) {
-            setErrorMessage(String.format(INCORRECT_FORMAT.getErrorMessage(), "Date ", DATE_TIME_FORMAT));
+            setErrorMessage(INCORRECT_DATE_FORMAT.getErrorMessage());
         }
 
         return date;
@@ -251,7 +251,7 @@ public class BcqValidator {
         }
 
         if (!NumberUtils.isParsable(bcqString)) {
-            setErrorMessage(String.format(INCORRECT_FORMAT.getErrorMessage(), bcqString, "decimal"));
+            setErrorMessage(INCORRECT_DATA_TYPE.getErrorMessage());
             return BigDecimal.ZERO;
         }
 

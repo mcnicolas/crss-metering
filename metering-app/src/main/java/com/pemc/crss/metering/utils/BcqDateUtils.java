@@ -1,10 +1,11 @@
-package com.pemc.crss.metering.parser.bcq.util;
+package com.pemc.crss.metering.utils;
 
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
 import java.text.ParseException;
 import java.util.Date;
+
+import static org.apache.commons.lang3.time.DateFormatUtils.format;
 
 public class BcqDateUtils {
 
@@ -32,19 +33,19 @@ public class BcqDateUtils {
     }
 
     public static String formatDate(Date date) {
-        return DateFormatUtils.format(date, DATE_FORMAT);
+        return format(date, DATE_FORMAT);
     }
 
     public static String formatDateTime(Date date) {
-        return DateFormatUtils.format(date, DATE_TIME_FORMAT);
+        return format(date, DATE_TIME_FORMAT);
     }
 
     public static String formatLongDate(Date date) {
-        return DateFormatUtils.format(date, LONG_DATE_FORMAT);
+        return format(date, LONG_DATE_FORMAT);
     }
 
     public static String formatLongDateTime(Date date) {
-        return DateFormatUtils.format(date, LONG_DATE_TIME_FORMAT);
+        return format(date, LONG_DATE_TIME_FORMAT);
     }
 
 }

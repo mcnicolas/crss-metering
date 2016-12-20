@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_REDECLARATION_ENTRIES;
-import static com.pemc.crss.metering.parser.bcq.util.BcqDateUtils.formatDate;
+import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 

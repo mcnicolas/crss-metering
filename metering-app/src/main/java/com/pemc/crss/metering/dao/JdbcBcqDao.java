@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.pemc.crss.metering.constants.ConfigKeys.BCQ_NULLIFICATION_DEADLINE;
-import static com.pemc.crss.metering.parser.bcq.util.BcqDateUtils.parseDate;
+import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 

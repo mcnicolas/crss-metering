@@ -1,4 +1,4 @@
-package com.pemc.crss.metering.parser.bcq;
+package com.pemc.crss.metering.constants;
 
 import org.apache.commons.lang3.StringUtils;
 

@@ -30,22 +30,25 @@ public class BcqReader {
 
     @Autowired
     public BcqReader(CacheManager cacheManager) {
+
         this.cacheManager = cacheManager;
     }
 
     public BcqDetails readData(InputStream inputStream) throws IOException {
         BcqValidator validator = new BcqValidator(getIntervalConfig(), getDeclarationConfig());
-        List<List<String>> csv = new ArrayList<>();
+        List<List<String>> csv = getCsv(inputStream);
+        return validator.getAndValidateBcq(csv);
+    }
 
+    private List<List<String>> getCsv(InputStream inputStream) throws IOException {
+        List<List<String>> csv = new ArrayList<>();
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
             List<String> line;
-
             while ((line = reader.read()) != null) {
                 csv.add(line);
             }
         }
-
-        return validator.getAndValidateBcq(csv);
+        return csv;
     }
 
     private int getIntervalConfig() {
