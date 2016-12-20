@@ -5,6 +5,7 @@ import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
 import com.pemc.crss.metering.validator.ValidationResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +61,15 @@ public class JdbcMeteringDao implements MeteringDao {
     @Value("${mq.manifest.status}")
     private String updateManifestStatus;
 
+    @Value("${mq.manifest.upload.status}")
+    private String fileProcessingCompleted;
+
+    @Value("${mq.manifest.upload.report}")
+    private String uploadReport;
+
+    @Value("${mq.manifest.filter-by.status}")
+    private String filterByHeaderAndStatus;
+
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
@@ -71,7 +81,7 @@ public class JdbcMeteringDao implements MeteringDao {
         this.jdbcTemplate.setExceptionTranslator(exceptionTranslator);
 
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-        ((JdbcTemplate)this.namedParameterJdbcTemplate.getJdbcOperations()).setExceptionTranslator(exceptionTranslator);
+        ((JdbcTemplate) this.namedParameterJdbcTemplate.getJdbcOperations()).setExceptionTranslator(exceptionTranslator);
     }
 
     @Override
@@ -247,4 +257,28 @@ public class JdbcMeteringDao implements MeteringDao {
                 new BeanPropertyRowMapper<>(FileManifest.class));
     }
 
+    @Override
+    public boolean isFileProcessingCompleted(long headerId) {
+        return namedParameterJdbcTemplate.queryForObject(fileProcessingCompleted,
+                new MapSqlParameterSource("headerID", headerId),
+                Boolean.class);
+    }
+
+    @Override
+    public MeterQuantityReport getManifestReport(long headerId) {
+        MeterQuantityReport report = namedParameterJdbcTemplate.queryForObject(uploadReport,
+                new MapSqlParameterSource("headerID", headerId),
+                new BeanPropertyRowMapper<>(MeterQuantityReport.class));
+
+        return report;
+    }
+
+    @Override
+    public List<FileManifest> findByHeaderAndStatus(long headerId, String status) {
+        MapSqlParameterSource paramSource = new MapSqlParameterSource()
+                .addValue("headerID", headerId)
+                .addValue("status", status);
+        return namedParameterJdbcTemplate.query(filterByHeaderAndStatus, paramSource,
+                new BeanPropertyRowMapper<>(FileManifest.class));
+    }
 }

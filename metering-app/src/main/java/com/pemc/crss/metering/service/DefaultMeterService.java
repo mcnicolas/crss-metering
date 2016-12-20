@@ -4,16 +4,14 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dao.MeteringDao;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
-import com.pemc.crss.metering.dto.mq.FileManifest;
-import com.pemc.crss.metering.dto.mq.HeaderManifest;
-import com.pemc.crss.metering.dto.mq.MeterData;
-import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.dto.mq.*;
 import com.pemc.crss.metering.event.MeterUploadEvent;
 import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.meterquantity.MeterQuantityParser;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.mq.MQValidationHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataAccessException;
@@ -200,4 +198,23 @@ public class DefaultMeterService implements MeterService {
                 totalRecords);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isFileProcessingCompleted(long headerId) {
+        return meteringDao.isFileProcessingCompleted(headerId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MeterQuantityReport getReport(long headerId) {
+        MeterQuantityReport report = meteringDao.getManifestReport(headerId);
+        Validate.notNull(report, "Cannot found Meter quantity report with manifest header id " + headerId);
+
+        return report;
+    }
+
+    @Override
+    public List<FileManifest> findRejectedFiles(long headerId) {
+        return meteringDao.findByHeaderAndStatus(headerId, "REJECTED");
+    }
 }

@@ -5,6 +5,7 @@ import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
 import com.pemc.crss.metering.validator.ValidationResult;
 
 import java.util.List;
@@ -25,8 +26,13 @@ public interface MeteringDao {
 
     void updateManifestStatus(ValidationResult validationResult);
 
-    HeaderManifest getHeaderManifest(long transactionID);
+    HeaderManifest getHeaderManifest(long headerId);
 
     List<FileManifest> getFileManifest(long headerID);
 
+    boolean isFileProcessingCompleted(long headerId);
+
+    MeterQuantityReport getManifestReport(long headerId);
+
+    List<FileManifest> findByHeaderAndStatus(long headerId, String status);
 }

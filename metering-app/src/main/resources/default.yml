@@ -56,6 +56,13 @@ security:
     resource:
       userInfoUri: http://localhost:8082/user
 
+logging:
+  level:
+    com.netflix: INFO
+    org.springframework.cloud: DEBUG
+    org.springframework.security: DEBUG
+    com.pemc.crss: DEBUG
+
 mq:
   manifest:
     header:
@@ -93,7 +100,26 @@ mq:
         WHERE B.HEADER_ID = :headerID
     status: >
       UPDATE TXN_MQ_MANIFEST_FILE SET PROCESS_FLAG = 'Y', STATUS = :status, ERROR_DETAILS = :errorDetail WHERE FILE_ID = :fileID
-
+    upload:
+      status: >
+         select count(*) from txn_mq_manifest_header h
+         where
+           file_count=(
+             select count(*) from txn_mq_manifest_file
+               where header_id=h.header_id and process_flag='Y')
+           and header_id=:headerID
+      report: >
+       select h.header_id as headerID, h.upload_by as uploadedBy, h.upload_datetime as uploadDateTime,
+          sum(case when status='ACCEPTED' then 1 else 0 end) as acceptedFileCount,
+          sum(case when status='REJECTED' then 1 else 0 end) as rejectedFileCount
+        from
+          txn_mq_manifest_header h, txn_mq_manifest_file f
+        where
+          f.header_id = h.header_id and h.header_id=:headerID
+        GROUP BY h.header_id, h.upload_datetime
+      notif.target.department: MSP,METERING
+    filter-by.status: >
+        select * from txn_mq_manifest_file where status=:status and header_id=:headerID
   meter:
     daily:
       insert: >
