@@ -47,8 +47,7 @@ dependencies {
     compile 'org.springframework.boot:spring-boot-starter-amqp'
     compile 'org.springframework.boot:spring-boot-starter-jdbc'
 
-    // TODO: Tagged for removal. Just for pagination we are downloading Hibernate?
-    compile 'org.springframework.boot:spring-boot-starter-data-jpa'
+    compile 'org.springframework.data:spring-data-commons'
 
     optional 'org.springframework.boot:spring-boot-configuration-processor'
 
