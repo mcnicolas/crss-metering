@@ -123,11 +123,11 @@ public class DefaultMeterService implements MeterService {
             log.error(e.getMessage(), e);
         }
 
-        if (validationResult.getStatus() == ACCEPTED) {
-            validationResult = validationHandler.validate(fileManifest, meterData);
-            log.debug("Finished validating MQ data status:{} errorDetail:{}",
-                    validationResult.getStatus(), validationResult.getErrorDetail());
-        }
+//        if (validationResult.getStatus() == ACCEPTED) {
+//            validationResult = validationHandler.validate(fileManifest, meterData);
+//            log.debug("Finished validating MQ data status:{} errorDetail:{}",
+//                    validationResult.getStatus(), validationResult.getErrorDetail());
+//        }
 
         if (validationResult.getStatus() == ACCEPTED) {
             validationResult = saveMeterData(fileManifest, meterData.getDetails());
