@@ -19,6 +19,8 @@ import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
 
+import static org.gradle.internal.os.OperatingSystem.*
+
 apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
 
 ext {
@@ -29,8 +31,12 @@ ext {
     dockerImageTag = "$project.dockerImageName:$version"
 }
 
+def defaultDockerUrl = {
+    current().isLinux() ? 'unix:///var/run/docker.sock' : 'tcp://127.0.0.1:2375'
+}
+
 docker {
-    url = System.properties['docker.host.url'] ?: 'unix:///var/run/docker.sock'
+    url = System.properties['docker.host.url'] ?: defaultDockerUrl()
     if (System.properties['docker.cert.path'])
         certPath = file(System.properties['docker.cert.path'])
 
