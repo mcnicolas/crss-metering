@@ -10,7 +10,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.bmuschko:gradle-docker-plugin:3.0.3'
+        classpath 'com.bmuschko:gradle-docker-plugin:3.0.4'
     }
 }
 
@@ -24,6 +24,7 @@ apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
 ext {
     baseImage = 'exist/jre:1.8'
     serviceName = 'metering' // simply supply metering than default project.name (metering-app)
+    serviceGroup = 'metering'
     dockerImageName = "crss/$project.serviceName"
     dockerImageTag = "$project.dockerImageName:$version"
 }
@@ -53,12 +54,15 @@ task createDockerfile(type: Dockerfile, dependsOn: copyArtifacts) {
     destFile = project.file("${project.buildDir}/docker/Dockerfile")
     from baseImage
     maintainer 'Exist Software Labs'
+    environmentVariable('JAVA_OPTS', '-Xms256m -Xmx4g')
 
+    exposePort({ 8080 })
     copyFile('app.jar', 'app.jar')
+    runCommand "sh -c 'touch /app.jar'"
+
     label(["${project.group}.build-no"     : revision,
            "${project.group}.service-group": 'metering'])
-    entryPoint("java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app.jar")
-    exposePort({ 8080 })
+    entryPoint('sh', '-c', "java \$JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -server -jar /app.jar")
 }
 
 task buildDockerImage(type: DockerBuildImage, dependsOn: createDockerfile) {
@@ -70,8 +74,10 @@ task buildDockerImage(type: DockerBuildImage, dependsOn: createDockerfile) {
 
 task tagDockerImage(type: DockerTagImage) {
     imageId = dockerImageTag
-    tag = "$version"
-    repository = "${docker.registryCredentials.url}/$dockerImageName"
+    tag = project.hasProperty('imageTag') ? imageTag : version
+
+    repository = project.hasProperty('dockerRegistryUrl') ?
+            "${dockerRegistryUrl}/$dockerImageName" : dockerImageName
 }
 
 task pushDockerImage(type: DockerPushImage, dependsOn: tagDockerImage) {
