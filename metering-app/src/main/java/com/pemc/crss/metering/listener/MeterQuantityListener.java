@@ -34,6 +34,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -77,6 +78,7 @@ public class MeterQuantityListener {
         fileManifest.setFileSize(fileContent.length);
         fileManifest.setChecksum(checksum);
         fileManifest.setMspShortName(mspShortName);
+        fileManifest.setUploadDateTime(new Date());
 
         try {
             meterService.processMeterData(fileManifest, fileContent);
