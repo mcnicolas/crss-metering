@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -96,6 +97,7 @@ public class MeterQuantityListener {
         eventPublisher.publishEvent(FileManifestProcessedEvent.newInstance(headerID, fileManifest.getFileID()));
     }
 
+    @Async
     @TransactionalEventListener
     public void onFileManifestProcessedListener(FileManifestProcessedEvent event) {
         log.debug("Handling event = {}", event);
