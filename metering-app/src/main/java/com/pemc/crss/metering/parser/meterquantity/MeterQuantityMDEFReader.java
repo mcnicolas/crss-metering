@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.pemc.crss.metering.parser.ParserUtil.parseText;
+import static java.math.RoundingMode.HALF_UP;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static java.util.Calendar.MINUTE;
 
@@ -49,7 +51,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
             int intervalPerHour = MINUTES_IN_HOUR / channel.getIntervalPerHour();
 
             for (MDEFIntervalData interval : channel.getIntervals()) {
-                List<Float> meterReadingList = interval.getMeterReading();
+                List<BigDecimal> meterReadingList = interval.getMeterReading();
                 List<Integer> channelStatusList = interval.getChannelStatus();
                 List<Integer> intervalStatusList = interval.getIntervalStatus();
                 List<String> readingDateList = interval.getReadingDate();
@@ -74,7 +76,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
                         meterDataMap.put(key, value);
                     }
 
-                    Double meterReading = Double.valueOf(meterReadingList.get(i));
+                    BigDecimal meterReading = meterReadingList.get(i);
 
                     int channelStatus = channelStatusList.get(i);
                     int intervalStatus = intervalStatusList.get(i);
@@ -278,7 +280,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
     private MDEFIntervalData readIntervalData(byte[] buffer, String intervalStartDate, String channelHeaderTaStop) {
         MDEFIntervalData retVal = new MDEFIntervalData();
 
-        List<Float> meterReadings = new ArrayList<>();
+        List<BigDecimal> meterReadings = new ArrayList<>();
         List<Integer> channelStatusList = new ArrayList<>();
         List<Integer> intervalStatusList = new ArrayList<>();
         List<String> readingDates = new ArrayList<>();
@@ -320,7 +322,8 @@ public class MeterQuantityMDEFReader implements QuantityReader {
                 break;
             }
 
-            meterReadings.add(byteBuffer.getFloat());
+            BigDecimal value = new BigDecimal(byteBuffer.getFloat());
+            meterReadings.add(value.setScale(17, HALF_UP));
 
             if (byteBuffer.hasRemaining()) {
                 channelStatusList.add((int) byteBuffer.getChar());

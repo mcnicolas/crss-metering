@@ -17,6 +17,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,6 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.pemc.crss.metering.utils.DateTimeUtils.READING_DATETIME;
+import static java.math.BigDecimal.ZERO;
+import static java.math.RoundingMode.HALF_UP;
 import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
 import static org.apache.poi.ss.usermodel.DateUtil.getJavaCalendar;
@@ -199,20 +202,20 @@ public class MeterQuantityExcelReader implements QuantityReader {
         return retVal;
     }
 
-    private double getNumericValue(Cell cell) {
-        double retVal = 0.0;
+    private BigDecimal getNumericValue(Cell cell) {
+        BigDecimal retVal = ZERO;
 
         if (cell != null) {
             switch (CellType.forInt(cell.getCellType())) {
                 case STRING:
-                    retVal = Double.valueOf(cell.getStringCellValue());
+                    retVal = new BigDecimal(cell.getStringCellValue());
                     break;
                 case NUMERIC:
-                    retVal = cell.getNumericCellValue();
+                    retVal = new BigDecimal(cell.getNumericCellValue());
             }
         }
 
-        return retVal;
+        return retVal.setScale(17, HALF_UP);
     }
 
 }

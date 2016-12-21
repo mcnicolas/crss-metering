@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.parser.meterquantity;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 class MDEFIntervalData {
@@ -9,7 +10,7 @@ class MDEFIntervalData {
     private String customerID;
 
     // TODO: Refactor. Each bean will contain a single record
-    private List<Float> meterReading;
+    private List<BigDecimal> meterReading;
     private List<Integer> channelStatus;
     private List<Integer> intervalStatus;
     private List<String> readingDate;
@@ -41,11 +42,11 @@ class MDEFIntervalData {
         this.customerID = customerID;
     }
 
-    public List<Float> getMeterReading() {
+    public List<BigDecimal> getMeterReading() {
         return meterReading;
     }
 
-    public void setMeterReading(List<Float> meterReading) {
+    public void setMeterReading(List<BigDecimal> meterReading) {
         this.meterReading = meterReading;
     }
 

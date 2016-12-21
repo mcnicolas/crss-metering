@@ -14,12 +14,14 @@ import org.supercsv.io.ICsvListReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import static com.pemc.crss.metering.utils.DateTimeUtils.parseDateAsLong;
+import static java.math.RoundingMode.HALF_UP;
 import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 
 @Slf4j
@@ -98,12 +100,14 @@ public class MeterQuantityCSVReader implements QuantityReader {
         return retVal;
     }
 
-    private Double getNumericValue(String data) {
+    private BigDecimal getNumericValue(String data) {
+        BigDecimal retVal = null;
+
         if (NumberUtils.isParsable(data)) {
-            return Double.parseDouble(data);
-        } else {
-            return null;
+            retVal = new BigDecimal(data).setScale(17, HALF_UP);
         }
+
+        return retVal;
     }
 
 }
