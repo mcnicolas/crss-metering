@@ -12,6 +12,7 @@ import static com.pemc.crss.metering.utils.DateTimeUtils.dateToLong;
 import static com.pemc.crss.metering.utils.DateTimeUtils.endOfDay;
 import static com.pemc.crss.metering.utils.DateTimeUtils.endOfMonth;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
+import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDayMQ;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfMonth;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
@@ -110,7 +111,7 @@ public class MQDisplayQueryBuilder {
             startDate = startOfMonth(dateParam);
             endDate = endOfMonth(dateParam);
         } else if (equalsIgnoreCase(category, "daily")) {
-            startDate = startOfDay(dateParam);
+            startDate = startOfDayMQ(dateParam);
             endDate = endOfDay(dateParam);
         }
 
