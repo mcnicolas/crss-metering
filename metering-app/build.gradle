@@ -63,7 +63,7 @@ dependencies {
     compile 'commons-io:commons-io'
     compile 'org.apache.commons:commons-lang3'
 
-    compile project(':commons-log')
+    runtime 'de.appelgriepsch.logback:logback-gelf-appender'
 
     testCompile 'org.springframework.boot:spring-boot-starter-test'
 }

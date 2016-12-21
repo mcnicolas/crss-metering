@@ -7,9 +7,8 @@
 
   <!-- appender configs -->
   <include resource="org/springframework/boot/logging/logback/base.xml"/>
-  <include resource="com/pemc/crss/commons/logger/crss-file-appender.xml"/>
-  <include resource="com/pemc/crss/commons/logger/crss-gelf-appender.xml"/>
-
+  <include resource="logger/crss-file-appender.xml"/>
+  <include resource="logger/crss-gelf-appender.xml"/>
 
   <root level="INFO">
     <appender-ref ref="CONSOLE" />

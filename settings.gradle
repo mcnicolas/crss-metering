@@ -1,3 +1,2 @@
-include 'commons-log'
 include 'metering-app'
 include 'metering-upload'
