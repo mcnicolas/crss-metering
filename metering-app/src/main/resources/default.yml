@@ -57,6 +57,7 @@ security:
       userInfoUri: http://localhost:8082/user
 
 logging:
+  pattern.level: 'username:%X{username:-system} %5p'
   level:
     com.netflix: INFO
     org.springframework.cloud: DEBUG
