@@ -79,7 +79,7 @@ public class ColumnHeaderValidator implements Validator {
     private ValidationResult checkOptionalColumns(List<String> columnNames) {
         ValidationResult retVal = ACCEPTED_STATUS;
 
-        for (int i = 3; i < columnNames.size(); i++) {
+        for (int i = 3; i < COLUMNS.length; i++) {
             String column = columnNames.get(i);
 
             if (isNotBlank(column) && !equalsIgnoreCase(columnNames.get(i), COLUMNS[i])) {
