@@ -68,7 +68,7 @@ public final class DateTimeUtils {
         Calendar retVal = Calendar.getInstance();
         retVal.setTime(date);
         retVal.set(HOUR_OF_DAY, 0);
-        retVal.set(MINUTE, 0);
+        retVal.set(MINUTE, 1);
         retVal.set(SECOND, 0);
         retVal.set(MILLISECOND, 0);
 
