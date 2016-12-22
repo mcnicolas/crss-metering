@@ -63,4 +63,15 @@ public class BcqReader {
         return wrapper == null ? 1 : parseInt(configCache.get(BCQ_DECLARATION_DEADLINE.toString()).get().toString());
     }
 
+    public List<List<String>> readCsv(InputStream inputStream) throws IOException {
+        List<List<String>> csv = new ArrayList<>();
+        try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
+            List<String> line;
+            while ((line = reader.read()) != null) {
+                csv.add(line);
+            }
+        }
+        return csv;
+    }
+
 }
