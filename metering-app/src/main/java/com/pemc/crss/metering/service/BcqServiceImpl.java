@@ -36,15 +36,22 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     @Transactional
+    public long saveUploadFile(BcqUploadFile uploadFile) {
+        return bcqDao.saveUploadFile(uploadFile);
+    }
+
+    @Override
+    @Transactional
     public void save(BcqDetails details) {
         BcqUploadFile file = details.getFile();
         String submittedDate = formatLongDateTime(file.getSubmittedDate());
         String transactionId = UUID.randomUUID().toString();
+        file.setTransactionId(transactionId);
 
         if (details.getErrorMessage() != null) {
             file.setValidationStatus(REJECTED);
             sendValidationError(details, submittedDate);
-            bcqDao.saveUploadFile(transactionId, file);
+            bcqDao.saveUploadFile(file);
         } else {
             file.setValidationStatus(ACCEPTED);
 
@@ -52,7 +59,7 @@ public class BcqServiceImpl implements BcqService {
             List<Long> buyerIds = details.getBuyerIds();
             Long sellerId = details.getSellerId();
             BcqHeader firstHeader = headerList.get(0);
-            long fileId = bcqDao.saveUploadFile(transactionId, file);
+            long fileId = bcqDao.saveUploadFile(file);
             int recordCount = headerList.size() * firstHeader.getDataList().size();
             List<BcqEventCode> eventCodeList = new ArrayList<>();
 

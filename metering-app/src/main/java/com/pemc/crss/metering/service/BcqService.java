@@ -9,6 +9,8 @@ import java.util.Map;
 
 public interface BcqService {
 
+    long saveUploadFile(BcqUploadFile uploadFile);
+
     void save(BcqDetails details);
 
     List<BcqHeader> findAllHeaders(Map<String, String> params);

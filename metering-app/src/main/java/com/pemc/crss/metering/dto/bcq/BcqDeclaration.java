@@ -12,15 +12,10 @@ import static com.pemc.crss.metering.validator.bcq.BcqValidationResult.accepted;
 @ToString
 public class BcqDeclaration {
 
+    private long uploadFileId;
     private ParticipantSellerDetails sellerDetails;
     private List<BcqHeaderDetails> headerDetailsList;
     private BcqValidationResult validationResult;
-
-    public BcqDeclaration(ParticipantSellerDetails sellerDetails, List<BcqHeaderDetails> headerDetailsList) {
-        this.sellerDetails = sellerDetails;
-        this.headerDetailsList = headerDetailsList;
-        this.validationResult = accepted();
-    }
 
     public BcqDeclaration(ParticipantSellerDetails sellerDetails) {
         this.sellerDetails = sellerDetails;

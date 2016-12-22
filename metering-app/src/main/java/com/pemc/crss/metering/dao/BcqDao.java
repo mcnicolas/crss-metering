@@ -12,7 +12,7 @@ import java.util.Map;
 
 public interface BcqDao {
 
-    long saveUploadFile(String transactionID, BcqUploadFile uploadFile);
+    long saveUploadFile(BcqUploadFile uploadFile);
 
     List<Long> saveBcq(long fileID, List<BcqHeader> headerList);
 

@@ -85,12 +85,13 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public long saveUploadFile(String transactionId, BcqUploadFile bcqUploadFile) {
+    public long saveUploadFile(BcqUploadFile bcqUploadFile) {
+        log.debug("[BCQ-DAO] Saving file: {}", bcqUploadFile);
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
                     PreparedStatement ps = connection.prepareStatement(insertManifest, new String[]{"file_id"});
-                    ps.setString(1, transactionId);
+                    ps.setString(1, bcqUploadFile.getTransactionId());
                     ps.setString(2, bcqUploadFile.getFileName());
                     ps.setLong(3, bcqUploadFile.getFileSize());
                     ps.setTimestamp(4, new Timestamp(bcqUploadFile.getSubmittedDate().getTime()));
@@ -168,6 +169,9 @@ public class JdbcBcqDao implements BcqDao {
                 .addExpiredFilter(expired)
                 .build();
 
+        log.debug("[BCQ-DAO] Find all headers with query: {}, and args: {}",
+                selectQuery.getSql(), selectQuery.getArguments());
+
         return jdbcTemplate.query(
                 selectQuery.getSql(),
                 selectQuery.getArguments(),
@@ -202,6 +206,9 @@ public class JdbcBcqDao implements BcqDao {
                 selectQuery.getArguments(),
                 new BcqHeaderRowMapper());
 
+        log.debug("[BCQ-DAO] Find all headers page with query: {}, and args: {}",
+                selectQuery.getSql(), selectQuery.getArguments());
+
         return new PageImpl<>(
                 headerList,
                 pageableRequest.getPageable(),
@@ -223,29 +230,26 @@ public class JdbcBcqDao implements BcqDao {
 
     @Override
     public List<BcqData> findAllBcqData(long headerId) {
+        log.debug("[BCQ-DAO] Find all data of header with ID: {}", headerId);
         return jdbcTemplate.query(
                 dataDetails,
                 new Object[]{headerId},
                 rs -> {
                     List<BcqData> content = new ArrayList<>();
-
                     while (rs.next()) {
                         BcqData bcqData = new BcqData();
-
                         bcqData.setReferenceMtn(rs.getString("reference_mtn"));
                         bcqData.setEndTime(rs.getTime("end_time"));
                         bcqData.setBcq(rs.getBigDecimal("bcq"));
-
                         content.add(bcqData);
                     }
-
                     return content;
                 });
     }
 
     @Override
     public void updateHeaderStatus(long headerId, BcqStatus status) {
-        log.debug("Updating status of header to {} with ID: {}", status, headerId);
+        log.debug("[BCQ-DAO] Updating status of header to {} with ID: {}", status, headerId);
         jdbcTemplate.update(
                 connection -> {
                     PreparedStatement ps = connection.prepareStatement(updateHeaderStatus);
@@ -254,7 +258,7 @@ public class JdbcBcqDao implements BcqDao {
 
                     return ps;
                 });
-        log.debug("Successfully updated status of header with ID: {} to {} ", headerId, status);
+        log.debug("[BCQ-DAO] Successfully updated status of header with ID: {} to {} ", headerId, status);
     }
 
     @Override
