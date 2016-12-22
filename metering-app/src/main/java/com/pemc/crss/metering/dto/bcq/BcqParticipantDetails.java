@@ -12,7 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 public class BcqParticipantDetails {
 
-    private ParticipantSellerDetails sellerDetails;
     private List<ParticipantBuyerDetails> buyerDetailsList;
     private BcqValidationResult validationResult;
 
