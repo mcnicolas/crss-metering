@@ -59,12 +59,11 @@ public class BcqResource2 {
         BcqDeclaration declaration = validationHandler.processAndValidate(csv);
         BcqValidationResult validationResult = declaration.getValidationResult();
         BcqUploadFile uploadFile = saveUploadFile(multipartFile, validationResult.getStatus());
-        long uploadFileId = bcqService.saveUploadFile(uploadFile);
         if (validationResult.getStatus() == REJECTED) {
             sendValidationNotif(uploadFile, declaration);
             return unprocessableEntity().body(validationResult);
         }
-        declaration.setUploadFileId(uploadFileId);
+        declaration.setUploadFileId(uploadFile.getFileId());
         log.debug("[REST-BCQ] Finished uploading of: {}", multipartFile.getOriginalFilename());
         return ok(declaration);
     }
