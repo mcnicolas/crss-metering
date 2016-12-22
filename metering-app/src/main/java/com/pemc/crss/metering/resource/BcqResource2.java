@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.resource;
 
+import com.pemc.crss.metering.constants.ValidationStatus;
 import com.pemc.crss.metering.dto.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
 import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
@@ -53,26 +54,37 @@ public class BcqResource2 {
 
     @PostMapping("/upload")
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile multipartFile) throws IOException {
+        log.debug("[REST-BCQ] Request for uploading of: {}", multipartFile.getOriginalFilename());
         List<List<String>> csv = bcqReader.readCsv(multipartFile.getInputStream());
         BcqDeclaration declaration = validationHandler.processAndValidate(csv);
         BcqValidationResult validationResult = declaration.getValidationResult();
-        BcqUploadFile uploadFile = new BcqUploadFile();
-        uploadFile.setFileName(multipartFile.getOriginalFilename());
-        uploadFile.setFileSize(multipartFile.getSize());
-        uploadFile.setTransactionId(randomUUID().toString());
-        uploadFile.setSubmittedDate(new Date());
-        uploadFile.setValidationStatus(validationResult.getStatus());
+        BcqUploadFile uploadFile = saveUploadFile(multipartFile, validationResult.getStatus());
         long uploadFileId = bcqService.saveUploadFile(uploadFile);
         if (validationResult.getStatus() == REJECTED) {
             sendValidationNotif(uploadFile, declaration);
             return unprocessableEntity().body(validationResult);
         }
         declaration.setUploadFileId(uploadFileId);
+        log.debug("[REST-BCQ] Finished uploading of: {}", multipartFile.getOriginalFilename());
         return ok(declaration);
     }
 
     /****************************************************
      * SUPPORT METHODS
+     ****************************************************/
+    private BcqUploadFile saveUploadFile(MultipartFile multipartFile, ValidationStatus status) {
+        BcqUploadFile uploadFile = new BcqUploadFile();
+        uploadFile.setFileName(multipartFile.getOriginalFilename());
+        uploadFile.setFileSize(multipartFile.getSize());
+        uploadFile.setTransactionId(randomUUID().toString());
+        uploadFile.setSubmittedDate(new Date());
+        uploadFile.setValidationStatus(status);
+        uploadFile.setFileId(bcqService.saveUploadFile(uploadFile));
+        return uploadFile;
+    }
+
+    /****************************************************
+     * NOTIF METHODS
      ****************************************************/
     private void sendValidationNotif(BcqUploadFile uploadFile, BcqDeclaration declaration) {
         ParticipantSellerDetails sellerDetails = declaration.getSellerDetails();
