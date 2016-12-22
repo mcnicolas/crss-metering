@@ -1,36 +1,22 @@
 package com.pemc.crss.metering.validator.bcq;
 
 import com.pemc.crss.metering.constants.ValidationStatus;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
+import static lombok.AccessLevel.PRIVATE;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor(access = PRIVATE)
 public class BcqValidationResult {
 
     private ValidationStatus status;
     private String errorMessage;
-
-    private BcqValidationResult(ValidationStatus status, String errorMessage) {
-        this.status = status;
-        this.errorMessage = errorMessage;
-    }
-
-    public ValidationStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ValidationStatus status) {
-        this.status = status;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
 
     public static BcqValidationResult accepted() {
         return new BcqValidationResult(ACCEPTED, null);
