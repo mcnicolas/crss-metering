@@ -72,14 +72,14 @@ public class BcqHeaderDetails extends AbstractWebDto<BcqHeader> {
         target().setTradingDate(tradingDate);
     }
 
-    public List<BcqDataDetails> getDataInfoList() {
+    public List<BcqDataDetails> getDataDetailsList() {
         return target().getDataList()
                 .stream()
                 .map(BcqDataDetails::new)
                 .collect(Collectors.toList());
     }
 
-    public void setDataInfoList(List<BcqDataDetails> dataInfoList) {
+    public void setDataDetailsList(List<BcqDataDetails> dataInfoList) {
         List<BcqData> dataList = new ArrayList<>();
         dataInfoList.forEach(dataInfo -> dataList.add(dataInfo.target()));
         target().setDataList(dataList);
