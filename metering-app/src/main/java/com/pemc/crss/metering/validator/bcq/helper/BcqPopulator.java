@@ -1,4 +1,4 @@
-package com.pemc.crss.metering.parser.bcq.helper;
+package com.pemc.crss.metering.validator.bcq.helper;
 
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.dto.BcqData;
