@@ -4,17 +4,17 @@ package com.pemc.crss.metering.resource.template;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.stereotype.Component;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static org.springframework.http.HttpHeaders.*;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.context.request.RequestContextHolder.getRequestAttributes;
 
 @Component
@@ -34,20 +34,19 @@ public class ResourceTemplate {
         return restTemplate.exchange(getRequestUrl(path), GET, getHttpEntity(null), type).getBody();
     }
 
-    public <T> T post(String path, Class<T> type, MultiValueMap<String, Object> body) {
-        return restTemplate.exchange(getRequestUrl(path), POST, getHttpEntity(body), type).getBody();
+    public <T> T post(String path, Class<T> type, Object requestBody) {
+        return restTemplate.exchange(getRequestUrl(path), POST, getHttpEntity(requestBody), type).getBody();
     }
 
     private HttpServletRequest getRequest() {
         return ((ServletRequestAttributes) getRequestAttributes()).getRequest();
     }
 
-    private HttpEntity getHttpEntity(MultiValueMap<String, Object> body) {
+    private HttpEntity getHttpEntity(Object requestBody) {
         HttpHeaders headers = new HttpHeaders();
-        headers.set(ACCEPT, APPLICATION_JSON_VALUE);
-        headers.set(CONTENT_TYPE, APPLICATION_JSON_VALUE);
+        headers.setContentType(APPLICATION_JSON);
         headers.set(AUTHORIZATION, getRequest().getHeader(AUTHORIZATION));
-        return new HttpEntity<>(body, headers);
+        return new HttpEntity<>(requestBody, headers);
     }
 
     private String getRequestUrl(String path) {
