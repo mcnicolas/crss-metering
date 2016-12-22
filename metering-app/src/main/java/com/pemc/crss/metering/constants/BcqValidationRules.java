@@ -24,7 +24,7 @@ public enum BcqValidationRules {
     MISSING_BCQ("Missing BCQ."),
     INCOMPLETE_REDECLARATION_ENTRIES("Incomplete BCQ entries. " +
             "Redeclaration for date <b>%s</b> should also have entries of the ff. " +
-            "Selling MTN and Billing ID pair(s):\n <b>%s</b>");
+            "Selling MTN and Billing ID pair(s):<br />%s");
 
     private final String errorMessage;
 
