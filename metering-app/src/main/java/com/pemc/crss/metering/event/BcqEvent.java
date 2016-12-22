@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.event;
 
-import com.pemc.crss.commons.notification.dto.NotificationDTO;
+import com.pemc.crss.metering.notification.Notification;
 import com.pemc.crss.metering.constants.BcqEventCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEvent;
@@ -21,9 +21,9 @@ public abstract class BcqEvent extends ApplicationEvent {
         this.eventCode = eventCode;
     }
 
-    public NotificationDTO generateNotification() {
+    public Notification generateNotification() {
         log.debug("Generating BCQ Notification");
-        NotificationDTO notification = new NotificationDTO(eventCode.toString(), getTimestamp());
+        Notification notification = new Notification(eventCode.toString(), getTimestamp());
         notification.setPayload(getPayload());
 
         if (source.get("recipientId") == null) {

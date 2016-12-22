@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.listener;
 
-import com.pemc.crss.commons.notification.dto.NotificationDTO;
+import com.pemc.crss.metering.notification.Notification;
 import com.pemc.crss.metering.event.BcqEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -27,14 +27,14 @@ public class BcqEventListener implements ApplicationListener<BcqEvent> {
     @Override
     public final void onApplicationEvent(BcqEvent event) {
         log.debug("Event received: type={}", event.getClass());
-        NotificationDTO notificationDTO = event.generateNotification();
+        Notification notification = event.generateNotification();
 
-        log.debug("generated notification {}", notificationDTO);
-        sendNotification(notificationDTO);
+        log.debug("generated notification {}", notification);
+        sendNotification(notification);
     }
 
     @Async
-    private void sendNotification(NotificationDTO notification) {
+    private void sendNotification(Notification notification) {
         log.debug("NOTIFICATION SENT = {}", notification);
         if (notification != null && StringUtils.isNotBlank(notification.getCode())) {
             rabbitTemplate.convertAndSend(EXCHANGE_TOPIC, RK_METERING, notification);

@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.listener;
 
-import com.pemc.crss.commons.notification.dto.NotificationDTO;
+import com.pemc.crss.metering.notification.Notification;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.event.MeterUploadEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -36,22 +36,22 @@ public class MeterUploadEventListener implements ApplicationListener<MeterUpload
     @Override
     public final void onApplicationEvent(MeterUploadEvent event) {
         log.debug("Event received: type={}", event.getClass());
-        NotificationDTO notificationDTO = generateNotification(event);
+        Notification notification = generateNotification(event);
 
-        log.debug("generated notification {}", notificationDTO);
-        sendNotification(notificationDTO);
+        log.debug("generated notification {}", notification);
+        sendNotification(notification);
     }
 
     @Async
-    private void sendNotification(NotificationDTO notification) {
+    private void sendNotification(Notification notification) {
         log.debug("NOTIFICATION SENT = {}", notification);
         if (notification != null && isNotBlank(notification.getCode())) {
             rabbitTemplate.convertAndSend(EXCHANGE_TOPIC, RK_METERING, notification);
         }
     }
 
-    private NotificationDTO generateNotification(MeterUploadEvent event) {
-        NotificationDTO notificationDTO = new NotificationDTO(NOTIF_CODE, event.getTimestamp());
+    private Notification generateNotification(MeterUploadEvent event) {
+        Notification notification = new Notification(NOTIF_CODE, event.getTimestamp());
         Map<String, Object> source = (Map<String, Object>) event.getSource();
         Map<String, Object> payload = new HashMap<>();
 
@@ -65,12 +65,12 @@ public class MeterUploadEventListener implements ApplicationListener<MeterUpload
             count ++;
         }
 
-        notificationDTO.setPayload(payload);
-        notificationDTO.setRecipientDeptCode("MSP");
+        notification.setPayload(payload);
+        notification.setRecipientDeptCode("MSP");
 
-        log.debug("PAYLOAD = {}", notificationDTO.getPayload().toString());
+        log.debug("PAYLOAD = {}", notification.getPayload().toString());
 
-        return notificationDTO;
+        return notification;
     }
 
 }
