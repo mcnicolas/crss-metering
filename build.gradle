@@ -16,6 +16,7 @@ buildscript {
         classpath 'io.spring.gradle:dependency-management-plugin:0.6.1.RELEASE'
         classpath 'org.ajoberstar:gradle-git:1.5.1'
         classpath 'gradle.plugin.edu.sc.seis.gradle:launch4j:1.6.2'
+        classpath 'com.github.ksoichiro:gradle-build-info-plugin:0.2.0'
     }
 }
 
@@ -29,6 +30,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'com.github.ksoichiro.build.info'
 
     project.buildDir = 'target'
 
