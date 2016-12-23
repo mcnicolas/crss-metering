@@ -14,8 +14,10 @@ public class BcqHeader {
     private long fileId;
     private String billingId;
     private String sellingMtn;
+    private long buyingParticipantUserId;
     private String buyingParticipantName;
     private String buyingParticipantShortName;
+    private long sellingParticipantUserId;
     private String sellingParticipantName;
     private String sellingParticipantShortName;
     private BcqStatus status;
@@ -24,6 +26,7 @@ public class BcqHeader {
     private String updatedVia;
     private BcqUploadFile uploadFile;
     private List<BcqData> dataList;
+    private boolean exists;
 
     @Override
     public boolean equals(Object o) {
@@ -40,8 +43,10 @@ public class BcqHeader {
                 && Objects.equals(fileId, that.fileId)
                 && Objects.equals(billingId, that.billingId)
                 && Objects.equals(sellingMtn, that.sellingMtn)
+                && Objects.equals(buyingParticipantUserId, that.sellingParticipantUserId)
                 && Objects.equals(buyingParticipantName, that.buyingParticipantName)
                 && Objects.equals(buyingParticipantShortName, that.buyingParticipantShortName)
+                && Objects.equals(sellingParticipantUserId, that.sellingParticipantUserId)
                 && Objects.equals(sellingParticipantName, that.sellingParticipantName)
                 && Objects.equals(sellingParticipantShortName, that.sellingParticipantShortName)
                 && Objects.equals(status, that.status)
@@ -51,7 +56,10 @@ public class BcqHeader {
 
     @Override
     public int hashCode() {
-        return Objects.hash(headerId, fileId, billingId, sellingMtn, buyingParticipantName, buyingParticipantShortName,
-                sellingParticipantName, sellingParticipantShortName, status, tradingDate, deadlineDate);
+        return Objects.hash(
+                headerId, fileId, billingId, sellingMtn,
+                buyingParticipantUserId, buyingParticipantName, buyingParticipantShortName,
+                sellingParticipantUserId, sellingParticipantName, sellingParticipantShortName,
+                status, tradingDate, deadlineDate);
     }
 }
