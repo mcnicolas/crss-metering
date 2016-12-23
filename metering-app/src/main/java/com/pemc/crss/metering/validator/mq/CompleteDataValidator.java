@@ -49,10 +49,10 @@ public class CompleteDataValidator implements Validator {
             int dataSize = meterData.getDetails().size();
             if (interval == 15 && dataSize != 96) {
                 retVal.setStatus(REJECTED);
-                retVal.setErrorDetail("Incomplete Daily MQ. MQ should have 96 entries.");
+                retVal.setErrorDetail("Incorrect No. of Entries for Category Daily. MQ should have 96 entries.");
             } else if (interval == 5 && dataSize != 288) {
                 retVal.setStatus(REJECTED);
-                retVal.setErrorDetail("Incomplete Daily MQ. MQ should have 288 entries.");
+                retVal.setErrorDetail("Incorrect No. of Entries for Category Daily. MQ should have 288 entries.");
             } else {
                 retVal.setStatus(ACCEPTED);
                 retVal.setErrorDetail("");
