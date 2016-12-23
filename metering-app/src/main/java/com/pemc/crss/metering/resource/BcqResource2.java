@@ -37,7 +37,6 @@ public class BcqResource2 {
     private final BcqValidationHandler validationHandler;
     private final BcqService bcqService;
     private final BcqService2 bcqService2;
-    private final BcqNotificationService bcqNotificationService;
 
     @PostMapping("/upload")
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile multipartFile) throws IOException {
