@@ -1,12 +1,14 @@
 package com.pemc.crss.metering.validator.bcq.helper;
 
 import com.pemc.crss.metering.dto.BcqHeader;
-import com.pemc.crss.metering.service.BcqService;
+import com.pemc.crss.metering.service.BcqService2;
 import com.pemc.crss.metering.validator.bcq.validation.RedeclarationValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.StringJoiner;
 import java.util.function.Predicate;
 
 import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_REDECLARATION_ENTRIES;
@@ -18,10 +20,10 @@ import static java.util.stream.Collectors.toList;
 @Component
 public class RedeclarationValidationHelper {
 
-    private final BcqService bcqService;
+    private final BcqService2 bcqService;
 
     @Autowired
-    public RedeclarationValidationHelper(BcqService bcqService) {
+    public RedeclarationValidationHelper(BcqService2 bcqService) {
         this.bcqService = bcqService;
     }
 

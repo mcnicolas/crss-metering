@@ -1,7 +1,6 @@
 package com.pemc.crss.metering.dto.bcq;
 
 import com.pemc.crss.commons.web.dto.AbstractWebDto;
-import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.BcqData;
 import com.pemc.crss.metering.dto.BcqHeader;
 import lombok.ToString;
@@ -10,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 
 @ToString
 public class BcqHeaderDetails extends AbstractWebDto<BcqHeader> {
@@ -68,7 +69,7 @@ public class BcqHeaderDetails extends AbstractWebDto<BcqHeader> {
 
     public void setStatus(String status) {
         if (status != null) {
-            target().setStatus(BcqStatus.fromString(status));
+            target().setStatus(fromString(status));
         }
     }
 

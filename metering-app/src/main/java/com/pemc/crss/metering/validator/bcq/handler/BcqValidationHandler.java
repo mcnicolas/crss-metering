@@ -23,6 +23,8 @@ import java.util.List;
 
 import static com.pemc.crss.metering.constants.BcqInterval.FIVE_MINUTES_PERIOD;
 import static com.pemc.crss.metering.constants.BcqInterval.fromDescription;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static java.lang.Integer.parseInt;
 import static java.math.BigDecimal.ROUND_HALF_UP;
@@ -137,6 +139,7 @@ public class BcqValidationHandler {
             header.setBuyingParticipantUserId(buyerDetails.getUserId());
             header.setBuyingParticipantName(buyerDetails.getName());
             header.setBuyingParticipantShortName(buyerDetails.getShortName());
+            header.setStatus(buyerDetails.isBcqConfirmation() ? FOR_NULLIFICATION : FOR_CONFIRMATION);
             return header;
         }).collect(toList());
     }
@@ -176,7 +179,6 @@ public class BcqValidationHandler {
         }
         return dividedDataList;
     }
-
 
     private ParticipantSellerDetails getSellerDetails() {
         return resourceTemplate.get(SELLER_URL, ParticipantSellerDetails.class);
