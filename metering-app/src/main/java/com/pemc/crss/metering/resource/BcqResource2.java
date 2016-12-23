@@ -63,8 +63,9 @@ public class BcqResource2 {
             sendValidationNotif(uploadFile, declaration);
             return unprocessableEntity().body(validationResult);
         }
-        declaration.setRedeclaration(isRedeclaration(declaration));
         declaration.setUploadFileId(uploadFile.getFileId());
+        declaration.setValidationResult(null);
+        declaration.setRedeclaration(isRedeclaration(declaration));
         log.debug("[REST-BCQ] Finished uploading of: {}", multipartFile.getOriginalFilename());
         return ok(declaration);
     }
