@@ -4,6 +4,7 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.*;
 import org.springframework.data.domain.Page;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,8 @@ public interface BcqService {
     void save(BcqDetails details);
 
     List<BcqHeader> findAllHeaders(Map<String, String> params);
+
+    List<BcqHeader> findAllHeadersBySellerAndTradingDate(String sellerShortName, Date tradingDate);
 
     Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest);
 

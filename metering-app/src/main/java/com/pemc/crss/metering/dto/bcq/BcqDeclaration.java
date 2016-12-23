@@ -16,6 +16,7 @@ public class BcqDeclaration {
     private ParticipantSellerDetails sellerDetails;
     private List<BcqHeaderDetails> headerDetailsList;
     private BcqValidationResult validationResult;
+    private boolean isRedeclaration;
 
     public BcqDeclaration(ParticipantSellerDetails sellerDetails) {
         this.sellerDetails = sellerDetails;

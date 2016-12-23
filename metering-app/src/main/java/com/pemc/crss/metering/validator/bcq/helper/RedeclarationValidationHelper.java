@@ -54,11 +54,11 @@ public class RedeclarationValidationHelper {
         return redeclarationValidation;
     }
 
+    /****************************************************
+     * SUPPORT METHODS
+     ****************************************************/
     private List<BcqHeader> getCurrentHeaderList(String sellingParticipant, Date tradingDate) {
-        Map<String, String> params = new HashMap<>();
-        params.put("sellingParticipant", sellingParticipant);
-        params.put("tradingDate", formatDate(tradingDate));
-        return bcqService.findAllHeaders(params);
+        return bcqService.findAllHeadersBySellerAndTradingDate(sellingParticipant, tradingDate);
     }
 
 }

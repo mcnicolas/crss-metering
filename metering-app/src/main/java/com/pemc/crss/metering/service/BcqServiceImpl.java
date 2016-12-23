@@ -103,6 +103,14 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
+    public List<BcqHeader> findAllHeadersBySellerAndTradingDate(String sellerShortName, Date tradingDate) {
+        Map<String, String> params = new HashMap<>();
+        params.put("sellerName", sellerShortName);
+        params.put("tradingDate", formatDate(tradingDate));
+        return findAllHeaders(params);
+    }
+
+    @Override
     public Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest) {
         return bcqDao.findAllHeaders(pageableRequest);
     }

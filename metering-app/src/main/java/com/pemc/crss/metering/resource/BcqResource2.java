@@ -63,6 +63,7 @@ public class BcqResource2 {
             sendValidationNotif(uploadFile, declaration);
             return unprocessableEntity().body(validationResult);
         }
+        declaration.setRedeclaration(isRedeclaration(declaration));
         declaration.setUploadFileId(uploadFile.getFileId());
         log.debug("[REST-BCQ] Finished uploading of: {}", multipartFile.getOriginalFilename());
         return ok(declaration);
@@ -80,6 +81,16 @@ public class BcqResource2 {
         uploadFile.setValidationStatus(status);
         uploadFile.setFileId(bcqService.saveUploadFile(uploadFile));
         return uploadFile;
+    }
+
+    private boolean isRedeclaration(BcqDeclaration declaration) {
+        return bcqService.findAllHeadersBySellerAndTradingDate(
+                declaration.getSellerDetails().getShortName(),
+                declaration.getHeaderDetailsList().get(0).getTradingDate()).size() > 0;
+    }
+
+    private String removeHtmlTags(String message) {
+        return message.replaceAll("<(.*?)>", "");
     }
 
     /****************************************************
