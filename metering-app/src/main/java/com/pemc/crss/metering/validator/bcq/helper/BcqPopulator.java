@@ -23,7 +23,7 @@ public class BcqPopulator {
     private static final int BCQ_INDEX = 4;
     private static final int START_LINE_OF_DATA = 2;
 
-    public static List<BcqHeader> populate(List<List<String>> csv, BcqInterval interval) {
+    public List<BcqHeader> populate(List<List<String>> csv, BcqInterval interval) {
         List<BcqHeader> headerList = new ArrayList<>();
         for (List<String> line : csv.subList(START_LINE_OF_DATA, csv.size())) {
             BcqHeader header = populateHeader(line);
@@ -49,7 +49,7 @@ public class BcqPopulator {
         return headerList;
     }
 
-    private static BcqHeader populateHeader(List<String> line) {
+    private BcqHeader populateHeader(List<String> line) {
         BcqHeader header = new BcqHeader();
         String sellingMtn = line.get(SELLING_MTN_INDEX);
         String billingId = line.get(BILLING_ID_INDEX);
@@ -62,7 +62,7 @@ public class BcqPopulator {
         return header;
     }
 
-    private static BcqData populateData(List<String> line, BcqInterval interval) {
+    private BcqData populateData(List<String> line, BcqInterval interval) {
         BcqData data = new BcqData();
         Date endTime = parseDateTime(line.get(DATE_INDEX));
 
@@ -74,7 +74,7 @@ public class BcqPopulator {
         return data;
     }
 
-    private static Date getTradingDate(String dateString) {
+    private Date getTradingDate(String dateString) {
         Date tradingDate = parseDateTime(dateString);
 
         if (tradingDate == null) {
@@ -88,7 +88,7 @@ public class BcqPopulator {
         return startOfDay(tradingDate);
     }
 
-    private static Date getStartTime(Date endTime, BcqInterval interval) {
+    private Date getStartTime(Date endTime, BcqInterval interval) {
         return new Date(endTime.getTime() - interval.getTimeInMillis());
     }
 

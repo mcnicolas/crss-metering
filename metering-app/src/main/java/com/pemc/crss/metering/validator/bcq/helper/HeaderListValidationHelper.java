@@ -31,7 +31,6 @@ public class HeaderListValidationHelper {
     }
 
     private HeaderListValidation openTradingDate(int declarationDateConfig) {
-        log.debug("TRADING DATE CONFIG: {}", declarationDateConfig);
         HeaderListValidation headerListValidation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             Date tradingDate = headerList.get(0).getTradingDate();
