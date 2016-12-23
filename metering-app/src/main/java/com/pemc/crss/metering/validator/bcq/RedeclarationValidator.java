@@ -20,9 +20,9 @@ public class RedeclarationValidator {
         this.validationHelper = validationHelper;
     }
 
-    public BcqValidationResult validate(List<BcqHeader> headerList, String sellingMtn, Date tradingDate) {
+    public BcqValidationResult validate(List<BcqHeader> headerList, String sellingParticipant, Date tradingDate) {
         log.debug("Start validation of Redeclaration");
-        BcqValidationResult result = validationHelper.validRedeclaration(sellingMtn, tradingDate).test(headerList);
+        BcqValidationResult result = validationHelper.validRedeclaration(sellingParticipant, tradingDate).test(headerList);
         log.debug("Finish validation of Redeclaration, Result: {}", result);
         return result;
     }
