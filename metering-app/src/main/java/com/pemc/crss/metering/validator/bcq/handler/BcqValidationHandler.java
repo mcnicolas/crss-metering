@@ -134,6 +134,7 @@ public class BcqValidationHandler {
                             .filter(buyer -> buyer.getBillingId().equals(header.getBillingId()))
                             .collect(toList())
                             .get(0);
+            header.setBuyingParticipantUserId(buyerDetails.getUserId());
             header.setBuyingParticipantName(buyerDetails.getName());
             header.setBuyingParticipantShortName(buyerDetails.getShortName());
             return header;

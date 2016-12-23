@@ -38,6 +38,14 @@ public class BcqHeaderDetails extends AbstractWebDto<BcqHeader> {
         target().setSellingMtn(sellingMtn);
     }
 
+    public long getBuyingParticipantUserId() {
+        return target().getBuyingParticipantUserId();
+    }
+
+    public void setBuyingParticipantUserId(long buyingParticipantUserId) {
+        target().setBuyingParticipantUserId(buyingParticipantUserId);
+    }
+
     public String getBuyingParticipantName() {
         return target().getBuyingParticipantName();
     }
