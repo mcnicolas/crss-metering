@@ -6,7 +6,6 @@ import com.pemc.crss.metering.dto.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
-import com.pemc.crss.metering.service.BcqNotificationService;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.service.BcqService2;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
@@ -37,6 +36,27 @@ public class BcqResource2 {
     private final BcqValidationHandler validationHandler;
     private final BcqService bcqService;
     private final BcqService2 bcqService2;
+
+    @PostMapping("/webservice/upload")
+    public ResponseEntity<String> uploadByWebService(@RequestParam("file") MultipartFile multipartFile) throws IOException {
+        log.debug("[REST-BCQ] Request for uploading by web service of: {}", multipartFile.getOriginalFilename());
+        List<List<String>> csv = bcqReader.readCsv(multipartFile.getInputStream());
+        BcqDeclaration declaration = validationHandler.processAndValidate(csv);
+        BcqValidationResult validationResult = declaration.getValidationResult();
+        BcqUploadFile uploadFile = populateUploadFile(multipartFile, validationResult.getStatus());
+        if (validationResult.getStatus() == REJECTED) {
+            bcqService2.saveFailedUploadFile(uploadFile, declaration);
+            return unprocessableEntity().body(removeHtmlTags(validationResult.getErrorMessage()));
+        }
+        declaration.setUploadFileDetails(new BcqUploadFileDetails(uploadFile));
+        declaration.setRedeclaration(getCurrentHeaders(declaration).size() > 0);
+        bcqService2.saveDeclaration(declaration);
+        log.debug("[REST-BCQ] Finished uploading and saving by web service of: {}", multipartFile.getOriginalFilename());
+        if (declaration.isRedeclaration()) {
+            return ok("Successfully saved redeclaration.");
+        }
+        return ok("Successfully saved declaration.");
+    }
 
     @PostMapping("/upload")
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile multipartFile) throws IOException {
