@@ -288,9 +288,8 @@ public class JdbcBcqDao implements BcqDao {
 
     private int getDeadlineConfig() {
         Cache configCache = cacheManager.getCache("config");
-        ValueWrapper deadlineWrapper = configCache.get("BCQ_NULLIFICATION_DEADLINE");
-        return deadlineWrapper == null ? 2 :
-                parseInt(configCache.get("BCQ_NULLIFICATION_DEADLINE").get().toString()) + 1;
+        ValueWrapper valueWrapper = configCache.get("BCQ_DEADLINE");
+        return valueWrapper == null ? 2 : parseInt(valueWrapper.get().toString()) + 1;
     }
 
     private int getTotalRecords(PageableRequest pageableRequest) {

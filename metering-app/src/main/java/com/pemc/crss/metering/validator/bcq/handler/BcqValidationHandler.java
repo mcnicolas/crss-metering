@@ -13,6 +13,7 @@ import com.pemc.crss.metering.validator.bcq.helper.BcqPopulator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
+import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
@@ -146,9 +147,8 @@ public class BcqValidationHandler {
 
     private int getIntervalConfig() {
         Cache configCache = cacheManager.getCache("config");
-        Cache.ValueWrapper intervalWrapper = configCache.get("BCQ_INTERVAL");
-        return intervalWrapper == null ? 15
-                : parseInt(configCache.get("BCQ_INTERVAL").get().toString());
+        ValueWrapper valueWrapper = configCache.get("BCQ_INTERVAL");
+        return valueWrapper == null ? 15 : parseInt(valueWrapper.get().toString());
     }
 
     private List<BcqData> divideDataByInterval(BcqData data, BcqInterval interval, int intervalConfig) {
