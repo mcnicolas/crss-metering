@@ -24,6 +24,7 @@ ext {
     springBootVersion = '1.4.2.RELEASE'
     git = org.ajoberstar.grgit.Grgit.open()
     revision = git.head().abbreviatedId
+    applicationDefaultJvmArgs = ['-Xms128m', '-Xmx256m']
 }
 
 subprojects {
