@@ -22,7 +22,7 @@ public class MeterQuantityParser {
             QuantityReader reader = getMeterQuantityReader(fileManifest.getFileType());
 
             return reader.readData(fileManifest, new ByteArrayInputStream(fileContent));
-        } catch (IOException e) {
+        } catch (IOException | java.text.ParseException e) {
             // TODO: Improve error message. If it is possible to capture culprit record
             throw new ParseException(e.getMessage(), e);
         }

@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -27,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.pemc.crss.metering.utils.DateTimeUtils.READING_DATETIME;
+import static com.pemc.crss.metering.utils.DateTimeUtils.dateFormat;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.HALF_UP;
 import static java.util.Calendar.HOUR_OF_DAY;
@@ -37,7 +37,7 @@ import static org.apache.poi.ss.usermodel.DateUtil.getJavaCalendar;
 public class MeterQuantityExcelReader implements QuantityReader {
 
     @Override
-    public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws IOException {
+    public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws IOException, ParseException {
         MeterData retVal = new MeterData();
 
         Date parseDate = new Date();
@@ -154,35 +154,18 @@ public class MeterQuantityExcelReader implements QuantityReader {
         }
     }
 
-    private Calendar getDateValue(Cell cell) {
+    private Calendar getDateValue(Cell cell) throws ParseException {
         Calendar retVal = Calendar.getInstance();
 
         switch (CellType.forInt(cell.getCellType())) {
             case STRING:
-                retVal.setTime(parseDate(cell.getStringCellValue()));
-
+                retVal.setTime(dateFormat.parse(cell.getStringCellValue()));
                 break;
             case NUMERIC:
                 retVal = getJavaCalendar(cell.getNumericCellValue());
         }
 
         return retVal;
-    }
-
-    private Date parseDate(String dateString) {
-        String[] formats = {
-                "MM-dd-yyyy",
-                "MM/dd/yyyy"
-        };
-
-        for (String formatString : formats) {
-            try {
-                return new SimpleDateFormat(formatString).parse(dateString);
-            } catch (ParseException e) {
-            }
-        }
-
-        return null;
     }
 
     private Calendar getTimeValue(Cell cell) {

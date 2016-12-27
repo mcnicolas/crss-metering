@@ -86,12 +86,12 @@ public class MeterQuantityCSVReader implements QuantityReader {
 
         retVal.setSein(row.get(0));
         retVal.setReadingDateTime(parseDateAsLong(row.get(1), row.get(2)));
-        retVal.setKwd(getNumericValue(row.get(3)));
-        retVal.setKwhd(getNumericValue(row.get(4)));
-        retVal.setKvarhd(getNumericValue(row.get(5)));
-        retVal.setKwr(getNumericValue(row.get(6)));
-        retVal.setKwhr(getNumericValue(row.get(7)));
-        retVal.setKvarhr(getNumericValue(row.get(8)));
+        retVal.setKwd(getNumericValue(row, 3));
+        retVal.setKwhd(getNumericValue(row, 4));
+        retVal.setKvarhd(getNumericValue(row, 5));
+        retVal.setKwr(getNumericValue(row, 6));
+        retVal.setKwhr(getNumericValue(row, 7));
+        retVal.setKvarhr(getNumericValue(row, 8));
 
         if (row.size() > 9) {
             retVal.setEstimationFlag(row.get(9));
@@ -100,11 +100,11 @@ public class MeterQuantityCSVReader implements QuantityReader {
         return retVal;
     }
 
-    private BigDecimal getNumericValue(String data) {
+    private BigDecimal getNumericValue(List<String> row, int index) {
         BigDecimal retVal = null;
 
-        if (NumberUtils.isParsable(data)) {
-            retVal = new BigDecimal(data).setScale(17, HALF_UP);
+        if (row.size() > index && NumberUtils.isParsable(row.get(index))) {
+            retVal = new BigDecimal(row.get(index)).setScale(17, HALF_UP);
         }
 
         return retVal;

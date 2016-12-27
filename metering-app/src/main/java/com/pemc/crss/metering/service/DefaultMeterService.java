@@ -116,7 +116,7 @@ public class DefaultMeterService implements MeterService {
 
             validationResult.setStatus(ACCEPTED);
             validationResult.setErrorDetail("");
-        } catch (ParseException e) {
+        } catch (Exception e) {
             validationResult.setStatus(REJECTED);
             validationResult.setErrorDetail(e.getMessage());
 

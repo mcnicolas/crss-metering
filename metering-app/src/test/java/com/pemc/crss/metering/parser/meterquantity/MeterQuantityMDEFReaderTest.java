@@ -8,6 +8,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.ParseException;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -17,7 +18,7 @@ import static org.junit.Assert.assertThat;
 public class MeterQuantityMDEFReaderTest {
 
     @Test
-    public void shouldParseMDEF() throws IOException {
+    public void shouldParseMDEF() throws IOException, ParseException {
         QuantityReader meterReader = new MeterQuantityMDEFReader();
 
         FileManifest fileManifest = new FileManifest();

@@ -8,6 +8,8 @@ import org.junit.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.*;
+import java.text.ParseException;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -17,7 +19,7 @@ import static org.junit.Assert.assertThat;
 public class MeterQuantityExcelReaderTest {
 
     @Test
-    public void shouldParseXLS() throws IOException {
+    public void shouldParseXLS() throws IOException, java.text.ParseException {
         QuantityReader reader = new MeterQuantityExcelReader();
         FileManifest fileManifest = new FileManifest();
         MeterData meterData = reader.readData(fileManifest, new FileInputStream(
@@ -28,7 +30,7 @@ public class MeterQuantityExcelReaderTest {
     }
 
     @Test
-    public void shouldParseXLSX() throws IOException {
+    public void shouldParseXLSX() throws IOException, ParseException {
         QuantityReader reader = new MeterQuantityExcelReader();
         FileManifest fileManifest = new FileManifest();
         MeterData meterData = reader.readData(fileManifest, new FileInputStream(

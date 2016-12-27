@@ -53,8 +53,9 @@ public class ColumnHeaderValidator implements Validator {
             }
 
             if (retVal.getStatus() != ACCEPTED) {
-                retVal.setErrorDetail("Incorrect Header Names. Column Header Names and Order should be as follows:"
-                        +  " SEIL, BDATE, TIME, KW_DEL, KWH_DEL, KVARH_DEL, KW_REC, KWH_REC, KVARH_REC, ESTIMATION_FLAG");
+                retVal.setErrorDetail("Incorrect Header Names."
+                        + " Expected: SEIL, BDATE, TIME, KW_DEL, KWH_DEL, KVARH_DEL, KW_REC, KWH_REC, KVARH_REC, ESTIMATION_FLAG;"
+                        + " Actual: " + String.join(", ", header.getColumnNames()));
             }
         }
 
@@ -65,7 +66,7 @@ public class ColumnHeaderValidator implements Validator {
     private ValidationResult checkRequiredColumns(List<String> columnNames) {
         ValidationResult retVal = ACCEPTED_STATUS;
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
             if (!equalsIgnoreCase(columnNames.get(i), COLUMNS[i])) {
                 retVal = REJECTED_STATUS;
                 break;
@@ -79,7 +80,12 @@ public class ColumnHeaderValidator implements Validator {
     private ValidationResult checkOptionalColumns(List<String> columnNames) {
         ValidationResult retVal = ACCEPTED_STATUS;
 
-        for (int i = 3; i < COLUMNS.length; i++) {
+        int maxIndex = COLUMNS.length;
+        if (columnNames.size() < maxIndex) {
+            maxIndex = columnNames.size();
+        }
+
+        for (int i = 5; i < maxIndex; i++) {
             String column = columnNames.get(i);
 
             if (isNotBlank(column) && !equalsIgnoreCase(columnNames.get(i), COLUMNS[i])) {
