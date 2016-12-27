@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ApplicationStartup implements ApplicationListener<ApplicationReadyEvent> {
 
-    public static final String ROUTING_KEY = "crss.config.request";
+    public static final String ROUTING_KEY = "crss.config.metering.request";
     public static final String EXCHANGE = "crss.config";
-    public static final String REPLY_QUEUE = "crss.config.response.metering";
+    public static final String REPLY_QUEUE = "crss.config.update.metering";
 
     private final RabbitTemplate rabbitTemplate;
 
