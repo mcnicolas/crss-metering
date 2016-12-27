@@ -4,10 +4,10 @@ import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.constants.ValidationStatus;
-import com.pemc.crss.metering.dto.BcqDataInfo;
-import com.pemc.crss.metering.dto.BcqHeader;
-import com.pemc.crss.metering.dto.BcqHeaderDisplay;
-import com.pemc.crss.metering.dto.BcqUploadFile;
+import com.pemc.crss.metering.dto.bcq.BcqDataDisplay;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay;
+import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
@@ -106,10 +106,10 @@ public class BcqResource2 extends BaseListResource<BcqHeaderDisplay> {
     }
 
     @GetMapping("/declaration/{headerId}/data")
-    public List<BcqDataInfo> getData(@PathVariable long headerId) {
+    public List<BcqDataDisplay> getData(@PathVariable long headerId) {
         log.debug("[REST-BCQ] Request for getting data of header with ID: {}", headerId);
-        List<BcqDataInfo> dataInfoList = bcqService2.findDataByHeaderId(headerId).stream()
-                .map(BcqDataInfo::new).collect(toList());
+        List<BcqDataDisplay> dataInfoList = bcqService2.findDataByHeaderId(headerId).stream()
+                .map(BcqDataDisplay::new).collect(toList());
         log.debug("[REST-BCQ] Found {} data of header with ID: {}", dataInfoList.size(), headerId);
         return dataInfoList;
     }

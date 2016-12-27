@@ -1,8 +1,8 @@
 package com.pemc.crss.metering.validator.bcq.handler;
 
 import com.pemc.crss.metering.constants.BcqInterval;
-import com.pemc.crss.metering.dto.BcqData;
-import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqData;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;

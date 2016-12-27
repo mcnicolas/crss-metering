@@ -1,7 +1,7 @@
 package com.pemc.crss.metering.validator.bcq;
 
 import com.pemc.crss.metering.constants.BcqInterval;
-import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.validator.bcq.helper.HeaderListValidationHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

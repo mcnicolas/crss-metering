@@ -1,4 +1,4 @@
-package com.pemc.crss.metering.dto;
+package com.pemc.crss.metering.dto.bcq;
 
 import com.pemc.crss.commons.web.dto.AbstractWebDto;
 import com.pemc.crss.metering.constants.BcqStatus;

@@ -1,8 +1,6 @@
 package com.pemc.crss.metering.dto.bcq;
 
 import com.pemc.crss.commons.web.dto.AbstractWebDto;
-import com.pemc.crss.metering.dto.BcqData;
-import com.pemc.crss.metering.dto.BcqHeader;
 import lombok.ToString;
 
 import java.util.ArrayList;

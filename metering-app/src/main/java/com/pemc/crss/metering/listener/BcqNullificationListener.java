@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.listener;
 
-import com.pemc.crss.metering.dao.BcqDao;
+import com.pemc.crss.metering.dao.BcqDao2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -20,10 +20,10 @@ import static org.springframework.amqp.core.ExchangeTypes.DIRECT;
 @Component
 public class BcqNullificationListener {
 
-    private final BcqDao bcqDao;
+    private final BcqDao2 bcqDao;
 
     @Autowired
-    public BcqNullificationListener(BcqDao bcqDao) {
+    public BcqNullificationListener(BcqDao2 bcqDao) {
         this.bcqDao = bcqDao;
     }
 
@@ -33,7 +33,6 @@ public class BcqNullificationListener {
             key = "crss.scheduler.bcq.de_nullification"))
     public void processNullification() {
         log.debug("Received BCQ nullification expiration trigger.");
-
         Map<String, String> params = new HashMap<>();
         params.put("expired", "expired");
         params.put("status", FOR_NULLIFICATION.toString());

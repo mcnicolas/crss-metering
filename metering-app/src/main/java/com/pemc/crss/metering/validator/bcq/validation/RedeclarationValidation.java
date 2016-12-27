@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.validator.bcq.validation;
 
-import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
 
 import java.util.List;

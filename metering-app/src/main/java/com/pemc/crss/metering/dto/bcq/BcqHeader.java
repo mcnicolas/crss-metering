@@ -1,4 +1,4 @@
-package com.pemc.crss.metering.dto;
+package com.pemc.crss.metering.dto.bcq;
 
 import com.pemc.crss.metering.constants.BcqStatus;
 import lombok.Data;

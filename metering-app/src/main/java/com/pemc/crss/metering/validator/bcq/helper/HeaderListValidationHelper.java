@@ -1,8 +1,8 @@
 package com.pemc.crss.metering.validator.bcq.helper;
 
 import com.pemc.crss.metering.constants.BcqInterval;
-import com.pemc.crss.metering.dto.BcqData;
-import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqData;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation;
 import com.pemc.crss.metering.validator.bcq.validation.Validation;
 import lombok.extern.slf4j.Slf4j;

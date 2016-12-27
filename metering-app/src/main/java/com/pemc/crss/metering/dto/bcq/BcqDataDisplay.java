@@ -1,17 +1,17 @@
-package com.pemc.crss.metering.dto;
+package com.pemc.crss.metering.dto.bcq;
 
 import com.pemc.crss.commons.web.dto.AbstractWebDto;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-public class BcqDataInfo extends AbstractWebDto<BcqData> {
+public class BcqDataDisplay extends AbstractWebDto<BcqData> {
 
-    public BcqDataInfo() {
+    public BcqDataDisplay() {
         super(new BcqData());
     }
 
-    public BcqDataInfo(BcqData target) {
+    public BcqDataDisplay(BcqData target) {
         super(target);
     }
 

@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.validator.bcq.helper;
 
-import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.service.BcqService2;
 import com.pemc.crss.metering.validator.bcq.validation.RedeclarationValidation;
 import org.springframework.beans.factory.annotation.Autowired;
