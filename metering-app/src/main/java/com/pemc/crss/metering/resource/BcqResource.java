@@ -65,6 +65,7 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
             bcqService.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
             return unprocessableEntity().body(removeHtmlTags(declaration.getValidationResult().getErrorMessage()));
         }
+        bcqService.saveDeclaration(declaration);
         log.debug("[REST-BCQ] Finished uploading and saving by web service of: {}", multipartFile.getOriginalFilename());
         if (declaration.isRedeclaration()) {
             return ok("Successfully saved redeclaration.");
