@@ -1,29 +1,24 @@
-package com.pemc.crss.metering.service;
+package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
-import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
 import org.springframework.data.domain.Page;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
-public interface BcqService2 {
+public interface BcqDao {
 
     long saveUploadFile(BcqUploadFile uploadFile);
 
-    void saveFailedUploadFile(BcqUploadFile uploadFile, BcqDeclaration declaration);
-
-    void saveDeclaration(BcqDeclaration declaration);
+    List<BcqHeader> saveHeaderList(List<BcqHeader> headerList);
 
     Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest);
 
-    List<BcqHeader> findAllHeadersBySellerAndTradingDate(String sellerShortName, Date tradingDate);
-
-    boolean isHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList);
+    List<BcqHeader> findAllHeaders(Map<String, String> params);
 
     BcqHeader findHeader(long headerId);
 

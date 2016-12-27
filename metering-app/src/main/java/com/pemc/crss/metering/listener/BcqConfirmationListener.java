@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.listener;
 
-import com.pemc.crss.metering.dao.BcqDao2;
+import com.pemc.crss.metering.dao.BcqDao;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -20,10 +20,10 @@ import static org.springframework.amqp.core.ExchangeTypes.DIRECT;
 @Component
 public class BcqConfirmationListener {
 
-    private final BcqDao2 bcqDao;
+    private final BcqDao bcqDao;
 
     @Autowired
-    public BcqConfirmationListener(BcqDao2 bcqDao) {
+    public BcqConfirmationListener(BcqDao bcqDao) {
         this.bcqDao = bcqDao;
     }
 

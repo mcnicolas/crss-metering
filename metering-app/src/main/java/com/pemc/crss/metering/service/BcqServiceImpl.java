@@ -3,7 +3,7 @@ package com.pemc.crss.metering.service;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqEventCode;
 import com.pemc.crss.metering.constants.BcqStatus;
-import com.pemc.crss.metering.dao.BcqDao2;
+import com.pemc.crss.metering.dao.BcqDao;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
@@ -30,9 +30,9 @@ import static java.util.UUID.randomUUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class BcqServiceImpl2 implements BcqService2 {
+public class BcqServiceImpl implements BcqService {
 
-    private final BcqDao2 bcqDao;
+    private final BcqDao bcqDao;
     private final BcqNotificationService bcqNotificationService;
 
     @Override

@@ -1,7 +1,7 @@
 package com.pemc.crss.metering.validator.bcq.helper;
 
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.service.BcqService2;
+import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.validator.bcq.validation.RedeclarationValidation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,10 +20,10 @@ import static java.util.stream.Collectors.toList;
 @Component
 public class RedeclarationValidationHelper {
 
-    private final BcqService2 bcqService;
+    private final BcqService bcqService;
 
     @Autowired
-    public RedeclarationValidationHelper(BcqService2 bcqService) {
+    public RedeclarationValidationHelper(BcqService bcqService) {
         this.bcqService = bcqService;
     }
 

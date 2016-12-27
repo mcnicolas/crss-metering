@@ -11,7 +11,7 @@ import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
-import com.pemc.crss.metering.service.BcqService2;
+import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
 import com.pemc.crss.metering.validator.bcq.handler.BcqValidationHandler;
 import lombok.RequiredArgsConstructor;
@@ -36,17 +36,17 @@ import static org.springframework.http.ResponseEntity.unprocessableEntity;
 
 @Slf4j
 @RestController
-@RequestMapping("/bcq2")
+@RequestMapping("/bcq")
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class BcqResource2 extends BaseListResource<BcqHeaderDisplay> {
+public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
 
     private final BcqReader bcqReader;
     private final BcqValidationHandler validationHandler;
-    private final BcqService2 bcqService2;
+    private final BcqService bcqService;
 
     @Override
     public DataTableResponse<BcqHeaderDisplay> executeSearch(PageableRequest request) {
-        Page<BcqHeader> headerPage = bcqService2.findAllHeaders(request);
+        Page<BcqHeader> headerPage = bcqService.findAllHeaders(request);
         List<BcqHeaderDisplay> headerDisplayList = new ArrayList<>();
         headerPage.getContent().forEach(header -> headerDisplayList.add(new BcqHeaderDisplay(header)));
 
@@ -62,7 +62,7 @@ public class BcqResource2 extends BaseListResource<BcqHeaderDisplay> {
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("[REST-BCQ] Finished uploading and rejecting by web service of: {}",
                     multipartFile.getOriginalFilename());
-            bcqService2.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
+            bcqService.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
             return unprocessableEntity().body(removeHtmlTags(declaration.getValidationResult().getErrorMessage()));
         }
         log.debug("[REST-BCQ] Finished uploading and saving by web service of: {}", multipartFile.getOriginalFilename());
@@ -78,7 +78,7 @@ public class BcqResource2 extends BaseListResource<BcqHeaderDisplay> {
         BcqDeclaration declaration = processAndValidateDeclaration(multipartFile);
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("[REST-BCQ] Finished uploading and rejecting of: {}", multipartFile.getOriginalFilename());
-            bcqService2.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
+            bcqService.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
             return unprocessableEntity().body(declaration.getValidationResult());
         }
         log.debug("[REST-BCQ] Finished uploading of: {}", multipartFile.getOriginalFilename());
@@ -88,19 +88,19 @@ public class BcqResource2 extends BaseListResource<BcqHeaderDisplay> {
     @PostMapping("/save")
     public void save(@RequestBody BcqDeclaration declaration) throws IOException {
         log.debug("[REST-BCQ] Request for saving declaration");
-        bcqService2.saveDeclaration(declaration);
+        bcqService.saveDeclaration(declaration);
         log.debug("[REST-BCQ] Finished saving declaration");
     }
 
     @GetMapping("/declaration/{headerId}")
     public BcqHeaderDisplay getHeader(@PathVariable long headerId) {
         log.debug("[REST-BCQ] Request for getting header with ID: {}", headerId);
-        BcqHeader header = bcqService2.findHeader(headerId);
+        BcqHeader header = bcqService.findHeader(headerId);
         if (header == null) {
             log.debug("[REST-BCQ] No found header with ID: {}", headerId);
             return null;
         }
-        BcqHeaderDisplay headerDisplay = new BcqHeaderDisplay(bcqService2.findHeader(headerId));
+        BcqHeaderDisplay headerDisplay = new BcqHeaderDisplay(bcqService.findHeader(headerId));
         log.debug("[REST-BCQ] Found header display: {}", headerDisplay);
         return headerDisplay;
     }
@@ -108,7 +108,7 @@ public class BcqResource2 extends BaseListResource<BcqHeaderDisplay> {
     @GetMapping("/declaration/{headerId}/data")
     public List<BcqDataDisplay> getData(@PathVariable long headerId) {
         log.debug("[REST-BCQ] Request for getting data of header with ID: {}", headerId);
-        List<BcqDataDisplay> dataInfoList = bcqService2.findDataByHeaderId(headerId).stream()
+        List<BcqDataDisplay> dataInfoList = bcqService.findDataByHeaderId(headerId).stream()
                 .map(BcqDataDisplay::new).collect(toList());
         log.debug("[REST-BCQ] Found {} data of header with ID: {}", dataInfoList.size(), headerId);
         return dataInfoList;
@@ -117,7 +117,7 @@ public class BcqResource2 extends BaseListResource<BcqHeaderDisplay> {
     @PostMapping("/declaration/{headerId}/{status}")
     public void updateStatus(@PathVariable long headerId, @PathVariable String status) {
         log.debug("[REST-BCQ] Request for updating status to {} of header with ID: {}", status, headerId);
-        bcqService2.updateHeaderStatus(headerId, fromString(status));
+        bcqService.updateHeaderStatus(headerId, fromString(status));
         log.debug("[REST-BCQ] Finished updating status to {} of header with ID: {}", status, headerId);
     }
 
@@ -147,7 +147,7 @@ public class BcqResource2 extends BaseListResource<BcqHeaderDisplay> {
     }
 
     private List<BcqHeader> getCurrentHeaders(BcqDeclaration declaration) {
-        return bcqService2.findAllHeadersBySellerAndTradingDate(
+        return bcqService.findAllHeadersBySellerAndTradingDate(
                 declaration.getSellerDetails().getShortName(),
                 declaration.getHeaderDetailsList().get(0).getTradingDate());
     }

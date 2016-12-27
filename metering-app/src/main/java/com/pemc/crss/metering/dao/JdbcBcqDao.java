@@ -41,7 +41,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @Slf4j
 @Repository
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class JdbcBcqDao2 implements BcqDao2 {
+public class JdbcBcqDao implements BcqDao {
 
     @Value("${bcq.manifest}")
     private String insertManifest;
