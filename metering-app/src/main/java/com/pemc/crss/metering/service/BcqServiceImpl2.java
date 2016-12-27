@@ -1,7 +1,10 @@
 package com.pemc.crss.metering.service;
 
+import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqEventCode;
+import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao2;
+import com.pemc.crss.metering.dto.BcqData;
 import com.pemc.crss.metering.dto.BcqHeader;
 import com.pemc.crss.metering.dto.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
@@ -9,15 +12,18 @@ import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqEventCode.*;
+import static com.pemc.crss.metering.constants.BcqStatus.CANCELLED;
+import static com.pemc.crss.metering.constants.BcqStatus.CONFIRMED;
+import static com.pemc.crss.metering.constants.BcqStatus.NULLIFIED;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
-import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
-import static com.pemc.crss.metering.utils.BcqDateUtils.formatDateTime;
+import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 
@@ -52,7 +58,8 @@ public class BcqServiceImpl2 implements BcqService2 {
         List<BcqHeader> currentHeaderList = new ArrayList<>();
         List<BcqHeader> headerList = new ArrayList<>();
         if (declaration.isRedeclaration()) {
-            currentHeaderList.addAll(findAllHeadersBySellerAndTradingDate(declaration.getSellerDetails().getShortName(),
+            currentHeaderList.addAll(findAllHeadersBySellerAndTradingDate(
+                    declaration.getSellerDetails().getShortName(),
                     declaration.getHeaderDetailsList().get(0).getTradingDate()));
         }
         declaration.getHeaderDetailsList().forEach(headerDetails -> {
@@ -67,12 +74,20 @@ public class BcqServiceImpl2 implements BcqService2 {
             boolean exists = isHeaderInList(header, currentHeaderList);
             header.setExists(exists);
             if (exists) {
-                header.setHeaderId(findHeaderInList(header, currentHeaderList).getHeaderId());
-                header.setUpdatedVia("REDECLARATION");
+                BcqHeader headerInList = findHeaderInList(header, currentHeaderList);
+                if (headerInList != null) {
+                    header.setHeaderId(headerInList.getHeaderId());
+                    header.setUpdatedVia("REDECLARATION");
+                }
             }
             headerList.add(header);
         });
         sendDeclarationNotif(bcqDao.saveHeaderList(headerList));
+    }
+
+    @Override
+    public Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest) {
+        return bcqDao.findAllHeaders(pageableRequest);
     }
 
     @Override
@@ -91,6 +106,22 @@ public class BcqServiceImpl2 implements BcqService2 {
             }
         }
         return false;
+    }
+
+    @Override
+    public BcqHeader findHeader(long headerId) {
+        return bcqDao.findHeader(headerId);
+    }
+
+    @Override
+    public List<BcqData> findDataByHeaderId(long headerId) {
+        return bcqDao.findDataByHeaderId(headerId);
+    }
+
+    @Override
+    public void updateHeaderStatus(long headerId, BcqStatus status) {
+        bcqDao.updateHeaderStatus(headerId, status);
+        sendUpdateStatusNotif(findHeader(headerId));
     }
 
     /****************************************************
@@ -148,4 +179,28 @@ public class BcqServiceImpl2 implements BcqService2 {
             bcqNotificationService.send(code, payloadObjectList.toArray());
         }
     }
+
+    private void sendUpdateStatusNotif(BcqHeader header) {
+        String respondedDate = formatLongDateTime(new Date());
+        String tradingDate = formatLongDate(header.getTradingDate());
+        List<Object> payloadObjectList = new ArrayList<>();
+        payloadObjectList.addAll(asList(tradingDate, respondedDate, header.getHeaderId()));
+
+        if (header.getStatus() == CANCELLED) {
+            payloadObjectList.add(header.getSellingParticipantName());
+            payloadObjectList.add(header.getSellingParticipantShortName());
+            payloadObjectList.add(header.getBuyingParticipantUserId());
+            bcqNotificationService.send(NTF_BCQ_CANCEL_BUYER, payloadObjectList.toArray());
+        } else if (header.getStatus() == CONFIRMED || header.getStatus() == NULLIFIED) {
+            payloadObjectList.add(header.getBuyingParticipantName());
+            payloadObjectList.add(header.getBuyingParticipantShortName());
+            payloadObjectList.add(header.getSellingParticipantUserId());
+            if (header.getStatus() == CONFIRMED) {
+                bcqNotificationService.send(NTF_BCQ_CONFIRM_SELLER, payloadObjectList.toArray());
+            } else {
+                bcqNotificationService.send(NTF_BCQ_NULLIFY_SELLER, payloadObjectList.toArray());
+            }
+        }
+    }
+
 }

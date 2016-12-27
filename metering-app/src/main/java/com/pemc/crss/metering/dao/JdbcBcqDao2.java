@@ -1,5 +1,7 @@
 package com.pemc.crss.metering.dao;
 
+import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
+import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.BcqData;
 import com.pemc.crss.metering.dto.BcqHeader;
 import com.pemc.crss.metering.dto.BcqUploadFile;
@@ -10,6 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.CacheManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -47,14 +51,26 @@ public class JdbcBcqDao2 implements BcqDao2 {
     @Value("${bcq.header.update}")
     private String updateHeader;
 
+    @Value("${bcq.header.status}")
+    private String updateHeaderStatus;
+
     @Value("${bcq.data.insert}")
     private String insertData;
 
     @Value("${bcq.data.update}")
     private String updateData;
 
+    @Value("${bcq.data.details}")
+    private String dataDetails;
+
     @Value("${bcq.display.data}")
     private String displayData;
+
+    @Value("${bcq.display.count}")
+    private String displayCount;
+
+    @Value("${bcq.display.paginate}")
+    private String displayPaginate;
 
     private final JdbcTemplate jdbcTemplate;
     private final CacheManager cacheManager;
@@ -115,6 +131,35 @@ public class JdbcBcqDao2 implements BcqDao2 {
     }
 
     @Override
+    public Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest) {
+        int totalRecords = getTotalRecords(pageableRequest);
+        Map<String, String> params = pageableRequest.getMapParams();
+        String sellingMtn = params.get("sellingMtn");
+        String billingId = params.get("billingId");
+        String buyingParticipant = params.get("buyingParticipant");
+        String sellingParticipant = params.get("sellingParticipant");
+        String status = params.get("status");
+        Date tradingDate = parseDate(params.get("tradingDate"));
+        BcqQueryBuilder builder = new BcqQueryBuilder(displayPaginate);
+        BuilderData selectQuery = builder.newQuery(displayData)
+                .addTradingDateFilter(tradingDate)
+                .addSellingMtnFilter(sellingMtn)
+                .addBillingIdFilter(billingId)
+                .addBuyingParticipantFilter(buyingParticipant)
+                .addSellingParticipantFilter(sellingParticipant)
+                .addStatusFilter(status)
+                .orderBy(pageableRequest.getOrderList())
+                .paginate(pageableRequest.getPageNo(), pageableRequest.getPageSize())
+                .build();
+        log.debug("[DAO-BCQ] Finding page of headers with query: {}, and args: {}",
+                selectQuery.getSql(), selectQuery.getArguments());
+        List<BcqHeader> headerList = jdbcTemplate.query(selectQuery.getSql(), selectQuery.getArguments(),
+                new BcqHeaderRowMapper());
+        log.debug("[DAO-BCQ] Found {} headers", headerList.size());
+        return new PageImpl<>(headerList, pageableRequest.getPageable(), totalRecords);
+    }
+
+    @Override
     public List<BcqHeader> findAllHeaders(Map<String, String> params) {
         Long headerId = params.get("headerId") == null ? null : parseLong(params.get("headerId"));
         String sellingMtn = params.get("sellingMtn");
@@ -135,12 +180,56 @@ public class JdbcBcqDao2 implements BcqDao2 {
                 .addStatusFilter(status)
                 .addExpiredFilter(expired)
                 .build();
-        log.debug("[DAO-BCQ] Find all headers with query: {}, and args: {}",
+        log.debug("[DAO-BCQ] Finding all headers with query: {}, and args: {}",
                 selectQuery.getSql(), selectQuery.getArguments());
-        return jdbcTemplate.query(
-                selectQuery.getSql(),
-                selectQuery.getArguments(),
+        List<BcqHeader> headerList = jdbcTemplate.query(selectQuery.getSql(), selectQuery.getArguments(),
                 new BcqHeaderRowMapper());
+        log.debug("[DAO-BCQ] Found {} headers", headerList.size());
+        return headerList;
+    }
+
+    @Override
+    public BcqHeader findHeader(long headerId) {
+        BcqQueryBuilder builder = new BcqQueryBuilder(displayData);
+        BuilderData query = builder.newQuery(displayData)
+                .addHeaderIdFilter(headerId)
+                .build();
+        log.debug("[DAO-BCQ] Finding header with ID: {}", headerId);
+        BcqHeader header = jdbcTemplate.queryForObject(query.getSql(), query.getArguments(), new BcqHeaderRowMapper());
+        log.debug("[DAO-BCQ] Found header: {}", header);
+        return header;
+    }
+
+    @Override
+    public List<BcqData> findDataByHeaderId(long headerId) {
+        log.debug("[DAO-BCQ] Finding data of header with ID: {}", headerId);
+        List<BcqData> dataList = jdbcTemplate.query(dataDetails, new Object[]{headerId},
+                rs -> {
+                    List<BcqData> content = new ArrayList<>();
+                    while (rs.next()) {
+                        BcqData bcqData = new BcqData();
+                        bcqData.setReferenceMtn(rs.getString("reference_mtn"));
+                        bcqData.setEndTime(rs.getTime("end_time"));
+                        bcqData.setBcq(rs.getBigDecimal("bcq"));
+                        content.add(bcqData);
+                    }
+                    return content;
+                });
+        log.debug("[DAO-BCQ] Found {} data of header with ID: {}", dataList.size(), headerId);
+        return dataList;
+    }
+
+    @Override
+    public void updateHeaderStatus(long headerId, BcqStatus status) {
+        log.debug("[DAO-BCQ] Updating status of header to {} with ID: {}", status, headerId);
+        jdbcTemplate.update(
+                connection -> {
+                    PreparedStatement ps = connection.prepareStatement(updateHeaderStatus);
+                    ps.setString(1, status.toString());
+                    ps.setLong(2, headerId);
+                    return ps;
+                });
+        log.debug("[DAO-BCQ] Updated status of header with ID: {} to {} ", headerId, status);
     }
 
 
@@ -196,6 +285,31 @@ public class JdbcBcqDao2 implements BcqDao2 {
                 parseInt(configCache.get("BCQ_NULLIFICATION_DEADLINE").get().toString()) + 1;
     }
 
+    private int getTotalRecords(PageableRequest pageableRequest) {
+        Map<String, String> params = pageableRequest.getMapParams();
+        String sellingMtn = params.get("sellingMtn");
+        String billingId = params.get("billingId");
+        String sellingParticipant = params.get("sellingParticipant");
+        String buyingParticipant = params.get("buyingParticipant");
+        Date tradingDate = parseDate(params.get("tradingDate"));
+        String status = params.get("status");
+
+        BcqQueryBuilder builder = new BcqQueryBuilder();
+        BuilderData countQuery = builder.newQuery(displayCount)
+                .addTradingDateFilter(tradingDate)
+                .addSellingMtnFilter(sellingMtn)
+                .addBillingIdFilter(billingId)
+                .addBuyingParticipantFilter(buyingParticipant)
+                .addSellingParticipantFilter(sellingParticipant)
+                .addStatusFilter(status)
+                .build();
+
+        return jdbcTemplate.queryForObject(
+                countQuery.getSql(),
+                countQuery.getArguments(),
+                Integer.class);
+    }
+
 
 
 
@@ -219,7 +333,6 @@ public class JdbcBcqDao2 implements BcqDao2 {
             uploadFile.setTransactionId(rs.getString("transaction_id"));
             uploadFile.setSubmittedDate(rs.getTimestamp("submitted_date"));
             header.setUploadFile(uploadFile);
-
             return header;
         }
 

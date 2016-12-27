@@ -62,4 +62,5 @@ public class BcqHeader {
                 sellingParticipantUserId, sellingParticipantName, sellingParticipantShortName,
                 status, tradingDate, deadlineDate);
     }
+
 }
