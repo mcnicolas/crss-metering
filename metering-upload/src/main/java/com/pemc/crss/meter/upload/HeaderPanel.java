@@ -42,6 +42,7 @@ public class HeaderPanel extends JPanel {
 
     private MeterDataUploader parent;
     private String selectedFileExtension = "";
+    private ParticipantName participant;
 
     public HeaderPanel() {
         initComponents();
@@ -86,7 +87,7 @@ public class HeaderPanel extends JPanel {
             cboMSP.addItem(comboBoxItem);
         }
 
-        ParticipantName participant = parent.getParticipant();
+        participant = parent.getParticipant();
         if (participant != null) {
             updateSelectedMSP(parent.getParticipant().getShortName());
             cboMSP.setEnabled(false);
@@ -400,7 +401,12 @@ public class HeaderPanel extends JPanel {
         btnLogout.setVisible(true);
 
         cboCategory.setEnabled(true);
-        cboMSP.setEnabled(true);
+
+        if (participant != null) {
+            cboMSP.setEnabled(false);
+        } else {
+            cboMSP.setEnabled(true);
+        }
     }
 
     public void loggedOutToolbar() {
