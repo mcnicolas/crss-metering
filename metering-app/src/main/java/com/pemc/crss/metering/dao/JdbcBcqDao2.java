@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.CacheManager;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -195,9 +196,14 @@ public class JdbcBcqDao2 implements BcqDao2 {
                 .addHeaderIdFilter(headerId)
                 .build();
         log.debug("[DAO-BCQ] Finding header with ID: {}", headerId);
-        BcqHeader header = jdbcTemplate.queryForObject(query.getSql(), query.getArguments(), new BcqHeaderRowMapper());
-        log.debug("[DAO-BCQ] Found header: {}", header);
-        return header;
+        try {
+            BcqHeader header = jdbcTemplate.queryForObject(query.getSql(), query.getArguments(), new BcqHeaderRowMapper());
+            log.debug("[DAO-BCQ] Found header: {}", header);
+            return header;
+        } catch (EmptyResultDataAccessException ex) {
+            log.debug("[DAO-BCQ] No header found with ID: {}", headerId);
+            return null;
+        }
     }
 
     @Override
@@ -265,13 +271,15 @@ public class JdbcBcqDao2 implements BcqDao2 {
                 ps.setLong(1, header.getFileId());
                 ps.setString(2, header.getSellingMtn());
                 ps.setString(3, header.getBillingId());
-                ps.setString(4, header.getBuyingParticipantName());
-                ps.setString(5, header.getBuyingParticipantShortName());
-                ps.setString(6, header.getSellingParticipantName());
-                ps.setString(7, header.getSellingParticipantShortName());
-                ps.setString(8, header.getStatus().toString());
-                ps.setTimestamp(9, new Timestamp(tradingDateInMillis));
-                ps.setTimestamp(10, deadlineDateTimestamp);
+                ps.setLong(4, header.getBuyingParticipantUserId());
+                ps.setString(5, header.getBuyingParticipantName());
+                ps.setString(6, header.getBuyingParticipantShortName());
+                ps.setLong(7, header.getSellingParticipantUserId());
+                ps.setString(8, header.getSellingParticipantName());
+                ps.setString(9, header.getSellingParticipantShortName());
+                ps.setString(10, header.getStatus().toString());
+                ps.setTimestamp(11, new Timestamp(tradingDateInMillis));
+                ps.setTimestamp(12, deadlineDateTimestamp);
                 return ps;
             }, keyHolder);
             return keyHolder.getKey().longValue();
@@ -322,8 +330,10 @@ public class JdbcBcqDao2 implements BcqDao2 {
             header.setHeaderId(rs.getLong("bcq_header_id"));
             header.setSellingMtn(rs.getString("selling_mtn"));
             header.setBillingId(rs.getString("billing_id"));
+            header.setBuyingParticipantUserId(rs.getLong("buying_participant_user_id"));
             header.setBuyingParticipantName(rs.getString("buying_participant_name"));
             header.setBuyingParticipantShortName(rs.getString("buying_participant_short_name"));
+            header.setSellingParticipantUserId(rs.getLong("selling_participant_user_id"));
             header.setSellingParticipantName(rs.getString("selling_participant_name"));
             header.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
             header.setTradingDate(rs.getDate("trading_date"));

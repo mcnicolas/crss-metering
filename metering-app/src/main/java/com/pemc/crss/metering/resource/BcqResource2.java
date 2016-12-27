@@ -3,9 +3,11 @@ package com.pemc.crss.metering.resource;
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.commons.web.resource.BaseListResource;
-import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.ValidationStatus;
-import com.pemc.crss.metering.dto.*;
+import com.pemc.crss.metering.dto.BcqDataInfo;
+import com.pemc.crss.metering.dto.BcqHeader;
+import com.pemc.crss.metering.dto.BcqHeaderDisplay;
+import com.pemc.crss.metering.dto.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
@@ -92,6 +95,11 @@ public class BcqResource2 extends BaseListResource<BcqHeaderDisplay> {
     @GetMapping("/declaration/{headerId}")
     public BcqHeaderDisplay getHeader(@PathVariable long headerId) {
         log.debug("[REST-BCQ] Request for getting header with ID: {}", headerId);
+        BcqHeader header = bcqService2.findHeader(headerId);
+        if (header == null) {
+            log.debug("[REST-BCQ] No found header with ID: {}", headerId);
+            return null;
+        }
         BcqHeaderDisplay headerDisplay = new BcqHeaderDisplay(bcqService2.findHeader(headerId));
         log.debug("[REST-BCQ] Found header display: {}", headerDisplay);
         return headerDisplay;
@@ -106,10 +114,10 @@ public class BcqResource2 extends BaseListResource<BcqHeaderDisplay> {
         return dataInfoList;
     }
 
-    @PostMapping("/declaration/{headerId}/status")
-    public void updateStatus(@PathVariable long headerId, @RequestParam BcqStatus status) {
+    @PostMapping("/declaration/{headerId}/{status}")
+    public void updateStatus(@PathVariable long headerId, @PathVariable String status) {
         log.debug("[REST-BCQ] Request for updating status to {} of header with ID: {}", status, headerId);
-        bcqService2.updateHeaderStatus(headerId, status);
+        bcqService2.updateHeaderStatus(headerId, fromString(status));
         log.debug("[REST-BCQ] Finished updating status to {} of header with ID: {}", status, headerId);
     }
 
@@ -122,7 +130,9 @@ public class BcqResource2 extends BaseListResource<BcqHeaderDisplay> {
         BcqValidationResult validationResult = declaration.getValidationResult();
         BcqUploadFile uploadFile = populateUploadFile(multipartFile, validationResult.getStatus());
         declaration.setUploadFileDetails(new BcqUploadFileDetails(uploadFile));
-        declaration.setRedeclaration(getCurrentHeaders(declaration).size() > 0);
+        if (declaration.getHeaderDetailsList() != null) {
+            declaration.setRedeclaration(getCurrentHeaders(declaration).size() > 0);
+        }
         return declaration;
     }
 
