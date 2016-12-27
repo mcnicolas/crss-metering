@@ -4,12 +4,7 @@ import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.constants.ValidationStatus;
-import com.pemc.crss.metering.dto.bcq.BcqDataDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
-import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
+import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
@@ -31,14 +26,15 @@ import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
-import static org.springframework.http.ResponseEntity.ok;
-import static org.springframework.http.ResponseEntity.unprocessableEntity;
+import static org.springframework.http.ResponseEntity.*;
 
 @Slf4j
 @RestController
 @RequestMapping("/bcq")
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
+
+    private static final String CSV_CONTENT_TYPE = "text/csv";
 
     private final BcqReader bcqReader;
     private final BcqValidationHandler validationHandler;
@@ -58,6 +54,10 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
     @PostMapping("/webservice/upload")
     public ResponseEntity<String> uploadByWebService(@RequestParam("file") MultipartFile multipartFile) throws IOException {
         log.debug("[REST-BCQ] Request for uploading by web service of: {}", multipartFile.getOriginalFilename());
+        if (!multipartFile.getContentType().equalsIgnoreCase(CSV_CONTENT_TYPE)) {
+            log.debug("[REST-BCQ] Uploading failed, {} is not a CSV file", multipartFile.getOriginalFilename());
+            return badRequest().body("Only CSV files are allowed.");
+        }
         BcqDeclaration declaration = processAndValidateDeclaration(multipartFile);
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("[REST-BCQ] Finished uploading and rejecting by web service of: {}",

@@ -2,7 +2,7 @@ package com.pemc.crss.metering.constants;
 
 public enum BcqValidationRules {
 
-    // CSV Validations
+    INVALID_CSV_FILE("Invalid CSV file."),
     EMPTY("No data found."),
     EMPTY_LINE("Empty line is not allowed."),
     INCORRECT_DECLARED_INTERVAL("Incorrect declared interval. Interval <b>%s</b> is not valid."),

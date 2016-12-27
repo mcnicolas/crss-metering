@@ -2,6 +2,7 @@ package com.pemc.crss.metering.parser.bcq;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.supercsv.exception.SuperCsvException;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.io.ICsvListReader;
 
@@ -24,6 +25,8 @@ public class BcqReader {
             while ((line = reader.read()) != null) {
                 csv.add(line);
             }
+        } catch (IOException | SuperCsvException ex) {
+            return null;
         }
         return csv;
     }

@@ -37,26 +37,31 @@ public class CsvValidationHelper {
     private static final int START_LINE_OF_DATA = 2;
 
     public Validation<List<List<String>>> validCsv(int intervalConfig) {
-        return nonEmpty().
-                and(validColumnHeaders()).
-                and(noEmptyLines()).
-                and(intervalIsSet()).
-                and(validInterval(intervalConfig)).
-                and(sellingMtnIsSet()).
-                and(billingIdIsSet()).
-                and(referenceMtnIsSet()).
-                and(dateIsSet()).
-                and(bcqIsSet()).
-                and(validDate()).
-                and(validBcq()).
-                and(positiveBcq()).
-                and(noDuplicates()).
-                and(sameTradingDate());
+        return validCsvFile()
+                .and(nonEmpty())
+                .and(validColumnHeaders())
+                .and(noEmptyLines())
+                .and(intervalIsSet())
+                .and(validInterval(intervalConfig))
+                .and(sellingMtnIsSet())
+                .and(billingIdIsSet())
+                .and(referenceMtnIsSet())
+                .and(dateIsSet())
+                .and(bcqIsSet())
+                .and(validDate())
+                .and(validBcq())
+                .and(positiveBcq())
+                .and(noDuplicates())
+                .and(sameTradingDate());
     }
 
     /****************************************************
      * VALIDATIONS
      ****************************************************/
+    private CsvValidation validCsvFile() {
+        return from(csv -> csv != null, INVALID_CSV_FILE.getErrorMessage());
+    }
+
     private CsvValidation nonEmpty() {
         return from(csv -> csv.size() > VALID_NO_OF_LINES, EMPTY.getErrorMessage());
     }
