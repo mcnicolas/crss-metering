@@ -14,7 +14,6 @@ buildscript {
     dependencies {
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.4.2.RELEASE'
         classpath 'io.spring.gradle:dependency-management-plugin:0.6.1.RELEASE'
-        classpath 'org.ajoberstar:gradle-git:1.5.1'
         classpath 'gradle.plugin.edu.sc.seis.gradle:launch4j:1.6.2'
         classpath 'com.github.ksoichiro:gradle-build-info-plugin:0.2.0'
     }
@@ -22,8 +21,6 @@ buildscript {
 
 ext {
     springBootVersion = '1.4.2.RELEASE'
-    git = org.ajoberstar.grgit.Grgit.open()
-    revision = git.head().abbreviatedId
     applicationDefaultJvmArgs = ['-Xms128m', '-Xmx256m']
 }
 

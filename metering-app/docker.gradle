@@ -28,7 +28,13 @@ ext {
     serviceName = 'metering' // simply supply metering than default project.name (metering-app)
     serviceGroup = 'metering'
     dockerImageName = "crss/$project.serviceName"
-    dockerImageTag = "$project.dockerImageName:$version"
+    tagVersion = version
+
+    if (project.hasProperty('teamcity.build.id')) {
+        tagVersion = "${version.contains('BUILD-SNAPSHOT') ? version.replace('.BUILD-SNAPSHOT', '') : version}-b${project.ext['build.number']}"
+    }
+
+    dockerImageTag = "$project.dockerImageName:$tagVersion"
 }
 
 def defaultDockerUrl = {
@@ -66,7 +72,7 @@ task createDockerfile(type: Dockerfile, dependsOn: copyArtifacts) {
     copyFile('app.jar', 'app.jar')
     runCommand "sh -c 'touch /app.jar'"
 
-    label(["${project.group}.build-no"     : revision,
+    label(["${project.group}.build-no"     : project.hasProperty('build.vcs.number') ? project.ext['build.vcs.number'] : 'snapshot',
            "${project.group}.service-group": 'metering'])
     entryPoint('sh', '-c', "java \$JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -server -jar /app.jar")
 }
@@ -80,7 +86,7 @@ task buildDockerImage(type: DockerBuildImage, dependsOn: createDockerfile) {
 
 task tagDockerImage(type: DockerTagImage) {
     imageId = dockerImageTag
-    tag = project.hasProperty('imageTag') ? imageTag : version
+    tag = project.hasProperty('imageTag') ? imageTag : tagVersion
 
     repository = project.hasProperty('dockerRegistryUrl') ?
             "${dockerRegistryUrl}/$dockerImageName" : dockerImageName
