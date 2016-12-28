@@ -10,7 +10,11 @@ public enum UnitOfMeasure {
     KWR("KW R"),
     KWHR("KWH R"),
     KVARHR("KVARH R"),
-    VAN("VAN"),
+
+    // NOTE: There are two formats for VAN. Handling them both.
+    VAN1("VAN"),
+    VAN2("V AN"),
+
     VBN("VBN"),
     VCN("VCN"),
     IAN("IA"),

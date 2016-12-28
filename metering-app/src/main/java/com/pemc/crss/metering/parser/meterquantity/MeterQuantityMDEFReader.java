@@ -83,73 +83,77 @@ public class MeterQuantityMDEFReader implements QuantityReader {
 
                     UnitOfMeasure uom = UnitOfMeasure.fromCode(channel.getMeterNo());
 
-                    // UOM can be null ?
-                    switch (uom) {
-                        case KWD:
-                            value.setKwd(meterReading);
-                            value.setKwdChannelStatus(channelStatus);
-                            value.setKwdIntervalStatus(intervalStatus);
-                            break;
-                        case KWHD:
-                            value.setKwhd(meterReading);
-                            value.setKwhdChannelStatus(channelStatus);
-                            value.setKwhdIntervalStatus(intervalStatus);
-                            break;
-                        case KVARHD:
-                            value.setKvarhd(meterReading);
-                            value.setKvarhdChannelStatus(channelStatus);
-                            value.setKvarhdIntervalStatus(intervalStatus);
-                            break;
-                        case KWR:
-                            value.setKwr(meterReading);
-                            value.setKwrChannelStatus(channelStatus);
-                            value.setKwrIntervalStatus(intervalStatus);
-                            break;
-                        case KWHR:
-                            value.setKwhr(meterReading);
-                            value.setKwhrChannelStatus(channelStatus);
-                            value.setKwhrIntervalStatus(intervalStatus);
-                            break;
-                        case KVARHR:
-                            value.setKvarhr(meterReading);
-                            value.setKvarhrChannelStatus(channelStatus);
-                            value.setKvarhrIntervalStatus(intervalStatus);
-                            break;
-                        case VAN:
-                            value.setVan(meterReading);
-                            value.setVanChannelStatus(channelStatus);
-                            value.setVanIntervalStatus(intervalStatus);
-                            break;
-                        case VBN:
-                            value.setVbn(meterReading);
-                            value.setVbnChannelStatus(channelStatus);
-                            value.setVbnIntervalStatus(intervalStatus);
-                            break;
-                        case VCN:
-                            value.setVcn(meterReading);
-                            value.setVcnChannelStatus(channelStatus);
-                            value.setVcnIntervalStatus(intervalStatus);
-                            break;
-                        case IAN:
-                            value.setIan(meterReading);
-                            value.setIanChannelStatus(channelStatus);
-                            value.setIanIntervalStatus(intervalStatus);
-                            break;
-                        case IBN:
-                            value.setIbn(meterReading);
-                            value.setIbnChannelStatus(channelStatus);
-                            value.setIbnIntervalStatus(intervalStatus);
-                            break;
-                        case ICN:
-                            value.setIcn(meterReading);
-                            value.setIcnChannelStatus(channelStatus);
-                            value.setIcnIntervalStatus(intervalStatus);
-                            break;
-                        case PF:
-                            value.setPf(meterReading);
-                            value.setPfChannelStatus(channelStatus);
-                            value.setPfIntervalStatus(intervalStatus);
-                            break;
+                    if (uom == null) {
+                        log.debug("Possible data error. UOM:{}", channel.getMeterNo());
+                    } else {
+                        switch (uom) {
+                            case KWD:
+                                value.setKwd(meterReading);
+                                value.setKwdChannelStatus(channelStatus);
+                                value.setKwdIntervalStatus(intervalStatus);
+                                break;
+                            case KWHD:
+                                value.setKwhd(meterReading);
+                                value.setKwhdChannelStatus(channelStatus);
+                                value.setKwhdIntervalStatus(intervalStatus);
+                                break;
+                            case KVARHD:
+                                value.setKvarhd(meterReading);
+                                value.setKvarhdChannelStatus(channelStatus);
+                                value.setKvarhdIntervalStatus(intervalStatus);
+                                break;
+                            case KWR:
+                                value.setKwr(meterReading);
+                                value.setKwrChannelStatus(channelStatus);
+                                value.setKwrIntervalStatus(intervalStatus);
+                                break;
+                            case KWHR:
+                                value.setKwhr(meterReading);
+                                value.setKwhrChannelStatus(channelStatus);
+                                value.setKwhrIntervalStatus(intervalStatus);
+                                break;
+                            case KVARHR:
+                                value.setKvarhr(meterReading);
+                                value.setKvarhrChannelStatus(channelStatus);
+                                value.setKvarhrIntervalStatus(intervalStatus);
+                                break;
+                            case VAN1:
+                            case VAN2:
+                                value.setVan(meterReading);
+                                value.setVanChannelStatus(channelStatus);
+                                value.setVanIntervalStatus(intervalStatus);
+                                break;
+                            case VBN:
+                                value.setVbn(meterReading);
+                                value.setVbnChannelStatus(channelStatus);
+                                value.setVbnIntervalStatus(intervalStatus);
+                                break;
+                            case VCN:
+                                value.setVcn(meterReading);
+                                value.setVcnChannelStatus(channelStatus);
+                                value.setVcnIntervalStatus(intervalStatus);
+                                break;
+                            case IAN:
+                                value.setIan(meterReading);
+                                value.setIanChannelStatus(channelStatus);
+                                value.setIanIntervalStatus(intervalStatus);
+                                break;
+                            case IBN:
+                                value.setIbn(meterReading);
+                                value.setIbnChannelStatus(channelStatus);
+                                value.setIbnIntervalStatus(intervalStatus);
+                                break;
+                            case ICN:
+                                value.setIcn(meterReading);
+                                value.setIcnChannelStatus(channelStatus);
+                                value.setIcnIntervalStatus(intervalStatus);
+                                break;
+                            case PF:
+                                value.setPf(meterReading);
+                                value.setPfChannelStatus(channelStatus);
+                                value.setPfIntervalStatus(intervalStatus);
+                                break;
+                        }
                     }
                 }
             }
