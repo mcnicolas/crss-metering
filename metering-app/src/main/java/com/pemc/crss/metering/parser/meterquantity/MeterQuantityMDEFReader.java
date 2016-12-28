@@ -84,7 +84,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
                     UnitOfMeasure uom = UnitOfMeasure.fromCode(channel.getMeterNo());
 
                     if (uom == null) {
-                        log.debug("Possible data error. UOM:{}", channel.getMeterNo());
+                        log.debug("Data error. UOM:{}", channel.getMeterNo());
                     } else {
                         switch (uom) {
                             case KWD:
