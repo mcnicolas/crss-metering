@@ -11,7 +11,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -21,7 +20,7 @@ import static org.junit.Assert.assertThat;
 public class MeterQuantityMDEFReaderTest {
 
     @Test
-    public void parseNormalMDEFFile() throws IOException, ParseException, URISyntaxException {
+    public void parseNormalMDEFFile() throws URISyntaxException, IOException, ParseException {
         // given
         String[][] files = new String[][] {
                 {"normal_mdef_01.mde", "1090"},

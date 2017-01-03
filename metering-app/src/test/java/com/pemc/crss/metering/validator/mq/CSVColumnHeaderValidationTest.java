@@ -2,6 +2,7 @@ package com.pemc.crss.metering.validator.mq;
 
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
+import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.QuantityReader;
 import com.pemc.crss.metering.parser.meterquantity.MeterQuantityCSVReader;
 import com.pemc.crss.metering.validator.ValidationResult;
@@ -15,7 +16,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
 
 import static com.pemc.crss.metering.constants.FileType.CSV;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
@@ -29,7 +29,7 @@ import static org.junit.Assert.assertThat;
 public class CSVColumnHeaderValidationTest {
 
     @Test
-    public void validateCompleteHeaders() throws IOException, java.text.ParseException, URISyntaxException {
+    public void validateCompleteHeaders() throws ParseException, IOException, URISyntaxException {
         // given
         String excelFile = "/meterdata/validation/header/complete_headers.csv";
         MeterData meterData = readMeterData(excelFile);
@@ -108,7 +108,7 @@ public class CSVColumnHeaderValidationTest {
         assertThat(result.getStatus(), is(equalTo(REJECTED)));
     }
 
-    private MeterData readMeterData(String excelFile) throws IOException, ParseException, URISyntaxException {
+    private MeterData readMeterData(String excelFile) throws URISyntaxException, IOException, ParseException {
         QuantityReader reader = new MeterQuantityCSVReader();
         FileManifest fileManifest = new FileManifest();
 

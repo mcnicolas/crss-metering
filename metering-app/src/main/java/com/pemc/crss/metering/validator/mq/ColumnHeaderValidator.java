@@ -14,8 +14,7 @@ import java.util.List;
 import static com.pemc.crss.metering.constants.FileType.CSV;
 import static com.pemc.crss.metering.constants.FileType.XLS;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
-import static com.pemc.crss.metering.validator.ValidationResult.ACCEPTED_STATUS;
-import static com.pemc.crss.metering.validator.ValidationResult.REJECTED_STATUS;
+import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -39,7 +38,8 @@ public class ColumnHeaderValidator implements Validator {
 
     @Override
     public ValidationResult validate(FileManifest fileManifest, MeterData meterData) {
-        ValidationResult retVal = ACCEPTED_STATUS;
+        ValidationResult retVal = new ValidationResult();
+        retVal.setStatus(ACCEPTED);
 
         if (fileManifest.getFileType() == XLS || fileManifest.getFileType() == CSV) {
             log.debug("Validating header for {}", fileManifest.getFileName());
@@ -64,11 +64,12 @@ public class ColumnHeaderValidator implements Validator {
 
     // TODO: Optimize code structure
     private ValidationResult checkRequiredColumns(List<String> columnNames) {
-        ValidationResult retVal = ACCEPTED_STATUS;
+        ValidationResult retVal = new ValidationResult();
+        retVal.setStatus(ACCEPTED);
 
         for (int i = 0; i < 5; i++) {
             if (!equalsIgnoreCase(columnNames.get(i), COLUMNS[i])) {
-                retVal = REJECTED_STATUS;
+                retVal.setStatus(REJECTED);
                 break;
             }
         }
@@ -78,7 +79,8 @@ public class ColumnHeaderValidator implements Validator {
 
     // TODO: Optimize code structure
     private ValidationResult checkOptionalColumns(List<String> columnNames) {
-        ValidationResult retVal = ACCEPTED_STATUS;
+        ValidationResult retVal = new ValidationResult();
+        retVal.setStatus(ACCEPTED);
 
         int maxIndex = COLUMNS.length;
         if (columnNames.size() < maxIndex) {
@@ -89,7 +91,7 @@ public class ColumnHeaderValidator implements Validator {
             String column = columnNames.get(i);
 
             if (isNotBlank(column) && !equalsIgnoreCase(columnNames.get(i), COLUMNS[i])) {
-                retVal = REJECTED_STATUS;
+                retVal.setStatus(REJECTED);
                 break;
             }
         }

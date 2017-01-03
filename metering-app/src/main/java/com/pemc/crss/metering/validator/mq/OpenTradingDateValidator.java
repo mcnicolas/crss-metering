@@ -24,13 +24,11 @@ import static com.pemc.crss.metering.constants.UploadType.DAILY;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.DateTimeUtils.isYesterday;
-import static com.pemc.crss.metering.validator.ValidationResult.ACCEPTED_STATUS;
 import static java.util.Calendar.DAY_OF_YEAR;
 import static java.util.Calendar.ERA;
 import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
 import static java.util.Calendar.YEAR;
-import static org.apache.commons.lang3.time.DateUtils.isSameDay;
 
 @Slf4j
 @Component
@@ -42,7 +40,8 @@ public class OpenTradingDateValidator implements Validator {
 
     @Override
     public ValidationResult validate(FileManifest fileManifest, MeterData meterData) {
-        ValidationResult retVal = ACCEPTED_STATUS;
+        ValidationResult retVal = new ValidationResult();
+        retVal.setStatus(ACCEPTED);
 
         FileType fileType = fileManifest.getFileType();
 
@@ -58,7 +57,8 @@ public class OpenTradingDateValidator implements Validator {
     }
 
     private ValidationResult validateNullDate(FileManifest fileManifest, MeterData meterData) {
-        ValidationResult retVal = ACCEPTED_STATUS;
+        ValidationResult retVal = new ValidationResult();
+        retVal.setStatus(ACCEPTED);
 
         List<MeterDataDetail> meterDataDetails = meterData.getDetails();
 
@@ -77,7 +77,8 @@ public class OpenTradingDateValidator implements Validator {
     }
 
     private ValidationResult validateOpenTradingDate(FileManifest fileManifest, MeterData meterData) {
-        ValidationResult retVal = ACCEPTED_STATUS;
+        ValidationResult retVal = new ValidationResult();
+        retVal.setStatus(ACCEPTED);
 
         UploadType uploadType = fileManifest.getUploadType();
         if (uploadType == DAILY) {

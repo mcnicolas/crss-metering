@@ -4,6 +4,7 @@ import com.pemc.crss.metering.constants.UnitOfMeasure;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,7 +14,6 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -33,8 +33,6 @@ public class MeterQuantityMDEFReader implements QuantityReader {
 
     private static final int RECORD_BLOCK_SIZE = 216;
 
-    private DateFormat dateFormat = new SimpleDateFormat("yyyyMMddhhmm");
-
     private String intervalStartDateForChannel = "";
 
     private int minuteInterval = 15;
@@ -42,128 +40,133 @@ public class MeterQuantityMDEFReader implements QuantityReader {
 
     // TODO: UGLY CODE. NEED TO OPTIMIZE!
     @Override
-    public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws IOException {
-        MDEFMeterData mdefMeterData = readMDEF(inputStream);
+    public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws ParseException {
+        MeterData retVal = new MeterData();
 
-        Map<String, MeterDataDetail> meterDataMap = new HashMap<>();
+        try {
+            MDEFMeterData mdefMeterData = readMDEF(inputStream);
 
-        for (MDEFChannelHeader channel : mdefMeterData.getChannels()) {
-            int intervalPerHour = MINUTES_IN_HOUR / channel.getIntervalPerHour();
+            Map<String, MeterDataDetail> meterDataMap = new HashMap<>();
 
-            for (MDEFIntervalData interval : channel.getIntervals()) {
-                List<BigDecimal> meterReadingList = interval.getMeterReading();
-                List<Integer> channelStatusList = interval.getChannelStatus();
-                List<Integer> intervalStatusList = interval.getIntervalStatus();
-                List<String> readingDateList = interval.getReadingDate();
+            for (MDEFChannelHeader channel : mdefMeterData.getChannels()) {
+                int intervalPerHour = MINUTES_IN_HOUR / channel.getIntervalPerHour();
 
-                for (int i = 0; i < meterReadingList.size(); i++) {
-                    String key = interval.getCustomerID() + "_" + readingDateList.get(i);
+                for (MDEFIntervalData interval : channel.getIntervals()) {
+                    List<BigDecimal> meterReadingList = interval.getMeterReading();
+                    List<Integer> channelStatusList = interval.getChannelStatus();
+                    List<Integer> intervalStatusList = interval.getIntervalStatus();
+                    List<String> readingDateList = interval.getReadingDate();
 
-                    MeterDataDetail value;
-                    if (meterDataMap.containsKey(key)) {
-                        value = meterDataMap.get(key);
-                    } else {
-                        value = new MeterDataDetail();
-                        value.setFileID(fileManifest.getFileID());
-                        value.setUploadType(fileManifest.getUploadType());
-                        value.setMspShortName(fileManifest.getMspShortName());
-                        value.setCreatedDateTime(new Date());
+                    for (int i = 0; i < meterReadingList.size(); i++) {
+                        String key = interval.getCustomerID() + "_" + readingDateList.get(i);
 
-                        value.setSein(interval.getCustomerID());
-                        value.setInterval(intervalPerHour);
-                        value.setReadingDateTime(Long.parseLong(readingDateList.get(i)));
+                        MeterDataDetail value;
+                        if (meterDataMap.containsKey(key)) {
+                            value = meterDataMap.get(key);
+                        } else {
+                            value = new MeterDataDetail();
+                            value.setFileID(fileManifest.getFileID());
+                            value.setUploadType(fileManifest.getUploadType());
+                            value.setMspShortName(fileManifest.getMspShortName());
+                            value.setCreatedDateTime(new Date());
 
-                        meterDataMap.put(key, value);
-                    }
+                            value.setSein(interval.getCustomerID());
+                            value.setInterval(intervalPerHour);
+                            value.setReadingDateTime(Long.parseLong(readingDateList.get(i)));
 
-                    BigDecimal meterReading = meterReadingList.get(i);
+                            meterDataMap.put(key, value);
+                        }
 
-                    int channelStatus = channelStatusList.get(i);
-                    int intervalStatus = intervalStatusList.get(i);
+                        BigDecimal meterReading = meterReadingList.get(i);
 
-                    UnitOfMeasure uom = UnitOfMeasure.fromCode(channel.getMeterNo());
+                        int channelStatus = channelStatusList.get(i);
+                        int intervalStatus = intervalStatusList.get(i);
 
-                    if (uom == null) {
-                        log.debug("Data error. UOM:{}", channel.getMeterNo());
-                    } else {
-                        switch (uom) {
-                            case KWD:
-                                value.setKwd(meterReading);
-                                value.setKwdChannelStatus(channelStatus);
-                                value.setKwdIntervalStatus(intervalStatus);
-                                break;
-                            case KWHD:
-                                value.setKwhd(meterReading);
-                                value.setKwhdChannelStatus(channelStatus);
-                                value.setKwhdIntervalStatus(intervalStatus);
-                                break;
-                            case KVARHD:
-                                value.setKvarhd(meterReading);
-                                value.setKvarhdChannelStatus(channelStatus);
-                                value.setKvarhdIntervalStatus(intervalStatus);
-                                break;
-                            case KWR:
-                                value.setKwr(meterReading);
-                                value.setKwrChannelStatus(channelStatus);
-                                value.setKwrIntervalStatus(intervalStatus);
-                                break;
-                            case KWHR:
-                                value.setKwhr(meterReading);
-                                value.setKwhrChannelStatus(channelStatus);
-                                value.setKwhrIntervalStatus(intervalStatus);
-                                break;
-                            case KVARHR:
-                                value.setKvarhr(meterReading);
-                                value.setKvarhrChannelStatus(channelStatus);
-                                value.setKvarhrIntervalStatus(intervalStatus);
-                                break;
-                            case VAN1:
-                            case VAN2:
-                                value.setVan(meterReading);
-                                value.setVanChannelStatus(channelStatus);
-                                value.setVanIntervalStatus(intervalStatus);
-                                break;
-                            case VBN:
-                                value.setVbn(meterReading);
-                                value.setVbnChannelStatus(channelStatus);
-                                value.setVbnIntervalStatus(intervalStatus);
-                                break;
-                            case VCN:
-                                value.setVcn(meterReading);
-                                value.setVcnChannelStatus(channelStatus);
-                                value.setVcnIntervalStatus(intervalStatus);
-                                break;
-                            case IAN:
-                                value.setIan(meterReading);
-                                value.setIanChannelStatus(channelStatus);
-                                value.setIanIntervalStatus(intervalStatus);
-                                break;
-                            case IBN:
-                                value.setIbn(meterReading);
-                                value.setIbnChannelStatus(channelStatus);
-                                value.setIbnIntervalStatus(intervalStatus);
-                                break;
-                            case ICN:
-                                value.setIcn(meterReading);
-                                value.setIcnChannelStatus(channelStatus);
-                                value.setIcnIntervalStatus(intervalStatus);
-                                break;
-                            case PF:
-                                value.setPf(meterReading);
-                                value.setPfChannelStatus(channelStatus);
-                                value.setPfIntervalStatus(intervalStatus);
-                                break;
+                        UnitOfMeasure uom = UnitOfMeasure.fromCode(channel.getMeterNo());
+
+                        if (uom == null) {
+                            log.debug("Data error. UOM:{}", channel.getMeterNo());
+                        } else {
+                            switch (uom) {
+                                case KWD:
+                                    value.setKwd(meterReading);
+                                    value.setKwdChannelStatus(channelStatus);
+                                    value.setKwdIntervalStatus(intervalStatus);
+                                    break;
+                                case KWHD:
+                                    value.setKwhd(meterReading);
+                                    value.setKwhdChannelStatus(channelStatus);
+                                    value.setKwhdIntervalStatus(intervalStatus);
+                                    break;
+                                case KVARHD:
+                                    value.setKvarhd(meterReading);
+                                    value.setKvarhdChannelStatus(channelStatus);
+                                    value.setKvarhdIntervalStatus(intervalStatus);
+                                    break;
+                                case KWR:
+                                    value.setKwr(meterReading);
+                                    value.setKwrChannelStatus(channelStatus);
+                                    value.setKwrIntervalStatus(intervalStatus);
+                                    break;
+                                case KWHR:
+                                    value.setKwhr(meterReading);
+                                    value.setKwhrChannelStatus(channelStatus);
+                                    value.setKwhrIntervalStatus(intervalStatus);
+                                    break;
+                                case KVARHR:
+                                    value.setKvarhr(meterReading);
+                                    value.setKvarhrChannelStatus(channelStatus);
+                                    value.setKvarhrIntervalStatus(intervalStatus);
+                                    break;
+                                case VAN1:
+                                case VAN2:
+                                    value.setVan(meterReading);
+                                    value.setVanChannelStatus(channelStatus);
+                                    value.setVanIntervalStatus(intervalStatus);
+                                    break;
+                                case VBN:
+                                    value.setVbn(meterReading);
+                                    value.setVbnChannelStatus(channelStatus);
+                                    value.setVbnIntervalStatus(intervalStatus);
+                                    break;
+                                case VCN:
+                                    value.setVcn(meterReading);
+                                    value.setVcnChannelStatus(channelStatus);
+                                    value.setVcnIntervalStatus(intervalStatus);
+                                    break;
+                                case IAN:
+                                    value.setIan(meterReading);
+                                    value.setIanChannelStatus(channelStatus);
+                                    value.setIanIntervalStatus(intervalStatus);
+                                    break;
+                                case IBN:
+                                    value.setIbn(meterReading);
+                                    value.setIbnChannelStatus(channelStatus);
+                                    value.setIbnIntervalStatus(intervalStatus);
+                                    break;
+                                case ICN:
+                                    value.setIcn(meterReading);
+                                    value.setIcnChannelStatus(channelStatus);
+                                    value.setIcnIntervalStatus(intervalStatus);
+                                    break;
+                                case PF:
+                                    value.setPf(meterReading);
+                                    value.setPfChannelStatus(channelStatus);
+                                    value.setPfIntervalStatus(intervalStatus);
+                                    break;
+                            }
                         }
                     }
                 }
             }
+
+            List<MeterDataDetail> meterDataDetails = new ArrayList<>(meterDataMap.values());
+            meterDataDetails.sort(Comparator.comparing(MeterDataDetail::getReadingDateTime));
+
+            retVal.setDetails(meterDataDetails);
+        } catch (Exception e) {
+            throw new ParseException(e.getMessage(), e);
         }
-
-        List<MeterDataDetail> meterDataDetails = new ArrayList<>(meterDataMap.values());
-        meterDataDetails.sort(Comparator.comparing(MeterDataDetail::getReadingDateTime));
-
-        MeterData retVal = new MeterData();
-        retVal.setDetails(meterDataDetails);
 
         return retVal;
     }
@@ -217,10 +220,6 @@ public class MeterQuantityMDEFReader implements QuantityReader {
             }
 
             return MDEFMeterData;
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-
-            throw e;
         }
     }
 
@@ -296,7 +295,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
         // TODO: Need to inspect this
         try {
             format.parse(intervalStartDate);
-        } catch (ParseException e) {
+        } catch (java.text.ParseException e) {
             // TODO: Set value to a special field like -999?
             log.warn(e.getMessage(), e);
         }
@@ -351,7 +350,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
         if (readingDates.size() != 0) {
             try {
                 format.parse(readingDates.get(readingDates.size() - 1));
-            } catch (ParseException e) {
+            } catch (java.text.ParseException e) {
                 log.warn(e.getMessage(), e);
             }
 

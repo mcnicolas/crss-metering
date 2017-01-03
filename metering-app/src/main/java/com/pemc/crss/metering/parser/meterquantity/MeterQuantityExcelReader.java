@@ -4,10 +4,10 @@ import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterDataHeader;
+import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -15,10 +15,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -31,68 +29,73 @@ import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.HALF_UP;
 import static java.util.Calendar.HOUR_OF_DAY;
 import static java.util.Calendar.MINUTE;
+import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.poi.ss.usermodel.DateUtil.getJavaCalendar;
 
 @Slf4j
 public class MeterQuantityExcelReader implements QuantityReader {
 
     @Override
-    public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws IOException, ParseException {
+    public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws ParseException {
+        log.debug("Parsing meter data fileName:{}", fileManifest.getFileName());
+
         MeterData retVal = new MeterData();
 
         Date parseDate = new Date();
 
-        // TODO: Use poi eventmodel for faster processing
-        Workbook workbook;
         try {
-            workbook = WorkbookFactory.create(inputStream);
-        } catch (InvalidFormatException e) {
-            throw new IOException(e);
-        }
+            // TODO: Use poi eventmodel for faster processing
+            Workbook workbook = WorkbookFactory.create(inputStream);
 
-        Sheet sheet = workbook.getSheetAt(0);
+            Sheet sheet = workbook.getSheetAt(0);
+            log.debug("Last row:{}", sheet.getLastRowNum());
 
-        Iterator<Row> rowIterator = sheet.rowIterator();
+            Iterator<Row> rowIterator = sheet.rowIterator();
 
-        MeterDataHeader header = readHeader(rowIterator.next());
+            MeterDataHeader header = readHeader(rowIterator.next());
 
-        List<MeterDataDetail> meterDataList = new ArrayList<>();
+            List<MeterDataDetail> meterDataList = new ArrayList<>();
 
-        while (rowIterator.hasNext()) {
-            Row row = rowIterator.next();
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
 
-            if (isBlank(row)) {
-                continue;
+                if (isBlank(row)) {
+                    continue;
+                }
+
+                MeterDataDetail meterData = new MeterDataDetail();
+                meterData.setFileID(fileManifest.getFileID());
+                meterData.setUploadType(fileManifest.getUploadType());
+                meterData.setMspShortName(fileManifest.getMspShortName());
+                meterData.setCreatedDateTime(parseDate);
+
+                meterData.setSein(row.getCell(0).getStringCellValue());
+
+                Calendar readingDateTime = getDateValue(row.getCell(1));
+                Calendar time = getTimeValue(row.getCell(2));
+
+                readingDateTime.set(HOUR_OF_DAY, time.get(HOUR_OF_DAY));
+                readingDateTime.set(MINUTE, time.get(MINUTE));
+
+                meterData.setReadingDateTime(Long.parseLong(READING_DATETIME.format(readingDateTime.getTime())));
+                meterData.setKwd(getNumericValue(row.getCell(3)));
+                meterData.setKwhd(getNumericValue(row.getCell(4)));
+                meterData.setKvarhd(getNumericValue(row.getCell(5)));
+                meterData.setKwr(getNumericValue(row.getCell(6)));
+                meterData.setKwhr(getNumericValue(row.getCell(7)));
+                meterData.setKvarhr(getNumericValue(row.getCell(8)));
+                meterData.setEstimationFlag(getStringValue(row.getCell(9)));
+
+                meterDataList.add(meterData);
             }
 
-            MeterDataDetail meterData = new MeterDataDetail();
-            meterData.setFileID(fileManifest.getFileID());
-            meterData.setUploadType(fileManifest.getUploadType());
-            meterData.setMspShortName(fileManifest.getMspShortName());
-            meterData.setCreatedDateTime(parseDate);
-
-            meterData.setSein(row.getCell(0).getStringCellValue());
-
-            Calendar readingDateTime = getDateValue(row.getCell(1));
-            Calendar time = getTimeValue(row.getCell(2));
-
-            readingDateTime.set(HOUR_OF_DAY, time.get(HOUR_OF_DAY));
-            readingDateTime.set(MINUTE, time.get(MINUTE));
-
-            meterData.setReadingDateTime(Long.parseLong(READING_DATETIME.format(readingDateTime.getTime())));
-            meterData.setKwd(getNumericValue(row.getCell(3)));
-            meterData.setKwhd(getNumericValue(row.getCell(4)));
-            meterData.setKvarhd(getNumericValue(row.getCell(5)));
-            meterData.setKwr(getNumericValue(row.getCell(6)));
-            meterData.setKwhr(getNumericValue(row.getCell(7)));
-            meterData.setKvarhr(getNumericValue(row.getCell(8)));
-            meterData.setEstimationFlag(getStringValue(row.getCell(9)));
-
-            meterDataList.add(meterData);
+            retVal.setHeader(header);
+            retVal.setDetails(meterDataList);
+        } catch (Exception e) {
+            throw new ParseException(e.getMessage(), e);
+        } finally {
+            closeQuietly(inputStream);
         }
-
-        retVal.setHeader(header);
-        retVal.setDetails(meterDataList);
 
         return retVal;
     }
@@ -154,7 +157,7 @@ public class MeterQuantityExcelReader implements QuantityReader {
         }
     }
 
-    private Calendar getDateValue(Cell cell) throws ParseException {
+    private Calendar getDateValue(Cell cell) throws java.text.ParseException {
         Calendar retVal = Calendar.getInstance();
 
         switch (CellType.forInt(cell.getCellType())) {

@@ -7,9 +7,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.text.*;
-import java.text.ParseException;
+import java.io.FileNotFoundException;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
@@ -19,7 +17,7 @@ import static org.junit.Assert.assertThat;
 public class MeterQuantityCSVReaderTest {
 
     @Test
-    public void parseCSVWithMissingColumns() throws IOException, java.text.ParseException {
+    public void parseCSVWithMissingColumns() throws FileNotFoundException, ParseException {
         QuantityReader reader = new MeterQuantityCSVReader();
         FileManifest fileManifest = new FileManifest();
         MeterData meterData = reader.readData(fileManifest, new FileInputStream(
@@ -30,7 +28,7 @@ public class MeterQuantityCSVReaderTest {
     }
 
     @Test
-    public void parseCSVWithExtraColumns() throws IOException, ParseException {
+    public void parseCSVWithExtraColumns() throws FileNotFoundException, ParseException {
         QuantityReader reader = new MeterQuantityCSVReader();
         FileManifest fileManifest = new FileManifest();
         MeterData meterData = reader.readData(fileManifest, new FileInputStream(

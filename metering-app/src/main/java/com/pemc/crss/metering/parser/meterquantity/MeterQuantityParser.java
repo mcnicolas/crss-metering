@@ -18,14 +18,9 @@ import static com.pemc.crss.metering.constants.FileType.XLS;
 public class MeterQuantityParser {
 
     public MeterData parse(FileManifest fileManifest, byte[] fileContent) throws ParseException {
-        try {
-            QuantityReader reader = getMeterQuantityReader(fileManifest.getFileType());
+        QuantityReader reader = getMeterQuantityReader(fileManifest.getFileType());
 
-            return reader.readData(fileManifest, new ByteArrayInputStream(fileContent));
-        } catch (IOException | java.text.ParseException e) {
-            // TODO: Improve error message. If it is possible to capture culprit record
-            throw new ParseException(e.getMessage(), e);
-        }
+        return reader.readData(fileManifest, new ByteArrayInputStream(fileContent));
     }
 
     private QuantityReader getMeterQuantityReader(FileType fileType) {

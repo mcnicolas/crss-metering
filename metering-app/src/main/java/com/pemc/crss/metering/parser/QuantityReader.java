@@ -9,6 +9,6 @@ import java.text.*;
 
 public interface QuantityReader {
 
-    MeterData readData(FileManifest fileManifest, InputStream inputStream) throws IOException, java.text.ParseException;
+    MeterData readData(FileManifest fileManifest, InputStream inputStream) throws ParseException;
 
 }

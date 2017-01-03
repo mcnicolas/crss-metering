@@ -4,6 +4,7 @@ import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterDataHeader;
+import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -28,20 +29,20 @@ import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 public class MeterQuantityCSVReader implements QuantityReader {
 
     @Override
-    public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws IOException {
+    public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws ParseException {
         MeterData meterData = new MeterData();
+
+        Date parseDate = new Date();
 
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
             List<MeterDataDetail> meterDataDetails = new ArrayList<>();
-
-            Date parseDate = new Date();
 
             MeterDataHeader header = readHeader(reader.getHeader(true));
 
             List<String> row;
             while ((row = reader.read()) != null) {
                 if (row.size() == 1) {
-                    throw new IOException("Cannot parse CSV file. It might be an invalid CSV file or malformed.");
+                    throw new ParseException("Cannot parse CSV file. It might be an invalid CSV file or malformed.");
                 }
 
                 if (isBlank(row)) {
@@ -59,6 +60,8 @@ public class MeterQuantityCSVReader implements QuantityReader {
 
             meterData.setHeader(header);
             meterData.setDetails(meterDataDetails);
+        } catch (Exception e) {
+            throw new ParseException(e.getMessage(), e);
         }
 
         return meterData;
