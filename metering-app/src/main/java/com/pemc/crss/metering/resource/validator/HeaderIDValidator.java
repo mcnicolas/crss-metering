@@ -1,23 +1,29 @@
 package com.pemc.crss.metering.resource.validator;
 
+import com.pemc.crss.metering.service.MeterService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
+
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
 
 @Component
-public class HeaderIDValidator implements Validator {
+public class HeaderIDValidator implements ConstraintValidator<ExistingHeaderID, Long> {
 
-    @Override
-    public boolean supports(Class<?> clazz) {
-        return false;
+    private final MeterService meterService;
+
+    @Autowired
+    public HeaderIDValidator(MeterService meterService) {
+        this.meterService = meterService;
     }
 
     @Override
-    public void validate(Object target, Errors errors) {
-        // TODO: Additional validaton
-        // 1. Check if headerID is existing in the header manifest table
-        // 2. Check if the record does not have a trailer record yet
-//        private Long headerID;
+    public void initialize(ExistingHeaderID constraintAnnotation) {
+    }
+
+    @Override
+    public boolean isValid(Long value, ConstraintValidatorContext context) {
+        return meterService.isHeaderValid(value);
     }
 
 }

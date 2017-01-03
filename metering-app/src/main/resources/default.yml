@@ -76,6 +76,8 @@ mq:
         SELECT HEADER_ID AS headerID, TRANSACTION_ID AS transactionID, FILE_COUNT AS fileCount, CATEGORY AS category,
         TAIL_RECEIVED AS tailReceived
         FROM TXN_MQ_MANIFEST_HEADER WHERE HEADER_ID = :headerID
+      count: >
+        SELECT COUNT(*) FROM TXN_MQ_MANIFEST_HEADER WHERE TAIL_RECEIVED = 'N' AND HEADER_ID = :headerID
     trailer:
       update: >
         UPDATE TXN_MQ_MANIFEST_HEADER SET TAIL_RECEIVED = 'Y' WHERE HEADER_ID = :headerID

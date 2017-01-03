@@ -15,6 +15,8 @@ public interface MeterService {
 
     long saveHeader(int fileCount, String category);
 
+    boolean isHeaderValid(long headerID);
+
     String saveTrailer(long transactionID);
 
     long saveFileManifest(FileManifest fileManifest);

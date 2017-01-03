@@ -11,10 +11,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
-@Constraint(validatedBy = CategoryValidator.class)
-public @interface ValidCategory {
+@Constraint(validatedBy = HeaderIDValidator.class)
+public @interface ExistingHeaderID {
 
-    String message() default "Invalid category. It should be either DAILY, MONTHLY, CORRECTED_DAILY, or CORRECTED_MONTHLY";
+    String message() default "HeaderID is not valid.";
 
     Class<?>[] groups() default {};
 

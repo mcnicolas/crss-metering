@@ -43,6 +43,9 @@ public class JdbcMeteringDao implements MeteringDao {
     @Value("${mq.manifest.header.query}")
     private String queryHeaderManifest;
 
+    @Value("${mq.manifest.header.count}")
+    private String queryHeaderCount;
+
     @Value("${mq.manifest.trailer.update}")
     private String addTrailerManifest;
 
@@ -92,6 +95,15 @@ public class JdbcMeteringDao implements MeteringDao {
                 new BeanPropertySqlParameterSource(manifest), keyHolder, new String[]{"header_id"});
 
         return keyHolder.getKey().longValue();
+    }
+
+    @Override
+    public boolean isHeaderValid(long headerID) {
+        int count = namedParameterJdbcTemplate.queryForObject(queryHeaderCount,
+                new MapSqlParameterSource("headerID", headerID),
+                Integer.class);
+
+        return count > 0;
     }
 
     @Override

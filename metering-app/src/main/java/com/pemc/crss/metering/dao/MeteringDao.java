@@ -14,6 +14,8 @@ public interface MeteringDao {
 
     long saveHeader(HeaderManifest manifest);
 
+    boolean isHeaderValid(long headerID);
+
     String saveTrailer(long headerID);
 
     long saveFileManifest(FileManifest fileManifest);

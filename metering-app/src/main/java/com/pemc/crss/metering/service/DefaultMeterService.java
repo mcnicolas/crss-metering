@@ -67,6 +67,12 @@ public class DefaultMeterService implements MeterService {
         return meteringDao.saveHeader(manifest);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isHeaderValid(long headerID) {
+        return meteringDao.isHeaderValid(headerID);
+    }
+
     private String getUserName() {
         String retVal = "";
 

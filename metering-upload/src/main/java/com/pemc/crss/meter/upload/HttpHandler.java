@@ -1,13 +1,9 @@
 package com.pemc.crss.meter.upload;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
-import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -19,18 +15,15 @@ import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -61,10 +54,8 @@ public class HttpHandler {
     private static final String CLIENT = CLIENT_ID + ":" + CLIENT_SECRET;
 
     private static final String PEMC_USERTYPE = "PEMC";
-    private static final String MSP_USERTYPE = "MSP";
 
     private static final String METERING_DEPARTMENT = "METERING";
-    private static final String MSP_CATEGORY = "MSP";
 
     private CloseableHttpClient httpClient;
     private String oAuthToken;
@@ -350,29 +341,34 @@ public class HttpHandler {
 
             HttpPost httpPost = new HttpPost(builder.build());
             httpPost.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
-            httpPost.setHeader("Content-type", APPLICATION_FORM_URLENCODED.getMimeType());
+            httpPost.setHeader("Content-type", APPLICATION_JSON.getMimeType());
 
-            List<NameValuePair> formParams = new ArrayList<>();
-            formParams.add(new BasicNameValuePair("headerID", String.valueOf(headerID)));
-            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(formParams, UTF_8);
+            String param = new JSONStringer()
+                    .object()
+                    .key("headerID").value(headerID)
+                    .endObject()
+                    .toString();
+
+            StringEntity entity = new StringEntity(param);
+
             httpPost.setEntity(entity);
 
             try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
                 StatusLine statusLine = httpResponse.getStatusLine();
                 log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
 
+                String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+                JSONObject jsonData = new JSONObject(content);
+
                 if (statusLine.getStatusCode() == SC_OK) {
-                    retVal = EntityUtils.toString(httpResponse.getEntity());
+                    retVal = (String) jsonData.get("transactionID");
 
                     log.debug("Response:{}", retVal);
                 } else {
-                    String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
-                    JSONObject errorDetails = new JSONObject(content);
-
                     // TODO: Error details needs further parsing
                     throw new HttpResponseException("Connection error"
-                            + " statusCode:" + errorDetails.get("status")
-                            + " reason:" + errorDetails.get("errors"));
+                            + " statusCode:" + jsonData.get("status")
+                            + " reason:" + jsonData.get("errors"));
                 }
             }
         } catch (URISyntaxException | IOException e) {
@@ -395,7 +391,7 @@ public class HttpHandler {
             httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
             httpGet.setHeader("Content-type", APPLICATION_FORM_URLENCODED.getMimeType());
 
-            try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet);) {
+            try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
                 StatusLine statusLine = httpResponse.getStatusLine();
                 log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
 

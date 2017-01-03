@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.metering.dto.mq.HeaderParam;
+import com.pemc.crss.metering.dto.mq.TrailerParam;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -8,7 +9,6 @@ import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -83,11 +85,15 @@ public class MeteringResource {
     }
 
     //    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
-    @PostMapping("/uploadTrailer")
-    public ResponseEntity<String> uploadTrailer(@RequestParam("headerID") long headerID) {
-        log.debug("Received trailer record headerID:{}", headerID);
+    @PostMapping(value = "/uploadTrailer",
+            consumes = APPLICATION_JSON_VALUE,
+            produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, String>> uploadTrailer(@Valid @RequestBody TrailerParam trailerParam) {
+        log.debug("Received trailer record headerID:{}", trailerParam.getHeaderID());
 
-        return ResponseEntity.ok(meterService.saveTrailer(headerID));
+        Map<String, String> retVal = new HashMap<>();
+        retVal.put("transactionID", meterService.saveTrailer(trailerParam.getHeaderID()));
+        return ResponseEntity.ok(retVal);
     }
 
 }
