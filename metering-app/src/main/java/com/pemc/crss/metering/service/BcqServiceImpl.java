@@ -108,6 +108,7 @@ public class BcqServiceImpl implements BcqService {
                         new ParticipantSellerDetails(header.getSellingParticipantUserId(),
                                 header.getSellingParticipantName(),
                                 header.getSellingParticipantShortName()))
+                .distinct()
                 .collect(toList());
     }
 
