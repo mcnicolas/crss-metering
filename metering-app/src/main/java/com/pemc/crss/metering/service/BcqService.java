@@ -2,10 +2,7 @@ package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
-import com.pemc.crss.metering.dto.bcq.BcqData;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
-import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
+import com.pemc.crss.metering.dto.bcq.*;
 import org.springframework.data.domain.Page;
 
 import java.util.Date;
@@ -22,6 +19,8 @@ public interface BcqService {
     Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest);
 
     List<BcqHeader> findAllHeadersBySellerAndTradingDate(String sellerShortName, Date tradingDate);
+
+    List<ParticipantSellerDetails> findAllSellersByTradingDate(Date tradingDate);
 
     boolean isHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList);
 

@@ -109,10 +109,10 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
     @GetMapping("/declaration/{headerId}/data")
     public List<BcqDataDisplay> getData(@PathVariable long headerId) {
         log.debug("[REST-BCQ] Request for getting data of header with ID: {}", headerId);
-        List<BcqDataDisplay> dataInfoList = bcqService.findDataByHeaderId(headerId).stream()
+        List<BcqDataDisplay> dataDisplayList = bcqService.findDataByHeaderId(headerId).stream()
                 .map(BcqDataDisplay::new).collect(toList());
-        log.debug("[REST-BCQ] Found {} data of header with ID: {}", dataInfoList.size(), headerId);
-        return dataInfoList;
+        log.debug("[REST-BCQ] Found {} data of header with ID: {}", dataDisplayList.size(), headerId);
+        return dataDisplayList;
     }
 
     @PostMapping("/declaration/{headerId}/{status}")
@@ -120,6 +120,14 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
         log.debug("[REST-BCQ] Request for updating status to {} of header with ID: {}", status, headerId);
         bcqService.updateHeaderStatus(headerId, fromString(status));
         log.debug("[REST-BCQ] Finished updating status to {} of header with ID: {}", status, headerId);
+    }
+
+    @GetMapping("/sellers")
+    public List<ParticipantSellerDetails> getSellersByTradingDate(@RequestParam Date tradingDate) {
+        log.debug("[REST-BCQ] Request for getting sellers with trading date: {}", tradingDate);
+        List<ParticipantSellerDetails> sellerDetailsList = bcqService.findAllSellersByTradingDate(tradingDate);
+        log.debug("[REST-BCQ] Found {} sellers with trading date: {}", sellerDetailsList.size(), tradingDate);
+        return sellerDetailsList;
     }
 
     /****************************************************

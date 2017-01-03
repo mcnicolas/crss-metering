@@ -26,6 +26,7 @@ import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Service
@@ -96,6 +97,18 @@ public class BcqServiceImpl implements BcqService {
         params.put("sellerName", sellerShortName);
         params.put("tradingDate", formatDate(tradingDate));
         return bcqDao.findAllHeaders(params);
+    }
+
+    @Override
+    public List<ParticipantSellerDetails> findAllSellersByTradingDate(Date tradingDate) {
+        Map<String, String> params = new HashMap<>();
+        params.put("tradingDate", formatDate(tradingDate));
+        return bcqDao.findAllHeaders(params).stream()
+                .map(header ->
+                        new ParticipantSellerDetails(header.getSellingParticipantUserId(),
+                                header.getSellingParticipantName(),
+                                header.getSellingParticipantShortName()))
+                .collect(toList());
     }
 
     @Override
