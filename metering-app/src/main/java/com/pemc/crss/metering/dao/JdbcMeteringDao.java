@@ -258,9 +258,9 @@ public class JdbcMeteringDao implements MeteringDao {
     }
 
     @Override
-    public boolean isFileProcessingCompleted(long headerId) {
+    public boolean isFileProcessingCompleted(long headerID) {
         return namedParameterJdbcTemplate.queryForObject(fileProcessingCompleted,
-                new MapSqlParameterSource("headerID", headerId),
+                new MapSqlParameterSource("headerID", headerID),
                 Boolean.class);
     }
 

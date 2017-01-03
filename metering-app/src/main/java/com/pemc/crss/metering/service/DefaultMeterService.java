@@ -4,9 +4,12 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dao.MeteringDao;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
-import com.pemc.crss.metering.dto.mq.*;
-import com.pemc.crss.metering.event.MeterUploadEvent;
-import com.pemc.crss.metering.parser.ParseException;
+import com.pemc.crss.metering.dto.mq.FileManifest;
+import com.pemc.crss.metering.dto.mq.HeaderManifest;
+import com.pemc.crss.metering.dto.mq.MeterData;
+import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
+import com.pemc.crss.metering.event.MeterQuantityUploadEvent;
 import com.pemc.crss.metering.parser.meterquantity.MeterQuantityParser;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.mq.MQValidationHandler;
@@ -23,15 +26,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
-import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 @Slf4j
 @Service
@@ -135,28 +135,9 @@ public class DefaultMeterService implements MeterService {
 
         validationResult.setFileID(fileManifest.getFileID());
         meteringDao.updateManifestStatus(validationResult);
-    }
 
-    private void sendNotification(long headerID) {
-        HeaderManifest header = meteringDao.getHeaderManifest(headerID);
-        List<FileManifest> fileList = meteringDao.getFileManifest(headerID);
-
-        if (isTransactionComplete(header, fileList)) {
-            Map<String, Object> messagePayload = new HashMap<>();
-
-            messagePayload.put("uploadedFiles", fileList);
-            eventPublisher.publishEvent(new MeterUploadEvent(messagePayload));
-        }
-    }
-
-    private boolean isTransactionComplete(HeaderManifest header, List<FileManifest> fileList) {
-        for (FileManifest fileManifest : fileList) {
-            if (!equalsIgnoreCase(fileManifest.getProcessFlag(), "Y")) {
-                return false;
-            }
-        }
-
-        return header.getFileCount() == fileList.size();
+        log.debug("Firing notification headerID:{} fileID:{}", fileManifest.getHeaderID(), fileManifest.getFileID());
+        eventPublisher.publishEvent(new MeterQuantityUploadEvent(fileManifest.getHeaderID()));
     }
 
     @Override
@@ -200,8 +181,8 @@ public class DefaultMeterService implements MeterService {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean isFileProcessingCompleted(long headerId) {
-        return meteringDao.isFileProcessingCompleted(headerId);
+    public boolean isFileProcessingCompleted(long headerID) {
+        return meteringDao.isFileProcessingCompleted(headerID);
     }
 
     @Override

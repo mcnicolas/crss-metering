@@ -4,9 +4,10 @@ import org.springframework.context.ApplicationEvent;
 
 import java.util.Map;
 
-public class MeterUploadEvent extends ApplicationEvent {
+public class MeterQuantityUploadEvent extends ApplicationEvent {
 
-    public MeterUploadEvent(Map<String, Object> source) {
+    public MeterQuantityUploadEvent(Long source) {
         super(source);
     }
+
 }
