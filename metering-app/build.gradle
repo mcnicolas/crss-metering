@@ -33,10 +33,13 @@ bootRun {
 }
 
 dependencies {
+    compile 'io.undertow:undertow-core'
+    compile 'io.undertow:undertow-servlet'
+    compile 'io.undertow:undertow-websockets-jsr'
+
     compile 'org.apache.poi:poi'
     compile 'org.apache.poi:poi-ooxml'
     compile 'net.sf.supercsv:super-csv-java8'
-    compile 'com.google.guava:guava'
 
     compile 'org.projectlombok:lombok'
 
