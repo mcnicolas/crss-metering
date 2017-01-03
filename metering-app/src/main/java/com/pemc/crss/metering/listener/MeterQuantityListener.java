@@ -61,7 +61,6 @@ public class MeterQuantityListener {
             value = @Queue(value = "crss.mq.data", durable = "true"),
             exchange = @Exchange(type = DIRECT, value = "crss.mq"),
             key = "crss.mq.data"))
-    @Transactional
     public void processMeterQuantityFile(@Header int headerID,
                                          @Header String fileName,
                                          @Header String mspShortName,
