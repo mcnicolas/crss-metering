@@ -25,7 +25,6 @@ configurations {
 }
 
 apply plugin: 'org.liquibase.gradle'
-apply from: 'liquibase.gradle'
 apply from: file('docker.gradle')
 
 bootRun {
@@ -74,10 +73,12 @@ dependencies {
 liquibase {
     activities {
         validate {
+            def env = project.hasProperty('env') ? env : 'dev'
+
             changeLogFile "${project.file('src/main')}/liquibase/changelog-main.groovy"
-            url "${dbUrl}"
-            username "${dbUser}"
-            password "${dbPassword}"
+            url project.property("${env}.datasource.url")
+            username project.property("${env}.datasource.username")
+            password project.property("${env}.datasource.password")
         }
     }
 }
