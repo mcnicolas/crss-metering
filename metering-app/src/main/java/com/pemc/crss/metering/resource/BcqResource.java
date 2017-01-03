@@ -24,6 +24,7 @@ import java.util.List;
 
 import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
+import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.http.ResponseEntity.*;
@@ -123,9 +124,9 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
     }
 
     @GetMapping("/sellers")
-    public List<ParticipantSellerDetails> getSellersByTradingDate(@RequestParam Date tradingDate) {
+    public List<ParticipantSellerDetails> getSellersByTradingDate(@RequestParam String tradingDate) {
         log.debug("[REST-BCQ] Request for getting sellers with trading date: {}", tradingDate);
-        List<ParticipantSellerDetails> sellerDetailsList = bcqService.findAllSellersByTradingDate(tradingDate);
+        List<ParticipantSellerDetails> sellerDetailsList = bcqService.findAllSellersByTradingDate(parseDate(tradingDate));
         log.debug("[REST-BCQ] Found {} sellers with trading date: {}", sellerDetailsList.size(), tradingDate);
         return sellerDetailsList;
     }
