@@ -5,6 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -21,9 +24,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Slf4j
 public final class DateTimeUtils {
 
-    public static final DateFormat READING_DATETIME = new SimpleDateFormat("yyyyMMddHHmm");
     public static final DateFormat DATE_PARAM_FORMAT = new SimpleDateFormat("MM/dd/yyyy");
     public static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    public static final DateTimeFormatter READING_DATETIME = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
     private DateTimeUtils() {
     }
@@ -99,7 +103,8 @@ public final class DateTimeUtils {
     }
 
     public static long dateToLong(Date date) {
-        String formattedDate = READING_DATETIME.format(date);
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+        String formattedDate = localDateTime.format(READING_DATETIME);
 
         return Long.valueOf(formattedDate);
     }
@@ -128,16 +133,9 @@ public final class DateTimeUtils {
     }
 
     public static Long parseDateAsLong(String strDate, String time) {
-        Long retVal = null;
+        LocalDateTime date = LocalDateTime.parse(strDate + " " + time, DATE_TIME_FORMATTER);
 
-        try {
-            Date date = dateFormat.parse(strDate + " " + time);
-            retVal = Long.parseLong(READING_DATETIME.format(date));
-        } catch (ParseException e) {
-            log.error(e.getMessage(), e);
-        }
-
-        return retVal;
+        return Long.parseLong(date.format(READING_DATETIME));
     }
 
 }
