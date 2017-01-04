@@ -11,7 +11,6 @@ import java.util.StringJoiner;
 import static com.pemc.crss.metering.utils.DateTimeUtils.dateToLong;
 import static com.pemc.crss.metering.utils.DateTimeUtils.endOfDay;
 import static com.pemc.crss.metering.utils.DateTimeUtils.endOfMonth;
-import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDayMQ;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfMonth;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
@@ -32,6 +31,8 @@ public class MQDisplayQueryBuilder {
         selectSQL = selectSQL.replace("${MQ_TABLE}", tableName);
         sqlBuilder.append(selectSQL);
         sqlBuilder.append(" WHERE READING_DATETIME BETWEEN ? AND ?");
+        sqlBuilder.append(" AND CREATED_DATE_TIME = (SELECT MAX(CREATED_DATE_TIME) FROM ").append(tableName).append(")");
+
         addReadingDateFilter(category, readingDate);
 
         return this;
@@ -46,6 +47,8 @@ public class MQDisplayQueryBuilder {
         countSQL = countSQL.replace("${MQ_TABLE}", tableName);
         sqlBuilder.append(countSQL);
         sqlBuilder.append(" WHERE READING_DATETIME BETWEEN ? AND ?");
+        sqlBuilder.append(" AND CREATED_DATE_TIME = (SELECT MAX(CREATED_DATE_TIME) FROM ").append(tableName).append(")");
+
         addReadingDateFilter(category, readingDate);
 
         return this;
