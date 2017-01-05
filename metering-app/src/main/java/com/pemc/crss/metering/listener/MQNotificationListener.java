@@ -59,6 +59,8 @@ public class MQNotificationListener implements ApplicationListener<MeterQuantity
                         .build());
                 notificationService.notify(payload);
             });
+
+            meterService.updateNotificationFlag(headerID);
         }
     }
 

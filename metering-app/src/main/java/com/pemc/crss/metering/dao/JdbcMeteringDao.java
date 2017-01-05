@@ -24,6 +24,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -72,6 +73,9 @@ public class JdbcMeteringDao implements MeteringDao {
 
     @Value("${mq.manifest.filter-by.status}")
     private String filterByHeaderAndStatus;
+
+    @Value("${mq.manifest.upload.notif.status}")
+    private String updateHeaderForNotification;
 
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -293,4 +297,13 @@ public class JdbcMeteringDao implements MeteringDao {
         return namedParameterJdbcTemplate.query(filterByHeaderAndStatus, paramSource,
                 new BeanPropertyRowMapper<>(FileManifest.class));
     }
+
+    @Override
+    public void updateNotificationFlag(long headerID) {
+        MapSqlParameterSource parameterSource = new MapSqlParameterSource()
+                .addValue("headerID", headerID)
+                .addValue("dateTime", new Date());
+        namedParameterJdbcTemplate.update(updateHeaderForNotification, parameterSource);
+    }
+
 }

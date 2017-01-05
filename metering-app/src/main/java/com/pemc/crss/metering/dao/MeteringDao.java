@@ -37,4 +37,7 @@ public interface MeteringDao {
     MeterQuantityReport getManifestReport(long headerId);
 
     List<FileManifest> findByHeaderAndStatus(long headerId, String status);
+
+    void updateNotificationFlag(long headerID);
+
 }

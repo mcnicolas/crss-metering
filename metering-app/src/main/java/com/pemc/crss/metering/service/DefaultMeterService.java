@@ -204,4 +204,11 @@ public class DefaultMeterService implements MeterService {
     public List<FileManifest> findRejectedFiles(long headerId) {
         return meteringDao.findByHeaderAndStatus(headerId, "REJECTED");
     }
+
+    @Override
+    @Transactional
+    public void updateNotificationFlag(long headerID) {
+        meteringDao.updateNotificationFlag(headerID);
+    }
+
 }
