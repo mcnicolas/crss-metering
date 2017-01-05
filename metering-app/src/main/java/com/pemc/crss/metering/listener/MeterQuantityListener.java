@@ -1,10 +1,8 @@
 package com.pemc.crss.metering.listener;
 
-import com.pemc.crss.metering.constants.FileType;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -25,10 +23,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
-import static com.pemc.crss.metering.constants.FileType.MDEF;
-import static com.pemc.crss.metering.constants.FileType.XLS;
+import static com.pemc.crss.metering.utils.FileTypeUtils.getFileType;
 import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
-import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.springframework.amqp.core.ExchangeTypes.DIRECT;
 
 @Slf4j
@@ -101,22 +97,6 @@ public class MeterQuantityListener {
             hexString.append(byteValue.length() == 2 ? byteValue : "0" + byteValue);
         }
         return hexString.toString();
-    }
-
-    private FileType getFileType(String filename) {
-        FileType retVal = null;
-
-        String fileExt = FilenameUtils.getExtension(filename);
-
-        if (equalsIgnoreCase(fileExt, "XLS") || equalsIgnoreCase(fileExt, "XLSX")) {
-            retVal = XLS;
-        } else if (equalsIgnoreCase(fileExt, "MDE") || equalsIgnoreCase(fileExt, "MDEF")) {
-            retVal = MDEF;
-        } else if (equalsIgnoreCase(fileExt, "CSV")) {
-            retVal = FileType.CSV;
-        }
-
-        return retVal;
     }
 
 }

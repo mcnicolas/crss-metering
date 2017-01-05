@@ -1,6 +1,7 @@
 package com.pemc.crss.meter.upload;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.StatusLine;
@@ -302,7 +303,10 @@ public class HttpHandler {
                     .addTextBody("headerID", String.valueOf(headerID))
                     .addTextBody("mspShortName", mspShortName);
 
+            String lastFile = "";
             for (FileBean fileBean : fileList) {
+                lastFile = fileBean.getPath().getFileName().toString();
+
                 InputStreamBody fileContent = new InputStreamBody(Files.newInputStream(fileBean.getPath()),
                         fileBean.getPath().getFileName().toString());
 
@@ -310,6 +314,8 @@ public class HttpHandler {
 
                 log.debug("Uploading file:{}", fileBean.getPath().getFileName().toString());
             }
+
+            multipartEntityBuilder.addTextBody("fileType", getFileType(lastFile));
 
             httpPost.setEntity(multipartEntityBuilder.build());
 
@@ -424,6 +430,22 @@ public class HttpHandler {
         log.debug("Shutting down HTTP connection");
 
         httpClient.close();
+    }
+
+    private String getFileType(String filename) {
+        String retVal = null;
+
+        String fileExt = FilenameUtils.getExtension(filename);
+
+        if (equalsIgnoreCase(fileExt, "XLS") || equalsIgnoreCase(fileExt, "XLSX")) {
+            retVal = "XLS";
+        } else if (equalsIgnoreCase(fileExt, "MDE") || equalsIgnoreCase(fileExt, "MDEF")) {
+            retVal = "MDEF";
+        } else if (equalsIgnoreCase(fileExt, "CSV")) {
+            retVal = "CSV";
+        }
+
+        return retVal;
     }
 
 }

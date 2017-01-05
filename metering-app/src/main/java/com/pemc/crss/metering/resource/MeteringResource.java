@@ -1,7 +1,9 @@
 package com.pemc.crss.metering.resource;
 
+import com.pemc.crss.metering.dto.mq.FileParam;
 import com.pemc.crss.metering.dto.mq.HeaderParam;
 import com.pemc.crss.metering.dto.mq.TrailerParam;
+import com.pemc.crss.metering.resource.validator.FileUploadValidator;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -9,10 +11,10 @@ import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +23,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -33,12 +36,13 @@ public class MeteringResource {
 
     private final MeterService meterService;
     private final RabbitTemplate rabbitTemplate;
+    private final FileUploadValidator fileUploadValidator;
 
     @Autowired
-    public MeteringResource(MeterService meterService, RabbitTemplate rabbitTemplate) {
-
+    public MeteringResource(MeterService meterService, RabbitTemplate rabbitTemplate, FileUploadValidator fileUploadValidator) {
         this.meterService = meterService;
         this.rabbitTemplate = rabbitTemplate;
+        this.fileUploadValidator = fileUploadValidator;
     }
 
     //    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
@@ -56,16 +60,21 @@ public class MeteringResource {
         return ResponseEntity.ok(headerID);
     }
 
-//    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
+    //    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
     @PostMapping(value = "/uploadFile",
             consumes = MULTIPART_FORM_DATA_VALUE,
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> uploadFile(@RequestParam("headerID") Long headerID,
-                                         @RequestParam("mspShortName") String mspShortName,
-                                         @RequestPart("file") MultipartFile[] multipartFiles) throws IOException {
+    public ResponseEntity<?> uploadFile(@ModelAttribute FileParam fileParam, BindingResult result) throws IOException {
+        Long headerID = fileParam.getHeaderID();
+        String mspShortName = fileParam.getMspShortName();
+        MultipartFile[] multipartFiles = fileParam.getFile();
+
         log.debug("Received file/s headerID:{} mspShortName:{} fileCount:{}", headerID, mspShortName, multipartFiles.length);
 
-        // TODO: Validate
+        fileUploadValidator.validate(fileParam, result);
+        if (result.hasErrors()) {
+            return new ResponseEntity<>(result.getAllErrors(), BAD_REQUEST);
+        }
 
         for (MultipartFile file : multipartFiles) {
             // TODO: Pass a FileManifest bean instead. Could use a json converter
