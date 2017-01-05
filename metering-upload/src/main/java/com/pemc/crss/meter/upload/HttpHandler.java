@@ -22,12 +22,16 @@ import org.json.JSONObject;
 import org.json.JSONStringer;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.net.*;
 import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 
 import static com.pemc.crss.meter.upload.EndPoint.MSP_LISTING_URL;
 import static com.pemc.crss.meter.upload.EndPoint.OAUTH_TOKEN;
@@ -64,9 +68,13 @@ public class HttpHandler {
     private String hostname;
     private int port;
 
+    private String deviceId;
+
     public HttpHandler() {
         encodedClient = new String(Base64.getEncoder().encode(CLIENT.getBytes()));
+        initializeDeviceId();
     }
+
 
     public void initialize(String urlString) {
         log.debug("Initializing HTTP Connection for {}", urlString);
@@ -106,6 +114,7 @@ public class HttpHandler {
                     .setScheme("http").setHost(hostname).setPort(port).setPath(OAUTH_TOKEN)
                     .addParameter("username", username)
                     .addParameter("password", password)
+                    .addParameter("device_id", deviceId)
                     .addParameter("client_id", CLIENT_ID)
                     .addParameter("client_secret", CLIENT_SECRET)
                     .addParameter("grant_type", GRANT_TYPE);
@@ -446,6 +455,38 @@ public class HttpHandler {
         }
 
         return retVal;
+    }
+
+
+    private void initializeDeviceId() {
+        try {
+            InetAddress ip = InetAddress.getLocalHost();
+            NetworkInterface network = NetworkInterface.getByInetAddress(ip);
+            byte[] mac = network.getHardwareAddress();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < mac.length; i++) {
+                sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+            }
+            deviceId = generateKey(sb.toString()); //sb.toString() will look like 12-34-56-78-9A-BC
+        } catch (UnknownHostException | SocketException e) {
+            if (log.isDebugEnabled()) {
+                log.debug(e.getMessage(), e);
+            }
+            deviceId = UUID.randomUUID().toString();
+        }
+    }
+
+    private String generateKey(String values) {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("MD5");
+            byte[] bytes = digest.digest(values.getBytes("UTF-8"));
+            return String.format("%032x", new BigInteger(1, bytes));
+        } catch (NoSuchAlgorithmException nsae) {
+            throw new IllegalStateException("MD5 algorithm not available.  Fatal (should be in the JDK).", nsae);
+        } catch (UnsupportedEncodingException uee) {
+            throw new IllegalStateException("UTF-8 encoding not available.  Fatal (should be in the JDK).", uee);
+        }
     }
 
 }
