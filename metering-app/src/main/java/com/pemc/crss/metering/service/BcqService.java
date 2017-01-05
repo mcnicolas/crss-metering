@@ -20,7 +20,7 @@ public interface BcqService {
 
     List<BcqHeader> findAllHeadersBySellerAndTradingDate(String sellerShortName, Date tradingDate);
 
-    List<ParticipantSellerDetails> findAllSellersByTradingDate(Date tradingDate);
+    List<ParticipantSellerDetails> findAllSellersWithExpiredBcqByTradingDate(Date tradingDate);
 
     boolean isHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList);
 

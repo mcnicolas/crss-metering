@@ -46,10 +46,35 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
         Page<BcqHeader> headerPage = bcqService.findAllHeaders(request);
         List<BcqHeaderDisplay> headerDisplayList = new ArrayList<>();
         headerPage.getContent().forEach(header -> headerDisplayList.add(new BcqHeaderDisplay(header)));
-
         return new DataTableResponse<BcqHeaderDisplay>()
                 .withData(headerDisplayList)
                 .withRecordsTotal(headerPage.getTotalElements());
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile multipartFile) throws IOException {
+        log.debug("[REST-BCQ] Request for uploading of: {}", multipartFile.getOriginalFilename());
+        BcqDeclaration declaration = processAndValidateDeclaration(multipartFile);
+        if (declaration.getValidationResult().getStatus() == REJECTED) {
+            log.debug("[REST-BCQ] Finished uploading and rejecting of: {}", multipartFile.getOriginalFilename());
+            bcqService.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
+            return unprocessableEntity().body(declaration.getValidationResult());
+        }
+        log.debug("[REST-BCQ] Finished uploading of: {}", multipartFile.getOriginalFilename());
+        return ok(declaration);
+    }
+
+    @PostMapping("/settlement/upload")
+    public ResponseEntity<?> uploadBySettlement(@RequestParam("file") MultipartFile multipartFile) throws IOException {
+        log.debug("[REST-BCQ] Request for settlement uploading of: {}", multipartFile.getOriginalFilename());
+        BcqDeclaration declaration = processAndValidateDeclaration(multipartFile);
+        if (declaration.getValidationResult().getStatus() == REJECTED) {
+            log.debug("[REST-BCQ] Finished uploading and rejecting of: {}", multipartFile.getOriginalFilename());
+            bcqService.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
+            return unprocessableEntity().body(declaration.getValidationResult());
+        }
+        log.debug("[REST-BCQ] Finished settlement uploading of: {}", multipartFile.getOriginalFilename());
+        return ok(declaration);
     }
 
     @PostMapping("/webservice/upload")
@@ -72,19 +97,6 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
             return ok("Successfully saved redeclaration.");
         }
         return ok("Successfully saved declaration.");
-    }
-
-    @PostMapping("/upload")
-    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile multipartFile) throws IOException {
-        log.debug("[REST-BCQ] Request for uploading of: {}", multipartFile.getOriginalFilename());
-        BcqDeclaration declaration = processAndValidateDeclaration(multipartFile);
-        if (declaration.getValidationResult().getStatus() == REJECTED) {
-            log.debug("[REST-BCQ] Finished uploading and rejecting of: {}", multipartFile.getOriginalFilename());
-            bcqService.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
-            return unprocessableEntity().body(declaration.getValidationResult());
-        }
-        log.debug("[REST-BCQ] Finished uploading of: {}", multipartFile.getOriginalFilename());
-        return ok(declaration);
     }
 
     @PostMapping("/save")
@@ -126,7 +138,8 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
     @GetMapping("/sellers")
     public List<ParticipantSellerDetails> getSellersByTradingDate(@RequestParam String tradingDate) {
         log.debug("[REST-BCQ] Request for getting sellers with trading date: {}", tradingDate);
-        List<ParticipantSellerDetails> sellerDetailsList = bcqService.findAllSellersByTradingDate(parseDate(tradingDate));
+        List<ParticipantSellerDetails> sellerDetailsList = bcqService
+                .findAllSellersWithExpiredBcqByTradingDate(parseDate(tradingDate));
         log.debug("[REST-BCQ] Found {} sellers with trading date: {}", sellerDetailsList.size(), tradingDate);
         return sellerDetailsList;
     }

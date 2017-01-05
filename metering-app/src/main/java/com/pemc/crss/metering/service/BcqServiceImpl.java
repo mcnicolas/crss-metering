@@ -4,24 +4,19 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqEventCode;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
-import com.pemc.crss.metering.dto.bcq.BcqData;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
-import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
-import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
+import com.pemc.crss.metering.dto.bcq.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqEventCode.*;
-import static com.pemc.crss.metering.constants.BcqStatus.CANCELLED;
-import static com.pemc.crss.metering.constants.BcqStatus.CONFIRMED;
-import static com.pemc.crss.metering.constants.BcqStatus.NULLIFIED;
+import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 import static java.util.Arrays.asList;
@@ -39,6 +34,7 @@ public class BcqServiceImpl implements BcqService {
     @Override
     @Transactional
     public long saveUploadFile(BcqUploadFile uploadFile) {
+        SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         uploadFile.setTransactionId(randomUUID().toString());
         uploadFile.setValidationStatus(ACCEPTED);
         return bcqDao.saveUploadFile(uploadFile);
@@ -100,9 +96,10 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public List<ParticipantSellerDetails> findAllSellersByTradingDate(Date tradingDate) {
+    public List<ParticipantSellerDetails> findAllSellersWithExpiredBcqByTradingDate(Date tradingDate) {
         Map<String, String> params = new HashMap<>();
         params.put("tradingDate", formatDate(tradingDate));
+        params.put("expired", "expired");
         return bcqDao.findAllHeaders(params).stream()
                 .map(header ->
                         new ParticipantSellerDetails(header.getSellingParticipantUserId(),
