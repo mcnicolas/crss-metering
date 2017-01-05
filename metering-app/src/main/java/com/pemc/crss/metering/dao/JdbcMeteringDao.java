@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -31,6 +32,7 @@ import java.util.Map;
 import static com.pemc.crss.metering.constants.UploadType.CORRECTED_DAILY;
 import static com.pemc.crss.metering.constants.UploadType.DAILY;
 import static java.sql.Types.VARCHAR;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 @Slf4j
 @Repository
@@ -76,6 +78,9 @@ public class JdbcMeteringDao implements MeteringDao {
 
     @Value("${mq.manifest.upload.notif.status}")
     private String updateHeaderForNotification;
+
+    @Value("${mq.manifest.upload.notif.stale}")
+    private String queryStaleRecordsForNotif;
 
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -282,11 +287,17 @@ public class JdbcMeteringDao implements MeteringDao {
 
     @Override
     public MeterQuantityReport getManifestReport(long headerId) {
-        MeterQuantityReport report = namedParameterJdbcTemplate.queryForObject(uploadReport,
+        MeterQuantityReport retVal = null;
+
+        List<MeterQuantityReport> list = namedParameterJdbcTemplate.query(uploadReport,
                 new MapSqlParameterSource("headerID", headerId),
                 new BeanPropertyRowMapper<>(MeterQuantityReport.class));
 
-        return report;
+        if (isNotEmpty(list)) {
+            retVal = list.get(0);
+        }
+
+        return retVal;
     }
 
     @Override
@@ -304,6 +315,12 @@ public class JdbcMeteringDao implements MeteringDao {
                 .addValue("headerID", headerID)
                 .addValue("dateTime", new Date());
         namedParameterJdbcTemplate.update(updateHeaderForNotification, parameterSource);
+    }
+
+    @Override
+    public List<Long> getStaleRecords() {
+        return namedParameterJdbcTemplate.query(queryStaleRecordsForNotif,
+                new SingleColumnRowMapper<>(Long.class));
     }
 
 }

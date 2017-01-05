@@ -8,6 +8,7 @@ import com.pemc.crss.metering.notification.Notification;
 import com.pemc.crss.metering.notification.NotificationService;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,7 @@ public class MQNotificationListener implements ApplicationListener<MeterQuantity
     @Value("${mq.manifest.upload.notif.target.department}")
     private String targetDepartments[];
 
+    @Autowired
     public MQNotificationListener(MeterService meterService, NotificationService notificationService) {
         this.meterService = meterService;
         this.notificationService = notificationService;
@@ -40,27 +42,29 @@ public class MQNotificationListener implements ApplicationListener<MeterQuantity
 
         if (meterService.isFileProcessingCompleted(headerID)) {
             MeterQuantityReport report = meterService.getReport(headerID);
-            DateTimeFormatter defaultPattern = DateTimeFormatter.ofPattern("MMM dd, YYYY hh:mm a");
+            if (report != null) {
+                DateTimeFormatter defaultPattern = DateTimeFormatter.ofPattern("MMM dd, YYYY hh:mm a");
 
-            Map<String, String> rejectedFiles = meterService.findRejectedFiles(headerID).stream()
-                    .collect(Collectors.toMap(FileManifest::getFileName, FileManifest::getErrorDetails));
+                Map<String, String> rejectedFiles = meterService.findRejectedFiles(headerID).stream()
+                        .collect(Collectors.toMap(FileManifest::getFileName, FileManifest::getErrorDetails));
 
-            Arrays.stream(targetDepartments).forEach((String dept) -> {
-                final Notification payload = new Notification("NTF_MQ_UPLOAD", System.currentTimeMillis());
-                payload.setRecipientDeptCode(dept);
+                Arrays.stream(targetDepartments).forEach((String dept) -> {
+                    final Notification payload = new Notification("NTF_MQ_UPLOAD", System.currentTimeMillis());
+                    payload.setRecipientDeptCode(dept);
 
-                // payload.setSenderId(); TODO: sender - as msp user
-                payload.setPayload(ImmutableMap.<String, Object>builder()
-                        .put("submissionDateTime", report.getUploadDateTime().format(defaultPattern))
-                        .put("acceptedFileCount", report.getAcceptedFileCount())
-                        .put("rejectedFileCount", report.getRejectedFileCount())
-                        .put("rejectedFiles", rejectedFiles)
-                        .put("uploadedBy", report.getUploadedBy())
-                        .build());
-                notificationService.notify(payload);
-            });
+                    // payload.setSenderId(); TODO: sender - as msp user
+                    payload.setPayload(ImmutableMap.<String, Object>builder()
+                            .put("submissionDateTime", report.getUploadDateTime().format(defaultPattern))
+                            .put("acceptedFileCount", report.getAcceptedFileCount())
+                            .put("rejectedFileCount", report.getRejectedFileCount())
+                            .put("rejectedFiles", rejectedFiles)
+                            .put("uploadedBy", report.getUploadedBy())
+                            .build());
+                    notificationService.notify(payload);
+                });
 
-            meterService.updateNotificationFlag(headerID);
+                meterService.updateNotificationFlag(headerID);
+            }
         }
     }
 

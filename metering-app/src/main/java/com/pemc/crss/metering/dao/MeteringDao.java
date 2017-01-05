@@ -40,4 +40,6 @@ public interface MeteringDao {
 
     void updateNotificationFlag(long headerID);
 
+    List<Long> getStaleRecords();
+
 }

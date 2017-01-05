@@ -34,4 +34,6 @@ public interface MeterService {
 
     void updateNotificationFlag(long headerID);
 
+    List<Long> getStaleRecords();
+
 }

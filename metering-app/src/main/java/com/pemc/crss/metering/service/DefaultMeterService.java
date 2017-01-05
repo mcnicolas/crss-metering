@@ -194,10 +194,7 @@ public class DefaultMeterService implements MeterService {
     @Override
     @Transactional(readOnly = true)
     public MeterQuantityReport getReport(long headerId) {
-        MeterQuantityReport report = meteringDao.getManifestReport(headerId);
-        Validate.notNull(report, "Cannot found Meter quantity report with manifest header id " + headerId);
-
-        return report;
+        return meteringDao.getManifestReport(headerId);
     }
 
     @Override
@@ -209,6 +206,12 @@ public class DefaultMeterService implements MeterService {
     @Transactional
     public void updateNotificationFlag(long headerID) {
         meteringDao.updateNotificationFlag(headerID);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> getStaleRecords() {
+        return meteringDao.getStaleRecords();
     }
 
 }
