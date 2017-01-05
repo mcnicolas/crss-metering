@@ -5,11 +5,9 @@ import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.resource.template.ResourceTemplate;
-import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
-import com.pemc.crss.metering.validator.bcq.CsvValidator;
-import com.pemc.crss.metering.validator.bcq.HeaderListValidator;
-import com.pemc.crss.metering.validator.bcq.RedeclarationValidator;
+import com.pemc.crss.metering.validator.bcq.*;
 import com.pemc.crss.metering.validator.bcq.helper.BcqPopulator;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -36,6 +34,7 @@ import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class BcqValidationHandler {
 
     private static final String SELLER_URL = "/reg/bcq/seller";
@@ -46,22 +45,9 @@ public class BcqValidationHandler {
     private final CsvValidator csvValidator;
     private final HeaderListValidator headerListValidator;
     private final RedeclarationValidator redeclarationValidator;
+    private final OverrideValidator overrideValidator;
     private final ResourceTemplate resourceTemplate;
     private final CacheManager cacheManager;
-
-    @Autowired
-    public BcqValidationHandler(CsvValidator csvValidator,
-                                HeaderListValidator headerListValidator,
-                                RedeclarationValidator redeclarationValidator,
-                                ResourceTemplate resourceTemplate,
-                                CacheManager cacheManager) {
-
-        this.csvValidator = csvValidator;
-        this.headerListValidator = headerListValidator;
-        this.redeclarationValidator = redeclarationValidator;
-        this.resourceTemplate = resourceTemplate;
-        this.cacheManager = cacheManager;
-    }
 
     public BcqDeclaration processAndValidate(List<List<String>> csv) {
         ParticipantSellerDetails sellerDetails = getSellerDetails();
@@ -94,6 +80,62 @@ public class BcqValidationHandler {
         }
 
         if (interval != FIVE_MINUTES_PERIOD) {
+            int intervalConfig = getIntervalConfig();
+            headerList.forEach(header -> {
+                List<BcqData> dividedDataList = new ArrayList<>();
+                header.getDataList().forEach(data ->
+                        dividedDataList.addAll(divideDataByInterval(data, interval, intervalConfig)));
+                header.setDataList(dividedDataList);
+            });
+        }
+
+        List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
+        headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
+        return declaration.withHeaderDetailsList(headerDetailsList);
+    }
+
+    public BcqDeclaration processAndValidateForSettlement(List<List<String>> csv,
+                                                          ParticipantSellerDetails sellerDetails,
+                                                          Date tradingDate) {
+
+        BcqDeclaration declaration = new BcqDeclaration(sellerDetails);
+        BcqValidationResult validationResult = csvValidator.validate(csv);
+        if (validationResult.getStatus() == REJECTED) {
+            return declaration.withValidationResult(validationResult);
+        }
+
+        BcqInterval interval = fromDescription(csv.get(INTERVAL_ROW_INDEX).get(INTERVAL_COLUMN_INDEX));
+        BcqPopulator populator = new BcqPopulator();
+        List<BcqHeader> headerList = populator.populate(csv, interval);
+        validationResult = headerListValidator.validateForSettlement(headerList, interval, tradingDate);
+        if (validationResult.getStatus() == REJECTED) {
+            return declaration.withValidationResult(validationResult);
+        }
+
+        BcqParticipantDetails participantDetails = getAndValidate(getUniqueItems(headerList));
+        if (participantDetails.getValidationResult().getStatus() == REJECTED) {
+            return declaration.withValidationResult(participantDetails.getValidationResult());
+        }
+
+        headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
+
+        validationResult = overrideValidator.validate(headerList,
+                sellerDetails.getShortName(),
+                headerList.get(0).getTradingDate());
+        if (validationResult.getStatus() == REJECTED) {
+            return declaration.withValidationResult(validationResult);
+        }
+
+        headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
+
+        validationResult = redeclarationValidator.validate(headerList,
+                sellerDetails.getShortName(),
+                headerList.get(0).getTradingDate());
+        if (validationResult.getStatus() == REJECTED) {
+            return declaration.withValidationResult(validationResult);
+        }
+
+        if (interval != FIVE_MINUTES_PERIOD) { //TODO: Remove duplicate
             int intervalConfig = getIntervalConfig();
             headerList.forEach(header -> {
                 List<BcqData> dividedDataList = new ArrayList<>();

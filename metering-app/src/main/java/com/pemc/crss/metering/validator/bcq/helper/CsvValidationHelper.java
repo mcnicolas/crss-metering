@@ -3,12 +3,14 @@ package com.pemc.crss.metering.validator.bcq.helper;
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.validator.bcq.validation.CsvValidation;
 import com.pemc.crss.metering.validator.bcq.validation.Validation;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import static com.pemc.crss.metering.constants.BcqInterval.*;
@@ -19,11 +21,11 @@ import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
 import static com.pemc.crss.metering.validator.bcq.validation.CsvValidation.emptyInst;
 import static com.pemc.crss.metering.validator.bcq.validation.CsvValidation.from;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.math.NumberUtils.isParsable;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 
-@Slf4j
 @Component
 public class CsvValidationHelper {
 
@@ -142,7 +144,9 @@ public class CsvValidationHelper {
         Predicate<List<List<String>>> predicate =  csv -> {
             Set<List<String>> uniqueSet = new HashSet<>();
             return !csv.subList(2, csv.size()).stream().anyMatch(line -> {
-                if (!uniqueSet.add(Arrays.asList(line.get(SELLING_MTN_INDEX), line.get(BILLING_ID_INDEX), line.get(DATE_INDEX)))) {
+                if (!uniqueSet.add(asList(line.get(SELLING_MTN_INDEX), line.get(BILLING_ID_INDEX),
+                        line.get(DATE_INDEX)))) {
+
                     validation.setErrorMessage(format(DUPLICATE_DATE.getErrorMessage(), line.get(SELLING_MTN_INDEX),
                             line.get(BILLING_ID_INDEX),
                             line.get(DATE_INDEX)));
@@ -177,7 +181,7 @@ public class CsvValidationHelper {
     private Date getTradingDate(String tradingDateString) {
         Date tradingDate = parseDateTime(tradingDateString);
         if (isStartOfDay(tradingDate)) {
-            return addDays(tradingDate, -1);
+            return tradingDate == null ? null : addDays(tradingDate, -1);
         } else {
             return startOfDay(tradingDate);
         }

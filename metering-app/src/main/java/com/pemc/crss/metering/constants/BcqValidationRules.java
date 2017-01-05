@@ -15,6 +15,7 @@ public enum BcqValidationRules {
     INCORRECT_DATE_FORMAT("Incorrect date format. Date should follow the format <b>yyyy-MM-dd HH:mm</b>."),
     CLOSED_TRADING_DATE("Trading date is closed. Submission of BCQ is closed for <b>%s</b>."),
     INVALID_TRADING_DATE("Trading date is invalid. Only one trading date can be accepted per file."),
+    DIFFERENT_TRADING_DATE("Trading date is invalid. Trading date must be the same when overriding."),
     NEGATIVE_BCQ("BCQ is Negative. Declared BCQs should not be negative."),
     MISSING_INTERVAL("Missing interval."),
     MISSING_SELLING_MTN("Missing selling MTN."),
@@ -24,6 +25,12 @@ public enum BcqValidationRules {
     MISSING_BCQ("Missing BCQ."),
     INCOMPLETE_REDECLARATION_ENTRIES("Incomplete BCQ entries. " +
             "Redeclaration for date <b>%s</b> should also have entries of the ff. " +
+            "Selling MTN and Billing ID pair(s):<br />%s"),
+    INCOMPLETE_OVERRIDE_ENTRIES("Incomplete BCQ entries. " +
+            "Override for date <b>%s</b> should also have entries of the ff. " +
+            "Selling MTN and Billing ID pair(s):<br />%s"),
+    EXCESS_OVERRIDE_ENTRIES("Excess BCQ entries. " +
+            "Override for date <b>%s</b> shouldn't have entries of the ff. " +
             "Selling MTN and Billing ID pair(s):<br />%s");
 
     private final String errorMessage;

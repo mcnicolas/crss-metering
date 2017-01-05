@@ -65,9 +65,11 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
     }
 
     @PostMapping("/settlement/upload")
-    public ResponseEntity<?> uploadBySettlement(@RequestParam("file") MultipartFile multipartFile) throws IOException {
+    public ResponseEntity<?> uploadBySettlement(@RequestParam("file") MultipartFile multipartFile,
+                                                @RequestParam ParticipantSellerDetails sellerDetails,
+                                                @RequestParam String tradingDate) throws IOException {
         log.debug("[REST-BCQ] Request for settlement uploading of: {}", multipartFile.getOriginalFilename());
-        BcqDeclaration declaration = processAndValidateDeclaration(multipartFile);
+        BcqDeclaration declaration = processAndValidateDeclaration(multipartFile, sellerDetails, parseDate(tradingDate));
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("[REST-BCQ] Finished uploading and rejecting of: {}", multipartFile.getOriginalFilename());
             bcqService.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
@@ -147,9 +149,26 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/
-    private BcqDeclaration processAndValidateDeclaration(MultipartFile multipartFile) throws IOException {
+    private BcqDeclaration processAndValidateDeclaration(MultipartFile multipartFile)
+            throws IOException {
+
         List<List<String>> csv = bcqReader.readCsv(multipartFile.getInputStream());
         BcqDeclaration declaration = validationHandler.processAndValidate(csv);
+        BcqValidationResult validationResult = declaration.getValidationResult();
+        BcqUploadFile uploadFile = populateUploadFile(multipartFile, validationResult.getStatus());
+        declaration.setUploadFileDetails(new BcqUploadFileDetails(uploadFile));
+        if (declaration.getHeaderDetailsList() != null) {
+            declaration.setRedeclaration(getCurrentHeaders(declaration).size() > 0);
+        }
+        return declaration;
+    }
+
+    private BcqDeclaration processAndValidateDeclaration(MultipartFile multipartFile,
+                                                         ParticipantSellerDetails sellerDetails,
+                                                         Date tradingDate) throws IOException {
+
+        List<List<String>> csv = bcqReader.readCsv(multipartFile.getInputStream());
+        BcqDeclaration declaration = validationHandler.processAndValidateForSettlement(csv, sellerDetails, tradingDate);
         BcqValidationResult validationResult = declaration.getValidationResult();
         BcqUploadFile uploadFile = populateUploadFile(multipartFile, validationResult.getStatus());
         declaration.setUploadFileDetails(new BcqUploadFileDetails(uploadFile));

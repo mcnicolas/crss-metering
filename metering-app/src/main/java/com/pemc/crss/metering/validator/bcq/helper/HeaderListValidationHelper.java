@@ -5,7 +5,6 @@ import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation;
 import com.pemc.crss.metering.validator.bcq.validation.Validation;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -20,12 +19,17 @@ import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidati
 import static java.lang.String.format;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 
-@Slf4j
 @Component
 public class HeaderListValidationHelper {
 
     public Validation<List<BcqHeader>> validHeaderList(int declarationDateConfig, BcqInterval interval) {
         return openTradingDate(declarationDateConfig).
+                and(validDataSize(interval)).
+                and(validTimeIntervals(interval));
+    }
+
+    public Validation<List<BcqHeader>> validHeaderList(Date tradingDate, BcqInterval interval) {
+        return sameTradingDate(tradingDate).
                 and(validDataSize(interval)).
                 and(validTimeIntervals(interval));
     }
@@ -37,10 +41,23 @@ public class HeaderListValidationHelper {
             Date today = new Date();
             Date minDate = startOfDay(addDays(today, -declarationDateConfig));
             Date maxDate = startOfDay(today);
-
             if (tradingDate.after(maxDate) || tradingDate.before(minDate)) {
                 headerListValidation.setErrorMessage(format(CLOSED_TRADING_DATE.getErrorMessage(),
                         formatDate(tradingDate)));
+                return false;
+            }
+            return true;
+        };
+        headerListValidation.setPredicate(predicate);
+        return headerListValidation;
+    }
+
+    private HeaderListValidation sameTradingDate(Date tradingDate) {
+        HeaderListValidation headerListValidation = emptyInst();
+        Predicate<List<BcqHeader>> predicate = headerList -> {
+            Date headerTradingDate = headerList.get(0).getTradingDate();
+            if (!tradingDate.equals(headerTradingDate)) {
+                headerListValidation.setErrorMessage(DIFFERENT_TRADING_DATE.getErrorMessage());
                 return false;
             }
             return true;
