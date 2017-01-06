@@ -14,7 +14,7 @@ import java.util.StringJoiner;
 import java.util.function.Predicate;
 
 import static com.pemc.crss.metering.constants.BcqValidationRules.EXCESS_OVERRIDE_ENTRIES;
-import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_REDECLARATION_ENTRIES;
+import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_OVERRIDE_ENTRIES;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.validator.bcq.validation.OverrideValidation.emptyInst;
 import static java.lang.String.format;
@@ -53,7 +53,7 @@ public class OverrideValidationHelper {
                             .append("]</b>");
                     pairs.add(pair);
                 });
-                overrideValidation.setErrorMessage(format(INCOMPLETE_REDECLARATION_ENTRIES.getErrorMessage(),
+                overrideValidation.setErrorMessage(format(INCOMPLETE_OVERRIDE_ENTRIES.getErrorMessage(),
                         formatDate(currentHeaderList.get(0).getTradingDate()), pairs.toString()));
                 return false;
             }
