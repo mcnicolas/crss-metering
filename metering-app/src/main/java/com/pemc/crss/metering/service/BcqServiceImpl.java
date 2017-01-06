@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.service;
 
+import com.google.common.collect.ImmutableMap;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqEventCode;
 import com.pemc.crss.metering.constants.BcqStatus;
@@ -21,6 +22,7 @@ import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
@@ -135,6 +137,22 @@ public class BcqServiceImpl implements BcqService {
         sendUpdateStatusNotif(findHeader(headerId));
     }
 
+    @Override
+    public void processUnconfirmedHeaders() {
+        List<BcqHeader> unconfirmedHeaders = getExpiredHeadersByStatus(FOR_CONFIRMATION);
+        unconfirmedHeaders.forEach(header -> updateHeaderStatus(header.getHeaderId(), NOT_CONFIRMED));
+        Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unconfirmedHeaders);
+        groupedHeaders.forEach((map, headerList) -> sendUnprocessedNotif(headerList, NOT_CONFIRMED));
+    }
+
+    @Override
+    public void processUnnullifiedHeaders() {
+        List<BcqHeader> unnullifiedHeaders = getExpiredHeadersByStatus(FOR_NULLIFICATION);
+        unnullifiedHeaders.forEach(header -> updateHeaderStatus(header.getHeaderId(), CONFIRMED));
+        Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unnullifiedHeaders);
+        groupedHeaders.forEach((map, headerList) -> sendUnprocessedNotif(headerList, CONFIRMED));
+    }
+
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/
@@ -151,6 +169,24 @@ public class BcqServiceImpl implements BcqService {
             }
         }
         return null;
+    }
+
+    private List<BcqHeader> getExpiredHeadersByStatus(BcqStatus status) {
+        Map<String, String> params = ImmutableMap.of(
+                "expired", "expired",
+                "status", status.toString()
+        );
+        return bcqDao.findAllHeaders(params);
+    }
+
+    private Map<Map<String, Object>, List<BcqHeader>> getGroupedHeaderList(List<BcqHeader> headerList) {
+        return headerList.stream()
+                .collect(groupingBy(header -> ImmutableMap.of(
+                        "sellerUserId", header.getSellingParticipantUserId(),
+                        "buyerUserId", header.getBuyingParticipantUserId(),
+                        "status", header.getStatus(),
+                        "tradingDate", header.getTradingDate()
+                )));
     }
 
     /****************************************************
@@ -212,6 +248,24 @@ public class BcqServiceImpl implements BcqService {
                 bcqNotificationService.send(NTF_BCQ_NULLIFY_SELLER, payloadObjectList.toArray());
             }
         }
+    }
+
+    private void sendUnprocessedNotif(List<BcqHeader> headerList, BcqStatus status) {
+        BcqHeader firstHeader = headerList.get(0);
+        StringJoiner sellingMtns = new StringJoiner(", ");
+        headerList.forEach(header -> sellingMtns.add(header.getSellingMtn()));
+        bcqNotificationService.send(status == CONFIRMED ? NTF_BCQ_UNNULLIFIED_SELLER : NTF_BCQ_UNCONFIRMED_SELLER,
+                formatDate(firstHeader.getTradingDate()),
+                sellingMtns,
+                firstHeader.getBuyingParticipantName(),
+                firstHeader.getBuyingParticipantShortName(),
+                firstHeader.getSellingParticipantUserId());
+        bcqNotificationService.send(status == CONFIRMED ? NTF_BCQ_UNNULLIFIED_BUYER : NTF_BCQ_UNCONFIRMED_BUYER,
+                formatDate(firstHeader.getTradingDate()),
+                sellingMtns,
+                firstHeader.getSellingParticipantName(),
+                firstHeader.getSellingParticipantShortName(),
+                firstHeader.getBuyingParticipantUserId());
     }
 
 }

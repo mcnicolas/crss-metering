@@ -30,4 +30,8 @@ public interface BcqService {
 
     void updateHeaderStatus(long headerId, BcqStatus status);
 
+    void processUnconfirmedHeaders();
+
+    void processUnnullifiedHeaders();
+
 }
