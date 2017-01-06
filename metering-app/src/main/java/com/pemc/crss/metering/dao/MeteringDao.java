@@ -32,6 +32,8 @@ public interface MeteringDao {
 
     List<FileManifest> getFileManifest(long headerID);
 
+    List<FileManifest> getFileManifestStatus(long headerID);
+
     boolean isFileProcessingCompleted(long headerId);
 
     MeterQuantityReport getManifestReport(long headerId);

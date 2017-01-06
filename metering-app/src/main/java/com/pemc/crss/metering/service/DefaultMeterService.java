@@ -14,7 +14,6 @@ import com.pemc.crss.metering.parser.meterquantity.MeterQuantityParser;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.mq.MQValidationHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataAccessException;
@@ -212,6 +211,16 @@ public class DefaultMeterService implements MeterService {
     @Transactional(readOnly = true)
     public List<Long> getStaleRecords() {
         return meteringDao.getStaleRecords();
+    }
+
+    @Override
+    public List<FileManifest> checkStatus(Long headerID) {
+        return meteringDao.getFileManifestStatus(headerID);
+    }
+
+    @Override
+    public HeaderManifest getHeader(Long headerID) {
+        return meteringDao.getHeaderManifest(headerID);
     }
 
 }

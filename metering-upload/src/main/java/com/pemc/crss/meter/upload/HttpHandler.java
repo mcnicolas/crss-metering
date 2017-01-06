@@ -1,6 +1,9 @@
 package com.pemc.crss.meter.upload;
 
+import com.pemc.crss.meter.upload.http.FileStatus;
+import com.pemc.crss.meter.upload.http.HeaderStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.HttpHost;
@@ -33,6 +36,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
+import static com.pemc.crss.meter.upload.EndPoint.CHECK_STATUS;
+import static com.pemc.crss.meter.upload.EndPoint.GET_HEADER;
 import static com.pemc.crss.meter.upload.EndPoint.MSP_LISTING_URL;
 import static com.pemc.crss.meter.upload.EndPoint.OAUTH_TOKEN;
 import static com.pemc.crss.meter.upload.EndPoint.PARTICIPANT_CATEGORY_URL;
@@ -430,6 +435,83 @@ public class HttpHandler {
             }
         } catch (URISyntaxException | IOException e) {
             throw new HttpConnectionException(e.getMessage(), e);
+        }
+
+        return retVal;
+    }
+
+    public List<FileStatus> checkStatus(Long headerID) {
+        log.debug("Check status:{}", headerID);
+
+        List<FileStatus> retVal = new ArrayList<>();
+
+        try {
+            String path = CHECK_STATUS + "/" + headerID;
+            URIBuilder builder = new URIBuilder()
+                    .setScheme("http").setHost(hostname).setPort(port).setPath(path);
+
+            HttpGet httpGet = new HttpGet(builder.build());
+            httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
+
+            try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
+                StatusLine statusLine = httpResponse.getStatusLine();
+                log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
+
+                if (statusLine.getStatusCode() == SC_OK) {
+                    String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+                    log.debug("content:{}", content);
+
+                    JSONArray jsonData = new JSONArray(content);
+
+                    for (int i = 0; i < jsonData.length(); i++) {
+                        FileStatus fileStatus = new FileStatus();
+                        // TODO: Set log level to INFO
+                        BeanUtils.populate(fileStatus, jsonData.getJSONObject(i).toMap());
+                        retVal.add(fileStatus);
+                    }
+                }
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+
+        return retVal;
+    }
+
+    public HeaderStatus getHeader(Long headerID) {
+        log.debug("Check status:{}", headerID);
+
+        HeaderStatus retVal = null;
+
+        try {
+            String path = GET_HEADER + "/" + headerID;
+            URIBuilder builder = new URIBuilder()
+                    .setScheme("http").setHost(hostname).setPort(port).setPath(path);
+
+            HttpGet httpGet = new HttpGet(builder.build());
+            httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
+
+            try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
+                StatusLine statusLine = httpResponse.getStatusLine();
+                log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
+
+                if (statusLine.getStatusCode() == SC_OK) {
+                    String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+                    log.debug("content:{}", content);
+
+                    JSONObject jsonData = new JSONObject(content);
+                    retVal = new HeaderStatus();
+
+                    // TODO: Set log level to INFO
+                    BeanUtils.populate(retVal, jsonData.toMap());
+                }
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         }
 
         return retVal;

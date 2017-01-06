@@ -2,26 +2,20 @@ package com.pemc.crss.meter.upload;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.nio.file.Files.isReadable;
 import static java.nio.file.Files.isSymbolicLink;
-import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 
 @Slf4j
 public class SelectedFileUtils {
@@ -30,8 +24,6 @@ public class SelectedFileUtils {
         List<FileBean> retVal = new ArrayList<>();
 
         try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-
             // TODO: Use Java 8 Stream Parallel instead
             // https://github.com/brettryan/io-recurse-tests
             for (File selectedFile : selectedFiles) {
@@ -41,31 +33,23 @@ public class SelectedFileUtils {
                         if (isReadable(file) && !isSymbolicLink(file)
                                 && isValidFileExtension(file.toString(), fileExtensions)) {
 
-                            try (InputStream source = new DigestInputStream(Files.newInputStream(file), md)) {
+                            FileBean fileBean = new FileBean();
+                            fileBean.setPath(file);
 
-                                IOUtils.copy(source, NULL_OUTPUT_STREAM);
+                            BasicFileAttributes fileAttributes = Files.readAttributes(file, BasicFileAttributes.class);
+                            fileBean.setSize(fileAttributes.size());
+                            fileBean.setStatus("");
+                            fileBean.setElapsedTime("");
 
-                                String hash = bytesToHex(md.digest());
-
-                                FileBean fileBean = new FileBean();
-                                fileBean.setPath(file);
-
-                                BasicFileAttributes fileAttributes = Files.readAttributes(file, BasicFileAttributes.class);
-                                fileBean.setLastModified(fileAttributes.lastModifiedTime());
-                                fileBean.setSize(fileAttributes.size());
-                                fileBean.setChecksum(hash);
-                                fileBean.setStatus("");
-
-                                retVal.add(fileBean);
-                            }
+                            retVal.add(fileBean);
                         }
 
                         return super.visitFile(file, attributes);
                     }
                 });
             }
-        } catch (IOException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
         }
 
         return retVal;
@@ -83,15 +67,6 @@ public class SelectedFileUtils {
         }
 
         return retVal;
-    }
-
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder hexString = new StringBuilder();
-        for (byte aByte : bytes) {
-            String byteValue = Integer.toHexString(0xFF & aByte);
-            hexString.append(byteValue.length() == 2 ? byteValue : "0" + byteValue);
-        }
-        return hexString.toString();
     }
 
 }

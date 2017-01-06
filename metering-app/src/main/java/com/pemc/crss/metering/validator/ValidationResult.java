@@ -13,11 +13,4 @@ public class ValidationResult {
     private ValidationStatus status;
     private String errorDetail = "";
 
-    public ValidationResult() {
-    }
-
-    public ValidationResult(ValidationStatus status) {
-        this.status = status;
-    }
-
 }

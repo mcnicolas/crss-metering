@@ -9,5 +9,7 @@ public interface EndPoint {
     String UPLOAD_HEADER = "/metering/uploadHeader";
     String UPLOAD_FILE = "/metering/uploadFile";
     String UPLOAD_TRAILER = "/metering/uploadTrailer";
+    String CHECK_STATUS = "/metering/checkStatus";
+    String GET_HEADER = "/metering/getHeader";
 
 }

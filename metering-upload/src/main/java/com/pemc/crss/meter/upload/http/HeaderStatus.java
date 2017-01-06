@@ -1,20 +1,17 @@
-package com.pemc.crss.metering.dto.mq;
+package com.pemc.crss.meter.upload.http;
 
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
-public class HeaderManifest {
+public class HeaderStatus {
 
     private long headerID;
     private String transactionID;
     private int fileCount;
-    private String category;
     private String notificationSent;
     private Date notificationDateTime;
-    private String tailReceived;
-    private String uploadedBy;
     private Date uploadDateTime;
 
 }

@@ -1,14 +1,25 @@
 package com.pemc.crss.meter.upload;
 
+import com.pemc.crss.meter.upload.http.FileStatus;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.text.WordUtils;
+
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.util.List;
 
+import static javax.swing.SwingConstants.CENTER;
+import static javax.swing.SwingConstants.RIGHT;
+
+@Slf4j
 public class TablePanel extends JPanel {
 
     private MeterDataUploader parent;
@@ -20,48 +31,51 @@ public class TablePanel extends JPanel {
     public void configureComponents(MeterDataUploader parent) {
         this.parent = parent;
 
+        DefaultTableCellRenderer rightAlignRenderer = new DefaultTableCellRenderer();
+        rightAlignRenderer.setHorizontalAlignment(RIGHT);
+
+        DefaultTableCellRenderer centerAlignRenderer = new DefaultTableCellRenderer();
+        centerAlignRenderer.setHorizontalAlignment(CENTER);
+
         TableColumnModel columnModel = fileTable.getColumnModel();
-        TableColumn column = columnModel.getColumn( 0 );
+        TableColumn column = columnModel.getColumn(0);
+        column.setCellRenderer(rightAlignRenderer);
         column.setHeaderValue("");
         column.setPreferredWidth(50);
         column.setMinWidth(50);
-        column.setResizable(true);
+        column.setResizable(false);
 
         column = columnModel.getColumn(1);
         column.setHeaderValue("Filename");
-        column.setPreferredWidth(305);
-        column.setMinWidth(305);
+        column.setPreferredWidth(350);
+        column.setMinWidth(350);
         column.setResizable(true);
 
         column = columnModel.getColumn(2);
-        column.setHeaderValue("Timestamp");
-        column.setPreferredWidth(140);
-        column.setMinWidth(140);
-        column.setResizable(true);
+        column.setCellRenderer(rightAlignRenderer);
+        column.setHeaderValue("Size");
+        column.setPreferredWidth(70);
+        column.setMinWidth(70);
+        column.setResizable(false);
 
         column = columnModel.getColumn(3);
-        column.setHeaderValue("Size");
-        column.setPreferredWidth(75);
-        column.setMinWidth(75);
-        column.setResizable(true);
+        column.setHeaderValue("Status");
+        column.setPreferredWidth(150);
+        column.setMinWidth(150);
+        column.setResizable(false);
 
         column = columnModel.getColumn(4);
-        column.setHeaderValue("Checksum");
-        column.setPreferredWidth(300);
-        column.setMinWidth(250);
-        column.setResizable(true);
-
-        column = columnModel.getColumn(5);
-        column.setHeaderValue("Status");
-        column.setPreferredWidth(80);
-        column.setMinWidth(80);
+        column.setHeaderValue("Error Details");
+        column.setPreferredWidth(400);
+        column.setMinWidth(400);
         column.setResizable(true);
     }
 
     public void updateTableDisplay(List<FileBean> selectedFiles) {
-        FileTableModel tableModel = (FileTableModel) fileTable.getModel();
-
-        tableModel.setFileList(selectedFiles);
+        SwingUtilities.invokeLater(() -> {
+            FileTableModel tableModel = (FileTableModel) fileTable.getModel();
+            tableModel.setFileList(selectedFiles);
+        });
     }
 
     public List<FileBean> getSelectedFiles() {
@@ -84,17 +98,26 @@ public class TablePanel extends JPanel {
         fileTable.scrollRectToVisible(rectangle);
     }
 
-    public void updateRecordStatus(List<FileBean> fileList) {
+    public void updateRecordStatus(List<FileStatus> fileList) {
         FileTableModel tableModel = (FileTableModel) fileTable.getModel();
 
-        int key = 0;
-        for (FileBean fileBean : fileList) {
-            key = fileBean.getKey();
-            tableModel.updateUploadedStatus(key);
-        }
+        for (FileStatus fileStatus : fileList) {
+            long fileID = fileStatus.getFileID();
+            String fileName = fileStatus.getFileName();
+            String status = WordUtils.capitalizeFully(fileStatus.getStatus());
+            String errorDetail = fileStatus.getErrorDetails();
 
-        Rectangle rectangle = fileTable.getCellRect(key - 1, 0, true);
-        fileTable.scrollRectToVisible(rectangle);
+            tableModel.updateStatus(fileID, fileName, status, errorDetail);
+        }
+    }
+
+    public void updateInitialRecordStatus(List<FileBean> fileList) {
+        FileTableModel tableModel = (FileTableModel) fileTable.getModel();
+
+        for (FileBean fileBean : fileList) {
+            int key = fileBean.getKey();
+            tableModel.updateStatus(key, "Queue For Processing");
+        }
     }
 
     /**
@@ -110,6 +133,9 @@ public class TablePanel extends JPanel {
         setLayout(new BorderLayout());
 
         fileTable.setModel(new FileTableModel());
+        fileTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        fileTable.setIntercellSpacing(new Dimension(5, 1));
+        fileTable.setRowSelectionAllowed(false);
         scrollPane.setViewportView(fileTable);
 
         add(scrollPane, BorderLayout.CENTER);

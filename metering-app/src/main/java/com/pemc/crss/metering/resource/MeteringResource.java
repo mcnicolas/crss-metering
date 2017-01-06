@@ -1,6 +1,8 @@
 package com.pemc.crss.metering.resource;
 
+import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.FileParam;
+import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.HeaderParam;
 import com.pemc.crss.metering.dto.mq.TrailerParam;
 import com.pemc.crss.metering.resource.validator.FileUploadValidator;
@@ -12,7 +14,9 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,12 +25,13 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
+import static org.springframework.http.ResponseEntity.ok;
 
 @Slf4j
 @RestController
@@ -52,12 +57,10 @@ public class MeteringResource {
     public ResponseEntity<Long> uploadHeader(@Valid @RequestBody HeaderParam headerParam) {
         log.debug("Received header record fileCount:{} category:{}", headerParam.getFileCount(), headerParam.getCategory());
 
-        // TODO: Validation
-        // 2. category should be a valid value refer to UploadType enumeration
         long headerID = meterService.saveHeader(headerParam.getFileCount(), headerParam.getCategory());
         log.debug("Saved manifest header: {}", headerID);
 
-        return ResponseEntity.ok(headerID);
+        return ok(headerID);
     }
 
     //    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
@@ -90,7 +93,7 @@ public class MeteringResource {
             rabbitTemplate.send("crss.mq", ROUTING_KEY, message);
         }
 
-        return new ResponseEntity<>(null, OK);
+        return ok(null);
     }
 
     //    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
@@ -102,7 +105,21 @@ public class MeteringResource {
 
         Map<String, String> retVal = new HashMap<>();
         retVal.put("transactionID", meterService.saveTrailer(trailerParam.getHeaderID()));
-        return ResponseEntity.ok(retVal);
+        return ok(retVal);
+    }
+
+    @GetMapping(value = "/checkStatus/{headerID}")
+    public ResponseEntity<List<FileManifest>> checkStatus(@PathVariable Long headerID) {
+        List<FileManifest> fileManifestList = meterService.checkStatus(headerID);
+
+        return ok(fileManifestList);
+    }
+
+    @GetMapping(value = "/getHeader/{headerID}")
+    public ResponseEntity<HeaderManifest> getHeader(@PathVariable Long headerID) {
+        HeaderManifest headerManifest = meterService.getHeader(headerID);
+
+        return ok(headerManifest);
     }
 
 }

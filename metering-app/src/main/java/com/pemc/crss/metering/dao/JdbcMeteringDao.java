@@ -55,6 +55,9 @@ public class JdbcMeteringDao implements MeteringDao {
     @Value("${mq.manifest.file.insert}")
     private String insertFileManifest;
 
+    @Value("${mq.manifest.file.status}")
+    private String queryFileManifestStatus;
+
     @Value("${mq.manifest.file.query}")
     private String queryFileManifest;
 
@@ -164,6 +167,7 @@ public class JdbcMeteringDao implements MeteringDao {
 
         log.debug("Select sql: {}", query.getSql());
 
+        // TODO: Refactored to named jdbc templated
         return jdbcTemplate.query(
                 query.getSql(),
                 query.getArguments(),
@@ -255,8 +259,11 @@ public class JdbcMeteringDao implements MeteringDao {
 
     @Override
     public void updateManifestStatus(ValidationResult validationResult) {
-        BeanPropertySqlParameterSource paramSource = new BeanPropertySqlParameterSource(validationResult);
-        paramSource.registerSqlType("status", VARCHAR);
+        MapSqlParameterSource paramSource = new MapSqlParameterSource();
+        paramSource.addValue("fileID", validationResult.getFileID());
+        paramSource.addValue("status", validationResult.getStatus().toString());
+        paramSource.addValue("errorDetail", validationResult.getErrorDetail());
+        paramSource.addValue("processDateTime", new Date());
 
         int affectedRows = namedParameterJdbcTemplate.update(updateManifestStatus, paramSource);
         log.debug("Finished updating manifest file fileID:{} affectedRows:{}", validationResult.getFileID(), affectedRows);
@@ -274,6 +281,13 @@ public class JdbcMeteringDao implements MeteringDao {
     @Transactional(readOnly = true)
     public List<FileManifest> getFileManifest(long headerID) {
         return namedParameterJdbcTemplate.query(queryFileManifest,
+                new MapSqlParameterSource("headerID", headerID),
+                new BeanPropertyRowMapper<>(FileManifest.class));
+    }
+
+    @Override
+    public List<FileManifest> getFileManifestStatus(long headerID) {
+        return namedParameterJdbcTemplate.query(queryFileManifestStatus,
                 new MapSqlParameterSource("headerID", headerID),
                 new BeanPropertyRowMapper<>(FileManifest.class));
     }

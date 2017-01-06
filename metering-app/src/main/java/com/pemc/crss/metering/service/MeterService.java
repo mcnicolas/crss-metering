@@ -3,6 +3,7 @@ package com.pemc.crss.metering.service;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.mq.FileManifest;
+import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
 import com.pemc.crss.metering.validator.ValidationResult;
@@ -35,5 +36,9 @@ public interface MeterService {
     void updateNotificationFlag(long headerID);
 
     List<Long> getStaleRecords();
+
+    List<FileManifest> checkStatus(Long headerID);
+
+    HeaderManifest getHeader(Long headerID);
 
 }

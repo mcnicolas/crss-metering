@@ -6,6 +6,7 @@ launch4j {
 
 dependencies {
     compile 'commons-io:commons-io'
+    compile 'commons-beanutils:commons-beanutils'
     compile 'org.apache.commons:commons-lang3'
 
     compile 'org.apache.httpcomponents:httpclient'

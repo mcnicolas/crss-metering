@@ -21,6 +21,7 @@ public class FileManifest {
     // TODO: Rename to categoryType
     private UploadType uploadType;
     private Date uploadDateTime;
+    private Date processDateTime;
     private String processFlag;
     private String status;
     private String errorDetails;
