@@ -19,12 +19,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
+import static java.lang.Long.parseLong;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.http.ResponseEntity.*;
@@ -64,15 +66,23 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
         return ok(declaration);
     }
 
-    @PostMapping("/settlement/upload")
+    @PostMapping(value = "/settlement/upload")
     public ResponseEntity<?> uploadBySettlement(@RequestParam("file") MultipartFile multipartFile,
-                                                @RequestParam ParticipantSellerDetails sellerDetails,
-                                                @RequestParam String tradingDate) throws IOException {
+                                                @RequestPart String sellerDetailsString,
+                                                @RequestPart String tradingDateString) throws IOException {
         log.debug("[REST-BCQ] Request for settlement uploading of: {}", multipartFile.getOriginalFilename());
-        BcqDeclaration declaration = processAndValidateDeclaration(multipartFile, sellerDetails, parseDate(tradingDate));
+        String[] sellerDetailsArray = sellerDetailsString.split(",");
+        log.debug("SELLER: {}", Arrays.toString(sellerDetailsArray));
+        long sellerUserId = parseLong(sellerDetailsArray[0]);
+        String sellerName = sellerDetailsArray[1];
+        String sellerShortName = sellerDetailsArray[2];
+        ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerUserId, sellerName,
+                sellerShortName);
+        BcqDeclaration declaration = processAndValidateDeclaration(multipartFile, sellerDetails,
+                parseDate(tradingDateString));
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("[REST-BCQ] Finished uploading and rejecting of: {}", multipartFile.getOriginalFilename());
-            bcqService.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
+            //bcqService.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
             return unprocessableEntity().body(declaration.getValidationResult());
         }
         log.debug("[REST-BCQ] Finished settlement uploading of: {}", multipartFile.getOriginalFilename());
@@ -149,9 +159,7 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/
-    private BcqDeclaration processAndValidateDeclaration(MultipartFile multipartFile)
-            throws IOException {
-
+    private BcqDeclaration processAndValidateDeclaration(MultipartFile multipartFile) throws IOException {
         List<List<String>> csv = bcqReader.readCsv(multipartFile.getInputStream());
         BcqDeclaration declaration = validationHandler.processAndValidate(csv);
         BcqValidationResult validationResult = declaration.getValidationResult();

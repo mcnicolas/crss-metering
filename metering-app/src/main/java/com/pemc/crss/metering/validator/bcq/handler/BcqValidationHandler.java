@@ -1,8 +1,6 @@
 package com.pemc.crss.metering.validator.bcq.handler;
 
 import com.pemc.crss.metering.constants.BcqInterval;
-import com.pemc.crss.metering.dto.bcq.BcqData;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.validator.bcq.*;
@@ -39,6 +37,7 @@ public class BcqValidationHandler {
 
     private static final String SELLER_URL = "/reg/bcq/seller";
     private static final String VALIDATE_URL = "/reg/bcq/validate";
+    private static final String SETTLEMENT_VALIDATE_URL = "/reg/bcq/settlement/validate";
     private static final int INTERVAL_ROW_INDEX = 0;
     private static final int INTERVAL_COLUMN_INDEX = 1;
 
@@ -112,7 +111,8 @@ public class BcqValidationHandler {
             return declaration.withValidationResult(validationResult);
         }
 
-        BcqParticipantDetails participantDetails = getAndValidate(getUniqueItems(headerList));
+        SellerWithItems sellerWithItems = new SellerWithItems(sellerDetails, getUniqueItems(headerList));
+        BcqParticipantDetails participantDetails = getAndValidate(sellerWithItems);
         if (participantDetails.getValidationResult().getStatus() == REJECTED) {
             return declaration.withValidationResult(participantDetails.getValidationResult());
         }
@@ -228,6 +228,10 @@ public class BcqValidationHandler {
 
     private BcqParticipantDetails getAndValidate(List<BcqItem> itemList) {
         return resourceTemplate.post(VALIDATE_URL, BcqParticipantDetails.class, itemList);
+    }
+
+    private BcqParticipantDetails getAndValidate(SellerWithItems sellerWithItems) {
+        return resourceTemplate.post(SETTLEMENT_VALIDATE_URL, BcqParticipantDetails.class, sellerWithItems);
     }
 
 }
