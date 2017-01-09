@@ -28,8 +28,7 @@ public class OverrideValidationHelper {
 
     public Validation<List<BcqHeader>> validOverride(String sellingParticipant, Date tradingDate) {
         List<BcqHeader> currentHeaderList = getCurrentHeaderList(sellingParticipant, tradingDate);
-        return noMissingHeaders(currentHeaderList)
-                .and(noExcessHeaders(currentHeaderList));
+        return noMissingHeaders(currentHeaderList);
     }
 
     private OverrideValidation noMissingHeaders(List<BcqHeader> currentHeaderList) {
