@@ -48,6 +48,14 @@ public class BcqNotificationService {
                 return new BcqStatusConfirmEvent(payload);
             case NTF_BCQ_NULLIFY_SELLER:
                 return new BcqStatusNullifyEvent(payload);
+            case NTF_BCQ_UNCONFIRMED_SELLER:
+                return new BcqUnconfirmedSellerEvent(payload);
+            case NTF_BCQ_UNCONFIRMED_BUYER:
+                return new BcqUnconfirmedBuyerEvent(payload);
+            case NTF_BCQ_UNNULLIFIED_SELLER:
+                return new BcqUnnullifiedSellerEvent(payload);
+            case NTF_BCQ_UNNULLIFIED_BUYER:
+                return new BcqUnnullifiedBuyerEvent(payload);
             default:
                 return null;
         }
