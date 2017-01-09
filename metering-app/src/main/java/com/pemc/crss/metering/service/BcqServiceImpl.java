@@ -80,8 +80,7 @@ public class BcqServiceImpl implements BcqService {
     public List<ParticipantSellerDetails> findAllSellersWithExpiredBcqByTradingDate(Date tradingDate) {
         return bcqDao.findAllHeaders(of(
                 "tradingDate", formatDate(tradingDate),
-                "expired", "expired",
-                "status", CONFIRMED.toString()
+                "expired", "expired"
         )).stream().map(header ->
                 new ParticipantSellerDetails(header.getSellingParticipantUserId(),
                         header.getSellingParticipantName(),
