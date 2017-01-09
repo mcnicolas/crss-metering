@@ -32,8 +32,6 @@ public class FileUploadValidator implements Validator {
         checkMSPShortName(fileParam.getMspShortName(), errors);
         checkFileType(fileParam.getFileType(), errors);
         checkFile(fileParam.getFileType(), fileParam.getFile(), errors);
-
-        log.debug("File Param validator");
     }
 
     private void checkHeaderID(Long headerID, Errors errors) {
@@ -80,7 +78,7 @@ public class FileUploadValidator implements Validator {
                     }
                     break;
                 case CSV:
-                    if (equalsIgnoreCase(fileType, "CSV")) {
+                    if (!equalsIgnoreCase(fileType, "CSV")) {
                         errors.reject("", fileTypeErrorMsg);
                     }
             }
