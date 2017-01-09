@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.validator.mq;
 
+import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.parser.ParseException;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.pemc.crss.metering.constants.FileType.XLS;
+import static com.pemc.crss.metering.constants.UploadType.DAILY;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -35,6 +37,7 @@ public class CorrectIntervalValidatorTest {
         String excelFile = "meterdata/validation/interval/correct_interval_15mins.xls";
         FileManifest fileManifest = new FileManifest();
         fileManifest.setFileType(XLS);
+        fileManifest.setUploadType(DAILY);
         fileManifest.setFileName(excelFile);
 
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(excelFile);
@@ -58,6 +61,7 @@ public class CorrectIntervalValidatorTest {
         String excelFile = "meterdata/validation/interval/incorrect_interval_15mins.xls";
         FileManifest fileManifest = new FileManifest();
         fileManifest.setFileType(XLS);
+        fileManifest.setUploadType(DAILY);
         fileManifest.setFileName(excelFile);
 
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(excelFile);

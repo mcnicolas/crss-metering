@@ -22,6 +22,7 @@ import java.util.Queue;
 
 import static com.pemc.crss.metering.constants.FileType.CSV;
 import static com.pemc.crss.metering.constants.FileType.XLS;
+import static com.pemc.crss.metering.constants.UploadType.DAILY;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static java.util.Calendar.MINUTE;
@@ -47,7 +48,8 @@ public class CorrectIntervalValidator implements Validator {
         retVal.setStatus(ACCEPTED);
 
         FileType fileType = fileManifest.getFileType();
-        if (fileType == XLS || fileType == CSV) {
+        if ((fileType == XLS || fileType == CSV)
+                && fileManifest.getUploadType() == DAILY) {
             Queue<MeterDataDetail> queue = new LinkedList<>(meterData.getDetails());
             long firstRecord = queue.poll().getReadingDateTime();
 
