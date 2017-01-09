@@ -1,8 +1,7 @@
 package com.pemc.crss.metering.dto.bcq;
 
 import com.pemc.crss.commons.web.dto.AbstractWebDto;
-
-import java.util.Date;
+import com.pemc.crss.metering.constants.ValidationStatus;
 
 public class BcqUploadFileDetails extends AbstractWebDto<BcqUploadFile> {
 
@@ -30,12 +29,12 @@ public class BcqUploadFileDetails extends AbstractWebDto<BcqUploadFile> {
         target().setFileSize(fileSize);
     }
 
-    public Date getSubmittedDate() {
-        return target().getSubmittedDate();
+    public ValidationStatus getValidationStatus() {
+        return target().getValidationStatus();
     }
 
-    public void setSubmittedDate(Date submittedDate) {
-        target().setSubmittedDate(submittedDate);
+    public void setValidationStatus(ValidationStatus validationStatus) {
+        target().setValidationStatus(validationStatus);
     }
 
 }

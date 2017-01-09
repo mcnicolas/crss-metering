@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +17,7 @@ import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqEventCode.*;
 import static com.pemc.crss.metering.constants.BcqStatus.*;
-import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
+import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
@@ -35,25 +34,13 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     @Transactional
-    public long saveUploadFile(BcqUploadFile uploadFile) {
-        SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        uploadFile.setTransactionId(randomUUID().toString());
-        uploadFile.setValidationStatus(ACCEPTED);
-        return bcqDao.saveUploadFile(uploadFile);
-    }
-
-    @Override
-    @Transactional
-    public void saveFailedUploadFile(BcqUploadFile uploadFile, BcqDeclaration declaration) {
-        bcqDao.saveUploadFile(uploadFile);
-        sendValidationNotif(uploadFile, declaration);
-    }
-
-    @Override
-    @Transactional
     public void saveDeclaration(BcqDeclaration declaration) {
         BcqUploadFile uploadFile = declaration.getUploadFileDetails().target();
         uploadFile.setFileId(saveUploadFile(uploadFile));
+        if (uploadFile.getValidationStatus() == REJECTED) {
+            sendValidationNotif(uploadFile, declaration);
+            return;
+        }
         List<BcqHeader> currentHeaderList = new ArrayList<>();
         List<BcqHeader> headerList = new ArrayList<>();
         if (declaration.isRedeclaration()) {
@@ -152,13 +139,18 @@ public class BcqServiceImpl implements BcqService {
         List<BcqHeader> unnullifiedHeaders = getExpiredHeadersByStatus(FOR_NULLIFICATION);
         unnullifiedHeaders.forEach(header -> bcqDao.updateHeaderStatus(header.getHeaderId(), CONFIRMED));
         Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unnullifiedHeaders);
-        log.debug("MAP SIZE: {}", groupedHeaders.size());
         groupedHeaders.forEach((map, headerList) -> sendUnprocessedNotif(headerList, CONFIRMED));
     }
 
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/
+    public long saveUploadFile(BcqUploadFile uploadFile) {
+        uploadFile.setSubmittedDate(new Date());
+        uploadFile.setTransactionId(randomUUID().toString());
+        return bcqDao.saveUploadFile(uploadFile);
+    }
+
     private boolean isSameHeader(BcqHeader header1, BcqHeader header2) {
         return header1.getSellingMtn().equals(header2.getSellingMtn()) &&
                 header1.getBillingId().equals(header2.getBillingId()) &&

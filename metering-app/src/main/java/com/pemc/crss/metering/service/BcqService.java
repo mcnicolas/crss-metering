@@ -10,10 +10,6 @@ import java.util.List;
 
 public interface BcqService {
 
-    long saveUploadFile(BcqUploadFile uploadFile);
-
-    void saveFailedUploadFile(BcqUploadFile uploadFile, BcqDeclaration declaration);
-
     void saveDeclaration(BcqDeclaration declaration);
 
     Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest);
