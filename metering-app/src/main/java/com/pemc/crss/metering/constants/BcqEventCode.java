@@ -20,7 +20,9 @@ public enum BcqEventCode {
     NTF_BCQ_UNCONFIRMED_SELLER,
     NTF_BCQ_UNCONFIRMED_BUYER,
     NTF_BCQ_UNNULLIFIED_SELLER,
-    NTF_BCQ_UNNULLIFIED_BUYER;
+    NTF_BCQ_UNNULLIFIED_BUYER,
+    NTF_BCQ_SETTLEMENT_UPDATE_DEPT,
+    NTF_BCQ_SETTLEMENT_NEW_BUYER;
 
     private static final Map<BcqEventCode, List<String>> PAYLOAD_NAME_MAP = new HashMap<>();
 
@@ -83,6 +85,18 @@ public enum BcqEventCode {
                     payloadNameList.add("recipientId");
                     payloadNameList.add("deadlineDate");
                     payloadNameList.add("status");
+                    break;
+                case NTF_BCQ_SETTLEMENT_UPDATE_DEPT:
+                    payloadNameList.add("submittedDate");
+                    payloadNameList.add("settlementUser");
+                    payloadNameList.add("tradingDate");
+                    break;
+                case NTF_BCQ_SETTLEMENT_NEW_BUYER:
+                    payloadNameList.add("submittedDate");
+                    payloadNameList.add("settlementUser");
+                    payloadNameList.addAll(sellerPayloadNameList);
+                    payloadNameList.add("recipientId");
+                    payloadNameList.add("headerId");
                     break;
             }
             PAYLOAD_NAME_MAP.put(code, payloadNameList);

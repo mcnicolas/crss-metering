@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,11 +59,12 @@ public class BcqServiceImpl implements BcqService {
         List<BcqHeader> headerList = extractHeaderList(declaration);
         headerList = setUploadFileOfHeaders(headerList, uploadFile);
         headerList = setUpdatedViaOfHeadersBySettlement(headerList, declaration);
-        bcqDao.saveHeaderList(headerList);
+        sendSettlementDeclarationNotif(bcqDao.saveHeaderList(headerList));
     }
 
     @Override
     public Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest) {
+        log.debug("SETTLEMENT NAME: {}", getSettlementName());
         return bcqDao.findAllHeaders(pageableRequest);
     }
 
@@ -229,6 +232,18 @@ public class BcqServiceImpl implements BcqService {
                 )));
     }
 
+    //TODO Find a better approach for this
+    @SuppressWarnings("unchecked")
+    private String getSettlementName() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        LinkedHashMap<String, Object> oAuthPrincipal = (LinkedHashMap) auth.getPrincipal();
+        LinkedHashMap<String, Object> userAuthentication = (LinkedHashMap) oAuthPrincipal.get("userAuthentication");
+        LinkedHashMap<String, String> principal = (LinkedHashMap) userAuthentication.get("principal");
+        return principal.get("firstName") + " "
+                + principal.get("lastName") + " ("
+                + principal.get("username") + ")";
+    }
+
     /****************************************************
      * NOTIF METHODS
      ****************************************************/
@@ -247,7 +262,7 @@ public class BcqServiceImpl implements BcqService {
 
     private void sendDeclarationNotif(List<BcqHeader> headerList) {
         BcqHeader firstHeader = headerList.get(0);
-        String submittedDate = formatDateTime(firstHeader.getUploadFile().getSubmittedDate());
+        String submittedDate = formatLongDateTime(firstHeader.getUploadFile().getSubmittedDate());
         int recordCount = headerList.size() * firstHeader.getDataList().size();
         bcqNotificationService.send(NTF_BCQ_SUBMIT_SELLER, submittedDate, recordCount,
                 firstHeader.getSellingParticipantUserId());
@@ -256,7 +271,7 @@ public class BcqServiceImpl implements BcqService {
             BcqEventCode code = NTF_BCQ_SUBMIT_BUYER;
             if (header.isExists()) {
                 code = NTF_BCQ_UPDATE_BUYER;
-                payloadObjectList.add(formatDate(firstHeader.getTradingDate()));
+                payloadObjectList.add(formatLongDate(firstHeader.getTradingDate()));
             }
             payloadObjectList.addAll(asList(submittedDate,
                     firstHeader.getSellingParticipantName(),
@@ -264,6 +279,27 @@ public class BcqServiceImpl implements BcqService {
                     header.getHeaderId(),
                     header.getBuyingParticipantUserId()));
             bcqNotificationService.send(code, payloadObjectList.toArray());
+        }
+    }
+
+    private void sendSettlementDeclarationNotif(List<BcqHeader> headerList) {
+        BcqHeader firstHeader = headerList.get(0);
+        String settlementUser = getSettlementName();
+        String submittedDate = formatLongDateTime(firstHeader.getUploadFile().getSubmittedDate());
+        bcqNotificationService.send(NTF_BCQ_SETTLEMENT_UPDATE_DEPT, submittedDate, settlementUser,
+                formatLongDate(firstHeader.getTradingDate()));
+        for (BcqHeader header : headerList) {
+            List<Object> payloadObjectList = new ArrayList<>();
+            if (!header.isExists()) {
+                payloadObjectList.addAll(asList(
+                        submittedDate,
+                        settlementUser,
+                        firstHeader.getSellingParticipantName(),
+                        firstHeader.getSellingParticipantShortName(),
+                        firstHeader.getBuyingParticipantUserId(),
+                        firstHeader.getHeaderId()));
+                bcqNotificationService.send(NTF_BCQ_SETTLEMENT_NEW_BUYER, payloadObjectList.toArray());
+            }
         }
     }
 

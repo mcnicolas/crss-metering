@@ -56,6 +56,10 @@ public class BcqNotificationService {
                 return new BcqUnnullifiedSellerEvent(payload);
             case NTF_BCQ_UNNULLIFIED_BUYER:
                 return new BcqUnnullifiedBuyerEvent(payload);
+            case NTF_BCQ_SETTLEMENT_UPDATE_DEPT:
+                return new BcqSettlementUpdateDeptEvent(payload);
+            case NTF_BCQ_SETTLEMENT_NEW_BUYER:
+                return new BcqSettlementNewBuyerEvent(payload);
             default:
                 return null;
         }
