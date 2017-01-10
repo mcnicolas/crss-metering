@@ -49,8 +49,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
+import static com.pemc.crss.meter.upload.ErrorDialog.showErrorDialog;
 import static com.pemc.crss.meter.upload.table.UploadType.FILE;
 import static com.pemc.crss.meter.upload.table.UploadType.HEADER;
+import static com.pemc.crss.meter.upload.util.ErrorParserUtil.parseErrorMessage;
 import static java.awt.GridBagConstraints.WEST;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -58,6 +60,7 @@ import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
 import static javax.swing.JOptionPane.OK_OPTION;
+import static javax.swing.JOptionPane.WARNING_MESSAGE;
 import static javax.swing.JOptionPane.showConfirmDialog;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
@@ -318,15 +321,11 @@ public class MeterDataUploader extends JFrame {
                     messagePanel.add(txtTransaction, constraints);
 
                     headerPanel.updateTransactionID(transactionID);
-
-//                    showMessageDialog(MeterDataUploader.this, messagePanel, "Upload Complete", INFORMATION_MESSAGE);
                 } catch (InterruptedException | ExecutionException e) {
                     uploadTimer.stop();
 
                     log.error(e.getMessage(), e);
-
-                    String errorMessage = e.getMessage().substring(e.getMessage().indexOf(":")).trim();
-                    showMessageDialog(MeterDataUploader.this, errorMessage, "Upload Error", ERROR_MESSAGE);
+                    showErrorDialog(e, parseErrorMessage(e.getMessage()), WARNING_MESSAGE, MeterDataUploader.this);
 
                     uploadProgressBar.setValue(0);
                     uploadTimerValue.setText("00:00");
@@ -415,7 +414,7 @@ public class MeterDataUploader extends JFrame {
                 } catch (InterruptedException | ExecutionException e) {
                     log.error(e.getMessage(), e);
 
-                    showMessageDialog(MeterDataUploader.this, e.getMessage(), "Login Error", ERROR_MESSAGE);
+                    showErrorDialog(e, parseErrorMessage(e.getMessage()), WARNING_MESSAGE, MeterDataUploader.this);
 
                     headerPanel.loggedOutToolbar();
                     ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "blank");

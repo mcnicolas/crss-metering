@@ -27,7 +27,12 @@ import org.json.JSONStringer;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -142,9 +147,9 @@ public class HttpHandler {
                         throw new LoginException("Unable to authenticate: " + username);
                     }
                 } else {
-                    throw new HttpResponseException("Connection error"
-                            + " statusCode:" + statusLine.getStatusCode()
-                            + " reason:" + statusLine.getReasonPhrase());
+                    throw new HttpResponseException("Message:Login error"
+                            + "\nStatus Code:" + statusLine.getStatusCode()
+                            + "\nReason:" + statusLine.getReasonPhrase());
                 }
             }
         } catch (URISyntaxException | IOException e) {
@@ -284,10 +289,9 @@ public class HttpHandler {
                     String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
                     JSONObject errorDetails = new JSONObject(content);
 
-                    // TODO: Error details needs further parsing
-                    throw new HttpResponseException("Connection error"
-                            + " statusCode:" + errorDetails.get("status")
-                            + " reason:" + errorDetails.get("errors"));
+                    throw new HttpResponseException("Message:Send Header Error"
+                            + "\nStatus Code:" + errorDetails.get("status")
+                            + "\nReason:" + errorDetails.get("error"));
                 }
             }
         } catch (URISyntaxException | IOException e) {
@@ -338,9 +342,9 @@ public class HttpHandler {
                 log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
 
                 if (statusLine.getStatusCode() != SC_OK) {
-                    throw new HttpResponseException("Connection error"
-                            + " statusCode:" + statusLine.getStatusCode()
-                            + " reason:" + statusLine.getReasonPhrase());
+                    throw new HttpResponseException("Message:Send File Error"
+                            + "\nStatus Code:" + statusLine.getStatusCode()
+                            + "\nReason:" + statusLine.getReasonPhrase());
                 }
             }
         } catch (URISyntaxException | IOException e) {
@@ -385,10 +389,9 @@ public class HttpHandler {
 
                     log.debug("Response:{}", retVal);
                 } else {
-                    // TODO: Error details needs further parsing
-                    throw new HttpResponseException("Connection error"
-                            + " statusCode:" + jsonData.get("status")
-                            + " reason:" + jsonData.get("errors"));
+                    throw new HttpResponseException("Message:Send Header Error"
+                            + "\nStatus Code:" + jsonData.get("status")
+                            + "\nReason:" + jsonData.get("error"));
                 }
             }
         } catch (URISyntaxException | IOException e) {
@@ -428,9 +431,9 @@ public class HttpHandler {
                         retVal.add(new ComboBoxItem(shortName, participantName));
                     }
                 } else {
-                    throw new HttpResponseException("Connection error"
-                            + " statusCode:" + statusLine.getStatusCode()
-                            + " reason:" + statusLine.getReasonPhrase());
+                    throw new HttpResponseException("Message:Send Header Error"
+                            + "\nStatus Code:" + statusLine.getStatusCode()
+                            + "\nReason:" + statusLine.getReasonPhrase());
                 }
             }
         } catch (URISyntaxException | IOException e) {
