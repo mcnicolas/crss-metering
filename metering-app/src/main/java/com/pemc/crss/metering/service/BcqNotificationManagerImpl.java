@@ -138,6 +138,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                     .addLoad("respondedDate", formattedRespondedDate)
                     .addLoad("buyerName", header.getBuyingParticipantName())
                     .addLoad("buyerShortName", header.getBuyingParticipantShortName())
+                    .addLoad("headerId", header.getHeaderId())
                     .build());
         }
     }
