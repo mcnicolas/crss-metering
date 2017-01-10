@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.event;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.pemc.crss.metering.constants.BcqEventCode;
 
 import java.util.Map;
@@ -13,7 +13,7 @@ public class BcqUnprocessedBuyerEvent extends BcqUnprocessedEvent {
 
     @Override
     protected Map<String, Object> getPayload() {
-        return new ImmutableMap.Builder<String, Object>()
+        return new Builder<String, Object>()
                 .put("sellerName", source.get("sellerName"))
                 .put("sellerShortName", source.get("sellerShortName"))
                 .putAll(getCommonPayload())

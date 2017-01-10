@@ -255,6 +255,7 @@ public class BcqServiceImpl implements BcqService {
 
     private void sendUnprocessedNotif(List<BcqHeader> headerList, BcqStatus status) {
         BcqHeader firstHeader = headerList.get(0);
+        String deadlineDate = formatLongDateTime(firstHeader.getDeadlineDate());
         StringJoiner sellingMtns = new StringJoiner(", ");
         headerList.forEach(header -> sellingMtns.add(header.getSellingMtn()));
         bcqNotificationService.send(status == CONFIRMED ? NTF_BCQ_UNNULLIFIED_SELLER : NTF_BCQ_UNCONFIRMED_SELLER,
@@ -262,13 +263,17 @@ public class BcqServiceImpl implements BcqService {
                 sellingMtns.toString(),
                 firstHeader.getBuyingParticipantName(),
                 firstHeader.getBuyingParticipantShortName(),
-                firstHeader.getSellingParticipantUserId());
+                firstHeader.getSellingParticipantUserId(),
+                deadlineDate,
+                status);
         bcqNotificationService.send(status == CONFIRMED ? NTF_BCQ_UNNULLIFIED_BUYER : NTF_BCQ_UNCONFIRMED_BUYER,
                 formatDate(firstHeader.getTradingDate()),
                 sellingMtns.toString(),
                 firstHeader.getSellingParticipantName(),
                 firstHeader.getSellingParticipantShortName(),
-                firstHeader.getBuyingParticipantUserId());
+                firstHeader.getBuyingParticipantUserId(),
+                deadlineDate,
+                status);
     }
 
 }

@@ -16,7 +16,9 @@ public abstract class BcqUnprocessedEvent extends BcqEvent {
         return of(
                 "tradingDate", source.get("tradingDate"),
                 "sellingMtns", source.get("sellingMtns"),
-                "recipientId", source.get("recipientId")
+                "recipientId", source.get("recipientId"),
+                "deadlineDate", source.get("deadlineDate"),
+                "status", source.get("status")
         );
     }
 

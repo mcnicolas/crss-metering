@@ -72,6 +72,8 @@ public enum BcqEventCode {
                     payloadNameList.add("sellingMtns");
                     payloadNameList.addAll(buyerPayloadNameList);
                     payloadNameList.add("recipientId");
+                    payloadNameList.add("deadlineDate");
+                    payloadNameList.add("status");
                     break;
                 case NTF_BCQ_UNCONFIRMED_BUYER:
                 case NTF_BCQ_UNNULLIFIED_BUYER:
@@ -79,6 +81,8 @@ public enum BcqEventCode {
                     payloadNameList.add("sellingMtns");
                     payloadNameList.addAll(sellerPayloadNameList);
                     payloadNameList.add("recipientId");
+                    payloadNameList.add("deadlineDate");
+                    payloadNameList.add("status");
                     break;
             }
             PAYLOAD_NAME_MAP.put(code, payloadNameList);
