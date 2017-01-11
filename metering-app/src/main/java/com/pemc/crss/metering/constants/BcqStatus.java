@@ -12,7 +12,8 @@ public enum BcqStatus {
     NOT_NULLIFIED,
     FOR_NULLIFICATION,
     FOR_APPROVAL_UPDATED,
-    FOR_APPROVAL_NEW;
+    FOR_APPROVAL_NEW,
+    FOR_APPROVAL_CANCEL;
 
     public static BcqStatus fromString(String value) {
         try {

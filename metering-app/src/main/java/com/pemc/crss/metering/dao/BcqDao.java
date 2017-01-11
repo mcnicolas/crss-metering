@@ -26,4 +26,6 @@ public interface BcqDao {
 
     void updateHeaderStatus(long headerId, BcqStatus status);
 
+    void updateHeaderStatusBySettlement(long headerId, BcqStatus status);
+
 }

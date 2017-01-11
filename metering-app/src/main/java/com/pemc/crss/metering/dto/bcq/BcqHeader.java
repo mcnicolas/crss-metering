@@ -2,12 +2,14 @@ package com.pemc.crss.metering.dto.bcq;
 
 import com.pemc.crss.metering.constants.BcqStatus;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 @Data
+@ToString
 public class BcqHeader {
 
     private long headerId;

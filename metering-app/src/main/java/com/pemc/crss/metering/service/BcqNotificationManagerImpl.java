@@ -20,9 +20,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import static com.pemc.crss.metering.constants.BcqEventCode.*;
-import static com.pemc.crss.metering.constants.BcqStatus.CANCELLED;
-import static com.pemc.crss.metering.constants.BcqStatus.CONFIRMED;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_NEW;
+import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 
 @Slf4j
@@ -152,6 +150,22 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                     .addLoad("respondedDate", formattedRespondedDate)
                     .addLoad("buyerName", header.getBuyingParticipantName())
                     .addLoad("buyerShortName", header.getBuyingParticipantShortName())
+                    .addLoad("headerId", header.getHeaderId())
+                    .build()));
+        }
+    }
+
+    @Override
+    public void sendSettlementUpdateStatusNotification(BcqHeader header) {
+        String formattedRespondedDate = formatLongDateTime(new Date());
+        String formattedTradingDate = formatLongDate(header.getTradingDate());
+        if (header.getStatus() == FOR_APPROVAL_CANCEL) {
+            eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                    .withCode(NTF_BCQ_REQUEST_CANCEL_DEPT.toString())
+                    .withRecipientDeptCode(DEPT_BILLING)
+                    .addLoad("tradingDate", formattedTradingDate)
+                    .addLoad("respondedDate", formattedRespondedDate)
+                    .addLoad("settlementUser", getSettlementName())
                     .addLoad("headerId", header.getHeaderId())
                     .build()));
         }

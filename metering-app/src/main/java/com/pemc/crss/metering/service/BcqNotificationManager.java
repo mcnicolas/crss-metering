@@ -19,6 +19,8 @@ public interface BcqNotificationManager {
 
     void sendUpdateStatusNotification(BcqHeader header);
 
+    void sendSettlementUpdateStatusNotification(BcqHeader header);
+
     void sendUnprocessedNotification(List<BcqHeader> headerList, BcqStatus status);
 
 }

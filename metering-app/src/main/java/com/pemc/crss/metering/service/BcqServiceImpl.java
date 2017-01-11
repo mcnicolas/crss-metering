@@ -48,6 +48,7 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
+    @Transactional
     public void saveSettlementDeclaration(BcqDeclaration declaration) {
         BcqUploadFile uploadFile = declaration.getUploadFileDetails().target();
         uploadFile.setFileId(saveUploadFile(uploadFile));
@@ -108,9 +109,17 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
+    @Transactional
     public void updateHeaderStatus(long headerId, BcqStatus status) {
         bcqDao.updateHeaderStatus(headerId, status);
         bcqNotificationManager.sendUpdateStatusNotification(findHeader(headerId));
+    }
+
+    @Override
+    @Transactional
+    public void updateHeaderStatusBySettlement(long headerId, BcqStatus status) {
+        bcqDao.updateHeaderStatusBySettlement(headerId, status);
+        bcqNotificationManager.sendSettlementUpdateStatusNotification(findHeader(headerId));
     }
 
     @Override

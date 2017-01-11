@@ -55,6 +55,9 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.header.status}")
     private String updateHeaderStatus;
 
+    @Value("${bcq.header.status.settlement}")
+    private String updateHeaderStatusBySettlement;
+
     @Value("${bcq.data.insert}")
     private String insertData;
 
@@ -236,6 +239,20 @@ public class JdbcBcqDao implements BcqDao {
                     return ps;
                 });
         log.debug("[DAO-BCQ] Updated status of header with ID: {} to {} ", headerId, status);
+    }
+
+    @Override
+    public void updateHeaderStatusBySettlement(long headerId, BcqStatus status) {
+        log.debug("[DAO-BCQ] Updating status by settlement of header to {} with ID: {}", status, headerId);
+        jdbcTemplate.update(
+                connection -> {
+                    PreparedStatement ps = connection.prepareStatement(updateHeaderStatusBySettlement);
+                    ps.setString(1, status.toString());
+                    ps.setString(2, "MANUAL_OVERRIDE");
+                    ps.setLong(3, headerId);
+                    return ps;
+                });
+        log.debug("[DAO-BCQ] Updated status by settlement of header with ID: {} to {} ", headerId, status);
     }
 
 
