@@ -1,6 +1,5 @@
 package com.pemc.crss.metering.service;
 
-import com.google.common.collect.ImmutableMap;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqEventCode;
 import com.pemc.crss.metering.constants.BcqStatus;
@@ -15,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqEventCode.*;
 import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
@@ -67,22 +67,22 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     public List<BcqHeader> findAllHeadersBySellerAndTradingDate(String sellerShortName, Date tradingDate) {
-        Map<String, String> params = new HashMap<>();
-        params.put("sellerName", sellerShortName);
-        params.put("tradingDate", formatDate(tradingDate));
-        return bcqDao.findAllHeaders(params);
+        return bcqDao.findAllHeaders(of(
+                "sellerName", sellerShortName,
+                "tradingDate", "formatDate(tradingDate)"
+        ));
     }
 
     @Override
     public List<ParticipantSellerDetails> findAllSellersWithExpiredBcqByTradingDate(Date tradingDate) {
-        Map<String, String> params = new HashMap<>();
-        params.put("tradingDate", formatDate(tradingDate));
-        params.put("expired", "expired");
-        return bcqDao.findAllHeaders(params).stream()
-                .map(header ->
-                        new ParticipantSellerDetails(header.getSellingParticipantUserId(),
-                                header.getSellingParticipantName(),
-                                header.getSellingParticipantShortName()))
+        return bcqDao.findAllHeaders(of(
+                "tradingDate", formatDate(tradingDate),
+                "expired", "expired",
+                "status", CONFIRMED.toString()
+        )).stream().map(header ->
+                new ParticipantSellerDetails(header.getSellingParticipantUserId(),
+                        header.getSellingParticipantName(),
+                        header.getSellingParticipantShortName()))
                 .distinct()
                 .collect(toList());
     }
@@ -202,16 +202,15 @@ public class BcqServiceImpl implements BcqService {
     }
 
     private List<BcqHeader> getExpiredHeadersByStatus(BcqStatus status) {
-        Map<String, String> params = ImmutableMap.of(
+        return bcqDao.findAllHeaders(of(
                 "expired", "expired",
                 "status", status.toString()
-        );
-        return bcqDao.findAllHeaders(params);
+        ));
     }
 
     private Map<Map<String, Object>, List<BcqHeader>> getGroupedHeaderList(List<BcqHeader> headerList) {
         return headerList.stream()
-                .collect(groupingBy(header -> ImmutableMap.of(
+                .collect(groupingBy(header -> of(
                         "sellerUserId", header.getSellingParticipantUserId(),
                         "buyerUserId", header.getBuyingParticipantUserId(),
                         "status", header.getStatus(),
