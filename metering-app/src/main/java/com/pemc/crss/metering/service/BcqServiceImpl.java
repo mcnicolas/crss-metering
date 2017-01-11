@@ -53,6 +53,7 @@ public class BcqServiceImpl implements BcqService {
         uploadFile.setFileId(saveUploadFile(uploadFile));
         if (uploadFile.getValidationStatus() == REJECTED) {
             bcqNotificationManager.sendValidationNotification(declaration, uploadFile.getSubmittedDate());
+            return;
         }
         List<BcqHeader> headerList = extractHeaderList(declaration);
         headerList = setUploadFileOfHeaders(headerList, uploadFile);
@@ -187,13 +188,19 @@ public class BcqServiceImpl implements BcqService {
                 declaration.getHeaderDetailsList().get(0).getTradingDate());
         return headerList.stream().map(header -> {
             boolean exists = isHeaderInList(header, currentHeaderList);
-            header.setExists(exists);
             if (exists) {
                 BcqHeader headerInList = findHeaderInList(header, currentHeaderList);
                 header.setHeaderId(headerInList.getHeaderId());
+                if (headerInList.getStatus() == FOR_APPROVAL_NEW) {
+                    header.setStatus(FOR_APPROVAL_NEW);
+                } else {
+                    header.setStatus(FOR_APPROVAL_UPDATED);
+                    header.setExists(true);
+                }
+            } else {
+                header.setStatus(FOR_APPROVAL_NEW);
             }
             header.setUpdatedVia("MANUAL_OVERRIDE");
-            header.setStatus(FOR_APPROVAL);
             return header;
         }).collect(toList());
     }
