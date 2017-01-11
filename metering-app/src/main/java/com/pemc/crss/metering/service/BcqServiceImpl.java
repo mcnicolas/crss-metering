@@ -43,7 +43,7 @@ public class BcqServiceImpl implements BcqService {
         }
         List<BcqHeader> headerList = extractHeaderList(declaration);
         headerList = setUploadFileOfHeaders(headerList, uploadFile);
-        headerList = setUpdatedViaOfHeaders(headerList, declaration, false);
+        headerList = setUpdatedViaOfHeaders(headerList, declaration);
         sendDeclarationNotif(bcqDao.saveHeaderList(headerList));
     }
 
@@ -56,7 +56,7 @@ public class BcqServiceImpl implements BcqService {
         }
         List<BcqHeader> headerList = extractHeaderList(declaration);
         headerList = setUploadFileOfHeaders(headerList, uploadFile);
-        headerList = setUpdatedViaOfHeaders(headerList, declaration, true);
+        headerList = setUpdatedViaOfHeadersBySettlement(headerList, declaration);
         bcqDao.saveHeaderList(headerList);
     }
 
@@ -161,9 +161,7 @@ public class BcqServiceImpl implements BcqService {
         }).collect(toList());
     }
 
-    private List<BcqHeader> setUpdatedViaOfHeaders(List<BcqHeader> headerList, BcqDeclaration declaration,
-                                                   boolean isSettlement) {
-
+    private List<BcqHeader> setUpdatedViaOfHeaders(List<BcqHeader> headerList, BcqDeclaration declaration) {
         if (declaration.isRedeclaration()) {
             List<BcqHeader> currentHeaderList = findAllHeadersBySellerAndTradingDate(
                     declaration.getSellerDetails().getShortName(),
@@ -171,19 +169,32 @@ public class BcqServiceImpl implements BcqService {
             return headerList.stream().map(header -> {
                 boolean exists = isHeaderInList(header, currentHeaderList);
                 header.setExists(exists);
-                if (isSettlement) {
-                    header.setUpdatedVia("MANUAL_OVERRIDE");
-                } else {
-                    if (exists) {
-                        BcqHeader headerInList = findHeaderInList(header, currentHeaderList);
-                        header.setHeaderId(headerInList.getHeaderId());
-                        header.setUpdatedVia("REDECLARATION");
-                    }
+                if (exists) {
+                    BcqHeader headerInList = findHeaderInList(header, currentHeaderList);
+                    header.setHeaderId(headerInList.getHeaderId());
+                    header.setUpdatedVia("REDECLARATION");
                 }
                 return header;
             }).collect(toList());
         }
         return headerList;
+    }
+
+    private List<BcqHeader> setUpdatedViaOfHeadersBySettlement(List<BcqHeader> headerList, BcqDeclaration declaration) {
+        List<BcqHeader> currentHeaderList = findAllHeadersBySellerAndTradingDate(
+                declaration.getSellerDetails().getShortName(),
+                declaration.getHeaderDetailsList().get(0).getTradingDate());
+        return headerList.stream().map(header -> {
+            boolean exists = isHeaderInList(header, currentHeaderList);
+            header.setExists(exists);
+            if (exists) {
+                BcqHeader headerInList = findHeaderInList(header, currentHeaderList);
+                header.setHeaderId(headerInList.getHeaderId());
+            }
+            header.setUpdatedVia("MANUAL_OVERRIDE");
+            header.setStatus(FOR_APPROVAL);
+            return header;
+        }).collect(toList());
     }
 
     private boolean isSameHeader(BcqHeader header1, BcqHeader header2) {

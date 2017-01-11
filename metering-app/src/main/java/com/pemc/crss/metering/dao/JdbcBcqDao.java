@@ -280,6 +280,7 @@ public class JdbcBcqDao implements BcqDao {
                 ps.setString(10, header.getStatus().toString());
                 ps.setTimestamp(11, new Timestamp(tradingDateInMillis));
                 ps.setTimestamp(12, deadlineDateTimestamp);
+                ps.setString(13, header.getUpdatedVia());
                 return ps;
             }, keyHolder);
             return keyHolder.getKey().longValue();
