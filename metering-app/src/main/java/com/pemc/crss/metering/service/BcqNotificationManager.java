@@ -13,6 +13,8 @@ public interface BcqNotificationManager {
 
     void sendUploadNotification(List<BcqHeader> headerList);
 
+    void sendSettlementValidationNotification(BcqDeclaration declaration, Date submittedDate);
+
     void sendSettlementUploadNotification(List<BcqHeader> headerList);
 
     void sendUpdateStatusNotification(BcqHeader header);

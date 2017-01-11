@@ -79,7 +79,7 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
                 parseDate(tradingDateString));
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("[REST-BCQ] Finished uploading and rejecting of: {}", multipartFile.getOriginalFilename());
-            //bcqService.saveFailedUploadFile(declaration.getUploadFileDetails().target(), declaration);
+            bcqService.saveSettlementDeclaration(declaration);
             return unprocessableEntity().body(declaration.getValidationResult());
         }
         log.debug("[REST-BCQ] Finished settlement uploading of: {}", multipartFile.getOriginalFilename());

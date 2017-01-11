@@ -52,7 +52,7 @@ public class BcqServiceImpl implements BcqService {
         BcqUploadFile uploadFile = declaration.getUploadFileDetails().target();
         uploadFile.setFileId(saveUploadFile(uploadFile));
         if (uploadFile.getValidationStatus() == REJECTED) {
-            bcqNotificationManager.sendValidationNotification(declaration, uploadFile.getSubmittedDate());
+            bcqNotificationManager.sendSettlementValidationNotification(declaration, uploadFile.getSubmittedDate());
             return;
         }
         List<BcqHeader> headerList = extractHeaderList(declaration);

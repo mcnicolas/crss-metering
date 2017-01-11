@@ -87,6 +87,18 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
     }
 
     @Override
+    public void sendSettlementValidationNotification(BcqDeclaration declaration, Date submittedDate) {
+        String formattedSubmittedDate = formatLongDateTime(submittedDate);
+        eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                .withCode(NTF_BCQ_SETTLEMENT_VALIDATION_DEPT.toString())
+                .withRecipientDeptCode(DEPT_BILLING)
+                .addLoad("submittedDate", formattedSubmittedDate)
+                .addLoad("settlementUser", getSettlementName())
+                .addLoad("errorMessage", declaration.getValidationResult().getErrorMessage())
+                .build()));
+    }
+
+    @Override
     public void sendSettlementUploadNotification(List<BcqHeader> headerList) {
         BcqHeader firstHeader = headerList.get(0);
         String settlementUser = getSettlementName();
