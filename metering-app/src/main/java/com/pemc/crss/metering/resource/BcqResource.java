@@ -57,7 +57,7 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
         BcqDeclaration declaration = processAndValidateDeclaration(multipartFile);
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("[REST-BCQ] Finished uploading and rejecting of: {}", multipartFile.getOriginalFilename());
-            bcqService.saveDeclaration(declaration);
+            bcqService.saveSellerDeclaration(declaration);
             return unprocessableEntity().body(declaration.getValidationResult());
         }
         log.debug("[REST-BCQ] Finished uploading of: {}", multipartFile.getOriginalFilename());
@@ -69,7 +69,7 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
                                                 @RequestPart String sellerDetailsString,
                                                 @RequestPart String tradingDateString) throws IOException {
         log.debug("[REST-BCQ] Request for settlement uploading of: {}", multipartFile.getOriginalFilename());
-        String[] sellerDetailsArray = sellerDetailsString.split(",");
+        String[] sellerDetailsArray = sellerDetailsString.split(", ");
         long sellerUserId = parseLong(sellerDetailsArray[0]);
         String sellerName = sellerDetailsArray[1];
         String sellerShortName = sellerDetailsArray[2];
@@ -97,10 +97,10 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("[REST-BCQ] Finished uploading and rejecting by web service of: {}",
                     multipartFile.getOriginalFilename());
-            bcqService.saveDeclaration(declaration);
+            bcqService.saveSellerDeclaration(declaration);
             return unprocessableEntity().body(removeHtmlTags(declaration.getValidationResult().getErrorMessage()));
         }
-        bcqService.saveDeclaration(declaration);
+        bcqService.saveSellerDeclaration(declaration);
         log.debug("[REST-BCQ] Finished uploading and saving by web service of: {}", multipartFile.getOriginalFilename());
         if (declaration.isRedeclaration()) {
             return ok("Successfully saved redeclaration.");
@@ -111,7 +111,14 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
     @PostMapping("/save")
     public void save(@RequestBody BcqDeclaration declaration) throws IOException {
         log.debug("[REST-BCQ] Request for saving declaration");
-        bcqService.saveDeclaration(declaration);
+        bcqService.saveSellerDeclaration(declaration);
+        log.debug("[REST-BCQ] Finished saving declaration");
+    }
+
+    @PostMapping("/settlement/save")
+    public void saveBySettlement(@RequestBody BcqDeclaration declaration) throws IOException {
+        log.debug("[REST-BCQ] Request for saving declaration");
+        bcqService.saveSettlementDeclaration(declaration);
         log.debug("[REST-BCQ] Finished saving declaration");
     }
 

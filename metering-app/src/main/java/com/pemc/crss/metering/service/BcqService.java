@@ -10,7 +10,9 @@ import java.util.List;
 
 public interface BcqService {
 
-    void saveDeclaration(BcqDeclaration declaration);
+    void saveSellerDeclaration(BcqDeclaration declaration);
+
+    void saveSettlementDeclaration(BcqDeclaration declaration);
 
     Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest);
 

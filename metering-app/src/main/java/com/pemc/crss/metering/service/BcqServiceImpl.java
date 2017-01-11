@@ -34,41 +34,30 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     @Transactional
-    public void saveDeclaration(BcqDeclaration declaration) {
+    public void saveSellerDeclaration(BcqDeclaration declaration) {
         BcqUploadFile uploadFile = declaration.getUploadFileDetails().target();
         uploadFile.setFileId(saveUploadFile(uploadFile));
         if (uploadFile.getValidationStatus() == REJECTED) {
             sendValidationNotif(uploadFile, declaration);
             return;
         }
-        List<BcqHeader> currentHeaderList = new ArrayList<>();
-        List<BcqHeader> headerList = new ArrayList<>();
-        if (declaration.isRedeclaration()) {
-            currentHeaderList.addAll(findAllHeadersBySellerAndTradingDate(
-                    declaration.getSellerDetails().getShortName(),
-                    declaration.getHeaderDetailsList().get(0).getTradingDate()));
-        }
-        declaration.getHeaderDetailsList().forEach(headerDetails -> {
-            ParticipantSellerDetails sellerDetails = declaration.getSellerDetails();
-            BcqHeader header = headerDetails.target();
-            header.setFileId(uploadFile.getFileId());
-            header.setUploadFile(uploadFile);
-            header.setSellingParticipantUserId(sellerDetails.getUserId());
-            header.setSellingParticipantName(sellerDetails.getName());
-            header.setSellingParticipantShortName(sellerDetails.getShortName());
-
-            boolean exists = isHeaderInList(header, currentHeaderList);
-            header.setExists(exists);
-            if (exists) {
-                BcqHeader headerInList = findHeaderInList(header, currentHeaderList);
-                if (headerInList != null) {
-                    header.setHeaderId(headerInList.getHeaderId());
-                    header.setUpdatedVia("REDECLARATION");
-                }
-            }
-            headerList.add(header);
-        });
+        List<BcqHeader> headerList = extractHeaderList(declaration);
+        headerList = setUploadFileOfHeaders(headerList, uploadFile);
+        headerList = setUpdatedViaOfHeaders(headerList, declaration, false);
         sendDeclarationNotif(bcqDao.saveHeaderList(headerList));
+    }
+
+    @Override
+    public void saveSettlementDeclaration(BcqDeclaration declaration) {
+        BcqUploadFile uploadFile = declaration.getUploadFileDetails().target();
+        uploadFile.setFileId(saveUploadFile(uploadFile));
+        if (uploadFile.getValidationStatus() == REJECTED) {
+            sendValidationNotif(uploadFile, declaration);
+        }
+        List<BcqHeader> headerList = extractHeaderList(declaration);
+        headerList = setUploadFileOfHeaders(headerList, uploadFile);
+        headerList = setUpdatedViaOfHeaders(headerList, declaration, true);
+        bcqDao.saveHeaderList(headerList);
     }
 
     @Override
@@ -145,10 +134,56 @@ public class BcqServiceImpl implements BcqService {
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/
-    public long saveUploadFile(BcqUploadFile uploadFile) {
+    private long saveUploadFile(BcqUploadFile uploadFile) {
         uploadFile.setSubmittedDate(new Date());
         uploadFile.setTransactionId(randomUUID().toString());
         return bcqDao.saveUploadFile(uploadFile);
+    }
+
+    private List<BcqHeader> extractHeaderList(BcqDeclaration declaration) {
+        List<BcqHeader> headerList = new ArrayList<>();
+        declaration.getHeaderDetailsList().forEach(headerDetails -> {
+            ParticipantSellerDetails sellerDetails = declaration.getSellerDetails();
+            BcqHeader header = headerDetails.target();
+            header.setSellingParticipantUserId(sellerDetails.getUserId());
+            header.setSellingParticipantName(sellerDetails.getName());
+            header.setSellingParticipantShortName(sellerDetails.getShortName());
+            headerList.add(header);
+        });
+        return headerList;
+    }
+
+    private List<BcqHeader> setUploadFileOfHeaders(List<BcqHeader> headerList, BcqUploadFile uploadFile) {
+        return headerList.stream().map(header -> {
+            header.setUploadFile(uploadFile);
+            header.setFileId(uploadFile.getFileId());
+            return header;
+        }).collect(toList());
+    }
+
+    private List<BcqHeader> setUpdatedViaOfHeaders(List<BcqHeader> headerList, BcqDeclaration declaration,
+                                                   boolean isSettlement) {
+
+        if (declaration.isRedeclaration()) {
+            List<BcqHeader> currentHeaderList = findAllHeadersBySellerAndTradingDate(
+                    declaration.getSellerDetails().getShortName(),
+                    declaration.getHeaderDetailsList().get(0).getTradingDate());
+            return headerList.stream().map(header -> {
+                boolean exists = isHeaderInList(header, currentHeaderList);
+                header.setExists(exists);
+                if (isSettlement) {
+                    header.setUpdatedVia("MANUAL_OVERRIDE");
+                } else {
+                    if (exists) {
+                        BcqHeader headerInList = findHeaderInList(header, currentHeaderList);
+                        header.setHeaderId(headerInList.getHeaderId());
+                        header.setUpdatedVia("REDECLARATION");
+                    }
+                }
+                return header;
+            }).collect(toList());
+        }
+        return headerList;
     }
 
     private boolean isSameHeader(BcqHeader header1, BcqHeader header2) {
@@ -163,7 +198,7 @@ public class BcqServiceImpl implements BcqService {
                 return header;
             }
         }
-        return null;
+        return new BcqHeader();
     }
 
     private List<BcqHeader> getExpiredHeadersByStatus(BcqStatus status) {
