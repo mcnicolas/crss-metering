@@ -31,7 +31,7 @@ public interface MeterService {
 
     MeterQuantityReport getReport(long headerId);
 
-    List<FileManifest> findRejectedFiles(long headerId);
+    List<FileManifest> getAllFileManifest(long headerID);
 
     void updateNotificationFlag(long headerID);
 
