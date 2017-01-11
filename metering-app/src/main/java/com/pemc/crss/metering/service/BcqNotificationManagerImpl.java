@@ -176,6 +176,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
         String settlementUser = getSettlementName();
         String formattedTradingDate = formatLongDate(header.getTradingDate());
         String formattedSubmittedDate = formatLongDateTime(header.getUploadFile().getSubmittedDate());
+        String formattedRespondedDate = formatLongDateTime(new Date());
         switch (header.getStatus()) {
             case FOR_APPROVAL_UPDATED:
                 eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
@@ -206,6 +207,15 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                         .addLoad("headerId", header.getHeaderId())
                         .build()));
                 break;
+            case FOR_APPROVAL_CANCEL:
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_CANCEL_BUYER.toString())
+                        .withRecipientId(header.getBuyingParticipantUserId())
+                        .addLoad("tradingDate", formattedTradingDate)
+                        .addLoad("respondedDate", formattedRespondedDate)
+                        .addLoad("settlementUser", settlementUser)
+                        .addLoad("headerId", header.getHeaderId())
+                        .build()));
             default:
                 break;
         }
