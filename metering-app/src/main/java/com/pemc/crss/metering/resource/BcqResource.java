@@ -158,6 +158,13 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
         log.debug("[REST-BCQ] Finished settlement updating status to {} of header with ID: {}", status, headerId);
     }
 
+    @PostMapping("/declaration/settlement/approve/{headerId}")
+    public void approve(@PathVariable long headerId) {
+        log.debug("[REST-BCQ] Request for approval of header with ID: {}", headerId);
+        bcqService.approve(headerId);
+        log.debug("[REST-BCQ] Finished approval of header with ID: {}", headerId);
+    }
+
     @GetMapping("/sellers")
     public List<ParticipantSellerDetails> getSellersByTradingDate(@RequestParam String tradingDate) {
         log.debug("[REST-BCQ] Request for getting sellers with trading date: {}", tradingDate);

@@ -172,6 +172,46 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
     }
 
     @Override
+    public void sendApprovalNotification(BcqHeader header) {
+        String settlementUser = getSettlementName();
+        String formattedTradingDate = formatLongDate(header.getTradingDate());
+        String formattedSubmittedDate = formatLongDateTime(header.getUploadFile().getSubmittedDate());
+        switch (header.getStatus()) {
+            case FOR_APPROVAL_UPDATED:
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_UPDATE_SELLER.toString())
+                        .withRecipientId(header.getSellingParticipantUserId())
+                        .addLoad("tradingDate", formattedTradingDate)
+                        .addLoad("submittedDate", formattedSubmittedDate)
+                        .addLoad("settlementUser", getSettlementName())
+                        .addLoad("headerId", header.getHeaderId())
+                        .build()));
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_UPDATE_BUYER.toString())
+                        .withRecipientId(header.getBuyingParticipantUserId())
+                        .addLoad("tradingDate", formattedTradingDate)
+                        .addLoad("submittedDate", formattedSubmittedDate)
+                        .addLoad("settlementUser", getSettlementName())
+                        .addLoad("headerId", header.getHeaderId())
+                        .build()));
+                break;
+            case FOR_APPROVAL_NEW:
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_NEW_BUYER.toString())
+                        .withRecipientId(header.getBuyingParticipantUserId())
+                        .addLoad("submittedDate", formattedSubmittedDate)
+                        .addLoad("sellerName", header.getSellingParticipantName())
+                        .addLoad("sellerShortName", header.getSellingParticipantShortName())
+                        .addLoad("settlementUser", getSettlementName())
+                        .addLoad("headerId", header.getHeaderId())
+                        .build()));
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
     public void sendUnprocessedNotification(List<BcqHeader> headerList, BcqStatus status) {
         BcqHeader firstHeader = headerList.get(0);
         String formattedTradingDate = formatLongDate(firstHeader.getTradingDate());

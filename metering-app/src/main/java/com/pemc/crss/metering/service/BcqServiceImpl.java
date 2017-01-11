@@ -124,6 +124,26 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     @Transactional
+    public void approve(long headerId) {
+        BcqHeader header = findHeader(headerId);
+        BcqStatus statusToBe = null;
+        switch (header.getStatus()) {
+            case FOR_APPROVAL_UPDATED:
+            case FOR_APPROVAL_NEW:
+                statusToBe = CONFIRMED;
+                break;
+            case FOR_APPROVAL_CANCEL:
+                statusToBe = CANCELLED;
+                break;
+            default:
+                break;
+        }
+        bcqDao.updateHeaderStatus(headerId, statusToBe);
+        bcqNotificationManager.sendApprovalNotification(header);
+    }
+
+    @Override
+    @Transactional
     public void processUnconfirmedHeaders() {
         List<BcqHeader> unconfirmedHeaders = getExpiredHeadersByStatus(FOR_CONFIRMATION);
         unconfirmedHeaders.forEach(header -> bcqDao.updateHeaderStatus(header.getHeaderId(), NOT_CONFIRMED));
