@@ -306,7 +306,7 @@ public class JdbcBcqDao implements BcqDao {
 
     private int getDeadlineConfig() {
         Cache configCache = cacheManager.getCache("config");
-        ValueWrapper valueWrapper = configCache.get("BCQ_DEADLINE");
+        ValueWrapper valueWrapper = configCache.get("BCQ_DECLARATION_DEADLINE");
         return valueWrapper == null ? 2 : parseInt(valueWrapper.get().toString()) + 1;
     }
 
