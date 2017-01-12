@@ -44,7 +44,7 @@ public class HeaderListValidator {
 
     private int getTradingDateConfig() {
         Cache configCache = cacheManager.getCache("config");
-        ValueWrapper valueWrapper = configCache.get("BCQ_TRADING_DATE");
+        ValueWrapper valueWrapper = configCache.get("BCQ_ALLOWABLE_TRADING_DATE");
         return valueWrapper == null ? 1 : parseInt(valueWrapper.get().toString());
     }
 }
