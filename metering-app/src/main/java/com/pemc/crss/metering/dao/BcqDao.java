@@ -4,6 +4,7 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import org.springframework.data.domain.Page;
 
@@ -27,5 +28,7 @@ public interface BcqDao {
     void updateHeaderStatus(long headerId, BcqStatus status);
 
     void updateHeaderStatusBySettlement(long headerId, BcqStatus status);
+
+    long saveSpecialEvent(BcqSpecialEvent specialEvent);
 
 }

@@ -4,6 +4,7 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,6 +77,15 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.display.paginate}")
     private String displayPaginate;
 
+    @Value("${bcq.event.insert")
+    private String insertEvent;
+
+    @Value("${bcq.event.trading-date.insert")
+    private String insertEventTradingDate;
+
+    @Value("${bcq.event.participant.insert")
+    private String insertEventParticipant;
+
     private final JdbcTemplate jdbcTemplate;
     private final CacheManager cacheManager;
 
@@ -96,7 +106,7 @@ public class JdbcBcqDao implements BcqDao {
                 keyHolder);
         long id = keyHolder.getKey().longValue();
         log.debug("[DAO-BCQ] Saved file: {} with ID: {}", uploadFile.getFileName(), id);
-        return keyHolder.getKey().longValue();
+        return id;
     }
 
     @Override
@@ -255,6 +265,24 @@ public class JdbcBcqDao implements BcqDao {
         log.debug("[DAO-BCQ] Updated status by settlement of header with ID: {} to {} ", headerId, status);
     }
 
+    @Override
+    public long saveSpecialEvent(BcqSpecialEvent specialEvent) {
+        log.debug("[DAO-BCQ] Saving new special event");
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(
+                connection -> {
+                    PreparedStatement ps = connection.prepareStatement(insertManifest, new String[]{"event_id"});
+                    ps.setTimestamp(1, new Timestamp(specialEvent.getDeadlineDate().getTime()));
+                    ps.setString(2, specialEvent.getRemarks());
+                    return ps;
+                },
+                keyHolder);
+        long eventId = keyHolder.getKey().longValue();
+        log.debug("[DAO-BCQ] Saved special event with ID: {}", eventId);
+        saveEventTradingDates(specialEvent.getTradingDates(), eventId);
+        saveEventParticipants(specialEvent.getTradingParticipants(), eventId);
+        return eventId;
+    }
 
     /****************************************************
      * SUPPORT METHODS
@@ -335,11 +363,43 @@ public class JdbcBcqDao implements BcqDao {
                 Integer.class);
     }
 
+    private void saveEventTradingDates(List<Date> tradingDateList, long eventId) {
+        log.debug("[DAO-BCQ] Saving event trading date list with size of: {} and event id: {}",
+                tradingDateList.size(), eventId);
+        jdbcTemplate.batchUpdate(insertEventTradingDate, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                Date tradingDate = tradingDateList.get(i);
+                ps.setLong(1, eventId);
+                ps.setTimestamp(2, new Timestamp(tradingDate.getTime()));
+            }
+            @Override
+            public int getBatchSize() {
+                return tradingDateList.size();
+            }
+        });
+        log.debug("[DAO-BCQ] Saved event trading date list");
+    }
 
-
+    private void saveEventParticipants(List<String> participantNameList, long eventId) {
+        log.debug("[DAO-BCQ] Saving event participant list with size of: {} and event id: {}",
+                participantNameList.size(), eventId);
+        jdbcTemplate.batchUpdate(insertEventTradingDate, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                String participantName = participantNameList.get(i);
+                ps.setLong(1, eventId);
+                ps.setString(2, participantName);
+            }
+            @Override
+            public int getBatchSize() {
+                return participantNameList.size();
+            }
+        });
+        log.debug("[DAO-BCQ] Saved event participant list");
+    }
 
     private class BcqHeaderRowMapper implements RowMapper<BcqHeader> {
-
         @Override
         public BcqHeader mapRow(ResultSet rs, int rowNum) throws SQLException {
             BcqHeader header = new BcqHeader();
@@ -362,6 +422,5 @@ public class JdbcBcqDao implements BcqDao {
             header.setUploadFile(uploadFile);
             return header;
         }
-
     }
 }

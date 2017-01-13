@@ -174,6 +174,13 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
         return sellerDetailsList;
     }
 
+    @PostMapping("/special-event")
+    public void saveSpecialEvent(BcqSpecialEventForm specialEventForm) {
+        log.debug("[REST-BCQ] Request for saving special event");
+        long eventId = bcqService.saveSpecialEvent(specialEventForm.target());
+        log.debug("[REST-BCQ] Saved special event with id: {}", eventId);
+    }
+
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/

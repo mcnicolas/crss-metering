@@ -162,6 +162,12 @@ public class BcqServiceImpl implements BcqService {
                 .sendUnprocessedNotification(headerList, CONFIRMED));
     }
 
+    @Override
+    @Transactional
+    public long saveSpecialEvent(BcqSpecialEvent specialEvent) {
+        return bcqDao.saveSpecialEvent(specialEvent);
+    }
+
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/

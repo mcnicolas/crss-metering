@@ -36,4 +36,6 @@ public interface BcqService {
 
     void processUnnullifiedHeaders();
 
+    long saveSpecialEvent(BcqSpecialEvent specialEvent);
+
 }
