@@ -14,6 +14,7 @@ import java.util.function.Predicate;
 import static com.pemc.crss.metering.constants.BcqValidationRules.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDateTime;
+import static com.pemc.crss.metering.utils.BcqDateUtils.formatLongDate;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
 import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation.emptyInst;
 import static java.lang.String.format;
@@ -43,7 +44,7 @@ public class HeaderListValidationHelper {
             Date maxDate = startOfDay(today);
             if (tradingDate.after(maxDate) || tradingDate.before(minDate)) {
                 headerListValidation.setErrorMessage(format(CLOSED_TRADING_DATE.getErrorMessage(),
-                        formatDate(tradingDate)));
+                        formatLongDate(tradingDate)));
                 return false;
             }
             return true;
