@@ -195,8 +195,8 @@ public class BcqServiceImpl implements BcqService {
                     header.setStatus(FOR_APPROVAL_NEW);
                 } else {
                     header.setStatus(FOR_APPROVAL_UPDATED);
-                    header.setExists(true);
                 }
+                header.setExists(true);
             } else {
                 header.setStatus(FOR_APPROVAL_NEW);
             }

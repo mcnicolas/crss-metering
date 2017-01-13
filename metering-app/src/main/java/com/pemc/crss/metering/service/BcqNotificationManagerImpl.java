@@ -22,6 +22,7 @@ import java.util.StringJoiner;
 import static com.pemc.crss.metering.constants.BcqEventCode.*;
 import static com.pemc.crss.metering.constants.BcqStatus.CANCELLED;
 import static com.pemc.crss.metering.constants.BcqStatus.CONFIRMED;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_NEW;
 import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 
 @Slf4j
@@ -44,9 +45,11 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                 .addLoad("errorMessage", declaration.getValidationResult().getErrorMessage())
                 .build()));
         eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
-                .withCode(NTF_BCQ_VALIDATION_SELLER.toString())
-                .withRecipientId(sellerDetails.getUserId())
+                .withCode(NTF_BCQ_VALIDATION_DEPT.toString())
+                .withRecipientDeptCode(DEPT_BILLING)
                 .addLoad("submittedDate", formattedSubmittedDate)
+                .addLoad("sellerName", sellerDetails.getName())
+                .addLoad("sellerShortName", sellerDetails.getShortName())
                 .addLoad("errorMessage", declaration.getValidationResult().getErrorMessage())
                 .build()));
     }
@@ -90,7 +93,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
         String formattedTradingDate = formatLongDate(firstHeader.getTradingDate());
         String formattedSubmittedDate = formatLongDateTime(firstHeader.getUploadFile().getSubmittedDate());
         for (BcqHeader header : headerList) {
-            if (header.isExists()) {
+            if (header.isExists() && header.getStatus() != FOR_APPROVAL_NEW) {
                 eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
                         .withCode(NTF_BCQ_SETTLEMENT_UPDATE_DEPT.toString())
                         .withRecipientDeptCode(DEPT_BILLING)
