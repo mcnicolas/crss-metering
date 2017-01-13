@@ -25,6 +25,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.math.NumberUtils.isParsable;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
+import static org.springframework.security.oauth2.client.http.StringSplitUtils.split;
 
 @Component
 public class CsvValidationHelper {
@@ -53,6 +54,7 @@ public class CsvValidationHelper {
                 .and(validDate())
                 .and(validBcq())
                 .and(positiveBcq())
+                .and(validBcqLength())
                 .and(noDuplicates())
                 .and(sameTradingDate());
     }
@@ -100,43 +102,61 @@ public class CsvValidationHelper {
     }
 
     private CsvValidation sellingMtnIsSet() {
-        return from(csv -> !getDataList(csv).stream().
-                anyMatch(line -> isBlank(line.get(SELLING_MTN_INDEX))), MISSING_SELLING_MTN.getErrorMessage());
+        return from(csv -> !getDataList(csv).stream()
+                .anyMatch(line -> isBlank(line.get(SELLING_MTN_INDEX))), MISSING_SELLING_MTN.getErrorMessage());
     }
 
     private CsvValidation billingIdIsSet() {
-        return from(csv -> !getDataList(csv).stream().
-                anyMatch(line -> isBlank(line.get(BILLING_ID_INDEX))), MISSING_BILLING_ID.getErrorMessage());
+        return from(csv -> !getDataList(csv).stream()
+                .anyMatch(line -> isBlank(line.get(BILLING_ID_INDEX))), MISSING_BILLING_ID.getErrorMessage());
     }
 
     private CsvValidation referenceMtnIsSet() {
-        return from(csv -> !getDataList(csv).stream().
-                anyMatch(line -> isBlank(line.get(REFERENCE_MTN_INDEX))), MISSING_REFERENCE_MTN.getErrorMessage());
+        return from(csv -> !getDataList(csv).stream()
+                .anyMatch(line -> isBlank(line.get(REFERENCE_MTN_INDEX))), MISSING_REFERENCE_MTN.getErrorMessage());
     }
 
     private CsvValidation dateIsSet() {
-        return from(csv -> !getDataList(csv).stream().
-                anyMatch(line -> isBlank(line.get(DATE_INDEX))), MISSING_DATE.getErrorMessage());
+        return from(csv -> !getDataList(csv).stream()
+                .anyMatch(line -> isBlank(line.get(DATE_INDEX))), MISSING_DATE.getErrorMessage());
     }
 
     private CsvValidation bcqIsSet() {
-        return from(csv -> !getDataList(csv).stream().
-                anyMatch(line -> isBlank(line.get(BCQ_INDEX))), MISSING_BCQ.getErrorMessage());
+        return from(csv -> !getDataList(csv).stream()
+                .anyMatch(line -> isBlank(line.get(BCQ_INDEX))), MISSING_BCQ.getErrorMessage());
     }
 
     private CsvValidation validDate() {
-        return from(csv -> !getDataList(csv).stream().
-                anyMatch(line -> parseDateTime(line.get(DATE_INDEX)) == null), INCORRECT_DATE_FORMAT.getErrorMessage());
+        return from(csv -> !getDataList(csv).stream()
+                .anyMatch(line -> parseDateTime(line.get(DATE_INDEX)) == null), INCORRECT_DATE_FORMAT.getErrorMessage());
     }
 
     private CsvValidation validBcq() {
-        return from(csv -> !getDataList(csv).stream().
-                anyMatch(line -> !isParsable(line.get(BCQ_INDEX))), INCORRECT_DATA_TYPE.getErrorMessage());
+        return from(csv -> !getDataList(csv).stream()
+                .anyMatch(line -> !isParsable(line.get(BCQ_INDEX))), INCORRECT_DATA_TYPE.getErrorMessage());
     }
 
     private CsvValidation positiveBcq() {
-        return from(csv -> !getDataList(csv).stream().
-                anyMatch(line -> new BigDecimal(line.get(BCQ_INDEX)).signum() == -1), NEGATIVE_BCQ.getErrorMessage());
+        return from(csv -> !getDataList(csv).stream()
+                .anyMatch(line -> new BigDecimal(line.get(BCQ_INDEX)).signum() == -1), NEGATIVE_BCQ.getErrorMessage());
+    }
+
+    private CsvValidation validBcqLength() {
+        return from(csv -> !getDataList(csv).stream()
+                .anyMatch(line -> {
+                    BigDecimal bcq = new BigDecimal(line.get(BCQ_INDEX));
+                    bcq = bcq.stripTrailingZeros();
+                    String integerPart = bcq.toPlainString();
+                    if (integerPart.contains(".")) {
+                        String[] bcqStrings = split(integerPart, ".");
+                        integerPart = bcqStrings[0];
+                        String fractionalPart = bcqStrings[1];
+                        if (fractionalPart.length() > 9) {
+                            return true;
+                        }
+                    }
+                    return integerPart.length() > 19;
+                }), INVALID_BCQ_LENGTH.getErrorMessage());
     }
 
     private CsvValidation noDuplicates() {

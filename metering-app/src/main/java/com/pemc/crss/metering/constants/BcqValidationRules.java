@@ -8,7 +8,8 @@ public enum BcqValidationRules {
     INCORRECT_DECLARED_INTERVAL("Incorrect declared interval. Interval <b>%s</b> is not valid."),
     INCORRECT_COLUMN_HEADER_COUNT("Incorrect column header count. Number of columns should be <b>5</b>."),
     INCORRECT_TIME_INTERVALS("Incorrect time interval. Value <b>%s</b> is not valid for interval <b>%s</b>"),
-    DUPLICATE_DATE("Duplicate date. Duplicate entry for <b>%s</b> found under Selling MTN <b>%s</b> and Billing ID <b>%s</b>."),
+    DUPLICATE_DATE("Duplicate date. Duplicate entry for <b>%s</b> found under " +
+            "Selling MTN <b>%s</b> and Billing ID <b>%s</b>."),
     INCOMPLETE_ENTRIES("Incomplete BCQ entries for date of <b>%s</b>. " +
             "Selling MTN <b>%s</b> and Billing ID <b>%s</b> should have <b>%s</b> entries."),
     INCORRECT_DATA_TYPE("Incorrect data type. BCQ should be in <b>number</b> format."),
@@ -17,6 +18,8 @@ public enum BcqValidationRules {
     INVALID_TRADING_DATE("Trading date is invalid. Only one trading date can be accepted per file."),
     DIFFERENT_TRADING_DATE("Trading date is invalid. Trading date must be the same when overriding."),
     NEGATIVE_BCQ("BCQ is Negative. Declared BCQs should not be negative."),
+    INVALID_BCQ_LENGTH("BCQ length is invalid. BCQ can only have a length of <b>19 for integer part</b>, " +
+            "and <b>9 for fractional part</b>."),
     MISSING_INTERVAL("Missing interval."),
     MISSING_SELLING_MTN("Missing selling MTN."),
     MISSING_BILLING_ID("Missing billing ID."),
