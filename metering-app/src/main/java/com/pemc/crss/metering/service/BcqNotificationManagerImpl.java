@@ -87,7 +87,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
     public void sendSettlementUploadNotification(List<BcqHeader> headerList) {
         BcqHeader firstHeader = headerList.get(0);
         String settlementUser = getSettlementName();
-        String formattedTradingDate = formatDateTime(firstHeader.getTradingDate());
+        String formattedTradingDate = formatLongDate(firstHeader.getTradingDate());
         String formattedSubmittedDate = formatLongDateTime(firstHeader.getUploadFile().getSubmittedDate());
         for (BcqHeader header : headerList) {
             if (header.isExists()) {
