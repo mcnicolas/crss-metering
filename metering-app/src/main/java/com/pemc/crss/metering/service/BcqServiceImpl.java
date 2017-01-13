@@ -70,8 +70,8 @@ public class BcqServiceImpl implements BcqService {
     @Override
     public List<BcqHeader> findAllHeadersBySellerAndTradingDate(String sellerShortName, Date tradingDate) {
         return bcqDao.findAllHeaders(of(
-                "sellerName", sellerShortName,
-                "tradingDate", "formatDate(tradingDate)"
+                "sellingParticipant", sellerShortName,
+                "tradingDate", formatDate(tradingDate)
         ));
     }
 
