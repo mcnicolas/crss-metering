@@ -2,6 +2,7 @@ package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
+import com.pemc.crss.metering.constants.BcqUpdateType;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.BcqSpecialEvent;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.pemc.crss.metering.constants.BcqStatus.fromString;
+import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
@@ -258,7 +260,7 @@ public class JdbcBcqDao implements BcqDao {
                 connection -> {
                     PreparedStatement ps = connection.prepareStatement(updateHeaderStatusBySettlement);
                     ps.setString(1, status.toString());
-                    ps.setString(2, "MANUAL_OVERRIDE");
+                    ps.setString(2, MANUAL_OVERRIDE.toString());
                     ps.setLong(3, headerId);
                     return ps;
                 });
@@ -297,7 +299,7 @@ public class JdbcBcqDao implements BcqDao {
                 PreparedStatement ps = con.prepareStatement(updateHeader);
                 ps.setLong(1, header.getFileId());
                 ps.setString(2, header.getStatus().toString());
-                ps.setString(3, header.getUpdatedVia());
+                ps.setString(3, header.getUpdatedVia().toString());
                 ps.setString(4, header.getSellingMtn());
                 ps.setString(5, header.getBillingId());
                 ps.setTimestamp(6, new Timestamp(tradingDateInMillis));
@@ -325,7 +327,7 @@ public class JdbcBcqDao implements BcqDao {
                 ps.setString(10, header.getStatus().toString());
                 ps.setTimestamp(11, new Timestamp(tradingDateInMillis));
                 ps.setTimestamp(12, deadlineDateTimestamp);
-                ps.setString(13, header.getUpdatedVia());
+                ps.setString(13, header.getUpdatedVia().toString());
                 return ps;
             }, keyHolder);
             return keyHolder.getKey().longValue();
@@ -415,7 +417,9 @@ public class JdbcBcqDao implements BcqDao {
             header.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
             header.setTradingDate(rs.getDate("trading_date"));
             header.setDeadlineDate(rs.getTimestamp("deadline_date"));
-            header.setUpdatedVia(rs.getString("updated_via"));
+            if (rs.getString("updated_via") != null) {
+                header.setUpdatedVia(BcqUpdateType.fromString(rs.getString("updated_via")));
+            }
             header.setStatus(fromString(rs.getString("status")));
             uploadFile.setTransactionId(rs.getString("transaction_id"));
             uploadFile.setSubmittedDate(rs.getTimestamp("submitted_date"));

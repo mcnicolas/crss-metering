@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.dto.bcq;
 
 import com.pemc.crss.metering.constants.BcqStatus;
+import com.pemc.crss.metering.constants.BcqUpdateType;
 import lombok.Data;
 import lombok.ToString;
 
@@ -25,7 +26,7 @@ public class BcqHeader {
     private BcqStatus status;
     private Date tradingDate;
     private Date deadlineDate;
-    private String updatedVia;
+    private BcqUpdateType updatedVia;
     private BcqUploadFile uploadFile;
     private List<BcqData> dataList;
     private boolean exists;

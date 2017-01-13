@@ -56,7 +56,7 @@ public class BcqHeaderDisplay extends AbstractWebDto<BcqHeader> {
     }
 
     public String getUpdatedVia() {
-        return target().getUpdatedVia();
+        return target().getUpdatedVia() == null ? "" : target().getUpdatedVia().toString();
     }
 
     public BcqStatus getStatus() {
