@@ -1,7 +1,6 @@
 package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.constants.BcqEventCode;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
 import com.pemc.crss.metering.dto.bcq.*;
@@ -9,19 +8,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static com.pemc.crss.metering.constants.BcqEventCode.*;
 import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
-import static com.pemc.crss.metering.utils.BcqDateUtils.*;
-import static java.util.Arrays.asList;
+import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -32,7 +30,7 @@ import static java.util.stream.Collectors.toList;
 public class BcqServiceImpl implements BcqService {
 
     private final BcqDao bcqDao;
-    private final BcqNotificationService bcqNotificationService;
+    private final BcqNotificationManager bcqNotificationManager;
 
     @Override
     @Transactional
@@ -40,13 +38,13 @@ public class BcqServiceImpl implements BcqService {
         BcqUploadFile uploadFile = declaration.getUploadFileDetails().target();
         uploadFile.setFileId(saveUploadFile(uploadFile));
         if (uploadFile.getValidationStatus() == REJECTED) {
-            sendValidationNotif(uploadFile, declaration);
+            bcqNotificationManager.sendValidationNotification(declaration, uploadFile.getSubmittedDate());
             return;
         }
         List<BcqHeader> headerList = extractHeaderList(declaration);
         headerList = setUploadFileOfHeaders(headerList, uploadFile);
         headerList = setUpdatedViaOfHeaders(headerList, declaration);
-        sendDeclarationNotif(bcqDao.saveHeaderList(headerList));
+        bcqNotificationManager.sendUploadNotification(bcqDao.saveHeaderList(headerList));
     }
 
     @Override
@@ -54,17 +52,16 @@ public class BcqServiceImpl implements BcqService {
         BcqUploadFile uploadFile = declaration.getUploadFileDetails().target();
         uploadFile.setFileId(saveUploadFile(uploadFile));
         if (uploadFile.getValidationStatus() == REJECTED) {
-            sendValidationNotif(uploadFile, declaration);
+            bcqNotificationManager.sendValidationNotification(declaration, uploadFile.getSubmittedDate());
         }
         List<BcqHeader> headerList = extractHeaderList(declaration);
         headerList = setUploadFileOfHeaders(headerList, uploadFile);
         headerList = setUpdatedViaOfHeadersBySettlement(headerList, declaration);
-        sendSettlementDeclarationNotif(bcqDao.saveHeaderList(headerList));
+        bcqNotificationManager.sendSettlementUploadNotification(bcqDao.saveHeaderList(headerList));
     }
 
     @Override
     public Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest) {
-        log.debug("SETTLEMENT NAME: {}", getSettlementName());
         return bcqDao.findAllHeaders(pageableRequest);
     }
 
@@ -112,7 +109,7 @@ public class BcqServiceImpl implements BcqService {
     @Override
     public void updateHeaderStatus(long headerId, BcqStatus status) {
         bcqDao.updateHeaderStatus(headerId, status);
-        sendUpdateStatusNotif(findHeader(headerId));
+        bcqNotificationManager.sendUpdateStatusNotification(findHeader(headerId));
     }
 
     @Override
@@ -121,7 +118,8 @@ public class BcqServiceImpl implements BcqService {
         List<BcqHeader> unconfirmedHeaders = getExpiredHeadersByStatus(FOR_CONFIRMATION);
         unconfirmedHeaders.forEach(header -> bcqDao.updateHeaderStatus(header.getHeaderId(), NOT_CONFIRMED));
         Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unconfirmedHeaders);
-        groupedHeaders.forEach((map, headerList) -> sendUnprocessedNotif(headerList, NOT_CONFIRMED));
+        groupedHeaders.forEach((map, headerList) -> bcqNotificationManager
+                .sendUnprocessedNotification(headerList, NOT_CONFIRMED));
     }
 
     @Override
@@ -130,7 +128,8 @@ public class BcqServiceImpl implements BcqService {
         List<BcqHeader> unnullifiedHeaders = getExpiredHeadersByStatus(FOR_NULLIFICATION);
         unnullifiedHeaders.forEach(header -> bcqDao.updateHeaderStatus(header.getHeaderId(), CONFIRMED));
         Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unnullifiedHeaders);
-        groupedHeaders.forEach((map, headerList) -> sendUnprocessedNotif(headerList, CONFIRMED));
+        groupedHeaders.forEach((map, headerList) -> bcqNotificationManager
+                .sendUnprocessedNotification(headerList, CONFIRMED));
     }
 
     /****************************************************
@@ -229,123 +228,6 @@ public class BcqServiceImpl implements BcqService {
                         "status", header.getStatus(),
                         "tradingDate", header.getTradingDate()
                 )));
-    }
-
-    //TODO Find a better approach for this
-    @SuppressWarnings("unchecked")
-    private String getSettlementName() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        LinkedHashMap<String, Object> oAuthPrincipal = (LinkedHashMap) auth.getPrincipal();
-        LinkedHashMap<String, Object> userAuthentication = (LinkedHashMap) oAuthPrincipal.get("userAuthentication");
-        LinkedHashMap<String, String> principal = (LinkedHashMap) userAuthentication.get("principal");
-        return principal.get("firstName") + " "
-                + principal.get("lastName") + " ("
-                + principal.get("username") + ")";
-    }
-
-    /****************************************************
-     * NOTIF METHODS
-     ****************************************************/
-    private void sendValidationNotif(BcqUploadFile uploadFile, BcqDeclaration declaration) {
-        ParticipantSellerDetails sellerDetails = declaration.getSellerDetails();
-        bcqNotificationService.send(NTF_BCQ_VALIDATION_SELLER,
-                formatDateTime(uploadFile.getSubmittedDate()),
-                declaration.getValidationResult().getErrorMessage(),
-                sellerDetails.getUserId());
-        bcqNotificationService.send(NTF_BCQ_VALIDATION_DEPT,
-                formatDateTime(uploadFile.getSubmittedDate()),
-                sellerDetails.getName(),
-                sellerDetails.getShortName(),
-                declaration.getValidationResult().getErrorMessage());
-    }
-
-    private void sendDeclarationNotif(List<BcqHeader> headerList) {
-        BcqHeader firstHeader = headerList.get(0);
-        String submittedDate = formatLongDateTime(firstHeader.getUploadFile().getSubmittedDate());
-        int recordCount = headerList.size() * firstHeader.getDataList().size();
-        bcqNotificationService.send(NTF_BCQ_SUBMIT_SELLER, submittedDate, recordCount,
-                firstHeader.getSellingParticipantUserId());
-        for (BcqHeader header : headerList) {
-            List<Object> payloadObjectList = new ArrayList<>();
-            BcqEventCode code = NTF_BCQ_SUBMIT_BUYER;
-            if (header.isExists()) {
-                code = NTF_BCQ_UPDATE_BUYER;
-                payloadObjectList.add(formatLongDate(firstHeader.getTradingDate()));
-            }
-            payloadObjectList.addAll(asList(submittedDate,
-                    firstHeader.getSellingParticipantName(),
-                    firstHeader.getSellingParticipantShortName(),
-                    header.getHeaderId(),
-                    header.getBuyingParticipantUserId()));
-            bcqNotificationService.send(code, payloadObjectList.toArray());
-        }
-    }
-
-    private void sendSettlementDeclarationNotif(List<BcqHeader> headerList) {
-        BcqHeader firstHeader = headerList.get(0);
-        String settlementUser = getSettlementName();
-        String submittedDate = formatLongDateTime(firstHeader.getUploadFile().getSubmittedDate());
-        bcqNotificationService.send(NTF_BCQ_SETTLEMENT_UPDATE_DEPT, submittedDate, settlementUser,
-                formatLongDate(firstHeader.getTradingDate()));
-        for (BcqHeader header : headerList) {
-            List<Object> payloadObjectList = new ArrayList<>();
-            if (!header.isExists()) {
-                payloadObjectList.addAll(asList(
-                        submittedDate,
-                        settlementUser,
-                        firstHeader.getSellingParticipantName(),
-                        firstHeader.getSellingParticipantShortName(),
-                        firstHeader.getBuyingParticipantUserId(),
-                        firstHeader.getHeaderId()));
-                bcqNotificationService.send(NTF_BCQ_SETTLEMENT_NEW_BUYER, payloadObjectList.toArray());
-            }
-        }
-    }
-
-    private void sendUpdateStatusNotif(BcqHeader header) {
-        String respondedDate = formatLongDateTime(new Date());
-        String tradingDate = formatLongDate(header.getTradingDate());
-        List<Object> payloadObjectList = new ArrayList<>();
-        payloadObjectList.addAll(asList(tradingDate, respondedDate, header.getHeaderId()));
-
-        if (header.getStatus() == CANCELLED) {
-            payloadObjectList.add(header.getSellingParticipantName());
-            payloadObjectList.add(header.getSellingParticipantShortName());
-            payloadObjectList.add(header.getBuyingParticipantUserId());
-            bcqNotificationService.send(NTF_BCQ_CANCEL_BUYER, payloadObjectList.toArray());
-        } else if (header.getStatus() == CONFIRMED || header.getStatus() == NULLIFIED) {
-            payloadObjectList.add(header.getBuyingParticipantName());
-            payloadObjectList.add(header.getBuyingParticipantShortName());
-            payloadObjectList.add(header.getSellingParticipantUserId());
-            if (header.getStatus() == CONFIRMED) {
-                bcqNotificationService.send(NTF_BCQ_CONFIRM_SELLER, payloadObjectList.toArray());
-            } else {
-                bcqNotificationService.send(NTF_BCQ_NULLIFY_SELLER, payloadObjectList.toArray());
-            }
-        }
-    }
-
-    private void sendUnprocessedNotif(List<BcqHeader> headerList, BcqStatus status) {
-        BcqHeader firstHeader = headerList.get(0);
-        String deadlineDate = formatLongDateTime(firstHeader.getDeadlineDate());
-        StringJoiner sellingMtns = new StringJoiner(", ");
-        headerList.forEach(header -> sellingMtns.add(header.getSellingMtn()));
-        bcqNotificationService.send(status == CONFIRMED ? NTF_BCQ_UNNULLIFIED_SELLER : NTF_BCQ_UNCONFIRMED_SELLER,
-                formatDate(firstHeader.getTradingDate()),
-                sellingMtns.toString(),
-                firstHeader.getBuyingParticipantName(),
-                firstHeader.getBuyingParticipantShortName(),
-                firstHeader.getSellingParticipantUserId(),
-                deadlineDate,
-                status);
-        bcqNotificationService.send(status == CONFIRMED ? NTF_BCQ_UNNULLIFIED_BUYER : NTF_BCQ_UNCONFIRMED_BUYER,
-                formatDate(firstHeader.getTradingDate()),
-                sellingMtns.toString(),
-                firstHeader.getSellingParticipantName(),
-                firstHeader.getSellingParticipantShortName(),
-                firstHeader.getBuyingParticipantUserId(),
-                deadlineDate,
-                status);
     }
 
 }
