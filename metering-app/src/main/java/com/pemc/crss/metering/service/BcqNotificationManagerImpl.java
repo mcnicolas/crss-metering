@@ -88,13 +88,14 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
     public void sendSettlementUploadNotification(List<BcqHeader> headerList) {
         BcqHeader firstHeader = headerList.get(0);
         String settlementUser = getSettlementName();
+        String formattedTradingDate = formatDateTime(firstHeader.getTradingDate());
         String formattedSubmittedDate = formatLongDateTime(firstHeader.getUploadFile().getSubmittedDate());
         for (BcqHeader header : headerList) {
             if (header.isExists()) {
                 notificationService.notify(new NotificationBuilder()
                         .withCode(NTF_BCQ_SETTLEMENT_UPDATE_DEPT.toString())
                         .withRecipientDeptCode(DEPT_BILLING)
-                        .addLoad("tradingDate", formatDateTime(firstHeader.getTradingDate()))
+                        .addLoad("tradingDate", formattedTradingDate)
                         .addLoad("submittedDate", formattedSubmittedDate)
                         .addLoad("settlementUser", settlementUser)
                         .addLoad("headerId", header.getHeaderId())
@@ -103,6 +104,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                 notificationService.notify(new NotificationBuilder()
                         .withCode(NTF_BCQ_SETTLEMENT_NEW_DEPT.toString())
                         .withRecipientDeptCode(DEPT_BILLING)
+                        .addLoad("tradingDate", formattedTradingDate)
                         .addLoad("submittedDate", formattedSubmittedDate)
                         .addLoad("settlementUser", settlementUser)
                         .addLoad("sellerName", firstHeader.getSellingParticipantName())
