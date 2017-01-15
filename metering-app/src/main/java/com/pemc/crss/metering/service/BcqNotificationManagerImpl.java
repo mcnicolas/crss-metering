@@ -94,9 +94,10 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                 notificationService.notify(new NotificationBuilder()
                         .withCode(NTF_BCQ_SETTLEMENT_UPDATE_DEPT.toString())
                         .withRecipientDeptCode(DEPT_BILLING)
+                        .addLoad("tradingDate", formatDateTime(firstHeader.getTradingDate()))
                         .addLoad("submittedDate", formattedSubmittedDate)
                         .addLoad("settlementUser", settlementUser)
-                        .addLoad("tradingDate", formatDateTime(firstHeader.getTradingDate()))
+                        .addLoad("headerId", header.getHeaderId())
                         .build());
             } else {
                 notificationService.notify(new NotificationBuilder()
@@ -106,7 +107,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                         .addLoad("settlementUser", settlementUser)
                         .addLoad("sellerName", firstHeader.getSellingParticipantName())
                         .addLoad("sellerShortName", firstHeader.getSellingParticipantShortName())
-                        .addLoad("headerId", firstHeader.getHeaderId())
+                        .addLoad("headerId", header.getHeaderId())
                         .build());
             }
         }
