@@ -138,18 +138,21 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
+    @Transactional
     public void processUnconfirmedHeaders() {
         List<BcqHeader> unconfirmedHeaders = getExpiredHeadersByStatus(FOR_CONFIRMATION);
-        unconfirmedHeaders.forEach(header -> updateHeaderStatus(header.getHeaderId(), NOT_CONFIRMED));
+        unconfirmedHeaders.forEach(header -> bcqDao.updateHeaderStatus(header.getHeaderId(), NOT_CONFIRMED));
         Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unconfirmedHeaders);
         groupedHeaders.forEach((map, headerList) -> sendUnprocessedNotif(headerList, NOT_CONFIRMED));
     }
 
     @Override
+    @Transactional
     public void processUnnullifiedHeaders() {
         List<BcqHeader> unnullifiedHeaders = getExpiredHeadersByStatus(FOR_NULLIFICATION);
-        unnullifiedHeaders.forEach(header -> updateHeaderStatus(header.getHeaderId(), CONFIRMED));
+        unnullifiedHeaders.forEach(header -> bcqDao.updateHeaderStatus(header.getHeaderId(), CONFIRMED));
         Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unnullifiedHeaders);
+        log.debug("MAP SIZE: {}", groupedHeaders.size());
         groupedHeaders.forEach((map, headerList) -> sendUnprocessedNotif(headerList, CONFIRMED));
     }
 
@@ -256,13 +259,13 @@ public class BcqServiceImpl implements BcqService {
         headerList.forEach(header -> sellingMtns.add(header.getSellingMtn()));
         bcqNotificationService.send(status == CONFIRMED ? NTF_BCQ_UNNULLIFIED_SELLER : NTF_BCQ_UNCONFIRMED_SELLER,
                 formatDate(firstHeader.getTradingDate()),
-                sellingMtns,
+                sellingMtns.toString(),
                 firstHeader.getBuyingParticipantName(),
                 firstHeader.getBuyingParticipantShortName(),
                 firstHeader.getSellingParticipantUserId());
         bcqNotificationService.send(status == CONFIRMED ? NTF_BCQ_UNNULLIFIED_BUYER : NTF_BCQ_UNCONFIRMED_BUYER,
                 formatDate(firstHeader.getTradingDate()),
-                sellingMtns,
+                sellingMtns.toString(),
                 firstHeader.getSellingParticipantName(),
                 firstHeader.getSellingParticipantShortName(),
                 firstHeader.getBuyingParticipantUserId());
