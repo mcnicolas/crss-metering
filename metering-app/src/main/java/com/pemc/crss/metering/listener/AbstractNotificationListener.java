@@ -51,6 +51,9 @@ public abstract class AbstractNotificationListener {
                     .filter(file -> isBlank(file.getStatus()))
                     .collect(Collectors.toMap(FileManifest::getFileName, FileManifest::getErrorDetails));
 
+            Integer unprocessedFileCount = meterService.getUnprocessedFileCount(headerID);
+            int totalUnprocessedFileCount = unprocessedFileCount + unprocessedFiles.size();
+
             Arrays.stream(targetDepartments).forEach((String dept) -> {
                 Notification payload = new Notification("NTF_MQ_UPLOAD", System.currentTimeMillis());
                 payload.setRecipientDeptCode(dept);
@@ -64,7 +67,7 @@ public abstract class AbstractNotificationListener {
                         .put("acceptedFiles", acceptedFiles)
                         .put("rejectedFileCount", rejectedFiles.size())
                         .put("rejectedFiles", rejectedFiles)
-                        .put("unprocessedFileCount", unprocessedFiles.size())
+                        .put("unprocessedFileCount", totalUnprocessedFileCount)
                         .put("unprocessedFiles", unprocessedFiles)
                         .put("uploadedBy", report.getUploadedBy())
                         .build());

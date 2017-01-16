@@ -32,6 +32,8 @@ public interface MeteringDao {
 
     List<FileManifest> getFileManifest(long headerID);
 
+    int getUnprocessedFileCount(long headerID);
+
     List<FileManifest> getFileManifestStatus(long headerID);
 
     boolean isFileProcessingCompleted(long headerId);

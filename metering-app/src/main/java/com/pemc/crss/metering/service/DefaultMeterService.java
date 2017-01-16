@@ -203,6 +203,12 @@ public class DefaultMeterService implements MeterService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Integer getUnprocessedFileCount(long headerID) {
+        return meteringDao.getUnprocessedFileCount(headerID);
+    }
+
+    @Override
     @Transactional
     public void updateNotificationFlag(long headerID) {
         meteringDao.updateNotificationFlag(headerID);

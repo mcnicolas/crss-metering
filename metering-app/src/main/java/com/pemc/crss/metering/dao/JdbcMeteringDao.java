@@ -19,7 +19,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -60,6 +59,9 @@ public class JdbcMeteringDao implements MeteringDao {
 
     @Value("${mq.manifest.file.query}")
     private String queryFileManifest;
+
+    @Value("${mq.manifest.file.unprocessed}")
+    private String queryUnprocessedFileCount;
 
     @Value("${mq.meter.daily.insert}")
     private String insertDailyMQ;
@@ -270,7 +272,6 @@ public class JdbcMeteringDao implements MeteringDao {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public HeaderManifest getHeaderManifest(long headerID) {
         return namedParameterJdbcTemplate.queryForObject(queryHeaderManifest,
                 new MapSqlParameterSource("headerID", headerID),
@@ -278,11 +279,17 @@ public class JdbcMeteringDao implements MeteringDao {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<FileManifest> getFileManifest(long headerID) {
         return namedParameterJdbcTemplate.query(queryFileManifest,
                 new MapSqlParameterSource("headerID", headerID),
                 new BeanPropertyRowMapper<>(FileManifest.class));
+    }
+
+    @Override
+    public int getUnprocessedFileCount(long headerID) {
+        return namedParameterJdbcTemplate.queryForObject(queryUnprocessedFileCount,
+                new MapSqlParameterSource("headerID", headerID),
+                Integer.class);
     }
 
     @Override

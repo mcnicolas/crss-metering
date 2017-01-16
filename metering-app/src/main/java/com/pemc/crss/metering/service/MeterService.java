@@ -33,6 +33,8 @@ public interface MeterService {
 
     List<FileManifest> getAllFileManifest(long headerID);
 
+    Integer getUnprocessedFileCount(long headerID);
+
     void updateNotificationFlag(long headerID);
 
     List<Long> getStaleRecords();
