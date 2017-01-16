@@ -549,10 +549,16 @@ public class HttpHandler {
             NetworkInterface network = NetworkInterface.getByInetAddress(ip);
             byte[] mac = network.getHardwareAddress();
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < mac.length; i++) {
-                sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+
+            if (mac != null) {
+                for (int i = 0; i < mac.length; i++) {
+                    sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+                }
+
+                deviceId = generateKey(sb.toString()); //sb.toString() will look like 12-34-56-78-9A-BC
+            } else {
+                deviceId = UUID.randomUUID().toString();
             }
-            deviceId = generateKey(sb.toString()); //sb.toString() will look like 12-34-56-78-9A-BC
         } catch (UnknownHostException | SocketException e) {
             if (log.isDebugEnabled()) {
                 log.debug(e.getMessage(), e);
