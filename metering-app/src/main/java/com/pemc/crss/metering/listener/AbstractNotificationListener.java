@@ -12,12 +12,13 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public abstract class AbstractNotificationListener {
 
@@ -39,17 +40,26 @@ public abstract class AbstractNotificationListener {
 
             List<FileManifest> files = meterService.getAllFileManifest(headerID);
 
-            Map<String, String> acceptedFiles = files.stream()
-                    .filter(file -> equalsIgnoreCase(file.getStatus(), "ACCEPTED"))
-                    .collect(Collectors.toMap(FileManifest::getFileName, FileManifest::getErrorDetails));
+            Map<String, String> acceptedFiles = new HashMap<>();
+            for (FileManifest file : files) {
+                if (equalsIgnoreCase(file.getStatus(), "ACCEPTED")) {
+                    acceptedFiles.put(file.getFileName(), "");
+                }
+            }
 
-            Map<String, String> rejectedFiles = files.stream()
-                    .filter(file -> equalsIgnoreCase(file.getStatus(), "REJECTED"))
-                    .collect(Collectors.toMap(FileManifest::getFileName, FileManifest::getErrorDetails));
+            Map<String, String> rejectedFiles = new HashMap<>();
+            for (FileManifest file : files) {
+                if (equalsIgnoreCase(file.getStatus(), "REJECTED")) {
+                    rejectedFiles.put(file.getFileName(), isEmpty(file.getErrorDetails()) ? "" : file.getErrorDetails());
+                }
+            }
 
-            Map<String, String> unprocessedFiles = files.stream()
-                    .filter(file -> isBlank(file.getStatus()))
-                    .collect(Collectors.toMap(FileManifest::getFileName, FileManifest::getErrorDetails));
+            Map<String, String> unprocessedFiles = new HashMap<>();
+            for (FileManifest file : files) {
+                if (isBlank(file.getStatus())) {
+                    unprocessedFiles.put(file.getFileName(), "");
+                }
+            }
 
             Integer unprocessedFileCount = meterService.getUnprocessedFileCount(headerID);
             int totalUnprocessedFileCount = unprocessedFileCount + unprocessedFiles.size();
