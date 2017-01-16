@@ -116,7 +116,7 @@ public class TablePanel extends JPanel {
 
         for (FileBean fileBean : fileList) {
             int key = fileBean.getKey();
-            tableModel.updateStatus(key, "Queue For Processing");
+            tableModel.updateStatus(key, "Queued For Processing");
         }
     }
 
