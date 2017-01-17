@@ -13,6 +13,7 @@ import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -50,7 +51,7 @@ public class MeteringResource {
         this.fileUploadValidator = fileUploadValidator;
     }
 
-    //    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
+    @PreAuthorize("hasAuthority('MQ_UPLOAD_METER_DATA')")
     @PostMapping(value = "/uploadHeader",
             consumes = APPLICATION_JSON_VALUE,
             produces = APPLICATION_JSON_VALUE)
@@ -63,7 +64,7 @@ public class MeteringResource {
         return ok(headerID);
     }
 
-    //    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
+    @PreAuthorize("hasAuthority('MQ_UPLOAD_METER_DATA')")
     @PostMapping(value = "/uploadFile",
             consumes = MULTIPART_FORM_DATA_VALUE,
             produces = APPLICATION_JSON_VALUE)
@@ -96,7 +97,7 @@ public class MeteringResource {
         return ok(null);
     }
 
-    //    @PreAuthorize("hasRole('MQ_UPLOAD_METER_DATA')") // TODO: Implement
+    @PreAuthorize("hasAuthority('MQ_UPLOAD_METER_DATA')")
     @PostMapping(value = "/uploadTrailer",
             consumes = APPLICATION_JSON_VALUE,
             produces = APPLICATION_JSON_VALUE)
@@ -108,6 +109,7 @@ public class MeteringResource {
         return ok(retVal);
     }
 
+    @PreAuthorize("hasAuthority('MQ_UPLOAD_METER_DATA')")
     @GetMapping(value = "/checkStatus/{headerID}")
     public ResponseEntity<List<FileManifest>> checkStatus(@PathVariable Long headerID) {
         List<FileManifest> fileManifestList = meterService.checkStatus(headerID);
@@ -115,6 +117,7 @@ public class MeteringResource {
         return ok(fileManifestList);
     }
 
+    @PreAuthorize("hasAuthority('MQ_UPLOAD_METER_DATA')")
     @GetMapping(value = "/getHeader/{headerID}")
     public ResponseEntity<HeaderManifest> getHeader(@PathVariable Long headerID) {
         HeaderManifest headerManifest = meterService.getHeader(headerID);

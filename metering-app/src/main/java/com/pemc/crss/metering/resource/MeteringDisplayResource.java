@@ -2,17 +2,21 @@ package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-public class MeteringDisplayResource extends BaseListResource<MeterDataDisplay>  {
+@RequestMapping("/mq")
+public class MeteringDisplayResource {
 
     private final MeterService meterService;
 
@@ -21,13 +25,16 @@ public class MeteringDisplayResource extends BaseListResource<MeterDataDisplay> 
         this.meterService = meterService;
     }
 
-    @Override
-    public DataTableResponse<MeterDataDisplay> executeSearch(PageableRequest request) {
+    @PostMapping(value = "/list")
+    @PreAuthorize("hasAuthority('MQ_VIEW_METERING_QUANTITY')")
+    public ResponseEntity<DataTableResponse<MeterDataDisplay>> executeSearch(PageableRequest request) {
         Page<MeterDataDisplay> meterDataPage = meterService.getMeterData(request);
 
-        return new DataTableResponse<MeterDataDisplay>()
+        DataTableResponse<MeterDataDisplay> response = new DataTableResponse<MeterDataDisplay>()
                 .withData(meterDataPage.getContent())
                 .withRecordsTotal(meterDataPage.getTotalElements());
+
+        return ResponseEntity.ok(response);
     }
 
 }

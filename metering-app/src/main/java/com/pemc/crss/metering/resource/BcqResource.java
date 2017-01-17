@@ -2,19 +2,32 @@ package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.commons.web.resource.BaseListResource;
 import com.pemc.crss.metering.constants.ValidationStatus;
-import com.pemc.crss.metering.dto.bcq.*;
+import com.pemc.crss.metering.dto.bcq.BcqDataDisplay;
+import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay;
+import com.pemc.crss.metering.dto.bcq.BcqSpecialEventForm;
+import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
+import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
+import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
 import com.pemc.crss.metering.validator.bcq.handler.BcqValidationHandler;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -27,13 +40,14 @@ import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.lang.Long.parseLong;
 import static java.util.stream.Collectors.toList;
-import static org.springframework.http.ResponseEntity.*;
+import static org.springframework.http.ResponseEntity.badRequest;
+import static org.springframework.http.ResponseEntity.ok;
+import static org.springframework.http.ResponseEntity.unprocessableEntity;
 
 @Slf4j
 @RestController
 @RequestMapping("/bcq")
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
+public class BcqResource {
 
     private static final String CSV_CONTENT_TYPE = "text/csv";
 
@@ -41,14 +55,24 @@ public class BcqResource extends BaseListResource<BcqHeaderDisplay> {
     private final BcqValidationHandler validationHandler;
     private final BcqService bcqService;
 
-    @Override
-    public DataTableResponse<BcqHeaderDisplay> executeSearch(PageableRequest request) {
+    @Autowired
+    public BcqResource(BcqReader bcqReader, BcqValidationHandler validationHandler, BcqService bcqService) {
+        this.bcqReader = bcqReader;
+        this.validationHandler = validationHandler;
+        this.bcqService = bcqService;
+    }
+
+    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
+    @PostMapping(value = "/list")
+    public ResponseEntity<DataTableResponse<BcqHeaderDisplay>> executeSearch(@RequestBody final PageableRequest request) {
         Page<BcqHeader> headerPage = bcqService.findAllHeaders(request);
         List<BcqHeaderDisplay> headerDisplayList = new ArrayList<>();
         headerPage.getContent().forEach(header -> headerDisplayList.add(new BcqHeaderDisplay(header)));
-        return new DataTableResponse<BcqHeaderDisplay>()
+        DataTableResponse<BcqHeaderDisplay> response = new DataTableResponse<BcqHeaderDisplay>()
                 .withData(headerDisplayList)
                 .withRecordsTotal(headerPage.getTotalElements());
+
+        return ok(response);
     }
 
     @PostMapping("/upload")

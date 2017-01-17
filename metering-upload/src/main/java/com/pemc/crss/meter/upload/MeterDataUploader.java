@@ -11,7 +11,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
@@ -53,7 +52,6 @@ import static com.pemc.crss.meter.upload.ErrorDialog.showErrorDialog;
 import static com.pemc.crss.meter.upload.table.UploadType.FILE;
 import static com.pemc.crss.meter.upload.table.UploadType.HEADER;
 import static com.pemc.crss.meter.upload.util.ErrorParserUtil.parseErrorMessage;
-import static java.awt.GridBagConstraints.WEST;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
@@ -67,7 +65,6 @@ import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationHMS;
-import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 @Slf4j
 public class MeterDataUploader extends JFrame {
@@ -294,31 +291,6 @@ public class MeterDataUploader extends JFrame {
                     uploadTimer.stop();
 
                     log.info("Done uploading files. Upload took: {}", formatDurationHMS(elapsedTime));
-
-                    JPanel messagePanel = new JPanel(new GridBagLayout());
-                    String durationMessage = "Finished uploading " + selectedFiles.size()
-                            + " file/s in " + formatDurationWords(elapsedTime, true, true);
-                    JLabel durationLabel = new JLabel(durationMessage);
-
-                    GridBagConstraints constraints = new GridBagConstraints();
-                    constraints.gridx = 0;
-                    constraints.gridy = 0;
-                    constraints.gridwidth = 2;
-                    constraints.anchor = WEST;
-                    messagePanel.add(durationLabel, constraints);
-
-                    JLabel transactionLabel = new JLabel("with Transaction ID:");
-                    constraints = new GridBagConstraints();
-                    constraints.gridx = 0;
-                    constraints.gridy = 1;
-                    messagePanel.add(transactionLabel, constraints);
-
-                    JTextField txtTransaction = new JTextField(transactionID);
-                    constraints = new GridBagConstraints();
-                    constraints.gridx = 1;
-                    constraints.gridy = 1;
-                    constraints.insets = new Insets(0, 5, 0, 5);
-                    messagePanel.add(txtTransaction, constraints);
 
                     headerPanel.updateTransactionID(transactionID);
                 } catch (InterruptedException | ExecutionException e) {

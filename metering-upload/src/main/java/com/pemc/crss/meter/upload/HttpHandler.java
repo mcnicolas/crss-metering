@@ -157,7 +157,7 @@ public class HttpHandler {
         }
     }
 
-    public List<String> getUserType() throws HttpConnectionException, HttpResponseException {
+    public List<String> getUserType() throws HttpConnectionException, HttpResponseException, AuthorizationException {
         log.debug("Retrieving user type");
 
         List<String> retVal = new ArrayList<>();
@@ -182,6 +182,21 @@ public class HttpHandler {
                 if (statusLine.getStatusCode() == SC_OK) {
                     String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
                     JSONObject obj = new JSONObject(content);
+
+                    boolean found = false;
+                    JSONArray authorities = (JSONArray) obj.get("authorities");
+                    for (Object objAuthority : authorities) {
+                        JSONObject authority = (JSONObject) objAuthority;
+
+                        if (equalsIgnoreCase((String)authority.get("authority"), "MQ_UPLOAD_METER_DATA")) {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        throw new AuthorizationException("User is not authorized to access the MQ Uploader");
+                    }
 
                     retVal.add(obj.getJSONObject("principal").getString("fullName"));
 
@@ -286,12 +301,9 @@ public class HttpHandler {
 
                     log.debug("Response:{}", content);
                 } else {
-                    String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
-                    JSONObject errorDetails = new JSONObject(content);
-
-                    throw new HttpResponseException("Message:Send Header Error"
-                            + "\nStatus Code:" + errorDetails.get("status")
-                            + "\nReason:" + errorDetails.get("error"));
+                    throw new HttpResponseException("Send Header Error"
+                            + " statusCode:" + statusLine.getStatusCode()
+                            + " reason:" + statusLine.getReasonPhrase());
                 }
             }
         } catch (URISyntaxException | IOException e) {
