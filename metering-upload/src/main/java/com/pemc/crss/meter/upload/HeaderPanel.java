@@ -25,6 +25,7 @@ import java.util.List;
 import static com.pemc.crss.meter.upload.LoginDialog.RET_OK;
 import static com.pemc.crss.meter.upload.SelectedFileUtils.retrieveFileListing;
 import static com.pemc.crss.meter.upload.SettingsDialog.RET_SAVE;
+import javax.swing.BorderFactory;
 import static javax.swing.JFileChooser.APPROVE_OPTION;
 import static javax.swing.JFileChooser.FILES_AND_DIRECTORIES;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
@@ -301,6 +302,7 @@ public class HeaderPanel extends JPanel {
         lblFinishedProcessing.setBackground(Color.blue);
         lblFinishedProcessing.setForeground(new Color(255, 255, 255));
         lblFinishedProcessing.setText("Finished Processing");
+        lblFinishedProcessing.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         lblFinishedProcessing.setOpaque(true);
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 6;
