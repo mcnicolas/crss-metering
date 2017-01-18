@@ -79,13 +79,13 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.display.paginate}")
     private String displayPaginate;
 
-    @Value("${bcq.event.insert")
+    @Value("${bcq.event.insert}")
     private String insertEvent;
 
-    @Value("${bcq.event.trading-date.insert")
+    @Value("${bcq.event.trading-date.insert}")
     private String insertEventTradingDate;
 
-    @Value("${bcq.event.participant.insert")
+    @Value("${bcq.event.participant.insert}")
     private String insertEventParticipant;
 
     private final JdbcTemplate jdbcTemplate;
@@ -271,18 +271,16 @@ public class JdbcBcqDao implements BcqDao {
     public long saveSpecialEvent(BcqSpecialEvent specialEvent) {
         log.debug("[DAO-BCQ] Saving new special event");
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(
-                connection -> {
-                    PreparedStatement ps = connection.prepareStatement(insertManifest, new String[]{"event_id"});
+        jdbcTemplate.update(con -> {
+                    PreparedStatement ps = con.prepareStatement(insertEvent, new String[]{"event_id"});
                     ps.setTimestamp(1, new Timestamp(specialEvent.getDeadlineDate().getTime()));
                     ps.setString(2, specialEvent.getRemarks());
                     return ps;
-                },
-                keyHolder);
+                }, keyHolder);
         long eventId = keyHolder.getKey().longValue();
-        log.debug("[DAO-BCQ] Saved special event with ID: {}", eventId);
         saveEventTradingDates(specialEvent.getTradingDates(), eventId);
         saveEventParticipants(specialEvent.getTradingParticipants(), eventId);
+        log.debug("[DAO-BCQ] Saved special event with ID: {}", eventId);
         return eventId;
     }
 
@@ -386,7 +384,7 @@ public class JdbcBcqDao implements BcqDao {
     private void saveEventParticipants(List<String> participantNameList, long eventId) {
         log.debug("[DAO-BCQ] Saving event participant list with size of: {} and event id: {}",
                 participantNameList.size(), eventId);
-        jdbcTemplate.batchUpdate(insertEventTradingDate, new BatchPreparedStatementSetter() {
+        jdbcTemplate.batchUpdate(insertEventParticipant, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 String participantName = participantNameList.get(i);

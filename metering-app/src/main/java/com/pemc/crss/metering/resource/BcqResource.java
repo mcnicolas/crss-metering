@@ -198,8 +198,8 @@ public class BcqResource {
         return sellerDetailsList;
     }
 
-    @PostMapping("/special-event")
-    public void saveSpecialEvent(BcqSpecialEventForm specialEventForm) {
+    @PostMapping("/special-event/save")
+    public void saveSpecialEvent(@RequestBody BcqSpecialEventForm specialEventForm) {
         log.debug("[REST-BCQ] Request for saving special event");
         long eventId = bcqService.saveSpecialEvent(specialEventForm.target());
         log.debug("[REST-BCQ] Saved special event with id: {}", eventId);
