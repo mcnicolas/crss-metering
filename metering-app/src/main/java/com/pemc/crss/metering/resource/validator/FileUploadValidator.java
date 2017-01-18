@@ -2,7 +2,6 @@ package com.pemc.crss.metering.resource.validator;
 
 import com.pemc.crss.metering.dto.mq.FileParam;
 import com.pemc.crss.metering.service.MeterService;
-import com.pemc.crss.metering.utils.FileTypeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +10,7 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import org.springframework.web.multipart.MultipartFile;
 
+import static com.pemc.crss.metering.utils.FileTypeUtils.getFileType;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 @Slf4j
@@ -66,7 +66,7 @@ public class FileUploadValidator implements Validator {
 
             // TODO: Ugly code. Refactor!
             String fileTypeErrorMsg = "Invalid file. File Type:" + fileType + " File Name:" + file.getOriginalFilename();
-            switch (FileTypeUtils.getFileType(file.getOriginalFilename())) {
+            switch (getFileType(file.getOriginalFilename())) {
                 case MDEF:
                     if (!equalsIgnoreCase(fileType, "MDEF")) {
                         errors.reject("", fileTypeErrorMsg);
@@ -81,6 +81,10 @@ public class FileUploadValidator implements Validator {
                     if (!equalsIgnoreCase(fileType, "CSV")) {
                         errors.reject("", fileTypeErrorMsg);
                     }
+            }
+
+            if (file.getOriginalFilename().length() > 100) {
+                errors.reject("", "Maximum filename length is 100 characters.");
             }
         }
     }
