@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,7 +28,7 @@ public class MeteringDisplayResource {
 
     @PostMapping(value = "/list")
     @PreAuthorize("hasAuthority('MQ_VIEW_METERING_QUANTITY')")
-    public ResponseEntity<DataTableResponse<MeterDataDisplay>> executeSearch(PageableRequest request) {
+    public ResponseEntity<DataTableResponse<MeterDataDisplay>> executeSearch(@RequestBody PageableRequest request) {
         Page<MeterDataDisplay> meterDataPage = meterService.getMeterData(request);
 
         DataTableResponse<MeterDataDisplay> response = new DataTableResponse<MeterDataDisplay>()
