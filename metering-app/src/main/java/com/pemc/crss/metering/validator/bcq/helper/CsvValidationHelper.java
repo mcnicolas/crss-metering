@@ -23,9 +23,9 @@ import static com.pemc.crss.metering.validator.bcq.validation.CsvValidation.from
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.split;
 import static org.apache.commons.lang3.math.NumberUtils.isParsable;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
-import static org.springframework.security.oauth2.client.http.StringSplitUtils.split;
 
 @Component
 public class CsvValidationHelper {
