@@ -20,6 +20,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -194,12 +195,12 @@ public class JdbcMeteringDao implements MeteringDao {
                                 log.error(e.getMessage(), e);
                             }
 
-                            meterData.setKwd(rs.getString("kwd"));
-                            meterData.setKwhd(rs.getString("kwhd"));
-                            meterData.setKvarhd(rs.getString("kvarhd"));
-                            meterData.setKwr(rs.getString("kwr"));
-                            meterData.setKwhr(rs.getString("kwhr"));
-                            meterData.setKvarhr(rs.getString("kvarhr"));
+                            meterData.setKwd(getValue(rs.getBigDecimal("kwd")));
+                            meterData.setKwhd(getValue(rs.getBigDecimal("kwhd")));
+                            meterData.setKvarhd(getValue(rs.getBigDecimal("kvarhd")));
+                            meterData.setKwr(getValue(rs.getBigDecimal("kwr")));
+                            meterData.setKwhr(getValue(rs.getBigDecimal("kwhr")));
+                            meterData.setKvarhr(getValue(rs.getBigDecimal("kvarhr")));
                             meterData.setEstimationFlag(rs.getString("estimation_flag"));
 
                             meterDataList.add(meterData);
@@ -210,6 +211,16 @@ public class JdbcMeteringDao implements MeteringDao {
 
                     return meterDataList;
                 });
+    }
+
+    private String getValue(BigDecimal reading) {
+        String retVal = "";
+
+        if (reading != null) {
+            retVal = reading.stripTrailingZeros().toPlainString();
+        }
+
+        return retVal;
     }
 
     @Override

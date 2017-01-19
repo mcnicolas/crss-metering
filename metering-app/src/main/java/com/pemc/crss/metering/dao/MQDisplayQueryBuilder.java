@@ -23,15 +23,17 @@ public class MQDisplayQueryBuilder {
     private List arguments = new ArrayList();
 
     public MQDisplayQueryBuilder selectMeterData(String category, String readingDate) {
-        String selectSQL = "SELECT A.TRANSACTION_ID, B.*" +
-                " FROM TXN_MQ_MANIFEST_FILE A" +
-                " INNER JOIN ${MQ_TABLE} B ON A.FILE_ID = B.FILE_ID";
+        String selectSQL = "SELECT DISTINCT ON (B.SEIN, B.READING_DATETIME)"
+                + " B.METER_DATA_ID, B.SEIN, A.TRANSACTION_ID, B.READING_DATETIME,"
+                + " B.KWD, B.KWHD, B.KVARHD, B.KWR, B.KWHR, B.KVARHR, B.ESTIMATION_FLAG,"
+                + " MAX(B.CREATED_DATE_TIME) OVER (PARTITION BY B.SEIN, B.READING_DATETIME ORDER BY B.CREATED_DATE_TIME DESC)"
+                + " FROM TXN_MQ_MANIFEST_FILE A"
+                + " INNER JOIN ${MQ_TABLE} B ON A.FILE_ID = B.FILE_ID";
 
         String tableName = getTableName(category);
         selectSQL = selectSQL.replace("${MQ_TABLE}", tableName);
         sqlBuilder.append(selectSQL);
-        sqlBuilder.append(" WHERE READING_DATETIME BETWEEN ? AND ?");
-        sqlBuilder.append(" AND CREATED_DATE_TIME = (SELECT MAX(CREATED_DATE_TIME) FROM ").append(tableName).append(")");
+        sqlBuilder.append(" WHERE B.READING_DATETIME BETWEEN ? AND ?");
 
         addReadingDateFilter(category, readingDate);
 
@@ -39,15 +41,14 @@ public class MQDisplayQueryBuilder {
     }
 
     public MQDisplayQueryBuilder countMeterData(String category, String readingDate) {
-        String countSQL = "SELECT COUNT(B.SEIN)" +
-                " FROM TXN_MQ_MANIFEST_FILE A" +
-                " INNER JOIN ${MQ_TABLE} B ON A.FILE_ID = B.FILE_ID";
+        String countSQL = "SELECT COUNT(DISTINCT(B.SEIN, B.READING_DATETIME))"
+                + " FROM TXN_MQ_MANIFEST_FILE A"
+                + " INNER JOIN ${MQ_TABLE} B ON A.FILE_ID = B.FILE_ID";
 
         String tableName = getTableName(category);
         countSQL = countSQL.replace("${MQ_TABLE}", tableName);
         sqlBuilder.append(countSQL);
         sqlBuilder.append(" WHERE READING_DATETIME BETWEEN ? AND ?");
-        sqlBuilder.append(" AND CREATED_DATE_TIME = (SELECT MAX(CREATED_DATE_TIME) FROM ").append(tableName).append(")");
 
         addReadingDateFilter(category, readingDate);
 

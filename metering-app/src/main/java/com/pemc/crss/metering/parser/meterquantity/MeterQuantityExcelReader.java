@@ -59,25 +59,11 @@ public class MeterQuantityExcelReader implements QuantityReader {
                     continue;
                 }
 
-                MeterDataDetail meterData = new MeterDataDetail();
+                MeterDataDetail meterData = populateBean(row);
                 meterData.setFileID(fileManifest.getFileID());
                 meterData.setUploadType(fileManifest.getUploadType());
                 meterData.setMspShortName(fileManifest.getMspShortName());
                 meterData.setCreatedDateTime(parseDate);
-
-                meterData.setSein(row.getCell(0).getStringCellValue());
-
-                String readingDate = getDateValue(row.getCell(1));
-                String readingTime = getTimeValue(row.getCell(2));
-
-                meterData.setReadingDateTime(parseDateAsLong(readingDate, readingTime));
-                meterData.setKwd(getNumericValue(row.getCell(3)));
-                meterData.setKwhd(getNumericValue(row.getCell(4)));
-                meterData.setKvarhd(getNumericValue(row.getCell(5)));
-                meterData.setKwr(getNumericValue(row.getCell(6)));
-                meterData.setKwhr(getNumericValue(row.getCell(7)));
-                meterData.setKvarhr(getNumericValue(row.getCell(8)));
-                meterData.setEstimationFlag(getStringValue(row.getCell(9)));
 
                 meterDataList.add(meterData);
             }
@@ -89,6 +75,27 @@ public class MeterQuantityExcelReader implements QuantityReader {
         } finally {
             closeQuietly(inputStream);
         }
+
+        return retVal;
+    }
+
+    private MeterDataDetail populateBean(Row row) {
+        MeterDataDetail retVal = new MeterDataDetail();
+
+        retVal.setSein(row.getCell(0).getStringCellValue());
+
+        String readingDate = getDateValue(row.getCell(1));
+        String readingTime = getTimeValue(row.getCell(2));
+
+        retVal.setReadingDateTime(parseDateAsLong(readingDate, readingTime));
+
+        retVal.setKwd(getNumericValue(row.getCell(3)));
+        retVal.setKwhd(getNumericValue(row.getCell(4)));
+        retVal.setKvarhd(getNumericValue(row.getCell(5)));
+        retVal.setKwr(getNumericValue(row.getCell(6)));
+        retVal.setKwhr(getNumericValue(row.getCell(7)));
+        retVal.setKvarhr(getNumericValue(row.getCell(8)));
+        retVal.setEstimationFlag(getStringValue(row.getCell(9)));
 
         return retVal;
     }
@@ -171,7 +178,7 @@ public class MeterQuantityExcelReader implements QuantityReader {
                     retVal = new BigDecimal(cell.getStringCellValue());
                     break;
                 case NUMERIC:
-                    retVal = new BigDecimal(cell.getNumericCellValue());
+                    retVal = new BigDecimal(String.valueOf(cell.getNumericCellValue()));
             }
         }
 
