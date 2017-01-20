@@ -198,6 +198,15 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                 break;
             case FOR_APPROVAL_NEW:
                 eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_NEW_SELLER.toString())
+                        .withRecipientId(header.getSellingParticipantUserId())
+                        .addLoad("submittedDate", formattedSubmittedDate)
+                        .addLoad("buyerName", header.getBuyingParticipantName())
+                        .addLoad("buyerShortName", header.getBuyingParticipantShortName())
+                        .addLoad("settlementUser", getSettlementName())
+                        .addLoad("headerId", header.getHeaderId())
+                        .build()));
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
                         .withCode(NTF_BCQ_APPROVE_NEW_BUYER.toString())
                         .withRecipientId(header.getBuyingParticipantUserId())
                         .addLoad("submittedDate", formattedSubmittedDate)
@@ -208,6 +217,14 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                         .build()));
                 break;
             case FOR_APPROVAL_CANCEL:
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_CANCEL_SELLER.toString())
+                        .withRecipientId(header.getSellingParticipantUserId())
+                        .addLoad("tradingDate", formattedTradingDate)
+                        .addLoad("respondedDate", formattedRespondedDate)
+                        .addLoad("settlementUser", settlementUser)
+                        .addLoad("headerId", header.getHeaderId())
+                        .build()));
                 eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
                         .withCode(NTF_BCQ_APPROVE_CANCEL_BUYER.toString())
                         .withRecipientId(header.getBuyingParticipantUserId())
