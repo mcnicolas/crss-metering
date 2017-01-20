@@ -1,5 +1,8 @@
 package com.pemc.crss.meter.upload;
 
+import com.pemc.crss.meter.upload.util.FileNameFilter;
+
+import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -25,7 +28,6 @@ import java.util.List;
 import static com.pemc.crss.meter.upload.LoginDialog.RET_OK;
 import static com.pemc.crss.meter.upload.SelectedFileUtils.retrieveFileListing;
 import static com.pemc.crss.meter.upload.SettingsDialog.RET_SAVE;
-import javax.swing.BorderFactory;
 import static javax.swing.JFileChooser.APPROVE_OPTION;
 import static javax.swing.JFileChooser.FILES_AND_DIRECTORIES;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
@@ -37,12 +39,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class HeaderPanel extends JPanel {
 
-    private FileFilter fileFilterXLS = new FileNameExtensionFilter("Excel Files (xls, xlsx)",
-            "xls", "xlsx");
-    private FileFilter fileFilterMDEF = new FileNameExtensionFilter("MDEF Files (mde)",
-            "mde");
-    private FileFilter fileFilterCSV = new FileNameExtensionFilter("CSV Files (csv)",
-            "csv");
+    private FileFilter fileFilterXLS = new FileNameFilter("Excel Files (xls, xlsx)", "xls", "xlsx");
+    private FileFilter fileFilterMDEF = new FileNameFilter("MDEF Files (mde)", "mde");
+    private FileFilter fileFilterCSV = new FileNameFilter("CSV Files (csv)", "csv");
 
     private MeterDataUploader parent;
     private String selectedFileExtension = "";
