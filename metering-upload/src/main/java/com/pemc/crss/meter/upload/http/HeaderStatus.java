@@ -7,6 +7,7 @@ import java.util.Date;
 @Data
 public class HeaderStatus {
 
+    private UploadStatus uploadStatus;
     private long headerID;
     private String transactionID;
     private int fileCount;

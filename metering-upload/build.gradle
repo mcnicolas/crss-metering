@@ -20,4 +20,6 @@ dependencies {
     compile 'org.slf4j:jcl-over-slf4j'
     compile 'ch.qos.logback:logback-core'
     compile 'ch.qos.logback:logback-classic'
+
+    testCompile 'junit:junit'
 }

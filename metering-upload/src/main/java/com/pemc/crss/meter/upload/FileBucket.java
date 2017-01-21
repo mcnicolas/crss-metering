@@ -6,6 +6,6 @@ public interface FileBucket {
 
     boolean hasMoreElements();
 
-    List<FileBean> getFiles();
+    List<FileBean> getFiles() throws LargeFileException;
 
 }

@@ -6,19 +6,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.DefaultClientConnectionReuseStrategy;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.pool.PoolStats;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,7 +37,6 @@ import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -58,6 +61,7 @@ import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.entity.ContentType.APPLICATION_FORM_URLENCODED;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import static org.apache.http.entity.ContentType.MULTIPART_FORM_DATA;
+import static org.apache.http.util.EntityUtils.consume;
 
 @Slf4j
 public class HttpHandler {
@@ -73,6 +77,8 @@ public class HttpHandler {
     private static final String METERING_DEPARTMENT = "METERING";
 
     private CloseableHttpClient httpClient;
+    private PoolingHttpClientConnectionManager connectionManager;
+
     private String oAuthToken;
     private String encodedClient;
     private String hostname;
@@ -98,18 +104,25 @@ public class HttpHandler {
             hostname = url.getHost();
             port = url.getPort() == -1 ? url.getDefaultPort() : url.getPort();
 
-            PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-            connectionManager.setMaxTotal(100);
+            connectionManager = new PoolingHttpClientConnectionManager();
+            connectionManager.setMaxTotal(300);
 
-            connectionManager.setDefaultMaxPerRoute(20);
+            connectionManager.setDefaultMaxPerRoute(50);
             HttpHost httpHost = new HttpHost(hostname, port);
-            connectionManager.setMaxPerRoute(new HttpRoute(httpHost), 50);
+            connectionManager.setMaxPerRoute(new HttpRoute(httpHost), 300);
 
-            httpClient = HttpClientBuilder
-                    .create()
+            httpClient = HttpClients
+                    .custom()
+                    .addInterceptorLast(
+                            (HttpRequestInterceptor) (request, context) -> {
+                                if (!request.containsHeader("Accept-Encoding")) {
+                                    request.addHeader("Accept-Encoding", "gzip");
+                                }
+                            }
+                    )
+                    .setConnectionReuseStrategy(new DefaultClientConnectionReuseStrategy())
                     .setConnectionManager(connectionManager)
                     .build();
-
             log.debug("HTTP Connection initialized");
         } catch (IOException e) {
             log.error(e.getMessage(), e);
@@ -133,24 +146,24 @@ public class HttpHandler {
             httpPost.setHeader("Authorization", "Basic " + encodedClient);
             httpPost.setHeader("Content-type", APPLICATION_FORM_URLENCODED.getMimeType());
 
-            try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
-                StatusLine statusLine = httpResponse.getStatusLine();
-                log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
+            HttpResponse httpResponse = httpClient.execute(httpPost);
+            StatusLine statusLine = httpResponse.getStatusLine();
 
-                if (statusLine.getStatusCode() == SC_OK) {
-                    String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
-                    JSONObject obj = new JSONObject(content);
+            String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+            consume(httpResponse.getEntity());
 
-                    oAuthToken = obj.get("access_token").toString();
+            if (statusLine.getStatusCode() == SC_OK) {
+                JSONObject obj = new JSONObject(content);
 
-                    if (isBlank(oAuthToken)) {
-                        throw new LoginException("Unable to authenticate: " + username);
-                    }
-                } else {
-                    throw new HttpResponseException("Message:Login error"
-                            + "\nStatus Code:" + statusLine.getStatusCode()
-                            + "\nReason:" + statusLine.getReasonPhrase());
+                oAuthToken = obj.get("access_token").toString();
+
+                if (isBlank(oAuthToken)) {
+                    throw new LoginException("Unable to authenticate: " + username);
                 }
+            } else {
+                throw new HttpResponseException("Message:Login error"
+                        + "\nStatus Code:" + statusLine.getStatusCode()
+                        + "\nReason:" + statusLine.getReasonPhrase());
             }
         } catch (URISyntaxException | IOException e) {
             throw new HttpConnectionException(e.getMessage(), e);
@@ -175,48 +188,49 @@ public class HttpHandler {
             httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
             httpGet.setHeader("Content-type", APPLICATION_FORM_URLENCODED.getMimeType());
 
-            try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
-                StatusLine statusLine = httpResponse.getStatusLine();
-                log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
+            HttpResponse httpResponse = httpClient.execute(httpGet);
 
-                if (statusLine.getStatusCode() == SC_OK) {
-                    String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
-                    JSONObject obj = new JSONObject(content);
+            StatusLine statusLine = httpResponse.getStatusLine();
 
-                    boolean found = false;
-                    JSONArray authorities = (JSONArray) obj.get("authorities");
-                    for (Object objAuthority : authorities) {
-                        JSONObject authority = (JSONObject) objAuthority;
+            String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+            consume(httpResponse.getEntity());
 
-                        if (equalsIgnoreCase((String)authority.get("authority"), "MQ_UPLOAD_METER_DATA")) {
-                            found = true;
-                            break;
-                        }
+            if (statusLine.getStatusCode() == SC_OK) {
+                JSONObject obj = new JSONObject(content);
+
+                boolean found = false;
+                JSONArray authorities = (JSONArray) obj.get("authorities");
+                for (Object objAuthority : authorities) {
+                    JSONObject authority = (JSONObject) objAuthority;
+
+                    if (equalsIgnoreCase((String) authority.get("authority"), "MQ_UPLOAD_METER_DATA")) {
+                        found = true;
+                        break;
                     }
+                }
 
-                    if (!found) {
-                        throw new AuthorizationException("User is not authorized to access the MQ Uploader");
-                    }
+                if (!found) {
+                    throw new AuthorizationException("User is not authorized to access the MQ Uploader");
+                }
 
-                    retVal.add(obj.getJSONObject("principal").getString("fullName"));
+                retVal.add(obj.getJSONObject("principal").getString("fullName"));
 
-                    String userType = obj.getJSONObject("principal").get("department").toString();
-                    isPemcUser = Boolean.valueOf(obj.getJSONObject("principal").get("pemcUser").toString());
+                String userType = obj.getJSONObject("principal").get("department").toString();
+                isPemcUser = Boolean.valueOf(obj.getJSONObject("principal").get("pemcUser").toString());
 
-                    if (isPemcUser) {
-                        if (equalsIgnoreCase(userType, METERING_DEPARTMENT)) {
-                            retVal.add(PEMC_USERTYPE);
-                        } else {
-                            retVal.add("");
-                        }
+                if (isPemcUser) {
+                    if (equalsIgnoreCase(userType, METERING_DEPARTMENT)) {
+                        retVal.add(PEMC_USERTYPE);
                     } else {
-                        retVal.add(getParticipant().getRegistrationCategory());
+                        retVal.add("");
                     }
                 } else {
-                    throw new HttpResponseException("Connection error"
-                            + " statusCode:" + statusLine.getStatusCode()
-                            + " reason:" + statusLine.getReasonPhrase());
+                    retVal.add(getParticipant().getRegistrationCategory());
                 }
+            } else {
+                throw new HttpResponseException("Connection error"
+                        + " statusCode:" + statusLine.getStatusCode()
+                        + " reason:" + statusLine.getReasonPhrase());
             }
         } catch (URISyntaxException | IOException e) {
             throw new HttpConnectionException(e.getMessage(), e);
@@ -238,23 +252,24 @@ public class HttpHandler {
             httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
             httpGet.setHeader("Content-type", APPLICATION_FORM_URLENCODED.getMimeType());
 
-            try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
-                StatusLine statusLine = httpResponse.getStatusLine();
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+            StatusLine statusLine = httpResponse.getStatusLine();
 
-                if (statusLine.getStatusCode() == SC_OK) {
-                    String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
-                    JSONObject obj = new JSONObject(content);
+            String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+            consume(httpResponse.getEntity());
 
-                    // TODO: Improve json deserialization
-                    retVal.setId(obj.getLong("id"));
-                    retVal.setShortName(obj.getString("shortName"));
-                    retVal.setParticipantName(obj.getString("participantName"));
-                    retVal.setRegistrationCategory(obj.getString("registrationCategory"));
-                } else {
-                    throw new HttpResponseException("Connection error"
-                            + " statusCode:" + statusLine.getStatusCode()
-                            + " reason:" + statusLine.getReasonPhrase());
-                }
+            if (statusLine.getStatusCode() == SC_OK) {
+                JSONObject obj = new JSONObject(content);
+
+                // TODO: Improve json deserialization
+                retVal.setId(obj.getLong("id"));
+                retVal.setShortName(obj.getString("shortName"));
+                retVal.setParticipantName(obj.getString("participantName"));
+                retVal.setRegistrationCategory(obj.getString("registrationCategory"));
+            } else {
+                throw new HttpResponseException("Connection error"
+                        + " statusCode:" + statusLine.getStatusCode()
+                        + " reason:" + statusLine.getReasonPhrase());
             }
         } catch (URISyntaxException | IOException e) {
             throw new HttpConnectionException(e.getMessage(), e);
@@ -263,9 +278,7 @@ public class HttpHandler {
         return retVal;
     }
 
-    public long sendHeader(int fileCount, String category)
-            throws HttpConnectionException, HttpResponseException {
-
+    public long sendHeader(int fileCount, String category) throws HttpConnectionException, HttpResponseException {
         log.debug("Sending Header Record. fileCount:{} category:{}", fileCount, category);
 
         long retVal = -1;
@@ -288,23 +301,22 @@ public class HttpHandler {
             StringEntity entity = new StringEntity(param);
             httpPost.setEntity(entity);
 
-            try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
-                StatusLine statusLine = httpResponse.getStatusLine();
-                log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
+            HttpResponse httpResponse = httpClient.execute(httpPost);
+            StatusLine statusLine = httpResponse.getStatusLine();
 
-                if (statusLine.getStatusCode() == SC_OK) {
-                    String content = EntityUtils.toString(httpResponse.getEntity());
+            String content = EntityUtils.toString(httpResponse.getEntity());
+            consume(httpResponse.getEntity());
 
-                    if (NumberUtils.isParsable(content)) {
-                        retVal = Long.valueOf(content);
-                    }
-
-                    log.debug("Response:{}", content);
-                } else {
-                    throw new HttpResponseException("Send Header Error"
-                            + " statusCode:" + statusLine.getStatusCode()
-                            + " reason:" + statusLine.getReasonPhrase());
+            if (statusLine.getStatusCode() == SC_OK) {
+                if (NumberUtils.isParsable(content)) {
+                    retVal = Long.valueOf(content);
                 }
+
+                log.debug("Response:{}", content);
+            } else {
+                throw new HttpResponseException("Send Header Error"
+                        + " statusCode:" + statusLine.getStatusCode()
+                        + " reason:" + statusLine.getReasonPhrase());
             }
         } catch (URISyntaxException | IOException e) {
             throw new HttpConnectionException(e.getMessage(), e);
@@ -337,27 +349,37 @@ public class HttpHandler {
             for (FileBean fileBean : fileList) {
                 lastFile = fileBean.getPath().getFileName().toString();
 
-                InputStreamBody fileContent = new InputStreamBody(Files.newInputStream(fileBean.getPath()),
-                        fileBean.getPath().getFileName().toString());
+//                InputStreamBody fileContent = new InputStreamBody(Files.newInputStream(fileBean.getPath()),
+//                        fileBean.getPath().getFileName().toString());
 
-                multipartEntityBuilder.addPart("file", fileContent);
+//                multipartEntityBuilder.addPart("file", fileContent);
+
+                multipartEntityBuilder.addPart("file", new FileBody(fileBean.getPath().toFile()));
 
                 log.debug("Uploading file:{}", fileBean.getPath().getFileName().toString());
             }
 
             multipartEntityBuilder.addTextBody("fileType", getFileType(lastFile));
 
-            httpPost.setEntity(multipartEntityBuilder.build());
+            HttpEntity httpEntity = multipartEntityBuilder.build();
+            log.debug("--------- Content size:{}, isChunked:{}", httpEntity.getContentLength(), httpEntity.isChunked());
 
-            try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
-                StatusLine statusLine = httpResponse.getStatusLine();
-                log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
+            httpPost.setEntity(httpEntity);
 
-                if (statusLine.getStatusCode() != SC_OK) {
-                    throw new HttpResponseException("Message:Send File Error"
-                            + "\nStatus Code:" + statusLine.getStatusCode()
-                            + "\nReason:" + statusLine.getReasonPhrase());
-                }
+            HttpResponse httpResponse = httpClient.execute(httpPost);
+            StatusLine statusLine = httpResponse.getStatusLine();
+
+            String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+            PoolStats stats = connectionManager.getTotalStats();
+            log.debug("Stats[L:{}, P:{}, A:{}, M:{}] Ack file list:{}", stats.getLeased(), stats.getPending(),
+                    stats.getAvailable(), stats.getMax(), content);
+
+            consume(httpResponse.getEntity());
+
+            if (statusLine.getStatusCode() != SC_OK) {
+                throw new HttpResponseException("Message:Send File Error"
+                        + "\nStatus Code:" + statusLine.getStatusCode()
+                        + "\nReason:" + statusLine.getReasonPhrase());
             }
         } catch (URISyntaxException | IOException e) {
             throw new HttpConnectionException(e.getMessage(), e);
@@ -389,22 +411,22 @@ public class HttpHandler {
 
             httpPost.setEntity(entity);
 
-            try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost)) {
-                StatusLine statusLine = httpResponse.getStatusLine();
-                log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
+            HttpResponse httpResponse = httpClient.execute(httpPost);
+            StatusLine statusLine = httpResponse.getStatusLine();
 
-                String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
-                JSONObject jsonData = new JSONObject(content);
+            String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+            JSONObject jsonData = new JSONObject(content);
 
-                if (statusLine.getStatusCode() == SC_OK) {
-                    retVal = (String) jsonData.get("transactionID");
+            consume(httpResponse.getEntity());
 
-                    log.debug("Response:{}", retVal);
-                } else {
-                    throw new HttpResponseException("Message:Send Header Error"
-                            + "\nStatus Code:" + jsonData.get("status")
-                            + "\nReason:" + jsonData.get("error"));
-                }
+            if (statusLine.getStatusCode() == SC_OK) {
+                retVal = (String) jsonData.get("transactionID");
+
+                log.debug("Response:{}", retVal);
+            } else {
+                throw new HttpResponseException("Message:Send Header Error"
+                        + "\nStatus Code:" + jsonData.get("status")
+                        + "\nReason:" + jsonData.get("error"));
             }
         } catch (URISyntaxException | IOException e) {
             throw new HttpConnectionException(e.getMessage(), e);
@@ -426,27 +448,27 @@ public class HttpHandler {
             httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
             httpGet.setHeader("Content-type", APPLICATION_FORM_URLENCODED.getMimeType());
 
-            try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
-                StatusLine statusLine = httpResponse.getStatusLine();
-                log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+            StatusLine statusLine = httpResponse.getStatusLine();
 
-                if (statusLine.getStatusCode() == SC_OK) {
-                    String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
-                    JSONArray jsonArray = new JSONArray(content);
+            String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+            consume(httpResponse.getEntity());
 
-                    for (Object aJsonArray : jsonArray) {
-                        JSONObject object = (JSONObject) aJsonArray;
+            if (statusLine.getStatusCode() == SC_OK) {
+                JSONArray jsonArray = new JSONArray(content);
 
-                        String shortName = object.getString("shortName");
-                        String participantName = object.getString("participantName") + "(" + shortName + ")";
+                for (Object aJsonArray : jsonArray) {
+                    JSONObject object = (JSONObject) aJsonArray;
 
-                        retVal.add(new ComboBoxItem(shortName, participantName));
-                    }
-                } else {
-                    throw new HttpResponseException("Message:Send Header Error"
-                            + "\nStatus Code:" + statusLine.getStatusCode()
-                            + "\nReason:" + statusLine.getReasonPhrase());
+                    String shortName = object.getString("shortName");
+                    String participantName = object.getString("participantName") + "(" + shortName + ")";
+
+                    retVal.add(new ComboBoxItem(shortName, participantName));
                 }
+            } else {
+                throw new HttpResponseException("Message:Send Header Error"
+                        + "\nStatus Code:" + statusLine.getStatusCode()
+                        + "\nReason:" + statusLine.getReasonPhrase());
             }
         } catch (URISyntaxException | IOException e) {
             throw new HttpConnectionException(e.getMessage(), e);
@@ -456,7 +478,7 @@ public class HttpHandler {
     }
 
     public List<FileStatus> checkStatus(Long headerID) {
-        log.debug("Check status:{}", headerID);
+        log.debug("Check status headerID: {}", headerID);
 
         List<FileStatus> retVal = new ArrayList<>();
 
@@ -468,13 +490,13 @@ public class HttpHandler {
             HttpGet httpGet = new HttpGet(builder.build());
             httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
 
-            try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
+            try {
+                HttpResponse httpResponse = httpClient.execute(httpGet);
+
                 StatusLine statusLine = httpResponse.getStatusLine();
-                log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
 
                 if (statusLine.getStatusCode() == SC_OK) {
                     String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
-                    log.debug("content:{}", content);
 
                     JSONArray jsonData = new JSONArray(content);
 
@@ -485,6 +507,8 @@ public class HttpHandler {
                         retVal.add(fileStatus);
                     }
                 }
+
+                consume(httpResponse.getEntity());
             } catch (IOException e) {
                 log.error(e.getMessage(), e);
             }
@@ -508,22 +532,21 @@ public class HttpHandler {
             HttpGet httpGet = new HttpGet(builder.build());
             httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
 
-            try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet)) {
-                StatusLine statusLine = httpResponse.getStatusLine();
-                log.debug("HTTP Response code:{} reason:{}", statusLine.getStatusCode(), statusLine.getReasonPhrase());
+            HttpResponse httpResponse = httpClient.execute(httpGet);
 
-                if (statusLine.getStatusCode() == SC_OK) {
-                    String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
-                    log.debug("content:{}", content);
+            StatusLine statusLine = httpResponse.getStatusLine();
 
-                    JSONObject jsonData = new JSONObject(content);
-                    retVal = new HeaderStatus();
+            String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+            log.debug("content:{}", content);
 
-                    // TODO: Set log level to INFO
-                    BeanUtils.populate(retVal, jsonData.toMap());
-                }
-            } catch (IOException e) {
-                log.error(e.getMessage(), e);
+            consume(httpResponse.getEntity());
+
+            if (statusLine.getStatusCode() == SC_OK) {
+                JSONObject jsonData = new JSONObject(content);
+                retVal = new HeaderStatus();
+
+                // TODO: Set log level to INFO
+                BeanUtils.populate(retVal, jsonData.toMap());
             }
         } catch (Exception e) {
             log.error(e.getMessage(), e);

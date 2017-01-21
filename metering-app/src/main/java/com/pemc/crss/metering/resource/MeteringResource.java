@@ -8,6 +8,7 @@ import com.pemc.crss.metering.dto.mq.TrailerParam;
 import com.pemc.crss.metering.resource.validator.FileUploadValidator;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -25,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +82,10 @@ public class MeteringResource {
             return new ResponseEntity<>(result.getAllErrors(), BAD_REQUEST);
         }
 
+        List<String> retVal = new ArrayList<>();
         for (MultipartFile file : multipartFiles) {
+            retVal.add(file.getOriginalFilename());
+
             // TODO: Pass a FileManifest bean instead. Could use a json converter
             Message message = MessageBuilder.withBody(file.getBytes())
                     .setHeader("headerID", headerID)
@@ -94,7 +99,7 @@ public class MeteringResource {
             rabbitTemplate.send("crss.mq", ROUTING_KEY, message);
         }
 
-        return ok(null);
+        return ok(StringUtils.join(retVal));
     }
 
     @PreAuthorize("hasAuthority('MQ_UPLOAD_METER_DATA')")

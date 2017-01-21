@@ -30,7 +30,7 @@ public class ApplicationLoader {
         MeterDataUploader dataUploader = new MeterDataUploader(httpHandler);
         dataUploader.configureComponents();
 
-        log.debug("Ready to render UI");
+        log.debug("Rendering User Interface...");
 
         dataUploader.setVisible(true);
 

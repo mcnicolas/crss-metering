@@ -1,5 +1,7 @@
 package com.pemc.crss.meter.upload;
 
+import com.pemc.crss.meter.upload.http.HeaderStatus;
+import com.pemc.crss.meter.upload.http.UploadStatus;
 import com.pemc.crss.meter.upload.util.FileNameFilter;
 
 import javax.swing.BorderFactory;
@@ -22,11 +24,19 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static com.pemc.crss.meter.upload.LoginDialog.RET_OK;
 import static com.pemc.crss.meter.upload.SelectedFileUtils.retrieveFileListing;
 import static com.pemc.crss.meter.upload.SettingsDialog.RET_SAVE;
+import static com.pemc.crss.meter.upload.http.UploadStatus.STALE;
+import static com.pemc.crss.meter.upload.http.UploadStatus.SUCCESS;
+import static java.awt.Color.BLUE;
+import static java.awt.Color.RED;
 import static javax.swing.JFileChooser.APPROVE_OPTION;
 import static javax.swing.JFileChooser.FILES_AND_DIRECTORIES;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
@@ -54,7 +64,7 @@ public class HeaderPanel extends JPanel {
         this.parent = parent;
 
         btnLogout.setVisible(false);
-        lblFinishedProcessing.setVisible(false);
+        uploadProcessStatus.setVisible(false);
 
         cboCategory.addItem(new ComboBoxItem("DAILY", "Daily"));
         cboCategory.addItem(new ComboBoxItem("MONTHLY", "Monthly"));
@@ -116,8 +126,38 @@ public class HeaderPanel extends JPanel {
         processDuration.setText(duration);
     }
 
-    public void toggleProcessComplete(boolean visible) {
-        lblFinishedProcessing.setVisible(visible);
+    public void toggleProcessComplete(UploadStatus status) {
+        if (status == SUCCESS) {
+            uploadProcessStatus.setText("Finished Processing");
+            uploadProcessStatus.setBackground(BLUE);
+        } else if (status == STALE) {
+            uploadProcessStatus.setText("Error Processing");
+            uploadProcessStatus.setBackground(RED);
+        } else {
+        }
+
+        uploadProcessStatus.setVisible(status != null);
+    }
+
+    public void updateProcessDisplay(HeaderStatus headerStatus, LocalDateTime uploadStartTime) {
+        LocalDateTime to = LocalDateTime.now();
+
+        if (headerStatus.getUploadStatus() == SUCCESS) {
+            uploadProcessStatus.setText("Finished Processing");
+            uploadProcessStatus.setBackground(BLUE);
+        } else if (headerStatus.getUploadStatus() == STALE) {
+            uploadProcessStatus.setText("Error Processing");
+            uploadProcessStatus.setBackground(RED);
+        }
+
+        Duration diff = Duration.between(uploadStartTime, to);
+
+        LocalTime localTime = LocalTime.MIDNIGHT.plus(diff);
+        String processDuration = DateTimeFormatter.ofPattern("mm:ss").format(localTime);
+
+        updateProcessDuration(processDuration);
+        toggleProcessComplete(headerStatus.getUploadStatus());
+        readyToUploadToolbar();
     }
 
     /**
@@ -146,7 +186,7 @@ public class HeaderPanel extends JPanel {
         txtTransactionID = new JTextField();
         lblProcessDuration = new JLabel();
         processDuration = new JLabel();
-        lblFinishedProcessing = new JLabel();
+        uploadProcessStatus = new JLabel();
 
         setLayout(new BorderLayout());
 
@@ -297,16 +337,16 @@ public class HeaderPanel extends JPanel {
         gridBagConstraints.insets = new Insets(5, 0, 5, 5);
         transactionPanel.add(processDuration, gridBagConstraints);
 
-        lblFinishedProcessing.setBackground(Color.blue);
-        lblFinishedProcessing.setForeground(new Color(255, 255, 255));
-        lblFinishedProcessing.setText("Finished Processing");
-        lblFinishedProcessing.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        lblFinishedProcessing.setOpaque(true);
+        uploadProcessStatus.setBackground(Color.blue);
+        uploadProcessStatus.setForeground(new Color(255, 255, 255));
+        uploadProcessStatus.setText("Finished Processing");
+        uploadProcessStatus.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        uploadProcessStatus.setOpaque(true);
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 6;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new Insets(5, 20, 5, 5);
-        transactionPanel.add(lblFinishedProcessing, gridBagConstraints);
+        transactionPanel.add(uploadProcessStatus, gridBagConstraints);
 
         uploadStatusPanel.add(transactionPanel);
 
@@ -395,7 +435,7 @@ public class HeaderPanel extends JPanel {
         btnClearTable.setEnabled(false);
         btnUpload.setEnabled(false);
 
-        toggleProcessComplete(false);
+        toggleProcessComplete(null);
         updateTransactionID("");
         updateProcessDuration("");
 
@@ -417,6 +457,11 @@ public class HeaderPanel extends JPanel {
     }//GEN-LAST:event_loginActionPerformed
 
     // TODO: Find a more elegant way of enabling/disabling buttons
+    public void resetStatus() {
+        processDuration.setText("00:00");
+        uploadProcessStatus.setText("");
+        uploadProcessStatus.setVisible(false);
+    }
 
     public void uploadingToolbar() {
         btnSelectFiles.setEnabled(false);
@@ -519,7 +564,6 @@ public class HeaderPanel extends JPanel {
     private JComboBox<ComboBoxItem> cboMSP;
     private JPanel fieldPanel;
     private JLabel lblCategory;
-    private JLabel lblFinishedProcessing;
     private JLabel lblMSP;
     private JLabel lblProcessDuration;
     private JLabel lblTransactionID;
@@ -527,6 +571,8 @@ public class HeaderPanel extends JPanel {
     private JPanel toolbarPanel;
     private JPanel transactionPanel;
     private JTextField txtTransactionID;
+    private JLabel uploadProcessStatus;
     private JPanel uploadStatusPanel;
     // End of variables declaration//GEN-END:variables
+
 }

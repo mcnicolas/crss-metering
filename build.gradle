@@ -107,6 +107,8 @@ subprojects {
             dependency 'org.postgresql:postgresql:9.4.1212'
 
             dependency 'org.springframework.security.oauth:spring-security-oauth2:2.0.11.RELEASE'
+
+            dependency 'junit:junit:4.12'
         }
     }
 

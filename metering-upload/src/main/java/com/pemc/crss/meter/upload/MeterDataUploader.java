@@ -35,12 +35,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -49,11 +46,15 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 import static com.pemc.crss.meter.upload.ErrorDialog.showErrorDialog;
+import static com.pemc.crss.meter.upload.http.UploadStatus.INPROGRESS;
+import static com.pemc.crss.meter.upload.http.UploadStatus.STALE;
+import static com.pemc.crss.meter.upload.http.UploadStatus.SUCCESS;
 import static com.pemc.crss.meter.upload.table.UploadType.FILE;
 import static com.pemc.crss.meter.upload.table.UploadType.HEADER;
 import static com.pemc.crss.meter.upload.util.ErrorParserUtil.parseErrorMessage;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
+import static java.time.LocalDateTime.now;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
@@ -64,12 +65,12 @@ import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationHMS;
 
 @Slf4j
 public class MeterDataUploader extends JFrame {
 
-    private final DateFormat timerFormat = new SimpleDateFormat("mm:ss");
+    public static final int ONE_SECOND = 1000;
+    public static final int STALE_UPLOAD_TIMEOUT = 30000;
 
     private HttpHandler httpHandler;
     private String username;
@@ -79,8 +80,7 @@ public class MeterDataUploader extends JFrame {
     private Properties properties;
     private Timer uploadTimer;
     private Timer processTimer;
-    private long uploadStartTime = 0;
-    private long processStartTime = 0;
+    private LocalDateTime uploadStartTime;
 
     public MeterDataUploader(HttpHandler httpHandler) {
         this.httpHandler = httpHandler;
@@ -140,23 +140,45 @@ public class MeterDataUploader extends JFrame {
         tablePanel.updateTableDisplay(selectedFiles);
     }
 
-    public void triggerStatusCheck(Long headerID) {
-        processStartTime = System.currentTimeMillis();
-
+    public void triggerStatusCheck(Long headerID, LocalDateTime uploadStartTime) {
         processTimer.start();
 
         int recordCount = tablePanel.getSelectedFiles().size();
 
+        StaleStatusMonitor monitor = new StaleStatusMonitor();
+
         SwingWorker<HeaderStatus, List<FileStatus>> statusWorker = new SwingWorker<HeaderStatus, List<FileStatus>>() {
-
-            private boolean isFinished(Long headerID, int statusCount) {
+            private boolean isStale(List<FileStatus> fileStatusList) {
                 boolean retVal = false;
+                Date now = new Date();
 
-                if (statusCount == recordCount) {
-                    HeaderStatus headerStatus = httpHandler.getHeader(headerID);
+                if (fileStatusList.hashCode() == monitor.getChecksum()) {
+                    Date lastUpdateTime = monitor.getUpdateTimestamp();
+                    long timeDiff = now.getTime() - lastUpdateTime.getTime();
 
-                    if (equalsIgnoreCase(headerStatus.getNotificationSent(), "Y")) { // OR the process has run a long time
+                    if (timeDiff > STALE_UPLOAD_TIMEOUT) {
                         retVal = true;
+                    }
+                } else {
+                    monitor.setChecksum(fileStatusList.hashCode());
+                    monitor.setUpdateTimestamp(now);
+
+                    retVal = false;
+                }
+
+                return retVal;
+            }
+
+            private HeaderStatus getStatus(int runningFileCount) {
+                HeaderStatus retVal = new HeaderStatus();
+                retVal.setUploadStatus(INPROGRESS);
+
+                if (runningFileCount == recordCount) {
+                    retVal = httpHandler.getHeader(headerID);
+
+                    if (equalsIgnoreCase(retVal.getNotificationSent(), "Y")) {
+                        log.debug("Finished Processing {} files", runningFileCount);
+                        retVal.setUploadStatus(SUCCESS);
                     }
                 }
 
@@ -167,20 +189,31 @@ public class MeterDataUploader extends JFrame {
             protected HeaderStatus doInBackground() throws Exception {
                 log.debug("Status check triggered with headerID:{}", headerID);
 
-                int statusCount = 0;
-                while (!isFinished(headerID, statusCount)) {
+                int runningFileCount = 0;
+                HeaderStatus status = getStatus(runningFileCount);
+
+                while (status.getUploadStatus() == INPROGRESS) {
                     List<FileStatus> fileStatusList = httpHandler.checkStatus(headerID);
-                    statusCount = fileStatusList.size();
+
+                    if (isStale(fileStatusList)) {
+                        log.debug("Upload is stale headerID:{}", headerID);
+
+                        status.setUploadStatus(STALE);
+                        break;
+                    }
 
                     if (isNotEmpty(fileStatusList)) {
                         publish(fileStatusList);
                     }
 
                     Thread.yield();
-                    Thread.sleep(1000);
+                    Thread.sleep(ONE_SECOND);
+
+                    runningFileCount = fileStatusList.size();
+                    status = getStatus(runningFileCount);
                 }
 
-                return httpHandler.getHeader(headerID);
+                return status;
             }
 
             @Override
@@ -195,17 +228,7 @@ public class MeterDataUploader extends JFrame {
 
                     processTimer.stop();
 
-                    LocalDateTime from = headerStatus.getUploadDateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                    LocalDateTime to = headerStatus.getNotificationDateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-
-                    Duration diff = Duration.between(from, to);
-
-                    LocalTime localTime = LocalTime.MIDNIGHT.plus(diff);
-                    String processDuration = DateTimeFormatter.ofPattern("mm:ss").format(localTime);
-
-                    headerPanel.updateProcessDuration(processDuration);
-                    headerPanel.toggleProcessComplete(true);
-                    headerPanel.readyToUploadToolbar();
+                    headerPanel.updateProcessDisplay(headerStatus, uploadStartTime);
                 } catch (InterruptedException | ExecutionException e) {
                     log.error(e.getMessage(), e);
                 }
@@ -216,16 +239,14 @@ public class MeterDataUploader extends JFrame {
     }
 
     public void uploadData(String category, String mspShortName) {
-        tablePanel.resetStatus();
-
-        ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "Upload");
+        resetUploadStatus();
 
         List<FileBean> selectedFiles = tablePanel.getSelectedFiles();
 
         FileBucketFactory fileBucketFactory = new FileBucketFactory();
         FileBucket fileBucket = fileBucketFactory.createBucket(selectedFiles);
 
-        uploadStartTime = System.currentTimeMillis();
+        uploadStartTime = now();
         uploadTimer.start();
 
         uploadProgressBar.setValue(0);
@@ -244,6 +265,7 @@ public class MeterDataUploader extends JFrame {
                 UploadData uploadData = new UploadData();
                 uploadData.setUploadType(HEADER);
                 uploadData.setHeaderID(headerID);
+                uploadData.setUploadStartTime(now());
                 publish(uploadData);
 
                 int progressValue = (100 * ++counter) / totalProgress;
@@ -275,7 +297,7 @@ public class MeterDataUploader extends JFrame {
                 UploadData uploadData = chunks.get(0);
 
                 if (uploadData.getUploadType() == HEADER) {
-                    triggerStatusCheck(uploadData.getHeaderID());
+                    triggerStatusCheck(uploadData.getHeaderID(), uploadData.getUploadStartTime());
                 } else if (uploadData.getUploadType() == FILE) {
                     tablePanel.updateInitialRecordStatus(uploadData.getFileList());
                 }
@@ -286,11 +308,9 @@ public class MeterDataUploader extends JFrame {
                 try {
                     String transactionID = get();
 
-                    long elapsedTime = System.currentTimeMillis() - uploadStartTime;
-
                     uploadTimer.stop();
 
-                    log.info("Done uploading files. Upload took: {}", formatDurationHMS(elapsedTime));
+                    log.info("Done uploading files.");
 
                     headerPanel.updateTransactionID(transactionID);
                 } catch (InterruptedException | ExecutionException e) {
@@ -316,6 +336,13 @@ public class MeterDataUploader extends JFrame {
         });
 
         uploadWorker.execute();
+    }
+
+    private void resetUploadStatus() {
+        headerPanel.resetStatus();
+        tablePanel.resetStatus();
+
+        ((CardLayout) statusBarPanel.getLayout()).show(statusBarPanel, "Upload");
     }
 
     public void login(String username, String password) {
@@ -765,16 +792,22 @@ public class MeterDataUploader extends JFrame {
     private class UploadTimerListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            Date elapsed = new Date(System.currentTimeMillis() - uploadStartTime);
-            uploadTimerValue.setText(timerFormat.format(elapsed));
+            Duration diff = Duration.between(uploadStartTime, now());
+
+            LocalTime localTime = LocalTime.MIDNIGHT.plus(diff);
+            String duration = DateTimeFormatter.ofPattern("mm:ss").format(localTime);
+            uploadTimerValue.setText(duration);
         }
     }
 
     private class ProcessTimerListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            Date elapsed = new Date(System.currentTimeMillis() - processStartTime);
-            headerPanel.updateProcessDuration(timerFormat.format(elapsed));
+            Duration diff = Duration.between(uploadStartTime, now());
+
+            LocalTime localTime = LocalTime.MIDNIGHT.plus(diff);
+            String duration = DateTimeFormatter.ofPattern("mm:ss").format(localTime);
+            headerPanel.updateProcessDuration(duration);
         }
     }
 

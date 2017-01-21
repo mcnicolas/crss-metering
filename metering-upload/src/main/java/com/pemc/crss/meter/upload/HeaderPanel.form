@@ -242,7 +242,7 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="javax.swing.JLabel" name="lblFinishedProcessing">
+            <Component class="javax.swing.JLabel" name="uploadProcessStatus">
               <Properties>
                 <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
                   <Color blue="ff" green="0" id="blue" palette="1" red="0" type="palette"/>

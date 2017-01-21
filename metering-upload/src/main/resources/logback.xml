@@ -7,6 +7,20 @@
         </encoder>
     </appender>
 
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+
+        <file>./logs/upload.log</file>
+
+        <!-- TODO: Optimize further -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>./logs/%d{yyyy-MM-dd}.upload.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+    </appender>
+
     <logger name="com.pemc.crss" level="DEBUG"/>
 
     <logger name="org.apache.http.wire" level="INFO"/>
@@ -17,8 +31,11 @@
     <logger name="org.apache.http.impl.conn.PoolingHttpClientConnectionManager" level="INFO"/>
     <logger name="org.apache.http.impl.execchain.MainClientExec" level="INFO"/>
 
+    <logger name="org.apache.commons.beanutils" level="INFO"/>
+
     <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
     </root>
 
 </configuration>
