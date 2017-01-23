@@ -13,7 +13,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -332,7 +331,7 @@ public class HeaderPanel extends JPanel {
         int action = fileChooser.showOpenDialog(this);
 
         if (action == APPROVE_OPTION) {
-            FileNameExtensionFilter fileFilter = (FileNameExtensionFilter) fileChooser.getFileFilter();
+            FileNameFilter fileFilter = (FileNameFilter) fileChooser.getFileFilter();
 
             List<FileBean> selectedFiles = retrieveFileListing(fileChooser.getSelectedFiles(), fileFilter.getExtensions());
 
