@@ -50,6 +50,14 @@ docker {
         if (project.hasProperty('dockerRegistryUrl')) {
             url = dockerRegistryUrl
         }
+
+        if (project.hasProperty('dockerRegistryUsername')) {
+            username = dockerRegistryUsername
+        }
+
+        if (project.hasProperty('dockerRegistryPassword')) {
+            password = dockerRegistryPassword
+        }
     }
 }
 
