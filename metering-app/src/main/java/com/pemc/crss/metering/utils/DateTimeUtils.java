@@ -6,7 +6,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
@@ -25,7 +24,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 public final class DateTimeUtils {
 
     public static final DateFormat DATE_PARAM_FORMAT = new SimpleDateFormat("MM/dd/yyyy");
-    public static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     public static final DateTimeFormatter READING_DATETIME = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
@@ -100,13 +98,6 @@ public final class DateTimeUtils {
         retVal.set(MILLISECOND, 0);
 
         return retVal.getTime();
-    }
-
-    public static long dateToLong(Date date) {
-        LocalDateTime localDateTime = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
-        String formattedDate = localDateTime.format(READING_DATETIME);
-
-        return Long.valueOf(formattedDate);
     }
 
     public static boolean isStartOfDay(Date date) {

@@ -1,18 +1,11 @@
 package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageOrder;
-import com.pemc.crss.metering.utils.DateTimeUtils;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.StringJoiner;
 
-import static com.pemc.crss.metering.utils.DateTimeUtils.dateToLong;
-import static com.pemc.crss.metering.utils.DateTimeUtils.endOfDay;
-import static com.pemc.crss.metering.utils.DateTimeUtils.endOfMonth;
-import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDayMQ;
-import static com.pemc.crss.metering.utils.DateTimeUtils.startOfMonth;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -22,7 +15,7 @@ public class MQDisplayQueryBuilder {
     private StringBuilder sqlBuilder = new StringBuilder();
     private List arguments = new ArrayList();
 
-    public MQDisplayQueryBuilder selectMeterData(String category, String readingDate) {
+    public MQDisplayQueryBuilder selectMeterData(String category, Long readingDateFrom, Long readingDateTo) {
         String selectSQL = "SELECT DISTINCT ON (B.SEIN, B.READING_DATETIME)"
                 + " B.METER_DATA_ID, B.SEIN, A.TRANSACTION_ID, B.READING_DATETIME,"
                 + " B.KWD, B.KWHD, B.KVARHD, B.KWR, B.KWHR, B.KVARHR, B.ESTIMATION_FLAG,"
@@ -33,14 +26,18 @@ public class MQDisplayQueryBuilder {
         String tableName = getTableName(category);
         selectSQL = selectSQL.replace("${MQ_TABLE}", tableName);
         sqlBuilder.append(selectSQL);
-        sqlBuilder.append(" WHERE B.READING_DATETIME BETWEEN ? AND ?");
 
-        addReadingDateFilter(category, readingDate);
+        if (readingDateFrom != null && readingDateTo != null) {
+            sqlBuilder.append(" WHERE B.READING_DATETIME BETWEEN ? AND ?");
+
+            arguments.add(readingDateFrom);
+            arguments.add(readingDateTo);
+        }
 
         return this;
     }
 
-    public MQDisplayQueryBuilder countMeterData(String category, String readingDate) {
+    public MQDisplayQueryBuilder countMeterData(String category, Long readingDateFrom, Long readingDateTo) {
         String countSQL = "SELECT COUNT(DISTINCT(B.SEIN, B.READING_DATETIME))"
                 + " FROM TXN_MQ_MANIFEST_FILE A"
                 + " INNER JOIN ${MQ_TABLE} B ON A.FILE_ID = B.FILE_ID";
@@ -48,9 +45,13 @@ public class MQDisplayQueryBuilder {
         String tableName = getTableName(category);
         countSQL = countSQL.replace("${MQ_TABLE}", tableName);
         sqlBuilder.append(countSQL);
-        sqlBuilder.append(" WHERE READING_DATETIME BETWEEN ? AND ?");
 
-        addReadingDateFilter(category, readingDate);
+        if (readingDateFrom != null && readingDateTo != null) {
+            sqlBuilder.append(" WHERE READING_DATETIME BETWEEN ? AND ?");
+
+            arguments.add(readingDateFrom);
+            arguments.add(readingDateTo);
+        }
 
         return this;
     }
@@ -103,24 +104,6 @@ public class MQDisplayQueryBuilder {
         retVal.setArguments(arguments.toArray());
 
         return retVal;
-    }
-
-    private void addReadingDateFilter(String category, String readingDate) {
-        Date dateParam = DateTimeUtils.parseDate(readingDate);
-
-        Date startDate = new Date();
-        Date endDate = new Date();
-
-        if (equalsIgnoreCase(category, "monthly")) {
-            startDate = startOfMonth(dateParam);
-            endDate = endOfMonth(dateParam);
-        } else if (equalsIgnoreCase(category, "daily")) {
-            startDate = startOfDayMQ(dateParam);
-            endDate = endOfDay(dateParam);
-        }
-
-        arguments.add(dateToLong(startDate));
-        arguments.add(dateToLong(endDate));
     }
 
     private String getTableName(String category) {

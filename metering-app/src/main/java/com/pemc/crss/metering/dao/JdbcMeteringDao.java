@@ -24,6 +24,9 @@ import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -33,11 +36,16 @@ import static com.pemc.crss.metering.constants.UploadType.CORRECTED_DAILY;
 import static com.pemc.crss.metering.constants.UploadType.DAILY;
 import static java.sql.Types.VARCHAR;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Slf4j
 @Repository
 public class JdbcMeteringDao implements MeteringDao {
 
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("M/d/yyyy");
+    private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+
+    @Deprecated // TODO: Use java.time
     private final DateFormat readingDateFormat = new SimpleDateFormat("yyyyMMddHHmm");
 
     @Value("${mq.manifest.header.insert}")
@@ -151,13 +159,16 @@ public class JdbcMeteringDao implements MeteringDao {
         Map<String, String> params = pageableRequest.getMapParams();
 
         String category = params.get("category");
-        String readingDate = params.get("readingDate");
+
+        Long readingDateFrom = getStartOfDay(params.get("readingDateFrom"));
+        Long readingDateTo = getEndOfDay(params.get("readingDateTo"));
+
         String sein = params.get("sein");
         String transactionID = params.get("transactionID");
         String mspShortName = params.get("shortName");
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
-        BuilderData query = queryBuilder.selectMeterData(category, readingDate)
+        BuilderData query = queryBuilder.selectMeterData(category, readingDateFrom, readingDateTo)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
                 .addMSPFilter(mspShortName)
@@ -228,13 +239,14 @@ public class JdbcMeteringDao implements MeteringDao {
         Map<String, String> params = pageableRequest.getMapParams();
 
         String category = params.get("category");
-        String readingDate = params.get("readingDate");
+        Long readingDateFrom = getStartOfDay(params.get("readingDateFrom"));
+        Long readingDateTo = getEndOfDay(params.get("readingDateTo"));
         String sein = params.get("sein");
         String transactionID = params.get("transactionID");
         String mspShortName = params.get("shortName");
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
-        BuilderData query = queryBuilder.countMeterData(category, readingDate)
+        BuilderData query = queryBuilder.countMeterData(category, readingDateFrom, readingDateTo)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
                 .addMSPFilter(mspShortName)
@@ -247,6 +259,30 @@ public class JdbcMeteringDao implements MeteringDao {
                 query.getArguments(),
                 Integer.class
         );
+    }
+
+    private Long getStartOfDay(String readingDate) {
+        Long retVal = null;
+
+        if (isNotBlank(readingDate)) {
+            LocalDateTime dateTime = LocalDate.parse(readingDate, DATE_FORMAT).atStartOfDay();
+
+            retVal = Long.valueOf(dateTime.format(DATETIME_FORMAT));
+        }
+
+        return retVal;
+    }
+
+    private Long getEndOfDay(String readingDate) {
+        Long retVal = null;
+
+        if (isNotBlank(readingDate)) {
+            LocalDateTime dateTime = LocalDate.parse(readingDate, DATE_FORMAT).atTime(23, 59);
+
+            retVal = Long.valueOf(dateTime.format(DATETIME_FORMAT));
+        }
+
+        return retVal;
     }
 
     @Override
