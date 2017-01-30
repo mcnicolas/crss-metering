@@ -594,7 +594,7 @@ public class HttpHandler {
             } else {
                 deviceId = UUID.randomUUID().toString();
             }
-        } catch (UnknownHostException | SocketException e) {
+        } catch (UnknownHostException | SocketException | NullPointerException e) {
             if (log.isDebugEnabled()) {
                 log.debug(e.getMessage(), e);
             }
