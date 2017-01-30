@@ -82,9 +82,10 @@ public class MeteringResource {
             return new ResponseEntity<>(result.getAllErrors(), BAD_REQUEST);
         }
 
-        List<String> retVal = new ArrayList<>();
+        Map<String, String> retVal = new HashMap<>();
+        List<String> files = new ArrayList<>();
         for (MultipartFile file : multipartFiles) {
-            retVal.add(file.getOriginalFilename());
+            files.add(file.getOriginalFilename());
 
             // TODO: Pass a FileManifest bean instead. Could use a json converter
             Message message = MessageBuilder.withBody(file.getBytes())
@@ -94,12 +95,15 @@ public class MeteringResource {
                     .setHeaderIfAbsent("Content type", file.getContentType())
                     .build();
 
+            // TODO: o.s.a.s.c.Jackson2JsonMessageConverter   : Could not convert incoming message with content-type [application/octet-stream]
+
             log.debug("Received file {} headerID:{} delegating to queue", file.getOriginalFilename(), headerID);
 
             rabbitTemplate.send("crss.mq", ROUTING_KEY, message);
         }
 
-        return ok(StringUtils.join(retVal));
+        retVal.put("files", StringUtils.join(files));
+        return ok(retVal);
     }
 
     @PreAuthorize("hasAuthority('MQ_UPLOAD_METER_DATA')")
