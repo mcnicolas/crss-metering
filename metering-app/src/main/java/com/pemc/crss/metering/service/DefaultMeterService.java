@@ -4,6 +4,7 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dao.MeteringDao;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
+import com.pemc.crss.metering.dto.VersionData;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
@@ -176,6 +178,7 @@ public class DefaultMeterService implements MeterService {
     @Transactional(readOnly = true)
     public Page<MeterDataDisplay> getMeterData(PageableRequest pageableRequest) {
         int totalRecords = meteringDao.getTotalRecords(pageableRequest);
+
         List<MeterDataDisplay> meterDataList = meteringDao.findAll(pageableRequest);
 
         return new PageImpl<>(
@@ -228,6 +231,11 @@ public class DefaultMeterService implements MeterService {
     @Override
     public HeaderManifest getHeader(Long headerID) {
         return meteringDao.getHeaderManifest(headerID);
+    }
+
+    @Override
+    public List<VersionData> getVersionedData(Map<String, String> request) {
+        return meteringDao.getVersionedData(request);
     }
 
 }

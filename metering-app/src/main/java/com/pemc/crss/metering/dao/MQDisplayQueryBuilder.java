@@ -15,7 +15,9 @@ public class MQDisplayQueryBuilder {
     private StringBuilder sqlBuilder = new StringBuilder();
     private List arguments = new ArrayList();
 
-    public MQDisplayQueryBuilder selectMeterData(String category, Long readingDateFrom, Long readingDateTo) {
+    public MQDisplayQueryBuilder selectMeterData(String category, Long readingDateFrom, Long readingDateTo, String createdDateTime) {
+        // TODO: If createdDateTime is specified then change the query. Remove max function.
+
         String selectSQL = "SELECT DISTINCT ON (B.SEIN, B.READING_DATETIME)"
                 + " B.METER_DATA_ID, B.SEIN, A.TRANSACTION_ID, B.READING_DATETIME,"
                 + " B.KWD, B.KWHD, B.KVARHD, B.KWR, B.KWHR, B.KVARHR, B.ESTIMATION_FLAG,"
@@ -78,6 +80,15 @@ public class MQDisplayQueryBuilder {
         if (isNotBlank(mspShortName)) {
             sqlBuilder.append(" AND B.MSP_SHORTNAME LIKE ?");
             arguments.add("%" + mspShortName + "%");
+        }
+
+        return this;
+    }
+
+    public MQDisplayQueryBuilder addVersionFilter(String createdDateTime) {
+        if (isNotBlank(createdDateTime)) {
+            sqlBuilder.append(" AND DATE_TRUNC('minute', B.CREATED_DATE_TIME) = ?");
+            arguments.add(createdDateTime);
         }
 
         return this;

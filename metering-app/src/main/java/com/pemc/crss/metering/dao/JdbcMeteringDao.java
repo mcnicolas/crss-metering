@@ -6,6 +6,7 @@ import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
+import com.pemc.crss.metering.dto.VersionData;
 import com.pemc.crss.metering.validator.ValidationResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -166,12 +167,14 @@ public class JdbcMeteringDao implements MeteringDao {
         String sein = params.get("sein");
         String transactionID = params.get("transactionID");
         String mspShortName = params.get("shortName");
+        String createdDateTime = params.get("createdDateTime");
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
-        BuilderData query = queryBuilder.selectMeterData(category, readingDateFrom, readingDateTo)
+        BuilderData query = queryBuilder.selectMeterData(category, readingDateFrom, readingDateTo, createdDateTime)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
                 .addMSPFilter(mspShortName)
+                .addVersionFilter(createdDateTime)
                 .orderBy(pageableRequest.getOrderList())
                 .build();
 
@@ -224,6 +227,33 @@ public class JdbcMeteringDao implements MeteringDao {
                 });
     }
 
+    @Override
+    public List<VersionData> getVersionedData(Map<String, String> params) {
+        String category = params.get("category");
+
+        Long readingDateFrom = getStartOfDay(params.get("readingDateFrom"));
+        Long readingDateTo = getEndOfDay(params.get("readingDateTo"));
+
+        String sein = params.get("sein");
+        String transactionID = params.get("transactionID");
+        String mspShortName = params.get("shortName");
+
+        MQVersionQueryBuilder queryBuilder = new MQVersionQueryBuilder();
+        BuilderData query = queryBuilder.selectVersionData(category, readingDateFrom, readingDateTo)
+                .addSEINFilter(sein)
+                .addTransactionIDFilter(transactionID)
+                .addMSPFilter(mspShortName)
+                .orderBy()
+                .build();
+
+        log.debug("Version query:{}", query.getSql());
+
+        return jdbcTemplate.query(
+                query.getSql(),
+                query.getArguments(),
+                new BeanPropertyRowMapper<>(VersionData.class));
+    }
+
     private String getValue(BigDecimal reading) {
         String retVal = "";
 
@@ -244,12 +274,14 @@ public class JdbcMeteringDao implements MeteringDao {
         String sein = params.get("sein");
         String transactionID = params.get("transactionID");
         String mspShortName = params.get("shortName");
+        String createdDateTime = params.get("createdDateTime");
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
         BuilderData query = queryBuilder.countMeterData(category, readingDateFrom, readingDateTo)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
                 .addMSPFilter(mspShortName)
+                .addVersionFilter(createdDateTime)
                 .build();
 
         log.debug("Total records sql: {}", query.getSql());

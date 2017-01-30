@@ -2,6 +2,7 @@ package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
+import com.pemc.crss.metering.dto.VersionData;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
@@ -10,6 +11,7 @@ import com.pemc.crss.metering.validator.ValidationResult;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.Map;
 
 public interface MeterService {
 
@@ -42,5 +44,7 @@ public interface MeterService {
     List<FileManifest> checkStatus(Long headerID);
 
     HeaderManifest getHeader(Long headerID);
+
+    List<VersionData> getVersionedData(Map<String, String> request);
 
 }

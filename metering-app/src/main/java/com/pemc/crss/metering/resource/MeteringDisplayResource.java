@@ -3,6 +3,7 @@ package com.pemc.crss.metering.resource;
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
+import com.pemc.crss.metering.dto.VersionData;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.springframework.http.ResponseEntity.ok;
 
 @Slf4j
 @RestController
@@ -35,7 +41,15 @@ public class MeteringDisplayResource {
                 .withData(meterDataPage.getContent())
                 .withRecordsTotal(meterDataPage.getTotalElements());
 
-        return ResponseEntity.ok(response);
+        return ok(response);
+    }
+
+    @PostMapping(value = "/version")
+    @PreAuthorize("hasAuthority('MQ_VIEW_METERING_QUANTITY')")
+    public ResponseEntity<List<VersionData>> getVersionData(@RequestBody Map<String, String> request) {
+        List<VersionData> versionData = meterService.getVersionedData(request);
+
+        return ok(versionData);
     }
 
 }

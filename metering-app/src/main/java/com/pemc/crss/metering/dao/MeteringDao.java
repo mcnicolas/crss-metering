@@ -6,9 +6,11 @@ import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
+import com.pemc.crss.metering.dto.VersionData;
 import com.pemc.crss.metering.validator.ValidationResult;
 
 import java.util.List;
+import java.util.Map;
 
 public interface MeteringDao {
 
@@ -21,6 +23,8 @@ public interface MeteringDao {
     long saveFileManifest(FileManifest fileManifest);
 
     List<MeterDataDisplay> findAll(PageableRequest pageableRequest);
+
+    List<VersionData> getVersionedData(Map<String, String> param);
 
     int getTotalRecords(PageableRequest pageableRequest);
 
