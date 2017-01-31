@@ -68,14 +68,19 @@ mq:
   manifest:
     header:
       insert: >
-        INSERT INTO TXN_MQ_MANIFEST_HEADER (HEADER_ID, TRANSACTION_ID, FILE_COUNT, TAIL_RECEIVED, CATEGORY, UPLOAD_BY, UPLOAD_DATETIME)
+        INSERT INTO TXN_MQ_MANIFEST_HEADER
+        (
+          HEADER_ID, TRANSACTION_ID, FILE_COUNT, NOTIFICATION_SENT, TAIL_RECEIVED, CATEGORY, UPLOAD_BY, UPLOAD_DATETIME
+        )
         VALUES (
-          NEXTVAL('MQ_MANIFEST_HEADER_SEQ'), :transactionID, :fileCount, 'N', :category, :uploadedBy, :uploadDateTime
+          NEXTVAL('MQ_MANIFEST_HEADER_SEQ'), :transactionID, :fileCount, 'N', 'N', :category, :uploadedBy, :uploadDateTime
         )
       query: >
-        SELECT HEADER_ID AS headerID, TRANSACTION_ID AS transactionID, FILE_COUNT AS fileCount, CATEGORY AS category,
-        TAIL_RECEIVED AS tailReceived
-        FROM TXN_MQ_MANIFEST_HEADER WHERE HEADER_ID = :headerID
+        SELECT HEADER_ID AS headerID, TRANSACTION_ID AS transactionID, FILE_COUNT AS fileCount,
+          CATEGORY AS category, NOTIFICATION_SENT AS notificationSent, NOTIFICATION_DATETIME AS notificationDateTime,
+          TAIL_RECEIVED AS tailReceived, UPLOAD_BY AS uploadedBy, UPLOAD_DATETIME AS UploadDateTime
+        FROM TXN_MQ_MANIFEST_HEADER
+        WHERE HEADER_ID = :headerID
       count: >
         SELECT COUNT(*) FROM TXN_MQ_MANIFEST_HEADER WHERE TAIL_RECEIVED = 'N' AND HEADER_ID = :headerID
     trailer:
@@ -87,6 +92,17 @@ mq:
         VALUES (
           NEXTVAL('MQ_MANIFEST_FILE_SEQ'), :headerID, :transactionID, :fileName, :fileType, :fileSize, :checksum, :uploadDateTime
         )
+      status: >
+        SELECT FILE_ID AS fileID,
+               HEADER_ID AS headerID,
+               TRANSACTION_ID AS transactionID,
+               FILENAME,
+               PROCESS_FLAG AS processFlag,
+               STATUS,
+               ERROR_DETAILS AS errorDetails
+        FROM TXN_MQ_MANIFEST_FILE
+        WHERE HEADER_ID = :headerID
+          AND PROCESS_FLAG = 'Y'
       query: >
         SELECT A.FILE_ID as fileID,
                A.HEADER_ID AS headerID,
@@ -101,8 +117,15 @@ mq:
                A.ERROR_DETAILS AS errorDetails
         FROM TXN_MQ_MANIFEST_FILE A INNER JOIN TXN_MQ_MANIFEST_HEADER B ON A.HEADER_ID = B.HEADER_ID
         WHERE B.HEADER_ID = :headerID
+      unprocessed: >
+        SELECT A.FILE_COUNT - COUNT(B.HEADER_ID) AS UNPROCESSED_COUNT
+        FROM TXN_MQ_MANIFEST_HEADER A
+        INNER JOIN TXN_MQ_MANIFEST_FILE B ON A.HEADER_ID = B.HEADER_ID
+        WHERE A.HEADER_ID = :headerID
+        GROUP BY A.HEADER_ID
     status: >
-      UPDATE TXN_MQ_MANIFEST_FILE SET PROCESS_FLAG = 'Y', STATUS = :status, ERROR_DETAILS = :errorDetail WHERE FILE_ID = :fileID
+      UPDATE TXN_MQ_MANIFEST_FILE SET PROCESS_FLAG = 'Y', STATUS = :status, ERROR_DETAILS = :errorDetail, PROCESS_DATETIME = :processDateTime
+      WHERE FILE_ID = :fileID
     upload:
       status: >
          select count(*) from txn_mq_manifest_header h
@@ -120,6 +143,10 @@ mq:
         where
           f.header_id = h.header_id and h.header_id=:headerID
         GROUP BY h.header_id, h.upload_datetime
+      notif.status: >
+        UPDATE TXN_MQ_MANIFEST_HEADER SET NOTIFICATION_SENT = 'Y', NOTIFICATION_DATETIME = :dateTime WHERE HEADER_ID = :headerID
+      notif.stale: >
+        SELECT HEADER_ID FROM TXN_MQ_MANIFEST_HEADER WHERE NOTIFICATION_SENT = 'N' AND UPLOAD_DATETIME < CURRENT_DATE
       notif.target.department: MSP,METERING
     filter-by.status: >
         select * from txn_mq_manifest_file where status=:status and header_id=:headerID
@@ -294,10 +321,10 @@ bcq:
         INSERT INTO TXN_BCQ_EVENT_TRADING_DATE (
           EVENT_ID,
           TRADING_DATE)
-        VALUES (?, ?)
+        VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?)
     participant:
       insert: >
         INSERT INTO TXN_BCQ_EVENT_PARTICIPANT (
           EVENT_ID,
           TRADING_PARTICIPANT)
-        VALUES (?, ?)
+        VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?)
