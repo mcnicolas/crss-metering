@@ -62,8 +62,8 @@ public class BcqResource {
         this.bcqService = bcqService;
     }
 
-    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
     @PostMapping(value = "/list")
+    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
     public ResponseEntity<DataTableResponse<BcqHeaderDisplay>> executeSearch(@RequestBody final PageableRequest request) {
         Page<BcqHeader> headerPage = bcqService.findAllHeaders(request);
         List<BcqHeaderDisplay> headerDisplayList = new ArrayList<>();
@@ -76,6 +76,7 @@ public class BcqResource {
     }
 
     @PostMapping("/upload")
+    @PreAuthorize("hasAuthority('BCQ_UPLOAD_BILATERAL_CONTRACT_QUANTITY')")
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile multipartFile) throws IOException {
         log.debug("[REST-BCQ] Request for uploading of: {}", multipartFile.getOriginalFilename());
         BcqDeclaration declaration = processAndValidateDeclaration(multipartFile);
@@ -89,6 +90,7 @@ public class BcqResource {
     }
 
     @PostMapping(value = "/settlement/upload")
+    @PreAuthorize("hasAuthority('BCQ_UPLOAD_BILATERAL_CONTRACT_QUANTITY')")
     public ResponseEntity<?> uploadBySettlement(@RequestParam("file") MultipartFile multipartFile,
                                                 @RequestPart String sellerDetailsString,
                                                 @RequestPart String tradingDateString) throws IOException {
@@ -111,6 +113,7 @@ public class BcqResource {
     }
 
     @PostMapping("/webservice/upload")
+    @PreAuthorize("hasAuthority('BCQ_UPLOAD_BILATERAL_CONTRACT_QUANTITY')")
     public ResponseEntity<String> uploadByWebService(@RequestParam("file") MultipartFile multipartFile) throws IOException {
         log.debug("[REST-BCQ] Request for uploading by web service of: {}", multipartFile.getOriginalFilename());
         if (!multipartFile.getContentType().equalsIgnoreCase(CSV_CONTENT_TYPE)) {
@@ -147,6 +150,7 @@ public class BcqResource {
     }
 
     @GetMapping("/declaration/{headerId}")
+    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
     public BcqHeaderDisplay getHeader(@PathVariable long headerId) {
         log.debug("[REST-BCQ] Request for getting header with ID: {}", headerId);
         BcqHeader header = bcqService.findHeader(headerId);
@@ -160,6 +164,7 @@ public class BcqResource {
     }
 
     @GetMapping("/declaration/{headerId}/data")
+    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
     public List<BcqDataDisplay> getData(@PathVariable long headerId) {
         log.debug("[REST-BCQ] Request for getting data of header with ID: {}", headerId);
         List<BcqDataDisplay> dataDisplayList = bcqService.findDataByHeaderId(headerId).stream()
@@ -169,6 +174,7 @@ public class BcqResource {
     }
 
     @PostMapping("/declaration/{headerId}/{status}")
+    @PreAuthorize("hasAuthority('BCQ_ASSESS_BILATERAL_CONTRACT_QUANTITY')")
     public void updateStatus(@PathVariable long headerId, @PathVariable String status) {
         log.debug("[REST-BCQ] Request for updating status to {} of header with ID: {}", status, headerId);
         bcqService.updateHeaderStatus(headerId, fromString(status));
@@ -176,6 +182,7 @@ public class BcqResource {
     }
 
     @PostMapping("/declaration/settlement/{headerId}/{status}")
+    @PreAuthorize("hasAuthority('BCQ_ASSESS_BILATERAL_CONTRACT_QUANTITY')")
     public void updateStatusBySettlement(@PathVariable long headerId, @PathVariable String status) {
         log.debug("[REST-BCQ] Request for settlement updating status to {} of header with ID: {}", status, headerId);
         bcqService.updateHeaderStatusBySettlement(headerId, fromString(status));
@@ -183,6 +190,7 @@ public class BcqResource {
     }
 
     @PostMapping("/declaration/settlement/approve/{headerId}")
+    @PreAuthorize("hasAuthority('BCQ_ASSESS_BILATERAL_CONTRACT_QUANTITY')")
     public void approve(@PathVariable long headerId) {
         log.debug("[REST-BCQ] Request for approval of header with ID: {}", headerId);
         bcqService.approve(headerId);
