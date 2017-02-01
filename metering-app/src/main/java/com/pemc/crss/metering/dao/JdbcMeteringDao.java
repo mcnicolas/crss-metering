@@ -174,7 +174,6 @@ public class JdbcMeteringDao implements MeteringDao {
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
                 .addMSPFilter(mspShortName)
-                .addVersionFilter(createdDateTime)
                 .orderBy(pageableRequest.getOrderList())
                 .build();
 
@@ -274,14 +273,12 @@ public class JdbcMeteringDao implements MeteringDao {
         String sein = params.get("sein");
         String transactionID = params.get("transactionID");
         String mspShortName = params.get("shortName");
-        String createdDateTime = params.get("createdDateTime");
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
         BuilderData query = queryBuilder.countMeterData(category, readingDateFrom, readingDateTo)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
                 .addMSPFilter(mspShortName)
-                .addVersionFilter(createdDateTime)
                 .build();
 
         log.debug("Total records sql: {}", query.getSql());
