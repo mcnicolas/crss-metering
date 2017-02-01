@@ -72,31 +72,17 @@ public class HeaderPanel extends JPanel {
         cboCategory.addItem(new ComboBoxItem("CORRECTED_MONTHLY", "Corrected Meter Data (Monthly)"));
     }
 
-    public void configureServices() {
-        populateMSPComboBox();
-
-        // TODO:
-
-        // 3. Determine user type
-        // 4. If MSP, change MSP combo box selection to corresponding logged in MSP and disable combo box
-        // 5. If PEMC user, enable MSP combo box selection
-
-        // 6. Upon clicking on upload the following validation should take place:
-        // 6.1 there should be some files selected
-        // 6.2 there should be an msp selected (if pemc user)
+    public void configureServices(List<ComboBoxItem> mspListing) {
+        populateMSPComboBox(mspListing);
     }
 
-    private void populateMSPComboBox() {
-        // 0. Consider prepopulation of MSP via async call at startup
-        // 1. Populate MSP combo box: Registration /category/msp
-        // 2. MSP combo box should have a blank item as the first element
-
+    private void populateMSPComboBox(List<ComboBoxItem> mspListing) {
         DefaultComboBoxModel<ComboBoxItem> model = (DefaultComboBoxModel<ComboBoxItem>) cboMSP.getModel();
         model.removeAllElements();
 
         cboMSP.addItem(new ComboBoxItem("", ""));
 
-        for (ComboBoxItem comboBoxItem : parent.getMSPListing()) {
+        for (ComboBoxItem comboBoxItem : mspListing) {
             cboMSP.addItem(comboBoxItem);
         }
 

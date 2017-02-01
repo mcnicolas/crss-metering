@@ -466,7 +466,7 @@ public class HttpHandler {
                     retVal.add(new ComboBoxItem(shortName, participantName));
                 }
             } else {
-                throw new HttpResponseException("Message:Send Header Error"
+                throw new HttpResponseException("Message:Get MSP Listing Error"
                         + "\nStatus Code:" + statusLine.getStatusCode()
                         + "\nReason:" + statusLine.getReasonPhrase());
             }

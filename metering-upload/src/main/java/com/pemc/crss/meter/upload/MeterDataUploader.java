@@ -39,7 +39,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -70,13 +69,14 @@ import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 public class MeterDataUploader extends JFrame {
 
     public static final int ONE_SECOND = 1000;
-    public static final int STALE_UPLOAD_TIMEOUT = 30000;
+    public static final int STALE_UPLOAD_TIMEOUT = 60000;
 
     private HttpHandler httpHandler;
     private String username;
     private String fullName;
     private String userType;
     private ParticipantName participant;
+    private List<ComboBoxItem> mspListing;
     private Properties properties;
     private Timer uploadTimer;
     private Timer processTimer;
@@ -120,7 +120,7 @@ public class MeterDataUploader extends JFrame {
     }
 
     public void configureServices() {
-        headerPanel.configureServices();
+        headerPanel.configureServices(mspListing);
     }
 
     public void updateTableDisplay(List<FileBean> selectedFiles) {
@@ -376,6 +376,8 @@ public class MeterDataUploader extends JFrame {
                 }
 
                 publish("Loading MSP Listing");
+                mspListing = httpHandler.getMSPListing();
+
                 configureServices();
                 setProgress(100);
 
@@ -451,19 +453,6 @@ public class MeterDataUploader extends JFrame {
         // TODO: Clear status
 
         tablePanel.clearSelectedFiles();
-    }
-
-    // TODO: Refactor. Move query right after login so that REST errors are handled properly and will not leave an abnormal UI state.
-    public List<ComboBoxItem> getMSPListing() {
-        List<ComboBoxItem> retVal = new ArrayList<>();
-
-        try {
-            retVal = httpHandler.getMSPListing();
-        } catch (HttpConnectionException | HttpResponseException e) {
-            log.error(e.getMessage(), e);
-        }
-
-        return retVal;
     }
 
     public ParticipantName getParticipant() {
