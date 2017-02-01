@@ -62,7 +62,7 @@ public abstract class AbstractNotificationListener {
             }
 
             Integer unprocessedFileCount = meterService.getUnprocessedFileCount(headerID);
-            int totalUnprocessedFileCount = unprocessedFileCount + unprocessedFiles.size();
+            int totalUnprocessedFileCount = Math.abs(unprocessedFileCount) + unprocessedFiles.size();
 
             Arrays.stream(targetDepartments).forEach((String dept) -> {
                 Notification payload = new Notification("NTF_MQ_UPLOAD", System.currentTimeMillis());
