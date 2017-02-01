@@ -1,6 +1,8 @@
 package com.pemc.crss.metering.config;
 
+import com.pemc.crss.commons.advice.ExceptionControllerAdvice;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -14,6 +16,7 @@ import static org.springframework.http.HttpMethod.OPTIONS;
 @EnableOAuth2Client
 @EnableResourceServer
 @EnableGlobalMethodSecurity(prePostEnabled = true)
+@Import(ExceptionControllerAdvice.class)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override

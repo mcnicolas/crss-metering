@@ -328,3 +328,17 @@ bcq:
           EVENT_ID,
           TRADING_PARTICIPANT)
         VALUES (?, ?)
+    validate: >
+      SELECT DISTINCT
+        ep.trading_participant,
+        etd.trading_date,
+        count(1) OVER (PARTITION BY date_trunc('day', etd.trading_date), ep.trading_participant) AS trading_date_count
+      FROM txn_bcq_special_event se
+      INNER JOIN txn_bcq_event_participant ep
+        ON se.event_id = ep.event_id
+      INNER JOIN txn_bcq_event_trading_date etd
+        ON se.event_id = etd.event_id
+      WHERE se.deadline_date >= :dateToday
+        AND ep.trading_participant IN (:tradingParticipants)
+        AND date_trunc('day', etd.trading_date) IN (:tradingDates)
+      ORDER BY etd.trading_date asc

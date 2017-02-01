@@ -4,9 +4,11 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.BcqUpdateType;
 import com.pemc.crss.metering.dto.bcq.BcqData;
+import com.pemc.crss.metering.dto.bcq.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
+import com.pemc.crss.metering.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +20,11 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -32,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
@@ -88,7 +94,11 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.event.participant.insert}")
     private String insertEventParticipant;
 
+    @Value("${bcq.event.validate}")
+    private String validateSpecialEvent;
+
     private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final CacheManager cacheManager;
 
     @Override
@@ -282,6 +292,21 @@ public class JdbcBcqDao implements BcqDao {
         saveEventParticipants(specialEvent.getTradingParticipants(), eventId);
         log.debug("[DAO-BCQ] Saved special event with ID: {}", eventId);
         return eventId;
+    }
+
+    @Override
+    public List<BcqEventValidationData> checkDuplicateParticipantTradingDates(List<String> tradingParticipants,
+                                                                              List<Date> tradingDates) {
+        List<Date> tradingDatesAtStartOfDay = tradingDates.stream().map(DateTimeUtils::startOfDay)
+                .collect(Collectors.toList());
+
+        MapSqlParameterSource paramSource = new MapSqlParameterSource()
+                .addValue("dateToday", DateTimeUtils.startOfDay(new Date()))
+                .addValue("tradingParticipants", tradingParticipants)
+                .addValue("tradingDates", tradingDatesAtStartOfDay);
+
+        return namedParameterJdbcTemplate.query(validateSpecialEvent, paramSource,
+                new BeanPropertyRowMapper<>(BcqEventValidationData.class));
     }
 
     /****************************************************

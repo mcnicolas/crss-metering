@@ -129,4 +129,8 @@ public final class DateTimeUtils {
         return Long.parseLong(date.format(READING_DATETIME));
     }
 
+    public static String dateToString(Date date) {
+        return DATE_PARAM_FORMAT.format(date);
+    }
+
 }

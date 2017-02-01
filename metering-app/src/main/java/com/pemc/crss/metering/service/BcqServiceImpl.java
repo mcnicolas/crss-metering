@@ -3,7 +3,13 @@ package com.pemc.crss.metering.service;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
-import com.pemc.crss.metering.dto.bcq.*;
+import com.pemc.crss.metering.dto.bcq.BcqData;
+import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
+import com.pemc.crss.metering.dto.bcq.BcqEventValidationData;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqSpecialEvent;
+import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
+import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +23,13 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static com.pemc.crss.metering.constants.BcqStatus.*;
+import static com.pemc.crss.metering.constants.BcqStatus.CANCELLED;
+import static com.pemc.crss.metering.constants.BcqStatus.CONFIRMED;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_NEW;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_UPDATED;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
+import static com.pemc.crss.metering.constants.BcqStatus.NOT_CONFIRMED;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
 import static com.pemc.crss.metering.constants.BcqUpdateType.REDECLARATION;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
@@ -167,6 +179,14 @@ public class BcqServiceImpl implements BcqService {
     @Override
     @Transactional
     public long saveSpecialEvent(BcqSpecialEvent specialEvent) {
+        List<BcqEventValidationData> result = bcqDao.checkDuplicateParticipantTradingDates(
+                specialEvent.getTradingParticipants(), specialEvent.getTradingDates());
+
+        if (!result.isEmpty()) {
+            //TODO: Parse result so you can inform user of participants with duplicate dates
+            throw new RuntimeException("Cannot submit special event. Selected participants have duplicate trading dates");
+        }
+
         return bcqDao.saveSpecialEvent(specialEvent);
     }
 
