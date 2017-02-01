@@ -537,6 +537,10 @@ public class HeaderPanel extends JPanel {
 
         cboCategory.setEnabled(false);
         cboMSP.setEnabled(false);
+
+        updateTransactionID("");
+        updateProcessDuration("");
+        toggleProcessComplete(null);
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
