@@ -321,10 +321,10 @@ bcq:
         INSERT INTO TXN_BCQ_EVENT_TRADING_DATE (
           EVENT_ID,
           TRADING_DATE)
-        VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?)
+        VALUES (?, ?)
     participant:
       insert: >
         INSERT INTO TXN_BCQ_EVENT_PARTICIPANT (
           EVENT_ID,
           TRADING_PARTICIPANT)
-        VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?)
+        VALUES (?, ?)
