@@ -206,6 +206,7 @@ public class BcqResource {
         return sellerDetailsList;
     }
 
+    @PreAuthorize("hasAuthority('BCQ_CREATE_SPECIAL_EVENT')")
     @PostMapping("/special-event/save")
     public void saveSpecialEvent(@RequestBody BcqSpecialEventForm specialEventForm) {
         log.debug("[REST-BCQ] Request for saving special event");
