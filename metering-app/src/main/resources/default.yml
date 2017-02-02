@@ -314,8 +314,9 @@ bcq:
       INSERT INTO TXN_BCQ_SPECIAL_EVENT (
         EVENT_ID,
         DEADLINE_DATE,
-        REMARKS)
-      VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?)
+        REMARKS,
+        CREATED_DATE)
+      VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?)
     trading-date:
       insert: >
         INSERT INTO TXN_BCQ_EVENT_TRADING_DATE (

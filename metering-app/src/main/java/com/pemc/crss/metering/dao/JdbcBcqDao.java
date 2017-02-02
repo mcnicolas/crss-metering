@@ -285,6 +285,7 @@ public class JdbcBcqDao implements BcqDao {
                     PreparedStatement ps = con.prepareStatement(insertEvent, new String[]{"event_id"});
                     ps.setTimestamp(1, new Timestamp(specialEvent.getDeadlineDate().getTime()));
                     ps.setString(2, specialEvent.getRemarks());
+                    ps.setTimestamp(3, DateTimeUtils.now());
                     return ps;
                 }, keyHolder);
         long eventId = keyHolder.getKey().longValue();

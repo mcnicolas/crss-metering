@@ -2,6 +2,7 @@ package com.pemc.crss.metering.utils;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -131,6 +132,10 @@ public final class DateTimeUtils {
 
     public static String dateToString(Date date) {
         return DATE_PARAM_FORMAT.format(date);
+    }
+
+    public static Timestamp now() {
+        return new Timestamp(Calendar.getInstance().getTime().getTime());
     }
 
 }
