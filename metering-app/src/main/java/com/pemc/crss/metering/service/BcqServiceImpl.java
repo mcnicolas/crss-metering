@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqStatus.CANCELLED;
@@ -183,8 +184,11 @@ public class BcqServiceImpl implements BcqService {
                 specialEvent.getTradingParticipants(), specialEvent.getTradingDates());
 
         if (!result.isEmpty()) {
-            //TODO: Parse result so you can inform user of participants with duplicate dates
-            throw new RuntimeException("Cannot submit special event. Selected participants have duplicate trading dates");
+            String uniqueParticipants = result.stream().map(BcqEventValidationData::getTradingParticipant)
+                    .distinct().collect(Collectors.joining(", "));
+
+            throw new RuntimeException("The following participants have duplicate trading dates from another special event: "
+                    + uniqueParticipants);
         }
 
         return bcqDao.saveSpecialEvent(specialEvent);
