@@ -327,8 +327,9 @@ bcq:
       insert: >
         INSERT INTO TXN_BCQ_EVENT_PARTICIPANT (
           EVENT_ID,
-          TRADING_PARTICIPANT)
-        VALUES (?, ?)
+          TRADING_PARTICIPANT,
+          PARTICIPANT_NAME)
+        VALUES (?, ?, ?)
     validate: >
       SELECT DISTINCT
         ep.trading_participant,
@@ -348,7 +349,7 @@ bcq:
         se.event_id,
         se.deadline_date,
         se.remarks,
-        ARRAY_AGG(DISTINCT ep.trading_participant) AS trading_participants,
+        ARRAY_AGG(DISTINCT ep.participant_name || '(' || ep.trading_participant || ')') AS trading_participants,
         ARRAY_AGG(DISTINCT etd.trading_date) AS trading_dates
       FROM txn_bcq_special_event se
         INNER JOIN txn_bcq_event_participant ep

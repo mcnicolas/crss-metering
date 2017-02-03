@@ -7,6 +7,7 @@ import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import org.springframework.data.domain.Page;
 
 import java.util.Date;
@@ -31,7 +32,7 @@ public interface BcqDao {
 
     void updateHeaderStatusBySettlement(long headerId, BcqStatus status);
 
-    List<BcqSpecialEvent> getAllSpecialEvents();
+    List<BcqSpecialEventList> getAllSpecialEvents();
 
     long saveSpecialEvent(BcqSpecialEvent specialEvent);
 

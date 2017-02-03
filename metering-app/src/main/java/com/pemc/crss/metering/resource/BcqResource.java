@@ -1,6 +1,5 @@
 package com.pemc.crss.metering.resource;
 
-import com.pemc.crss.commons.web.dto.WebDtoUtils;
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.ValidationStatus;
@@ -8,11 +7,11 @@ import com.pemc.crss.metering.dto.bcq.BcqDataDisplay;
 import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay;
-import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
-import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventForm;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
 import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventForm;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
@@ -218,10 +217,10 @@ public class BcqResource {
 
     @PreAuthorize("hasAuthority('BCQ_VIEW_SPECIAL_EVENT')")
     @GetMapping("/special-event/list")
-    public ResponseEntity<List<BcqSpecialEventForm>> getSpecialEvents() {
+    public ResponseEntity<List<BcqSpecialEventList>> getSpecialEvents() {
         log.debug("[REST-BCQ] Request for getSpecialEvents");
-        List<BcqSpecialEvent> result = bcqService.getSpecialEvents();
-        return ResponseEntity.ok(WebDtoUtils.wrapDto(result, BcqSpecialEventForm.class));
+        List<BcqSpecialEventList> result = bcqService.getSpecialEvents();
+        return ResponseEntity.ok(result);
     }
 
     /****************************************************

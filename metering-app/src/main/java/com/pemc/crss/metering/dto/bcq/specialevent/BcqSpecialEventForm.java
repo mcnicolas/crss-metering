@@ -1,11 +1,9 @@
 package com.pemc.crss.metering.dto.bcq.specialevent;
 
 import com.pemc.crss.commons.web.dto.AbstractWebDto;
-import com.pemc.crss.metering.utils.BcqDateUtils;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class BcqSpecialEventForm extends AbstractWebDto<BcqSpecialEvent> {
 
@@ -33,11 +31,11 @@ public class BcqSpecialEventForm extends AbstractWebDto<BcqSpecialEvent> {
         target().setDeadlineDate(deadlineDate);
     }
 
-    public List<String> getTradingParticipants() {
+    public List<BcqSpecialEventParticipant> getTradingParticipants() {
         return target().getTradingParticipants();
     }
 
-    public void setTradingParticipants(List<String> tradingParticipants) {
+    public void setTradingParticipants(List<BcqSpecialEventParticipant> tradingParticipants) {
         target().setTradingParticipants(tradingParticipants);
     }
 
@@ -47,19 +45,6 @@ public class BcqSpecialEventForm extends AbstractWebDto<BcqSpecialEvent> {
 
     public void setRemarks(String remarks) {
         target().setRemarks(remarks);
-    }
-
-    // getters
-    public String getDeadlineDateStr() {
-        return BcqDateUtils.formatDate(getDeadlineDate());
-    }
-
-    public String getTradingParticipantsStr() {
-        return getTradingParticipants().stream().collect(Collectors.joining(", "));
-    }
-
-    public String getTradingDatesStr() {
-        return getTradingDates().stream().map(BcqDateUtils::formatDate).collect(Collectors.joining(", "));
     }
 
 }

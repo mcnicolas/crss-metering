@@ -4,6 +4,7 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import org.springframework.data.domain.Page;
 
 import java.util.Date;
@@ -37,7 +38,7 @@ public interface BcqService {
 
     void processUnnullifiedHeaders();
 
-    List<BcqSpecialEvent> getSpecialEvents();
+    List<BcqSpecialEventList> getSpecialEvents();
 
     long saveSpecialEvent(BcqSpecialEvent specialEvent);
 

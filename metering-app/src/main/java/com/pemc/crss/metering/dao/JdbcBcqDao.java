@@ -9,6 +9,8 @@ import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.mapper.BcqSpecialEventMapper;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
 import com.pemc.crss.metering.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -282,7 +284,7 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public List<BcqSpecialEvent> getAllSpecialEvents() {
+    public List<BcqSpecialEventList> getAllSpecialEvents() {
         log.debug("[DAO-BCQ] Querying all special Events");
         return jdbcTemplate.query(bcqEventList, new BcqSpecialEventMapper());
     }
@@ -417,19 +419,21 @@ public class JdbcBcqDao implements BcqDao {
         log.debug("[DAO-BCQ] Saved event trading date list");
     }
 
-    private void saveEventParticipants(List<String> participantNameList, long eventId) {
+    private void saveEventParticipants(List<BcqSpecialEventParticipant> participants, long eventId) {
         log.debug("[DAO-BCQ] Saving event participant list with size of: {} and event id: {}",
-                participantNameList.size(), eventId);
+                participants.size(), eventId);
         jdbcTemplate.batchUpdate(insertEventParticipant, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
-                String participantName = participantNameList.get(i);
+                String shortName = participants.get(i).getShortName();
+                String participantName = participants.get(i).getParticipantName();
                 ps.setLong(1, eventId);
-                ps.setString(2, participantName);
+                ps.setString(2, shortName);
+                ps.setString(3, participantName);
             }
             @Override
             public int getBatchSize() {
-                return participantNameList.size();
+                return participants.size();
             }
         });
         log.debug("[DAO-BCQ] Saved event participant list");

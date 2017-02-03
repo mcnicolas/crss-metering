@@ -10,6 +10,8 @@ import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -178,15 +180,18 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public List<BcqSpecialEvent> getSpecialEvents() {
+    public List<BcqSpecialEventList> getSpecialEvents() {
         return bcqDao.getAllSpecialEvents();
     }
 
     @Override
     @Transactional
     public long saveSpecialEvent(BcqSpecialEvent specialEvent) {
+        List<String> tradingParticipantStr = specialEvent.getTradingParticipants().stream()
+                .map(BcqSpecialEventParticipant::getShortName).collect(Collectors.toList());
+
         List<BcqEventValidationData> result = bcqDao.checkDuplicateParticipantTradingDates(
-                specialEvent.getTradingParticipants(), specialEvent.getTradingDates());
+                tradingParticipantStr, specialEvent.getTradingDates());
 
         if (!result.isEmpty()) {
             String uniqueParticipants = result.stream().map(BcqEventValidationData::getTradingParticipant)

@@ -11,7 +11,7 @@ public class BcqSpecialEvent {
     private Long eventId;
     private List<Date> tradingDates;
     private Date deadlineDate;
-    private List<String> tradingParticipants;
     private String remarks;
+    private List<BcqSpecialEventParticipant> tradingParticipants;
 
 }
