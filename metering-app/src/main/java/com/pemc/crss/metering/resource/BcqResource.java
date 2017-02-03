@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.resource;
 
+import com.pemc.crss.commons.web.dto.WebDtoUtils;
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.ValidationStatus;
@@ -7,7 +8,8 @@ import com.pemc.crss.metering.dto.bcq.BcqDataDisplay;
 import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqSpecialEventForm;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventForm;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
 import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
@@ -212,6 +214,14 @@ public class BcqResource {
         log.debug("[REST-BCQ] Request for saving special event");
         long eventId = bcqService.saveSpecialEvent(specialEventForm.target());
         log.debug("[REST-BCQ] Saved special event with id: {}", eventId);
+    }
+
+    @PreAuthorize("hasAuthority('BCQ_VIEW_SPECIAL_EVENT')")
+    @GetMapping("/special-event/list")
+    public ResponseEntity<List<BcqSpecialEventForm>> getSpecialEvents() {
+        log.debug("[REST-BCQ] Request for getSpecialEvents");
+        List<BcqSpecialEvent> result = bcqService.getSpecialEvents();
+        return ResponseEntity.ok(WebDtoUtils.wrapDto(result, BcqSpecialEventForm.class));
     }
 
     /****************************************************

@@ -3,10 +3,10 @@ package com.pemc.crss.metering.dao;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.bcq.BcqData;
-import com.pemc.crss.metering.dto.bcq.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import org.springframework.data.domain.Page;
 
 import java.util.Date;
@@ -30,6 +30,8 @@ public interface BcqDao {
     void updateHeaderStatus(long headerId, BcqStatus status);
 
     void updateHeaderStatusBySettlement(long headerId, BcqStatus status);
+
+    List<BcqSpecialEvent> getAllSpecialEvents();
 
     long saveSpecialEvent(BcqSpecialEvent specialEvent);
 

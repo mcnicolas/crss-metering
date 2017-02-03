@@ -4,10 +4,11 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.BcqUpdateType;
 import com.pemc.crss.metering.dto.bcq.BcqData;
-import com.pemc.crss.metering.dto.bcq.BcqEventValidationData;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqSpecialEvent;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
+import com.pemc.crss.metering.dto.bcq.mapper.BcqSpecialEventMapper;
 import com.pemc.crss.metering.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,6 +97,9 @@ public class JdbcBcqDao implements BcqDao {
 
     @Value("${bcq.event.validate}")
     private String validateSpecialEvent;
+
+    @Value("${bcq.event.list}")
+    private String bcqEventList;
 
     private final JdbcTemplate jdbcTemplate;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -275,6 +279,12 @@ public class JdbcBcqDao implements BcqDao {
                     return ps;
                 });
         log.debug("[DAO-BCQ] Updated status by settlement of header with ID: {} to {} ", headerId, status);
+    }
+
+    @Override
+    public List<BcqSpecialEvent> getAllSpecialEvents() {
+        log.debug("[DAO-BCQ] Querying all special Events");
+        return jdbcTemplate.query(bcqEventList, new BcqSpecialEventMapper());
     }
 
     @Override

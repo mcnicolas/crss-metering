@@ -5,9 +5,9 @@ import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
-import com.pemc.crss.metering.dto.bcq.BcqEventValidationData;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqSpecialEvent;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
 import lombok.RequiredArgsConstructor;
@@ -175,6 +175,11 @@ public class BcqServiceImpl implements BcqService {
         Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unnullifiedHeaders);
         groupedHeaders.forEach((map, headerList) -> bcqNotificationManager
                 .sendUnprocessedNotification(headerList, CONFIRMED));
+    }
+
+    @Override
+    public List<BcqSpecialEvent> getSpecialEvents() {
+        return bcqDao.getAllSpecialEvents();
     }
 
     @Override

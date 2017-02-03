@@ -343,3 +343,17 @@ bcq:
         AND ep.trading_participant IN (:tradingParticipants)
         AND date_trunc('day', etd.trading_date) IN (:tradingDates)
       ORDER BY etd.trading_date asc
+    list: >
+      SELECT
+        se.event_id,
+        se.deadline_date,
+        se.remarks,
+        ARRAY_AGG(DISTINCT ep.trading_participant) AS trading_participants,
+        ARRAY_AGG(DISTINCT etd.trading_date) AS trading_dates
+      FROM txn_bcq_special_event se
+        INNER JOIN txn_bcq_event_participant ep
+          ON se.event_id = ep.event_id
+        INNER JOIN txn_bcq_event_trading_date etd
+          ON se.event_id = etd.event_id
+      GROUP BY se.event_id, se.deadline_date, se.remarks
+      ORDER BY se.deadline_date ASC, se.created_date DESC;

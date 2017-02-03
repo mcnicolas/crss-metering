@@ -1,4 +1,4 @@
-package com.pemc.crss.metering.dto.bcq;
+package com.pemc.crss.metering.dto.bcq.specialevent;
 
 import lombok.Data;
 
