@@ -480,7 +480,12 @@ public class HeaderPanel extends JPanel {
         btnLogout.setVisible(true);
 
         cboCategory.setEnabled(true);
-        cboMSP.setEnabled(true);
+
+        if (participant != null) {
+            cboMSP.setEnabled(false);
+        } else {
+            cboMSP.setEnabled(true);
+        }
     }
 
     public void disableAllToolbar() {
