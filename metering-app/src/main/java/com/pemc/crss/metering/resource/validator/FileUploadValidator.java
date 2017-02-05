@@ -2,6 +2,7 @@ package com.pemc.crss.metering.resource.validator;
 
 import com.pemc.crss.metering.constants.FileType;
 import com.pemc.crss.metering.dto.mq.FileParam;
+import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,11 +31,35 @@ public class FileUploadValidator implements Validator {
         FileParam fileParam = (FileParam) target;
 
         checkHeaderID(fileParam.getHeaderID(), errors);
+        checkCategory(fileParam.getHeaderID(), fileParam.getFileType(), errors);
         checkMSPShortName(fileParam.getMspShortName(), errors);
         checkFileType(fileParam.getFileType(), fileParam.getFile(), errors);
         checkEmptyFileList(fileParam.getFile(), errors);
         checkEmptyFileContent(fileParam.getFile(), errors);
         checkFilenameLength(fileParam.getFile(), errors);
+    }
+
+    private void checkHeaderID(Long headerID, Errors errors) {
+        boolean valid = meterService.isHeaderValid(headerID);
+
+        if (!valid) {
+            errors.rejectValue("headerID", "", "HeaderID is not valid.");
+        }
+    }
+
+    private void checkCategory(Long headerID, String fileType, Errors errors) {
+        boolean valid = meterService.isHeaderValid(headerID);
+
+        if (valid) {
+            HeaderManifest header = meterService.getHeader(headerID);
+
+            String category = header.getCategory();
+
+            if (!equalsIgnoreCase(category, "DAILY") && equalsIgnoreCase(fileType, "MDEF")) {
+                errors.rejectValue("fileType", "",
+                        "Invalid file type. MDEF files are only valid for DAILY category");
+            }
+        }
     }
 
     private void checkFilenameLength(MultipartFile[] files, Errors errors) {
@@ -43,14 +68,6 @@ public class FileUploadValidator implements Validator {
                 errors.reject("", "Maximum filename length is 100 characters.");
                 break;
             }
-        }
-    }
-
-    private void checkHeaderID(Long headerID, Errors errors) {
-        boolean valid = meterService.isHeaderValid(headerID);
-
-        if (!valid) {
-            errors.rejectValue("headerID", "", "HeaderID is not valid.");
         }
     }
 
