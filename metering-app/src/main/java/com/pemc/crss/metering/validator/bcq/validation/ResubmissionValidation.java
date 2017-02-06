@@ -9,12 +9,12 @@ import java.util.function.Predicate;
 import static com.pemc.crss.metering.validator.bcq.BcqValidationResult.accepted;
 import static com.pemc.crss.metering.validator.bcq.BcqValidationResult.rejected;
 
-public class RedeclarationValidation implements Validation<List<BcqHeader>> {
+public class ResubmissionValidation implements Validation<List<BcqHeader>> {
 
     private Predicate<List<BcqHeader>> predicate;
     private String errorMessage;
 
-    private RedeclarationValidation(Predicate<List<BcqHeader>> predicate, String errorMessage) {
+    private ResubmissionValidation(Predicate<List<BcqHeader>> predicate, String errorMessage) {
         this.predicate = predicate;
         this.errorMessage = errorMessage;
     }
@@ -24,16 +24,16 @@ public class RedeclarationValidation implements Validation<List<BcqHeader>> {
         return predicate.test(headerList) ? accepted() : rejected(errorMessage);
     }
 
-    public static RedeclarationValidation emptyInst() {
-        return new RedeclarationValidation(null, null);
+    public static ResubmissionValidation emptyInst() {
+        return new ResubmissionValidation(null, null);
     }
 
-    public static RedeclarationValidation from(Predicate<List<BcqHeader>> predicate) {
-        return new RedeclarationValidation(predicate, null);
+    public static ResubmissionValidation from(Predicate<List<BcqHeader>> predicate) {
+        return new ResubmissionValidation(predicate, null);
     }
 
-    public static RedeclarationValidation from(Predicate<List<BcqHeader>> predicate, String onErrorMessage) {
-        return new RedeclarationValidation(predicate, onErrorMessage);
+    public static ResubmissionValidation from(Predicate<List<BcqHeader>> predicate, String onErrorMessage) {
+        return new ResubmissionValidation(predicate, onErrorMessage);
     }
 
     public void setPredicate(Predicate<List<BcqHeader>> predicate) {

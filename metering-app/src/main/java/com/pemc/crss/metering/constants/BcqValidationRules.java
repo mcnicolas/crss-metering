@@ -26,8 +26,8 @@ public enum BcqValidationRules {
     MISSING_REFERENCE_MTN("Missing reference MTN."),
     MISSING_DATE("Missing date."),
     MISSING_BCQ("Missing BCQ."),
-    INCOMPLETE_REDECLARATION_ENTRIES("Incomplete BCQ entries. " +
-            "Redeclaration for date <b>%s</b> should also have entries of the ff. " +
+    INCOMPLETE_RESUBMISSION_ENTRIES("Incomplete BCQ entries. " +
+            "Resubmission for date <b>%s</b> should also have entries of the ff. " +
             "Selling MTN and Billing ID pair(s):<br />%s"),
     INCOMPLETE_OVERRIDE_ENTRIES("Incomplete BCQ entries. " +
             "Override for date <b>%s</b> should also have entries of the ff. " +

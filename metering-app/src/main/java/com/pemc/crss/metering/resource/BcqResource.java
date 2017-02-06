@@ -115,8 +115,8 @@ public class BcqResource {
         }
         bcqService.saveSellerDeclaration(declaration);
         log.debug("[REST-BCQ] Finished uploading and saving by web service of: {}", multipartFile.getOriginalFilename());
-        if (declaration.isRedeclaration()) {
-            return ok("Successfully saved redeclaration.");
+        if (declaration.isResubmission()) {
+            return ok("Successfully saved resubmission.");
         }
         return ok("Successfully saved declaration.");
     }
@@ -240,7 +240,7 @@ public class BcqResource {
         BcqUploadFile uploadFile = populateUploadFile(multipartFile, validationResult.getStatus());
         declaration.setUploadFileDetails(new BcqUploadFileDetails(uploadFile));
         if (declaration.getHeaderDetailsList() != null) {
-            declaration.setRedeclaration(getCurrentHeaders(declaration).size() > 0);
+            declaration.setResubmission(getCurrentHeaders(declaration).size() > 0);
         }
         return declaration;
     }
@@ -255,7 +255,7 @@ public class BcqResource {
         BcqUploadFile uploadFile = populateUploadFile(multipartFile, validationResult.getStatus());
         declaration.setUploadFileDetails(new BcqUploadFileDetails(uploadFile));
         if (declaration.getHeaderDetailsList() != null) {
-            declaration.setRedeclaration(getCurrentHeaders(declaration).size() > 0);
+            declaration.setResubmission(getCurrentHeaders(declaration).size() > 0);
         }
         return declaration;
     }

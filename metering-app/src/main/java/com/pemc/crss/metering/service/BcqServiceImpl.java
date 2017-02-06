@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
-import static com.pemc.crss.metering.constants.BcqUpdateType.REDECLARATION;
+import static com.pemc.crss.metering.constants.BcqUpdateType.RESUBMISSION;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static java.util.UUID.randomUUID;
@@ -214,7 +214,7 @@ public class BcqServiceImpl implements BcqService {
     }
 
     private List<BcqHeader> setUpdatedViaOfHeaders(List<BcqHeader> headerList, BcqDeclaration declaration) {
-        if (declaration.isRedeclaration()) {
+        if (declaration.isResubmission()) {
             List<BcqHeader> currentHeaderList = findAllHeaders(of(
                     "sellingParticipant", declaration.getSellerDetails().getShortName(),
                     "tradingDate", formatDate(declaration.getHeaderDetailsList().get(0).getTradingDate())
@@ -225,7 +225,7 @@ public class BcqServiceImpl implements BcqService {
                 if (exists) {
                     BcqHeader headerInList = findHeaderInList(header, currentHeaderList);
                     header.setHeaderId(headerInList.getHeaderId());
-                    header.setUpdatedVia(REDECLARATION);
+                    header.setUpdatedVia(RESUBMISSION);
                 }
                 return header;
             }).collect(toList());

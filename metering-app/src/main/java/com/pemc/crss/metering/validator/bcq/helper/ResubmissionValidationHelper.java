@@ -2,7 +2,7 @@ package com.pemc.crss.metering.validator.bcq.helper;
 
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.service.BcqService;
-import com.pemc.crss.metering.validator.bcq.validation.RedeclarationValidation;
+import com.pemc.crss.metering.validator.bcq.validation.ResubmissionValidation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,20 +13,20 @@ import java.util.StringJoiner;
 import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_REDECLARATION_ENTRIES;
+import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_RESUBMISSION_ENTRIES;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
-import static com.pemc.crss.metering.validator.bcq.validation.RedeclarationValidation.emptyInst;
+import static com.pemc.crss.metering.validator.bcq.validation.ResubmissionValidation.emptyInst;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-public class RedeclarationValidationHelper {
+public class ResubmissionValidationHelper {
 
     private final BcqService bcqService;
 
-    public RedeclarationValidation validRedeclaration(String sellingParticipant, Date tradingDate) {
-        RedeclarationValidation redeclarationValidation = emptyInst();
+    public ResubmissionValidation validResubmission(String sellingParticipant, Date tradingDate) {
+        ResubmissionValidation resubmissionValidation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             List<BcqHeader> missingHeaderList = getCurrentHeaderList(sellingParticipant, tradingDate)
                     .stream()
@@ -44,14 +44,14 @@ public class RedeclarationValidationHelper {
                             .append("]</b>");
                     pairs.add(pair);
                 });
-                redeclarationValidation.setErrorMessage(format(INCOMPLETE_REDECLARATION_ENTRIES.getErrorMessage(),
+                resubmissionValidation.setErrorMessage(format(INCOMPLETE_RESUBMISSION_ENTRIES.getErrorMessage(),
                         formatDate(tradingDate), pairs.toString()));
                 return false;
             }
             return true;
         };
-        redeclarationValidation.setPredicate(predicate);
-        return redeclarationValidation;
+        resubmissionValidation.setPredicate(predicate);
+        return resubmissionValidation;
     }
 
     /****************************************************

@@ -43,7 +43,7 @@ public class BcqValidationHandler {
 
     private final CsvValidator csvValidator;
     private final HeaderListValidator headerListValidator;
-    private final RedeclarationValidator redeclarationValidator;
+    private final ResubmissionValidator resubmissionValidator;
     private final OverrideValidator overrideValidator;
     private final ResourceTemplate resourceTemplate;
     private final CacheManager cacheManager;
@@ -71,7 +71,7 @@ public class BcqValidationHandler {
 
         headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
 
-        validationResult = redeclarationValidator.validate(headerList,
+        validationResult = resubmissionValidator.validate(headerList,
                 sellerDetails.getShortName(),
                 headerList.get(0).getTradingDate());
         if (validationResult.getStatus() == REJECTED) {
@@ -128,7 +128,7 @@ public class BcqValidationHandler {
 
         headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
 
-        validationResult = redeclarationValidator.validate(headerList,
+        validationResult = resubmissionValidator.validate(headerList,
                 sellerDetails.getShortName(),
                 headerList.get(0).getTradingDate());
         if (validationResult.getStatus() == REJECTED) {

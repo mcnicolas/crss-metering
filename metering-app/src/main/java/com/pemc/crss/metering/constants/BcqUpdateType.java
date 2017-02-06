@@ -4,7 +4,7 @@ import java.util.Locale;
 
 public enum BcqUpdateType {
 
-    REDECLARATION,
+    RESUBMISSION,
     MANUAL_OVERRIDE;
 
     public static BcqUpdateType fromString(String value) {

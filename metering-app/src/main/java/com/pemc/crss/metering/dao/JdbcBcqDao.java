@@ -534,7 +534,9 @@ public class JdbcBcqDao implements BcqDao {
                 header.setDeadlineDate(rs.getTimestamp("deadline_date"));
             }
             if (doesColumnExist("updated_via", rs)) {
-                header.setUpdatedVia(BcqUpdateType.fromString(rs.getString("updated_via")));
+                if (rs.getString("updated_via") != null) {
+                    header.setUpdatedVia(BcqUpdateType.fromString(rs.getString("updated_via")));
+                }
             }
             if (doesColumnExist("status", rs)) {
                 header.setStatus(fromString(rs.getString("status")));
