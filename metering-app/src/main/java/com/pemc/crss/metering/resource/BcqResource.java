@@ -23,11 +23,13 @@ import java.util.Date;
 import java.util.List;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static com.pemc.crss.metering.constants.BcqStatus.VOID;
 import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.lang.Long.parseLong;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.http.ResponseEntity.*;
 
@@ -145,6 +147,21 @@ public class BcqResource {
         BcqHeaderDisplay headerDisplay = new BcqHeaderDisplay(bcqService.findHeader(headerId));
         log.debug("[REST-BCQ] Found header display: {}", headerDisplay);
         return headerDisplay;
+    }
+
+    @GetMapping("/declaration/{headerId}/previous")
+    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
+    public List<BcqHeaderDisplay> getPrevHeaders(@PathVariable long headerId) {
+        log.debug("[REST-BCQ] Request for getting previous headers of header with ID: {}", headerId);
+        BcqHeader header = bcqService.findHeader(headerId);
+        if (header == null) {
+            log.debug("[REST-BCQ] No found header with ID: {}", headerId);
+            return null;
+        }
+        List<BcqHeader> prevHeaders = bcqService.findPrevHeadersWithStatusNotIn(header, singletonList(VOID));
+        List<BcqHeaderDisplay> prevHeadersDisplay = prevHeaders.stream().map(BcqHeaderDisplay::new).collect(toList());
+        log.debug("[REST-BCQ] Found {} prev headers display: {}", prevHeadersDisplay.size());
+        return prevHeadersDisplay;
     }
 
     @GetMapping("/declaration/{headerId}/data")

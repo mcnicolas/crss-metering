@@ -3,6 +3,7 @@ package com.pemc.crss.metering.dao;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.BcqUpdateType;
+import com.pemc.crss.metering.dao.query.ComparisonOperator;
 import com.pemc.crss.metering.dao.query.QueryBuilder;
 import com.pemc.crss.metering.dao.query.QueryData;
 import com.pemc.crss.metering.dao.query.QueryFilter;
@@ -35,8 +36,12 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.pemc.crss.metering.constants.BcqStatus.*;
@@ -209,6 +214,16 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
+    public List<BcqHeader> findPrevHeadersWithStatusIn(BcqHeader header, List<BcqStatus> statuses) {
+        return getPrevHeadersWithStatus(header, statuses, IN);
+    }
+
+    @Override
+    public List<BcqHeader> findPrevHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses) {
+        return getPrevHeadersWithStatus(header, statuses, NOT_IN);
+    }
+
+    @Override
     public BcqHeader findHeader(long headerId) {
         log.debug("[DAO-BCQ] Finding header with ID: {}", headerId);
         QueryData queryData = new QueryBuilder()
@@ -267,7 +282,7 @@ public class JdbcBcqDao implements BcqDao {
         log.debug("[DAO-BCQ] Updating status of header to {} with ID: {}", status, headerId);
         if (status == CONFIRMED) {
             BcqHeader header = findHeader(headerId);
-            List<BcqHeader> prevHeaders = getPrevHeadersWithStatusIn(header, singletonList(CONFIRMED));
+            List<BcqHeader> prevHeaders = findPrevHeadersWithStatusIn(header, singletonList(CONFIRMED));
             BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
             updateHeaderStatusToVoid(prevHeader);
         }
@@ -336,7 +351,7 @@ public class JdbcBcqDao implements BcqDao {
         long deadlineConfigInSeconds = DAYS.toSeconds(getDeadlineConfig());
         KeyHolder keyHolder = new GeneratedKeyHolder();
         header.setDeadlineDate(new Date(tradingDateInMillis + SECONDS.toMillis(deadlineConfigInSeconds - 1)));
-        List<BcqHeader> prevHeaders = getPrevHeadersWithStatusIn(header,
+        List<BcqHeader> prevHeaders = findPrevHeadersWithStatusIn(header,
                 asList(FOR_NULLIFICATION, FOR_CONFIRMATION, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATED));
         BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
         updateHeaderStatusToVoid(prevHeader);
@@ -347,10 +362,14 @@ public class JdbcBcqDao implements BcqDao {
         return keyHolder.getKey().longValue();
     }
 
-    private List<BcqHeader> getPrevHeadersWithStatusIn(BcqHeader header, List<BcqStatus> statuses) {
+    private List<BcqHeader> getPrevHeadersWithStatus(BcqHeader header, List<BcqStatus> statuses,
+                                                       ComparisonOperator operator) {
+
+        log.debug("[DAO-BCQ] Finding previous header of: {}", header);
         QueryData queryData = new QueryBuilder()
                 .select()
                     .column("HEADER_ID")
+                    .column("SUBMITTED_DATE")
                     .column("STATUS")
                 .from(headerJoinFile)
                 .where()
@@ -360,12 +379,12 @@ public class JdbcBcqDao implements BcqDao {
                     .and()
                     .filter(new QueryFilter("TRADING_DATE", header.getTradingDate()))
                     .and()
-                    .filter(new QueryFilter("STATUS", statuses.stream().map(Enum::toString).collect(toList()), IN))
+                    .filter(new QueryFilter("STATUS", statuses.stream().map(Enum::toString).collect(toList()), operator))
                 .orderBy("SUBMITTED_DATE", DESC)
                 .build();
         log.debug("SQL: {}", queryData.getSql());
         return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
-                new BeanPropertyRowMapper<>(BcqHeader.class));
+                new BcqHeaderRowMapper());
     }
 
     private void updateHeaderStatusToVoid(BcqHeader header) {
@@ -475,25 +494,63 @@ public class JdbcBcqDao implements BcqDao {
         public BcqHeader mapRow(ResultSet rs, int rowNum) throws SQLException {
             BcqHeader header = new BcqHeader();
             BcqUploadFile uploadFile = new BcqUploadFile();
-            header.setHeaderId(rs.getLong("header_id"));
-            header.setSellingMtn(rs.getString("selling_mtn"));
-            header.setBillingId(rs.getString("billing_id"));
-            header.setBuyingParticipantUserId(rs.getLong("buying_participant_user_id"));
-            header.setBuyingParticipantName(rs.getString("buying_participant_name"));
-            header.setBuyingParticipantShortName(rs.getString("buying_participant_short_name"));
-            header.setSellingParticipantUserId(rs.getLong("selling_participant_user_id"));
-            header.setSellingParticipantName(rs.getString("selling_participant_name"));
-            header.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
-            header.setTradingDate(rs.getDate("trading_date"));
-            header.setDeadlineDate(rs.getTimestamp("deadline_date"));
-            if (rs.getString("updated_via") != null) {
+            if (doesColumnExist("header_id", rs)) {
+                header.setHeaderId(rs.getLong("header_id"));
+            }
+            if (doesColumnExist("selling_mtn", rs)) {
+                header.setSellingMtn(rs.getString("selling_mtn"));
+            }
+            if (doesColumnExist("billing_id", rs)) {
+                header.setBillingId(rs.getString("billing_id"));
+            }
+            if (doesColumnExist("buying_participant_user_id", rs)) {
+                header.setBuyingParticipantUserId(rs.getLong("buying_participant_user_id"));
+            }
+            if (doesColumnExist("buying_participant_name", rs)) {
+                header.setBuyingParticipantName(rs.getString("buying_participant_name"));
+            }
+            if (doesColumnExist("buying_participant_short_name", rs)) {
+                header.setBuyingParticipantShortName(rs.getString("buying_participant_short_name"));
+            }
+            if (doesColumnExist("selling_participant_user_id", rs)) {
+                header.setSellingParticipantUserId(rs.getLong("selling_participant_user_id"));
+            }
+            if (doesColumnExist("selling_participant_name", rs)) {
+                header.setSellingParticipantName(rs.getString("selling_participant_name"));
+            }
+            if (doesColumnExist("selling_participant_short_name", rs)) {
+                header.setSellingParticipantShortName(rs.getString("selling_participant_short_name"));
+            }
+            if (doesColumnExist("trading_date", rs)) {
+                header.setTradingDate(rs.getDate("trading_date"));
+            }
+            if (doesColumnExist("deadline_date", rs)) {
+                header.setDeadlineDate(rs.getTimestamp("deadline_date"));
+            }
+            if (doesColumnExist("updated_via", rs)) {
                 header.setUpdatedVia(BcqUpdateType.fromString(rs.getString("updated_via")));
             }
-            header.setStatus(fromString(rs.getString("status")));
-            uploadFile.setTransactionId(rs.getString("transaction_id"));
-            uploadFile.setSubmittedDate(rs.getTimestamp("submitted_date"));
+            if (doesColumnExist("status", rs)) {
+                header.setStatus(fromString(rs.getString("status")));
+            }
+            if (doesColumnExist("transaction_id", rs)) {
+                uploadFile.setTransactionId(rs.getString("transaction_id"));
+            }
+            if (doesColumnExist("submitted_date", rs)) {
+                uploadFile.setSubmittedDate(rs.getTimestamp("submitted_date"));
+            }
             header.setUploadFile(uploadFile);
             return header;
+        }
+
+        private boolean doesColumnExist(String columnName, ResultSet rs) throws SQLException{
+            ResultSetMetaData meta = rs.getMetaData();
+            for (int i = 1; i <= meta.getColumnCount(); i ++) {
+                if(meta.getColumnName(i).equalsIgnoreCase(columnName)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

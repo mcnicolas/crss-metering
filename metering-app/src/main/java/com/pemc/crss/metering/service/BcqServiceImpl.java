@@ -80,6 +80,11 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
+    public List<BcqHeader> findPrevHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses) {
+        return bcqDao.findPrevHeadersWithStatusNotIn(header, statuses);
+    }
+
+    @Override
     public boolean isHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList) {
         for(BcqHeader header : headerList) {
             if (isSameHeader(header, headerToFind)) {
