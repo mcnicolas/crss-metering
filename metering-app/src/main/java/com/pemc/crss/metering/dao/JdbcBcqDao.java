@@ -36,10 +36,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.pemc.crss.metering.constants.BcqStatus.*;
@@ -50,6 +47,7 @@ import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.sql.Types.VARCHAR;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -155,7 +153,7 @@ public class JdbcBcqDao implements BcqDao {
                     .column("HEADER_ID")
                     .column("SELLING_MTN")
                     .column("BILLING_ID")
-                    .column("TO_CHAR(TRADING_DATE, 'YYYY-DD-MM')").as("TRADING_DATE")
+                    .column("TO_CHAR(TRADING_DATE, 'YYYY-MM-DD')").as("TRADING_DATE")
                     .column("SELLING_PARTICIPANT_USER_ID")
                     .column("SELLING_PARTICIPANT_NAME")
                     .column("SELLING_PARTICIPANT_SHORT_NAME")
@@ -267,6 +265,12 @@ public class JdbcBcqDao implements BcqDao {
     @Override
     public void updateHeaderStatus(long headerId, BcqStatus status) {
         log.debug("[DAO-BCQ] Updating status of header to {} with ID: {}", status, headerId);
+        if (status == CONFIRMED) {
+            BcqHeader header = findHeader(headerId);
+            List<BcqHeader> prevHeaders = getPrevHeadersWithStatusIn(header, singletonList(CONFIRMED));
+            BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
+            updateHeaderStatusToVoid(prevHeader);
+        }
         MapSqlParameterSource source = new MapSqlParameterSource();
         source.addValue("headerId", headerId);
         source.addValue("status", status.toString());
@@ -335,14 +339,7 @@ public class JdbcBcqDao implements BcqDao {
         List<BcqHeader> prevHeaders = getPrevHeadersWithStatusIn(header,
                 asList(FOR_NULLIFICATION, FOR_CONFIRMATION, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATED));
         BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
-        if (prevHeader != null) {
-            log.debug("[DAO-BCQ] Previous header: {}", prevHeader);
-            MapSqlParameterSource mapSource = new MapSqlParameterSource();
-            mapSource.addValue("status", VOID);
-            mapSource.addValue("headerId", prevHeader.getHeaderId());
-            mapSource.registerSqlType("status", VARCHAR);
-            namedParameterJdbcTemplate.update(updateHeaderStatus, mapSource);
-        }
+        updateHeaderStatusToVoid(prevHeader);
         BeanPropertySqlParameterSource beanSource = new BeanPropertySqlParameterSource(header);
         beanSource.registerSqlType("status", VARCHAR);
         beanSource.registerSqlType("updatedVia", VARCHAR);
@@ -369,6 +366,16 @@ public class JdbcBcqDao implements BcqDao {
         log.debug("SQL: {}", queryData.getSql());
         return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
                 new BeanPropertyRowMapper<>(BcqHeader.class));
+    }
+
+    private void updateHeaderStatusToVoid(BcqHeader header) {
+        if (header != null) {
+            log.debug("[DAO-BCQ] Previous header: {}", header);
+            MapSqlParameterSource mapSource = new MapSqlParameterSource();
+            mapSource.addValue("status", VOID.toString());
+            mapSource.addValue("headerId", header.getHeaderId());
+            namedParameterJdbcTemplate.update(updateHeaderStatus, mapSource);
+        }
     }
 
     private int getDeadlineConfig() {
@@ -422,9 +429,9 @@ public class JdbcBcqDao implements BcqDao {
         if (isNotBlank(buyingParticipant)) {
             queryBuilder = queryBuilder
                     .and().openParenthesis().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_NAME)",
-                            "%" + sellingParticipant.toUpperCase() + "%", LIKE))
+                            "%" + buyingParticipant.toUpperCase() + "%", LIKE))
                     .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
-                            "%" + sellingParticipant.toUpperCase() + "%", LIKE))
+                            "%" + buyingParticipant.toUpperCase() + "%", LIKE))
                     .closeParenthesis();
         }
         if (expired) {
