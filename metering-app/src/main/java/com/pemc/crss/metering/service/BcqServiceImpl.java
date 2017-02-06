@@ -126,7 +126,7 @@ public class BcqServiceImpl implements BcqService {
         switch (header.getStatus()) {
             case FOR_APPROVAL_UPDATED:
             case FOR_APPROVAL_NEW:
-                statusToBe = CONFIRMED;
+                statusToBe = SETTLEMENT_READY;
                 break;
             case FOR_APPROVAL_CANCEL:
                 statusToBe = CANCELLED;

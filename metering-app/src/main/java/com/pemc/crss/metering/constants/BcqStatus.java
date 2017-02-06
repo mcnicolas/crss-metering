@@ -14,7 +14,8 @@ public enum BcqStatus {
     FOR_APPROVAL_UPDATED,
     FOR_APPROVAL_NEW,
     FOR_APPROVAL_CANCEL,
-    VOID;
+    VOID,
+    SETTLEMENT_READY;
 
     public static BcqStatus fromString(String value) {
         try {

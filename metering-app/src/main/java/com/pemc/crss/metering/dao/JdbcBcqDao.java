@@ -280,9 +280,15 @@ public class JdbcBcqDao implements BcqDao {
     @Override
     public void updateHeaderStatus(long headerId, BcqStatus status) {
         log.debug("[DAO-BCQ] Updating status of header to {} with ID: {}", status, headerId);
-        if (status == CONFIRMED) {
+        if (status == CONFIRMED || status == SETTLEMENT_READY) {
             BcqHeader header = findHeader(headerId);
-            List<BcqHeader> prevHeaders = findPrevHeadersWithStatusIn(header, singletonList(CONFIRMED));
+            List<BcqStatus> statusToCheck;
+            if (status == CONFIRMED) {
+                statusToCheck = singletonList(CONFIRMED);
+            } else {
+                statusToCheck = asList(CONFIRMED, SETTLEMENT_READY);
+            }
+            List<BcqHeader> prevHeaders = findPrevHeadersWithStatusIn(header, statusToCheck);
             BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
             updateHeaderStatusToVoid(prevHeader);
         }
