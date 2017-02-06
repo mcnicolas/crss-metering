@@ -210,11 +210,14 @@ public class QueryBuilder {
     }
 
     private String getParamName(String columnName) {
-        return toCamelCase(removeLeadingText(removeParenthesis(columnName)));
+        return toCamelCase(removeLeadingText(removeParenthesis(removeFunction(columnName))));
     }
 
-    private String toCamelCase(String value) {
-        return UPPER_UNDERSCORE.to(LOWER_CAMEL, value);
+    private String removeFunction(String value) {
+        if (value.indexOf('(') > -1) {
+            return value.substring(value.indexOf('('));
+        }
+        return value;
     }
 
     private String removeParenthesis(String value) {
@@ -226,6 +229,10 @@ public class QueryBuilder {
             return value.substring(value.indexOf('.') + 1);
         }
         return value;
+    }
+
+    private String toCamelCase(String value) {
+        return UPPER_UNDERSCORE.to(LOWER_CAMEL, value);
     }
 
 }
