@@ -332,7 +332,8 @@ public class JdbcBcqDao implements BcqDao {
         long deadlineConfigInSeconds = DAYS.toSeconds(getDeadlineConfig());
         KeyHolder keyHolder = new GeneratedKeyHolder();
         header.setDeadlineDate(new Date(tradingDateInMillis + SECONDS.toMillis(deadlineConfigInSeconds - 1)));
-        List<BcqHeader> prevHeaders = getPrevHeadersWithStatusIn(header, asList(FOR_NULLIFICATION, FOR_CONFIRMATION));
+        List<BcqHeader> prevHeaders = getPrevHeadersWithStatusIn(header,
+                asList(FOR_NULLIFICATION, FOR_CONFIRMATION, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATED));
         BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
         if (prevHeader != null) {
             log.debug("[DAO-BCQ] Previous header: {}", prevHeader);
