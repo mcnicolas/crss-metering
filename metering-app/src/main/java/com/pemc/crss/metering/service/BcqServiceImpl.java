@@ -3,13 +3,9 @@ package com.pemc.crss.metering.service;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
-import com.pemc.crss.metering.dto.bcq.BcqData;
-import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
+import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
-import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
 import lombok.RequiredArgsConstructor;
@@ -26,13 +22,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static com.pemc.crss.metering.constants.BcqStatus.CANCELLED;
-import static com.pemc.crss.metering.constants.BcqStatus.CONFIRMED;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_NEW;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_UPDATED;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
-import static com.pemc.crss.metering.constants.BcqStatus.NOT_CONFIRMED;
+import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
 import static com.pemc.crss.metering.constants.BcqUpdateType.REDECLARATION;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
@@ -80,29 +70,13 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public Page<BcqHeader> findAllHeaders(PageableRequest pageableRequest) {
+    public Page<BcqHeaderDisplay2> findAllHeaders(PageableRequest pageableRequest) {
         return bcqDao.findAllHeaders(pageableRequest);
     }
 
     @Override
-    public List<BcqHeader> findAllHeadersBySellerAndTradingDate(String sellerShortName, Date tradingDate) {
-        return bcqDao.findAllHeaders(of(
-                "sellingParticipant", sellerShortName,
-                "tradingDate", formatDate(tradingDate)
-        ));
-    }
-
-    @Override
-    public List<ParticipantSellerDetails> findAllSellersWithExpiredBcqByTradingDate(Date tradingDate) {
-        return bcqDao.findAllHeaders(of(
-                "tradingDate", formatDate(tradingDate),
-                "expired", "expired"
-        )).stream().map(header ->
-                new ParticipantSellerDetails(header.getSellingParticipantUserId(),
-                        header.getSellingParticipantName(),
-                        header.getSellingParticipantShortName()))
-                .distinct()
-                .collect(toList());
+    public List<BcqHeader> findAllHeaders(Map<String, String> mapParams) {
+        return bcqDao.findAllHeaders(mapParams);
     }
 
     @Override
@@ -236,9 +210,10 @@ public class BcqServiceImpl implements BcqService {
 
     private List<BcqHeader> setUpdatedViaOfHeaders(List<BcqHeader> headerList, BcqDeclaration declaration) {
         if (declaration.isRedeclaration()) {
-            List<BcqHeader> currentHeaderList = findAllHeadersBySellerAndTradingDate(
-                    declaration.getSellerDetails().getShortName(),
-                    declaration.getHeaderDetailsList().get(0).getTradingDate());
+            List<BcqHeader> currentHeaderList = findAllHeaders(of(
+                    "sellingParticipant", declaration.getSellerDetails().getShortName(),
+                    "tradingDate", formatDate(declaration.getHeaderDetailsList().get(0).getTradingDate())
+            ));
             return headerList.stream().map(header -> {
                 boolean exists = isHeaderInList(header, currentHeaderList);
                 header.setExists(exists);
@@ -254,9 +229,10 @@ public class BcqServiceImpl implements BcqService {
     }
 
     private List<BcqHeader> setUpdatedViaOfHeadersBySettlement(List<BcqHeader> headerList, BcqDeclaration declaration) {
-        List<BcqHeader> currentHeaderList = findAllHeadersBySellerAndTradingDate(
-                declaration.getSellerDetails().getShortName(),
-                declaration.getHeaderDetailsList().get(0).getTradingDate());
+        List<BcqHeader> currentHeaderList = findAllHeaders(of(
+                "sellingParticipant", declaration.getSellerDetails().getShortName(),
+                "tradingDate", formatDate(declaration.getHeaderDetailsList().get(0).getTradingDate())
+        ));
         return headerList.stream().map(header -> {
             boolean exists = isHeaderInList(header, currentHeaderList);
             if (exists) {

@@ -10,8 +10,8 @@ import java.util.Objects;
 @Data
 public class BcqData {
 
-    private long bcqDataId;
-    private long bcqHeaderId;
+    private long dataId;
+    private long headerId;
     private String referenceMtn;
     private Date startTime;
     private Date endTime;
@@ -20,8 +20,8 @@ public class BcqData {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("id", getBcqDataId())
-                .add("fileId", getBcqHeaderId())
+                .add("id", getDataId())
+                .add("fileId", getHeaderId())
                 .add("referenceMtn", getReferenceMtn())
                 .add("startTime", getStartTime())
                 .add("endTime", getEndTime())
@@ -40,8 +40,8 @@ public class BcqData {
         }
 
         BcqData that = (BcqData) o;
-        return Objects.equals(bcqDataId, that.bcqDataId)
-                && Objects.equals(bcqHeaderId, that.bcqHeaderId)
+        return Objects.equals(dataId, that.dataId)
+                && Objects.equals(headerId, that.headerId)
                 && Objects.equals(referenceMtn, that.referenceMtn)
                 && Objects.equals(startTime, that.startTime)
                 && Objects.equals(endTime, that.endTime)
@@ -50,6 +50,6 @@ public class BcqData {
 
     @Override
     public int hashCode() {
-        return Objects.hash(bcqDataId, bcqHeaderId, referenceMtn, startTime, endTime, bcq);
+        return Objects.hash(dataId, headerId, referenceMtn, startTime, endTime, bcq);
     }
 }

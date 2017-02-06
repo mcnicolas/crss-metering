@@ -304,4 +304,74 @@ databaseChangeLog(logicalFilePath: "/liquibase/${REL}/${ITER}") {
                 cycle: 'true')
     }
 
+    changeSet(id: "${REL}_${ITER}_${FILE}_04", author: 'jlapugot', failOnError: 'true') {
+        dropUniqueConstraint(constraintName: 'UK_BCQ_HEADER', tableName: 'TXN_BCQ_HEADER')
+
+        addUniqueConstraint(
+                columnNames: 'SELLING_MTN, BILLING_ID, TRADING_DATE, FILE_ID',
+                constraintName: 'UK_BCQ_HEADER',
+                tableName: 'TXN_BCQ_HEADER'
+        )
+    }
+
+    changeSet(id: "${REL}_${ITER}_${FILE}_05", author: 'jlapugot', failOnError: 'true') {
+        renameColumn(
+                oldColumnName: 'BCQ_HEADER_ID',
+                newColumnName: 'HEADER_ID',
+                tableName: 'TXN_BCQ_HEADER'
+        )
+
+        renameColumn(
+                oldColumnName: 'BCQ_DATA_ID',
+                newColumnName: 'DATA_ID',
+                tableName: 'TXN_BCQ_DATA'
+        )
+    }
+
+    changeSet(id: "${REL}_${ITER}_${FILE}_06", author: 'jlapugot') {
+        dropForeignKeyConstraint(baseTableName: 'TXN_BCQ_DATA', constraintName: 'FK_BCQ_HEADER')
+
+        dropPrimaryKey(constraintName: 'PK_TXN_BCQ_HEADER', tableName: 'TXN_BCQ_HEADER')
+
+        dropPrimaryKey(constraintName: 'PK_TXN_BCQ_DATA', tableName: 'TXN_BCQ_DATA')
+
+        dropUniqueConstraint(constraintName: 'UK_BCQ_DATA', tableName: 'TXN_BCQ_DATA')
+
+        renameColumn(
+                oldColumnName: 'BCQ_HEADER_ID',
+                newColumnName: 'HEADER_ID',
+                tableName: 'TXN_BCQ_DATA'
+        )
+
+        addPrimaryKey(
+                columnNames: 'HEADER_ID',
+                constraintName: 'PK_BCQ_HEADER',
+                tableName: 'TXN_BCQ_HEADER'
+        )
+
+
+        addPrimaryKey(
+                columnNames: 'DATA_ID',
+                constraintName: 'PK_BCQ_DATA',
+                tableName: 'TXN_BCQ_DATA'
+        )
+
+
+        addUniqueConstraint(
+                columnNames: 'HEADER_ID, END_TIME',
+                constraintName: 'UK_BCQ_DATA',
+                tableName: 'TXN_BCQ_DATA'
+        )
+
+        addForeignKeyConstraint(
+                baseColumnNames: 'HEADER_ID',
+                baseTableName: 'TXN_BCQ_DATA',
+                constraintName: 'FK_BCQ_HEADER',
+                deferrable: false,
+                initiallyDeferred: false,
+                referencedColumnNames: 'HEADER_ID',
+                referencedTableName: 'TXN_BCQ_HEADER'
+        )
+    }
+
 }

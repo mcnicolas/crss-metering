@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_REDECLARATION_ENTRIES;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.validator.bcq.validation.RedeclarationValidation.emptyInst;
@@ -57,7 +58,10 @@ public class RedeclarationValidationHelper {
      * SUPPORT METHODS
      ****************************************************/
     private List<BcqHeader> getCurrentHeaderList(String sellingParticipant, Date tradingDate) {
-        return bcqService.findAllHeadersBySellerAndTradingDate(sellingParticipant, tradingDate);
+        return bcqService.findAllHeaders(of(
+                "sellingParticipant", sellingParticipant,
+                "tradingDate", formatDate(tradingDate)
+        ));
     }
 
 }

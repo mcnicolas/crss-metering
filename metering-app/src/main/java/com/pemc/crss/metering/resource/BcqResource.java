@@ -3,13 +3,7 @@ package com.pemc.crss.metering.resource;
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.ValidationStatus;
-import com.pemc.crss.metering.dto.bcq.BcqDataDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
-import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
+import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventForm;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
@@ -21,29 +15,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
+import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.lang.Long.parseLong;
 import static java.util.stream.Collectors.toList;
-import static org.springframework.http.ResponseEntity.badRequest;
-import static org.springframework.http.ResponseEntity.ok;
-import static org.springframework.http.ResponseEntity.unprocessableEntity;
+import static org.springframework.http.ResponseEntity.*;
 
 @Slf4j
 @RestController
@@ -65,14 +51,11 @@ public class BcqResource {
 
     @PostMapping(value = "/list")
     @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
-    public ResponseEntity<DataTableResponse<BcqHeaderDisplay>> executeSearch(@RequestBody final PageableRequest request) {
-        Page<BcqHeader> headerPage = bcqService.findAllHeaders(request);
-        List<BcqHeaderDisplay> headerDisplayList = new ArrayList<>();
-        headerPage.getContent().forEach(header -> headerDisplayList.add(new BcqHeaderDisplay(header)));
-        DataTableResponse<BcqHeaderDisplay> response = new DataTableResponse<BcqHeaderDisplay>()
-                .withData(headerDisplayList)
+    public ResponseEntity<DataTableResponse<BcqHeaderDisplay2>> executeSearch(@RequestBody final PageableRequest request) {
+        Page<BcqHeaderDisplay2> headerPage = bcqService.findAllHeaders(request);
+        DataTableResponse<BcqHeaderDisplay2> response = new DataTableResponse<BcqHeaderDisplay2>()
+                .withData(headerPage.getContent())
                 .withRecordsTotal(headerPage.getTotalElements());
-
         return ok(response);
     }
 
@@ -201,8 +184,15 @@ public class BcqResource {
     @GetMapping("/sellers")
     public List<ParticipantSellerDetails> getSellersByTradingDate(@RequestParam String tradingDate) {
         log.debug("[REST-BCQ] Request for getting sellers with trading date: {}", tradingDate);
-        List<ParticipantSellerDetails> sellerDetailsList = bcqService
-                .findAllSellersWithExpiredBcqByTradingDate(parseDate(tradingDate));
+        List<ParticipantSellerDetails> sellerDetailsList = bcqService.findAllHeaders(of(
+                        "tradingDate", tradingDate,
+                        "expired", "expired")
+        ).stream().map(header ->
+                new ParticipantSellerDetails(header.getSellingParticipantUserId(),
+                        header.getSellingParticipantName(),
+                        header.getSellingParticipantShortName()))
+                .distinct()
+                .collect(toList());
         log.debug("[REST-BCQ] Found {} sellers with trading date: {}", sellerDetailsList.size(), tradingDate);
         return sellerDetailsList;
     }
@@ -262,9 +252,10 @@ public class BcqResource {
     }
 
     private List<BcqHeader> getCurrentHeaders(BcqDeclaration declaration) {
-        return bcqService.findAllHeadersBySellerAndTradingDate(
-                declaration.getSellerDetails().getShortName(),
-                declaration.getHeaderDetailsList().get(0).getTradingDate());
+        return bcqService.findAllHeaders(of(
+                "sellingParticipant", declaration.getSellerDetails().getShortName(),
+                "tradingDate", formatDate(declaration.getHeaderDetailsList().get(0).getTradingDate())
+        ));
     }
 
     private String removeHtmlTags(String message) {

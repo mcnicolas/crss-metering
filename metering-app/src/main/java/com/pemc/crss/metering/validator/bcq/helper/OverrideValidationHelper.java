@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqValidationRules.EXCESS_OVERRIDE_ENTRIES;
 import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_OVERRIDE_ENTRIES;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
@@ -97,7 +98,10 @@ public class OverrideValidationHelper {
      * SUPPORT METHODS
      ****************************************************/
     private List<BcqHeader> getCurrentHeaderList(String sellingParticipant, Date tradingDate) {
-        return bcqService.findAllHeadersBySellerAndTradingDate(sellingParticipant, tradingDate);
+        return bcqService.findAllHeaders(of(
+                "sellingParticipant", sellingParticipant,
+                "tradingDate", formatDate(tradingDate)
+        ));
     }
 
 }
