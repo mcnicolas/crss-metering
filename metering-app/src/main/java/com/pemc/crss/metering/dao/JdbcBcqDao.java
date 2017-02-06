@@ -292,9 +292,9 @@ public class JdbcBcqDao implements BcqDao {
             BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
             updateHeaderStatusToVoid(prevHeader);
         }
-        MapSqlParameterSource source = new MapSqlParameterSource();
-        source.addValue("headerId", headerId);
-        source.addValue("status", status.toString());
+        MapSqlParameterSource source = new MapSqlParameterSource()
+                .addValue("headerId", headerId)
+                .addValue("status", status.toString());
         namedParameterJdbcTemplate.update(updateHeaderStatus, source);
         log.debug("[DAO-BCQ] Updated status of header with ID: {} to {} ", headerId, status);
     }
@@ -302,10 +302,10 @@ public class JdbcBcqDao implements BcqDao {
     @Override
     public void updateHeaderStatusBySettlement(long headerId, BcqStatus status) {
         log.debug("[DAO-BCQ] Updating status by settlement of header to {} with ID: {}", status, headerId);
-        MapSqlParameterSource source = new MapSqlParameterSource();
-        source.addValue("headerId", headerId);
-        source.addValue("status", status.toString());
-        source.addValue("updatedVia", MANUAL_OVERRIDE.toString());
+        MapSqlParameterSource source = new MapSqlParameterSource()
+                .addValue("headerId", headerId)
+                .addValue("status", status.toString())
+                .addValue("updatedVia", MANUAL_OVERRIDE.toString());
         namedParameterJdbcTemplate.update(updateHeaderStatusBySettlement, source);
         log.debug("[DAO-BCQ] Updated status by settlement of header with ID: {} to {} ", headerId, status);
     }
@@ -320,10 +320,10 @@ public class JdbcBcqDao implements BcqDao {
     public long saveSpecialEvent(BcqSpecialEvent specialEvent) {
         log.debug("[DAO-BCQ] Saving new special event");
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource source = new MapSqlParameterSource();
-        source.addValue("deadlineDate", specialEvent.getDeadlineDate());
-        source.addValue("remarks", specialEvent.getRemarks());
-        source.addValue("createdDate", DateTimeUtils.now());
+        MapSqlParameterSource source = new MapSqlParameterSource()
+                .addValue("deadlineDate", specialEvent.getDeadlineDate())
+                .addValue("remarks", specialEvent.getRemarks())
+                .addValue("createdDate", DateTimeUtils.now());
         namedParameterJdbcTemplate.update(insertEvent, source, keyHolder, new String[]{"event_id"});
         long eventId = keyHolder.getKey().longValue();
         saveEventTradingDates(specialEvent.getTradingDates(), eventId);
@@ -396,9 +396,9 @@ public class JdbcBcqDao implements BcqDao {
     private void updateHeaderStatusToVoid(BcqHeader header) {
         if (header != null) {
             log.debug("[DAO-BCQ] Previous header: {}", header);
-            MapSqlParameterSource mapSource = new MapSqlParameterSource();
-            mapSource.addValue("status", VOID.toString());
-            mapSource.addValue("headerId", header.getHeaderId());
+            MapSqlParameterSource mapSource = new MapSqlParameterSource()
+                    .addValue("status", VOID.toString())
+                    .addValue("headerId", header.getHeaderId());
             namedParameterJdbcTemplate.update(updateHeaderStatus, mapSource);
         }
     }
@@ -473,9 +473,9 @@ public class JdbcBcqDao implements BcqDao {
                 tradingDateList.size(), eventId);
         MapSqlParameterSource[] sourceArray = new MapSqlParameterSource[tradingDateList.size()];
         for (int i = 0; i < tradingDateList.size(); i ++) {
-            sourceArray[i] = new MapSqlParameterSource();
-            sourceArray[i].addValue("eventId", eventId);
-            sourceArray[i].addValue("tradingDate", tradingDateList.get(i));
+            sourceArray[i] = new MapSqlParameterSource()
+                    .addValue("eventId", eventId)
+                    .addValue("tradingDate", tradingDateList.get(i));
         }
         namedParameterJdbcTemplate.batchUpdate(insertEventTradingDate, sourceArray);
         log.debug("[DAO-BCQ] Saved event trading date list");
@@ -486,10 +486,10 @@ public class JdbcBcqDao implements BcqDao {
                 participants.size(), eventId);
         MapSqlParameterSource[] sourceArray = new MapSqlParameterSource[participants.size()];
         for (int i = 0; i < participants.size(); i ++) {
-            sourceArray[i] = new MapSqlParameterSource();
-            sourceArray[i].addValue("eventId", eventId);
-            sourceArray[i].addValue("participantName", participants.get(i).getParticipantName());
-            sourceArray[i].addValue("shortName", participants.get(i).getShortName());
+            sourceArray[i] = new MapSqlParameterSource()
+                    .addValue("eventId", eventId)
+                    .addValue("participantName", participants.get(i).getParticipantName())
+                    .addValue("shortName", participants.get(i).getShortName());
         }
         namedParameterJdbcTemplate.batchUpdate(insertEventParticipant, sourceArray);
         log.debug("[DAO-BCQ] Saved event participant list");
