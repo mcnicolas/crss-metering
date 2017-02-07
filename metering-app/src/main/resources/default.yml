@@ -219,20 +219,22 @@ mq:
           :icn, :icnChannelStatus, :icnIntervalStatus,
           :pf, :pfChannelStatus, :pfIntervalStatus,
           :estimationFlag, :mspShortName, :uploadType, :createdDateTime)
+
 bcq:
-  manifest: >
-    INSERT INTO TXN_BCQ_UPLOAD_FILE (
-      FILE_ID,
-      TRANSACTION_ID,
-      FILE_NAME,
-      FILE_SIZE,
-      SUBMITTED_DATE,
-      VALIDATION_STATUS)
-    VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?)
+  file:
+    insert: >
+      INSERT INTO TXN_BCQ_UPLOAD_FILE (
+        FILE_ID,
+        TRANSACTION_ID,
+        FILE_NAME,
+        FILE_SIZE,
+        SUBMITTED_DATE,
+        VALIDATION_STATUS)
+      VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), :transactionId, :fileName, :fileSize, :submittedDate, :validationStatus)
   header:
     insert: >
       INSERT INTO TXN_BCQ_HEADER (
-        BCQ_HEADER_ID,
+        HEADER_ID,
         FILE_ID,
         SELLING_MTN,
         BILLING_ID,
@@ -246,69 +248,80 @@ bcq:
         TRADING_DATE,
         DEADLINE_DATE,
         UPDATED_VIA)
-      VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    update: >
-      UPDATE TXN_BCQ_HEADER SET
-        FILE_ID = ?,
-        STATUS = ?,
-        UPDATED_VIA = ?
-      WHERE SELLING_MTN = ? AND BILLING_ID = ? AND TRADING_DATE = ? AND SELLING_PARTICIPANT_SHORT_NAME = ?
-    count: >
-      SELECT COUNT(*) FROM TXN_BCQ_HEADER
-      WHERE SELLING_MTN = ? AND BILLING_ID = ? AND TRADING_DATE = ? AND SELLING_PARTICIPANT_SHORT_NAME = ?
-    id: >
-      SELECT BCQ_HEADER_ID FROM TXN_BCQ_HEADER
-      WHERE SELLING_MTN = ? AND BILLING_ID = ? AND TRADING_DATE = ? AND SELLING_PARTICIPANT_SHORT_NAME = ?
-    status: >
-      UPDATE TXN_BCQ_HEADER SET STATUS = ? WHERE BCQ_HEADER_ID = ?
-    status.settlement: >
-      UPDATE TXN_BCQ_HEADER SET STATUS = ?, UPDATED_VIA = ? WHERE BCQ_HEADER_ID = ?
+      VALUES (NEXTVAL('HIBERNATE_SEQUENCE'),
+        :fileId, :sellingMtn, :billingId,
+        :buyingParticipantUserId, :buyingParticipantName, :buyingParticipantShortName,
+        :sellingParticipantUserId, :sellingParticipantName, :sellingParticipantShortName,
+        :status, :tradingDate, :deadlineDate, :updatedVia)
+    status:
+      update: >
+        UPDATE TXN_BCQ_HEADER SET STATUS = :status WHERE HEADER_ID = :headerId
+      update-settlement: >
+        UPDATE TXN_BCQ_HEADER SET
+          STATUS = :status,
+          UPDATED_VIA = :updatedVia
+        WHERE HEADER_ID = :headerId
+    list:
+      header-join-file: >
+        TXN_BCQ_HEADER A INNER JOIN TXN_BCQ_UPLOAD_FILE B ON A.FILE_ID = B.FILE_ID
+      sub-select:
+        transaction-id: >
+          (SELECT STRING_AGG(D.TRANSACTION_ID, ', ' ORDER BY D.SUBMITTED_DATE)
+           FROM TXN_BCQ_HEADER C INNER JOIN TXN_BCQ_UPLOAD_FILE D ON C.FILE_ID = D.FILE_ID
+           WHERE A.SELLING_MTN = C.SELLING_MTN
+             AND A.BILLING_ID = C.BILLING_ID
+             AND A.TRADING_DATE = C.TRADING_DATE
+             AND C.STATUS != 'VOID')
+        submitted-date: >
+          (SELECT STRING_AGG(TO_CHAR(D.SUBMITTED_DATE, 'YYYY-MM-DD hh:mm AM'), ', ' ORDER BY D.SUBMITTED_DATE)
+           FROM TXN_BCQ_HEADER C INNER JOIN TXN_BCQ_UPLOAD_FILE D ON C.FILE_ID = D.FILE_ID
+           WHERE A.SELLING_MTN = C.SELLING_MTN
+             AND A.BILLING_ID = C.BILLING_ID
+             AND A.TRADING_DATE = C.TRADING_DATE
+             AND C.STATUS != 'VOID')
+        deadline-date: >
+          (SELECT STRING_AGG(TO_CHAR(C.DEADLINE_DATE, 'YYYY-MM-DD'), ', ' ORDER BY D.SUBMITTED_DATE)
+           FROM TXN_BCQ_HEADER C INNER JOIN TXN_BCQ_UPLOAD_FILE D ON C.FILE_ID = D.FILE_ID
+           WHERE A.SELLING_MTN = C.SELLING_MTN
+             AND A.BILLING_ID = C.BILLING_ID
+             AND A.TRADING_DATE = C.TRADING_DATE
+             AND C.STATUS != 'VOID')
+        status: >
+          (SELECT STRING_AGG(C.STATUS, ', ' ORDER BY D.SUBMITTED_DATE)
+           FROM TXN_BCQ_HEADER C INNER JOIN TXN_BCQ_UPLOAD_FILE D ON C.FILE_ID = D.FILE_ID
+           WHERE A.SELLING_MTN = C.SELLING_MTN
+             AND A.BILLING_ID = C.BILLING_ID
+             AND A.TRADING_DATE = C.TRADING_DATE
+             AND C.STATUS != 'VOID')
+        updated-via: >
+          (SELECT STRING_AGG(COALESCE(C.UPDATED_VIA, ' '), ', ' ORDER BY D.SUBMITTED_DATE)
+           FROM TXN_BCQ_HEADER C INNER JOIN TXN_BCQ_UPLOAD_FILE D ON C.FILE_ID = D.FILE_ID
+           WHERE A.SELLING_MTN = C.SELLING_MTN
+             AND A.BILLING_ID = C.BILLING_ID
+             AND A.TRADING_DATE = C.TRADING_DATE
+             AND C.STATUS != 'VOID')
+      unique: >
+        HEADER_ID IN(
+          SELECT
+            DISTINCT ON (SELLING_MTN, BILLING_ID, TRADING_DATE) HEADER_ID
+          FROM TXN_BCQ_HEADER A
+            INNER JOIN TXN_BCQ_UPLOAD_FILE B
+              ON A.FILE_ID = B.FILE_ID
+          ORDER BY
+            SELLING_MTN,
+            BILLING_ID,
+            TRADING_DATE,
+            SUBMITTED_DATE DESC)
   data:
     insert: >
       INSERT INTO TXN_BCQ_DATA (
-        BCQ_DATA_ID,
-        BCQ_HEADER_ID,
+        DATA_ID,
+        HEADER_ID,
         REFERENCE_MTN,
         START_TIME,
         END_TIME,
         BCQ)
-      VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?, ?, ?)
-    update: >
-      UPDATE TXN_BCQ_DATA SET
-        REFERENCE_MTN = ?,
-        BCQ = ?
-       WHERE END_TIME = ? AND BCQ_HEADER_ID = ?
-    details: >
-      SELECT
-        REFERENCE_MTN,
-        END_TIME,
-        BCQ
-      FROM TXN_BCQ_DATA
-      WHERE BCQ_HEADER_ID = ?
-  display:
-    data: >
-      SELECT
-        BCQ_HEADER_ID,
-        SELLING_MTN,
-        BILLING_ID,
-        BUYING_PARTICIPANT_USER_ID,
-        BUYING_PARTICIPANT_NAME,
-        BUYING_PARTICIPANT_SHORT_NAME,
-        SELLING_PARTICIPANT_USER_ID,
-        SELLING_PARTICIPANT_NAME,
-        SELLING_PARTICIPANT_SHORT_NAME,
-        TRADING_DATE,
-        DEADLINE_DATE,
-        TRANSACTION_ID,
-        SUBMITTED_DATE,
-        STATUS,
-        UPDATED_VIA
-      FROM TXN_BCQ_HEADER A INNER JOIN TXN_BCQ_UPLOAD_FILE B ON A.FILE_ID = B.FILE_ID
-    count: >
-      SELECT COUNT(*)
-      FROM TXN_BCQ_HEADER A INNER JOIN TXN_BCQ_UPLOAD_FILE B ON A.FILE_ID = B.FILE_ID
-    paginate: >
-      {SELECT_QUERY} LIMIT ({PAGE_NO} + 1) * {PAGE_SIZE} OFFSET {PAGE_NO} * {PAGE_SIZE}
+      VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), :headerId, :referenceMtn, :startTime, :endTime, :bcq)
   event:
     insert: >
       INSERT INTO TXN_BCQ_SPECIAL_EVENT (
@@ -316,20 +329,20 @@ bcq:
         DEADLINE_DATE,
         REMARKS,
         CREATED_DATE)
-      VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), ?, ?, ?)
+      VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), :deadlineDate, :remarks, :createdDate)
     trading-date:
       insert: >
         INSERT INTO TXN_BCQ_EVENT_TRADING_DATE (
           EVENT_ID,
           TRADING_DATE)
-        VALUES (?, ?)
+        VALUES (:eventId, :tradingDate)
     participant:
       insert: >
         INSERT INTO TXN_BCQ_EVENT_PARTICIPANT (
           EVENT_ID,
-          TRADING_PARTICIPANT,
-          PARTICIPANT_NAME)
-        VALUES (?, ?, ?)
+          PARTICIPANT_NAME,
+          TRADING_PARTICIPANT)
+        VALUES (:eventId, :participantName, :shortName)
     validate: >
       SELECT DISTINCT
         ep.trading_participant,
