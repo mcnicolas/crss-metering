@@ -2,23 +2,21 @@ package com.pemc.crss.metering.validator.bcq.helper;
 
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.service.BcqService;
+import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.validation.OverrideValidation;
 import com.pemc.crss.metering.validator.bcq.validation.Validation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static com.pemc.crss.metering.constants.BcqValidationRules.EXCESS_OVERRIDE_ENTRIES;
-import static com.pemc.crss.metering.constants.BcqValidationRules.INCOMPLETE_OVERRIDE_ENTRIES;
+import static com.pemc.crss.metering.constants.BcqValidationError.INCOMPLETE_OVERRIDE_ENTRIES;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.validator.bcq.validation.OverrideValidation.emptyInst;
-import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 @Component
@@ -35,15 +33,13 @@ public class OverrideValidationHelper {
     private OverrideValidation noMissingHeaders(List<BcqHeader> currentHeaderList) {
         OverrideValidation overrideValidation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList -> {
-            if (headerList.size() > currentHeaderList.size()) {
-                return true;
-            }
             List<BcqHeader> missingHeaderList = currentHeaderList.stream()
                     .filter(header -> !bcqService.isHeaderInList(header, headerList))
                     .collect(toList());
 
             if (missingHeaderList.size() > 0) {
                 StringJoiner pairs = new StringJoiner("<br />");
+                Set<String> pairsSet = new HashSet<>();
                 missingHeaderList.forEach(missingHeader -> {
                     StringBuilder pair = new StringBuilder();
                     pair.append("<b>[")
@@ -52,40 +48,13 @@ public class OverrideValidationHelper {
                             .append(missingHeader.getBillingId())
                             .append("]</b>");
                     pairs.add(pair);
+                    if (pairsSet.add(pair.toString())) {
+                        pairs.add(pair);
+                    }
                 });
-                overrideValidation.setErrorMessage(format(INCOMPLETE_OVERRIDE_ENTRIES.getErrorMessage(),
-                        formatDate(currentHeaderList.get(0).getTradingDate()), pairs.toString()));
-                return false;
-            }
-            return true;
-        };
-        overrideValidation.setPredicate(predicate);
-        return overrideValidation;
-    }
-
-    private OverrideValidation noExcessHeaders(List<BcqHeader> currentHeaderList) {
-        OverrideValidation overrideValidation = emptyInst();
-        Predicate<List<BcqHeader>> predicate = headerList -> {
-            if (headerList.size() < currentHeaderList.size()) {
-                return true;
-            }
-            List<BcqHeader> excessHeaderList = headerList.stream()
-                    .filter(header -> !bcqService.isHeaderInList(header, currentHeaderList))
-                    .collect(toList());
-
-            if (excessHeaderList.size() > 0) {
-                StringJoiner pairs = new StringJoiner("<br />");
-                excessHeaderList.forEach(excessHeader -> {
-                    StringBuilder pair = new StringBuilder();
-                    pair.append("<b>[")
-                            .append(excessHeader.getSellingMtn())
-                            .append(" - ")
-                            .append(excessHeader.getBillingId())
-                            .append("]</b>");
-                    pairs.add(pair);
-                });
-                overrideValidation.setErrorMessage(format(EXCESS_OVERRIDE_ENTRIES.getErrorMessage(),
-                        formatDate(currentHeaderList.get(0).getTradingDate()), pairs.toString()));
+                BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INCOMPLETE_OVERRIDE_ENTRIES,
+                        asList(formatDate(currentHeaderList.get(0).getTradingDate()), pairs.toString()));
+                overrideValidation.setErrorMessage(errorMessage);
                 return false;
             }
             return true;

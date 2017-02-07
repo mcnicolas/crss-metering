@@ -111,7 +111,8 @@ public class BcqResource {
             log.debug("[REST-BCQ] Finished uploading and rejecting by web service of: {}",
                     multipartFile.getOriginalFilename());
             bcqService.saveSellerDeclaration(declaration);
-            return unprocessableEntity().body(removeHtmlTags(declaration.getValidationResult().getErrorMessage()));
+            return unprocessableEntity().body(removeHtmlTags(
+                    declaration.getValidationResult().getErrorMessage().getFormattedMessage()));
         }
         bcqService.saveSellerDeclaration(declaration);
         log.debug("[REST-BCQ] Finished uploading and saving by web service of: {}", multipartFile.getOriginalFilename());

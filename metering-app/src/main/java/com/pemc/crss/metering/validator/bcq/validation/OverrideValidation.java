@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.validator.bcq.validation;
 
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
 
 import java.util.List;
@@ -12,9 +13,9 @@ import static com.pemc.crss.metering.validator.bcq.BcqValidationResult.rejected;
 public class OverrideValidation implements Validation<List<BcqHeader>> {
 
     private Predicate<List<BcqHeader>> predicate;
-    private String errorMessage;
+    private BcqValidationErrorMessage errorMessage;
 
-    private OverrideValidation(Predicate<List<BcqHeader>> predicate, String errorMessage) {
+    private OverrideValidation(Predicate<List<BcqHeader>> predicate, BcqValidationErrorMessage errorMessage) {
         this.predicate = predicate;
         this.errorMessage = errorMessage;
     }
@@ -32,15 +33,17 @@ public class OverrideValidation implements Validation<List<BcqHeader>> {
         return new OverrideValidation(predicate, null);
     }
 
-    public static OverrideValidation from(Predicate<List<BcqHeader>> predicate, String onErrorMessage) {
-        return new OverrideValidation(predicate, onErrorMessage);
+    public static OverrideValidation from(Predicate<List<BcqHeader>> predicate,
+                                          BcqValidationErrorMessage errorMessage) {
+
+        return new OverrideValidation(predicate, errorMessage);
     }
 
     public void setPredicate(Predicate<List<BcqHeader>> predicate) {
         this.predicate = predicate;
     }
 
-    public void setErrorMessage(String errorMessage) {
+    public void setErrorMessage(BcqValidationErrorMessage errorMessage) {
         this.errorMessage = errorMessage;
     }
 

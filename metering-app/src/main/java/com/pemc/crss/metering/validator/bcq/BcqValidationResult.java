@@ -16,13 +16,13 @@ import static lombok.AccessLevel.PRIVATE;
 public class BcqValidationResult {
 
     private ValidationStatus status;
-    private String errorMessage;
+    private BcqValidationErrorMessage errorMessage;
 
     public static BcqValidationResult accepted() {
         return new BcqValidationResult(ACCEPTED, null);
     }
 
-    public static BcqValidationResult rejected(String errorMessage) {
+    public static BcqValidationResult rejected(BcqValidationErrorMessage errorMessage) {
         return new BcqValidationResult(REJECTED, errorMessage);
     }
 

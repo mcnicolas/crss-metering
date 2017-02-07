@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.constants;
 
-public enum BcqValidationRules {
+public enum BcqValidationError {
 
     INVALID_CSV_FILE("Invalid CSV file."),
     EMPTY("No data found."),
@@ -38,7 +38,7 @@ public enum BcqValidationRules {
 
     private final String errorMessage;
 
-    BcqValidationRules(String errorMessage) {
+    BcqValidationError(String errorMessage) {
         this.errorMessage = errorMessage;
     }
 
