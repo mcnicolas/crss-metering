@@ -14,7 +14,7 @@ buildscript {
 
     dependencies {
         classpath 'gradle.plugin.org.liquibase:liquibase-gradle-plugin:1.2.1'
-        classpath 'org.postgresql:postgresql:9.4.1211'
+        classpath 'org.postgresql:postgresql:9.4.1212'
         classpath files("$rootDir/libs/ojdbc6-11.2.0.4.jar")
     }
 }

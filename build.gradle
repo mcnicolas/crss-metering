@@ -12,15 +12,14 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.4.3.RELEASE'
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.4.4.RELEASE'
         classpath 'io.spring.gradle:dependency-management-plugin:0.6.1.RELEASE'
-        classpath 'gradle.plugin.edu.sc.seis.gradle:launch4j:1.6.2'
         classpath 'com.github.ksoichiro:gradle-build-info-plugin:0.2.0'
     }
 }
 
 ext {
-    springBootVersion = '1.4.2.RELEASE'
+    springBootVersion = '1.4.4.RELEASE'
     applicationDefaultJvmArgs = ['-Xms128m', '-Xmx256m']
 }
 
@@ -54,12 +53,12 @@ subprojects {
 
     dependencyManagement {
         imports {
-            mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Camden.SR3'
+            mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Camden.SR4'
             mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
         }
 
         dependencies {
-            dependencySet(group:'io.undertow', version:'1.4.8.Final') {
+            dependencySet(group:'io.undertow', version:'1.4.9.Final') {
                 entry 'undertow-core'
                 entry 'undertow-servlet'
                 entry 'undertow-websockets-jsr'
@@ -103,7 +102,7 @@ subprojects {
             dependency 'de.appelgriepsch.logback:logback-gelf-appender:1.2'
 
             // DB Related
-            dependency 'com.zaxxer:HikariCP:2.5.1'
+            dependency 'com.zaxxer:HikariCP:2.6.0'
             dependency 'org.postgresql:postgresql:9.4.1212'
 
             dependency 'org.springframework.security.oauth:spring-security-oauth2:2.0.11.RELEASE'
