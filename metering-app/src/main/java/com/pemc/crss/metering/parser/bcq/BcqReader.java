@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Arrays.asList;
 import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 
 @Slf4j
@@ -22,8 +23,13 @@ public class BcqReader {
         List<List<String>> csv = new ArrayList<>();
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
             List<String> line;
+            int lastLineNumber = 0;
             while ((line = reader.read()) != null) {
+                if (reader.getLineNumber() - lastLineNumber != 1) {
+                    csv.add(asList("", "", "", "", ""));
+                }
                 csv.add(line);
+                lastLineNumber = reader.getLineNumber();
             }
         } catch (IOException | SuperCsvException ex) {
             return null;
