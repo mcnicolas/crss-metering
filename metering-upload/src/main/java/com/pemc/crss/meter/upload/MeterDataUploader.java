@@ -11,7 +11,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.WindowConstants;
@@ -78,15 +77,11 @@ public class MeterDataUploader extends JFrame {
     private ParticipantName participant;
     private List<ComboBoxItem> mspListing;
     private Properties properties;
-    private Timer uploadTimer;
     private Timer processTimer;
     private LocalDateTime uploadStartTime;
 
     public MeterDataUploader(HttpHandler httpHandler) {
         this.httpHandler = httpHandler;
-
-        uploadTimer = new Timer(53, new UploadTimerListener());
-        uploadTimer.setInitialDelay(0);
 
         processTimer = new Timer(53, new ProcessTimerListener());
         processTimer.setInitialDelay(0);
@@ -247,7 +242,6 @@ public class MeterDataUploader extends JFrame {
         FileBucket fileBucket = fileBucketFactory.createBucket(selectedFiles);
 
         uploadStartTime = now();
-        uploadTimer.start();
 
         uploadProgressBar.setValue(0);
         uploadProgressBar.setMinimum(0);
@@ -308,19 +302,14 @@ public class MeterDataUploader extends JFrame {
                 try {
                     String transactionID = get();
 
-                    uploadTimer.stop();
-
                     log.info("Done uploading files.");
 
                     headerPanel.updateTransactionID(transactionID);
                 } catch (InterruptedException | ExecutionException e) {
-                    uploadTimer.stop();
-
                     log.error(e.getMessage(), e);
                     showErrorDialog(e, parseErrorMessage(e.getMessage()), WARNING_MESSAGE, MeterDataUploader.this);
 
                     uploadProgressBar.setValue(0);
-                    uploadTimerValue.setText("00:00");
                 }
 
                 // TODO: Display process upload progress bar
@@ -524,8 +513,6 @@ public class MeterDataUploader extends JFrame {
         fileCount2 = new JLabel();
         centerUploadPanel = new JPanel();
         uploadProgressBar = new JProgressBar();
-        lblTime = new JLabel();
-        uploadTimerValue = new JLabel();
         userStatusPanel3 = new JPanel();
         lblUser3 = new JLabel();
         userFullName3 = new JLabel();
@@ -673,23 +660,6 @@ public class MeterDataUploader extends JFrame {
         gridBagConstraints.insets = new Insets(0, 5, 0, 5);
         centerUploadPanel.add(uploadProgressBar, gridBagConstraints);
 
-        lblTime.setText("Upload Time:");
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new Insets(0, 5, 0, 0);
-        centerUploadPanel.add(lblTime, gridBagConstraints);
-
-        uploadTimerValue.setHorizontalAlignment(SwingConstants.RIGHT);
-        uploadTimerValue.setText("00:00");
-        uploadTimerValue.setMaximumSize(new Dimension(40, 16));
-        uploadTimerValue.setMinimumSize(new Dimension(40, 16));
-        uploadTimerValue.setPreferredSize(new Dimension(40, 16));
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.gridy = 0;
-        centerUploadPanel.add(uploadTimerValue, gridBagConstraints);
-
         uploadProgressPanel.add(centerUploadPanel, BorderLayout.CENTER);
 
         userStatusPanel3.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(1, 3, 3, 1), new SoftBevelBorder(BevelBorder.LOWERED)));
@@ -755,7 +725,6 @@ public class MeterDataUploader extends JFrame {
     private JPanel initializeProgressPanel;
     private JLabel lblFileCount1;
     private JLabel lblFileCount2;
-    private JLabel lblTime;
     private JLabel lblTotalFileSize1;
     private JLabel lblTotalFileSize2;
     private JLabel lblUser1;
@@ -769,7 +738,6 @@ public class MeterDataUploader extends JFrame {
     private JLabel totalFileSize2;
     private JProgressBar uploadProgressBar;
     private JPanel uploadProgressPanel;
-    private JLabel uploadTimerValue;
     private JLabel userFullName1;
     private JLabel userFullName2;
     private JLabel userFullName3;
@@ -777,17 +745,6 @@ public class MeterDataUploader extends JFrame {
     private JPanel userStatusPanel2;
     private JPanel userStatusPanel3;
     // End of variables declaration//GEN-END:variables
-
-    private class UploadTimerListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            Duration diff = Duration.between(uploadStartTime, now());
-
-            LocalTime localTime = LocalTime.MIDNIGHT.plus(diff);
-            String duration = DateTimeFormatter.ofPattern("mm:ss").format(localTime);
-            uploadTimerValue.setText(duration);
-        }
-    }
 
     private class ProcessTimerListener implements ActionListener {
         @Override
