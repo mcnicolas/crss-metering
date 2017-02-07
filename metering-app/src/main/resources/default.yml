@@ -70,13 +70,13 @@ mq:
       insert: >
         INSERT INTO TXN_MQ_MANIFEST_HEADER
         (
-          HEADER_ID, TRANSACTION_ID, FILE_COUNT, NOTIFICATION_SENT, TAIL_RECEIVED, CATEGORY, UPLOAD_BY, UPLOAD_DATETIME
+          HEADER_ID, TRANSACTION_ID, MSP_SHORTNAME, FILE_COUNT, NOTIFICATION_SENT, TAIL_RECEIVED, CATEGORY, UPLOAD_BY, UPLOAD_DATETIME
         )
         VALUES (
-          NEXTVAL('MQ_MANIFEST_HEADER_SEQ'), :transactionID, :fileCount, 'N', 'N', :category, :uploadedBy, :uploadDateTime
+          NEXTVAL('MQ_MANIFEST_HEADER_SEQ'), :transactionID, :mspShortName, :fileCount, 'N', 'N', :category, :uploadedBy, :uploadDateTime
         )
       query: >
-        SELECT HEADER_ID AS headerID, TRANSACTION_ID AS transactionID, FILE_COUNT AS fileCount,
+        SELECT HEADER_ID AS headerID, TRANSACTION_ID AS transactionID, MSP_SHORTNAME AS mspShortName, FILE_COUNT AS fileCount,
           CATEGORY AS category, NOTIFICATION_SENT AS notificationSent, NOTIFICATION_DATETIME AS notificationDateTime,
           TAIL_RECEIVED AS tailReceived, UPLOAD_BY AS uploadedBy, UPLOAD_DATETIME AS UploadDateTime
         FROM TXN_MQ_MANIFEST_HEADER

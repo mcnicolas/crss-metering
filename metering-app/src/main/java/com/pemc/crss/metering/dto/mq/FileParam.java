@@ -7,7 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileParam {
 
     private Long headerID;
-    private String mspShortName;
     private String fileType;
     private MultipartFile[] file;
 

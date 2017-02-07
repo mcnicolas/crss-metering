@@ -32,7 +32,6 @@ public class FileUploadValidator implements Validator {
 
         checkHeaderID(fileParam.getHeaderID(), errors);
         checkCategory(fileParam.getHeaderID(), fileParam.getFileType(), errors);
-        checkMSPShortName(fileParam.getMspShortName(), errors);
         checkFileType(fileParam.getFileType(), fileParam.getFile(), errors);
         checkEmptyFileList(fileParam.getFile(), errors);
         checkEmptyFileContent(fileParam.getFile(), errors);
@@ -69,10 +68,6 @@ public class FileUploadValidator implements Validator {
                 break;
             }
         }
-    }
-
-    private void checkMSPShortName(String mspShortName, Errors errors) {
-        // TODO: How to access MSP Listing
     }
 
     private void checkFileType(String selectedFileType, MultipartFile[] files, Errors errors) {

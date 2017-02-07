@@ -278,7 +278,7 @@ public class HttpHandler {
         return retVal;
     }
 
-    public long sendHeader(int fileCount, String category) throws HttpConnectionException, HttpResponseException {
+    public long sendHeader(int fileCount, String category, String mspShortName) throws HttpConnectionException, HttpResponseException {
         log.debug("Sending Header Record. fileCount:{} category:{}", fileCount, category);
 
         long retVal = -1;
@@ -295,6 +295,7 @@ public class HttpHandler {
                     .object()
                     .key("fileCount").value(fileCount)
                     .key("category").value(category)
+                    .key("mspShortName").value(mspShortName)
                     .endObject()
                     .toString();
 
@@ -325,10 +326,10 @@ public class HttpHandler {
         return retVal;
     }
 
-    public void sendFiles(long headerID, String mspShortName, List<FileBean> fileList)
+    public void sendFiles(long headerID, List<FileBean> fileList)
             throws HttpResponseException, HttpConnectionException {
 
-        log.debug("Sending file. headerID:{} mspShortName:{}", headerID, mspShortName);
+        log.debug("Sending file. headerID:{} file count:{}", headerID);
 
         try {
             URIBuilder builder = new URIBuilder()
@@ -342,8 +343,7 @@ public class HttpHandler {
                     .create()
                     .setContentType(MULTIPART_FORM_DATA)
                     .setCharset(UTF_8)
-                    .addTextBody("headerID", String.valueOf(headerID))
-                    .addTextBody("mspShortName", mspShortName);
+                    .addTextBody("headerID", String.valueOf(headerID));
 
             String lastFile = "";
             for (FileBean fileBean : fileList) {

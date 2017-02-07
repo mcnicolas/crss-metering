@@ -47,10 +47,9 @@ public class MeterQuantityListener {
             key = "crss.mq.data"))
     public void processMeterQuantityFile(@Header int headerID,
                                          @Header String fileName,
-                                         @Header String mspShortName,
                                          @Payload byte[] fileContent) {
-        log.debug("Received MQ File. fileName:{} headerID:{} mspShortName:{}",
-                fileName, headerID, mspShortName);
+        log.debug("Received MQ File. fileName:{} headerID:{}",
+                fileName, headerID);
 
         String checksum = getChecksum(fileContent);
 
@@ -61,7 +60,6 @@ public class MeterQuantityListener {
         fileManifest.setFileType(getFileType(fileName));
         fileManifest.setFileSize(fileContent.length);
         fileManifest.setChecksum(checksum);
-        fileManifest.setMspShortName(mspShortName);
         fileManifest.setUploadDateTime(new Date());
 
         try {

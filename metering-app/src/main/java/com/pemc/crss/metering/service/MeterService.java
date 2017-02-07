@@ -5,6 +5,7 @@ import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.VersionData;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
+import com.pemc.crss.metering.dto.mq.HeaderParam;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
 import com.pemc.crss.metering.validator.ValidationResult;
@@ -15,7 +16,7 @@ import java.util.Map;
 
 public interface MeterService {
 
-    long saveHeader(int fileCount, String category);
+    Long saveHeader(HeaderParam headerParam);
 
     boolean isHeaderValid(long headerID);
 

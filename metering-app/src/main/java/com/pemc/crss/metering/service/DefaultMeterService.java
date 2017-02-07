@@ -7,6 +7,7 @@ import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.VersionData;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
+import com.pemc.crss.metering.dto.mq.HeaderParam;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
@@ -55,13 +56,14 @@ public class DefaultMeterService implements MeterService {
 
     @Override
     @Transactional
-    public long saveHeader(int fileCount, String category) {
+    public Long saveHeader(HeaderParam headerParam) {
         String userName = getUserName();
 
         HeaderManifest manifest = new HeaderManifest();
         manifest.setTransactionID(UUID.randomUUID().toString());
-        manifest.setFileCount(fileCount);
-        manifest.setCategory(category);
+        manifest.setFileCount(headerParam.getFileCount());
+        manifest.setCategory(headerParam.getCategory());
+        manifest.setMspShortName(headerParam.getMspShortName());
         manifest.setUploadedBy(userName);
         manifest.setUploadDateTime(new Date());
 
@@ -106,6 +108,7 @@ public class DefaultMeterService implements MeterService {
         HeaderManifest headerManifest = meteringDao.getHeaderManifest(fileManifest.getHeaderID());
 
         fileManifest.setTransactionID(headerManifest.getTransactionID());
+        fileManifest.setMspShortName(headerManifest.getMspShortName());
 
         UploadType uploadType = UploadType.valueOf(headerManifest.getCategory().toUpperCase());
         fileManifest.setUploadType(uploadType);

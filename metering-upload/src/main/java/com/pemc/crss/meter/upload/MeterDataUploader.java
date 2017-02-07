@@ -261,7 +261,7 @@ public class MeterDataUploader extends JFrame {
 
                 int counter = 0;
 
-                long headerID = httpHandler.sendHeader(selectedFiles.size(), category);
+                long headerID = httpHandler.sendHeader(selectedFiles.size(), category, mspShortName);
                 UploadData uploadData = new UploadData();
                 uploadData.setUploadType(HEADER);
                 uploadData.setHeaderID(headerID);
@@ -273,7 +273,7 @@ public class MeterDataUploader extends JFrame {
 
                 while (fileBucket.hasMoreElements()) {
                     List<FileBean> fileList = fileBucket.getFiles();
-                    httpHandler.sendFiles(headerID, mspShortName, fileList);
+                    httpHandler.sendFiles(headerID, fileList);
 
                     uploadData = new UploadData();
                     uploadData.setUploadType(UploadType.FILE);

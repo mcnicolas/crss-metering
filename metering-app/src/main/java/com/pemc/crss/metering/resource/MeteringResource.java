@@ -58,9 +58,9 @@ public class MeteringResource {
             consumes = APPLICATION_JSON_VALUE,
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<Long> uploadHeader(@Valid @RequestBody HeaderParam headerParam) {
-        log.debug("Received header record fileCount:{} category:{}", headerParam.getFileCount(), headerParam.getCategory());
+        log.debug("Received header record: {}", headerParam);
 
-        long headerID = meterService.saveHeader(headerParam.getFileCount(), headerParam.getCategory());
+        Long headerID = meterService.saveHeader(headerParam);
         log.debug("Saved manifest header: {}", headerID);
 
         return ok(headerID);
@@ -72,10 +72,9 @@ public class MeteringResource {
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> uploadFile(@ModelAttribute FileParam fileParam, BindingResult result) throws IOException {
         Long headerID = fileParam.getHeaderID();
-        String mspShortName = fileParam.getMspShortName();
         MultipartFile[] multipartFiles = fileParam.getFile();
 
-        log.debug("Received file/s headerID:{} mspShortName:{} fileCount:{}", headerID, mspShortName, multipartFiles.length);
+        log.debug("Received file/s headerID:{} fileCount:{}", headerID, multipartFiles.length);
 
         fileUploadValidator.validate(fileParam, result);
         if (result.hasErrors()) {
@@ -91,7 +90,6 @@ public class MeteringResource {
             Message message = MessageBuilder.withBody(file.getBytes())
                     .setHeader("headerID", headerID)
                     .setHeader("fileName", file.getOriginalFilename())
-                    .setHeader("mspShortName", mspShortName)
                     .setHeaderIfAbsent("Content type", file.getContentType())
                     .build();
 
