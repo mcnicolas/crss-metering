@@ -36,40 +36,40 @@ public class HeaderListValidationHelper {
     }
 
     private HeaderListValidation openTradingDate(int declarationDateConfig) {
-        HeaderListValidation headerListValidation = emptyInst();
+        HeaderListValidation validation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             Date tradingDate = headerList.get(0).getTradingDate();
             Date today = new Date();
             Date minDate = startOfDay(addDays(today, -declarationDateConfig));
             Date maxDate = startOfDay(today);
             if (tradingDate.after(maxDate) || tradingDate.before(minDate)) {
-                headerListValidation.setErrorMessage(new BcqValidationErrorMessage(CLOSED_TRADING_DATE,
+                validation.setErrorMessage(new BcqValidationErrorMessage(CLOSED_TRADING_DATE,
                         singletonList(formatLongDate(tradingDate))));
                 return false;
             }
             return true;
         };
-        headerListValidation.setPredicate(predicate);
-        return headerListValidation;
+        validation.setPredicate(predicate);
+        return validation;
     }
 
     private HeaderListValidation sameTradingDate(Date tradingDate) {
-        HeaderListValidation headerListValidation = emptyInst();
+        HeaderListValidation validation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             Date headerTradingDate = headerList.get(0).getTradingDate();
             if (tradingDate.equals(headerTradingDate)) {
                 return true;
             }
-            headerListValidation.setErrorMessage(new BcqValidationErrorMessage(DIFFERENT_TRADING_DATE));
+            validation.setErrorMessage(new BcqValidationErrorMessage(DIFFERENT_TRADING_DATE));
             return false;
         };
-        headerListValidation.setPredicate(predicate);
-        return headerListValidation;
+        validation.setPredicate(predicate);
+        return validation;
     }
 
     private HeaderListValidation validDataSize(BcqInterval interval) {
         int validBcqSize = interval.getValidNoOfRecords();
-        HeaderListValidation headerListValidation = emptyInst();
+        HeaderListValidation validation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList ->
                 headerList.stream().allMatch(header -> {
                     if (header.getDataList().size() == validBcqSize) {
@@ -77,15 +77,15 @@ public class HeaderListValidationHelper {
                     }
                     BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INCOMPLETE_ENTRIES,
                             asList(formatDate(header.getTradingDate()), header.getSellingMtn(), header.getBillingId(), String.valueOf(validBcqSize)));
-                    headerListValidation.setErrorMessage(errorMessage);
+                    validation.setErrorMessage(errorMessage);
                     return false;
                 });
-        headerListValidation.setPredicate(predicate);
-        return headerListValidation;
+        validation.setPredicate(predicate);
+        return validation;
     }
 
     private HeaderListValidation validTimeIntervals(BcqInterval interval) {
-        HeaderListValidation headerListValidation = emptyInst();
+        HeaderListValidation validation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList ->
                 headerList.stream()
                         .allMatch(header -> {
@@ -106,13 +106,13 @@ public class HeaderListValidationHelper {
                                 BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(
                                         INCORRECT_TIME_INTERVALS, asList(formatDateTime(data.getEndTime()),
                                         interval.getDescription()));
-                                headerListValidation.setErrorMessage(errorMessage);
+                                validation.setErrorMessage(errorMessage);
                                 return false;
                             }
                             return true;
                         });
-        headerListValidation.setPredicate(predicate);
-        return headerListValidation;
+        validation.setPredicate(predicate);
+        return validation;
     }
 
 }

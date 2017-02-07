@@ -3,7 +3,7 @@ package com.pemc.crss.metering.validator.bcq.helper;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
-import com.pemc.crss.metering.validator.bcq.validation.ResubmissionValidation;
+import com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,7 +14,7 @@ import java.util.function.Predicate;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqValidationError.INCOMPLETE_RESUBMISSION_ENTRIES;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
-import static com.pemc.crss.metering.validator.bcq.validation.ResubmissionValidation.emptyInst;
+import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation.emptyInst;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
@@ -24,8 +24,8 @@ public class ResubmissionValidationHelper {
 
     private final BcqService bcqService;
 
-    public ResubmissionValidation validResubmission(String sellingParticipant, Date tradingDate) {
-        ResubmissionValidation resubmissionValidation = emptyInst();
+    public HeaderListValidation validResubmission(String sellingParticipant, Date tradingDate) {
+        HeaderListValidation validation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             List<BcqHeader> missingHeaderList = getCurrentHeaderList(sellingParticipant, tradingDate).stream()
                     .filter(header -> !bcqService.isHeaderInList(header, headerList))
@@ -47,13 +47,13 @@ public class ResubmissionValidationHelper {
                 });
                 BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INCOMPLETE_RESUBMISSION_ENTRIES,
                         asList(formatDate(tradingDate), pairs.toString()));
-                resubmissionValidation.setErrorMessage(errorMessage);
+                validation.setErrorMessage(errorMessage);
                 return false;
             }
             return true;
         };
-        resubmissionValidation.setPredicate(predicate);
-        return resubmissionValidation;
+        validation.setPredicate(predicate);
+        return validation;
     }
 
     /****************************************************
