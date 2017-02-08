@@ -422,11 +422,11 @@ public class JdbcBcqDao implements BcqDao {
 
     private QueryBuilder addParams(QueryBuilder queryBuilder, Map<String, String> mapParams) {
         Long headerId = mapParams.get("headerId") == null ? null : parseLong(mapParams.get("headerId"));
+        Date tradingDate = mapParams.get("tradingDate") == null ? null : parseDate(mapParams.get("tradingDate"));
         String sellingMtn = mapParams.get("sellingMtn") == null ? "" : mapParams.get("sellingMtn");
         String billingId = mapParams.get("billingId") == null ? "" : mapParams.get("billingId");
         String sellingParticipant = mapParams.get("sellingParticipant") == null ? "" : mapParams.get("sellingParticipant");
         String buyingParticipant = mapParams.get("buyingParticipant") == null ? "" : mapParams.get("buyingParticipant");
-        Date tradingDate = parseDate(mapParams.get("tradingDate"));
         String status = mapParams.get("status") == null ? null : mapParams.get("status");
         boolean expired = mapParams.get("expired") != null;
         if (headerId != null) {
