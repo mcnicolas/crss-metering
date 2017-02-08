@@ -145,7 +145,10 @@ public class BcqResource {
             log.debug("[REST-BCQ] No found header with ID: {}", headerId);
             return null;
         }
-        BcqHeaderDisplay headerDisplay = new BcqHeaderDisplay(bcqService.findHeader(headerId));
+        if (header.getStatus() == VOID) {
+            header = bcqService.findSameHeadersWithStatusNotIn(header, singletonList(VOID)).get(0);
+        }
+        BcqHeaderDisplay headerDisplay = new BcqHeaderDisplay(bcqService.findHeader(header.getHeaderId()));
         log.debug("[REST-BCQ] Found header display: {}", headerDisplay);
         return headerDisplay;
     }
@@ -159,7 +162,7 @@ public class BcqResource {
             log.debug("[REST-BCQ] No found header with ID: {}", headerId);
             return null;
         }
-        List<BcqHeader> prevHeaders = bcqService.findPrevHeadersWithStatusNotIn(header, singletonList(VOID));
+        List<BcqHeader> prevHeaders = bcqService.findSameHeadersWithStatusNotIn(header, singletonList(VOID));
         List<BcqHeaderDisplay> prevHeadersDisplay = prevHeaders.stream().map(BcqHeaderDisplay::new).collect(toList());
         log.debug("[REST-BCQ] Found {} prev headers display: {}", prevHeadersDisplay.size());
         return prevHeadersDisplay;

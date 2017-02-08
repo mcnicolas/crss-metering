@@ -216,13 +216,13 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public List<BcqHeader> findPrevHeadersWithStatusIn(BcqHeader header, List<BcqStatus> statuses) {
-        return getPrevHeadersWithStatus(header, statuses, IN);
+    public List<BcqHeader> findSameHeadersWithStatusIn(BcqHeader header, List<BcqStatus> statuses) {
+        return getSameHeadersWithStatus(header, statuses, IN);
     }
 
     @Override
-    public List<BcqHeader> findPrevHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses) {
-        return getPrevHeadersWithStatus(header, statuses, NOT_IN);
+    public List<BcqHeader> findSameHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses) {
+        return getSameHeadersWithStatus(header, statuses, NOT_IN);
     }
 
     @Override
@@ -291,7 +291,7 @@ public class JdbcBcqDao implements BcqDao {
             } else {
                 statusToCheck = asList(CONFIRMED, SETTLEMENT_READY);
             }
-            List<BcqHeader> prevHeaders = findPrevHeadersWithStatusIn(header, statusToCheck);
+            List<BcqHeader> prevHeaders = findSameHeadersWithStatusIn(header, statusToCheck);
             BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
             updateHeaderStatusToVoid(prevHeader);
         }
@@ -364,7 +364,7 @@ public class JdbcBcqDao implements BcqDao {
         long deadlineConfigInSeconds = DAYS.toSeconds(getDeadlineConfig());
         KeyHolder keyHolder = new GeneratedKeyHolder();
         header.setDeadlineDate(new Date(tradingDateInMillis + SECONDS.toMillis(deadlineConfigInSeconds - 1)));
-        List<BcqHeader> prevHeaders = findPrevHeadersWithStatusIn(header,
+        List<BcqHeader> prevHeaders = findSameHeadersWithStatusIn(header,
                 asList(FOR_NULLIFICATION, FOR_CONFIRMATION, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATED));
         BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
         updateHeaderStatusToVoid(prevHeader);
@@ -375,8 +375,8 @@ public class JdbcBcqDao implements BcqDao {
         return keyHolder.getKey().longValue();
     }
 
-    private List<BcqHeader> getPrevHeadersWithStatus(BcqHeader header, List<BcqStatus> statuses,
-                                                       ComparisonOperator operator) {
+    private List<BcqHeader> getSameHeadersWithStatus(BcqHeader header, List<BcqStatus> statuses,
+                                                     ComparisonOperator operator) {
 
         log.debug("[DAO-BCQ] Finding previous header of: {}", header);
         QueryData queryData = new QueryBuilder()

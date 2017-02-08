@@ -25,9 +25,9 @@ public interface BcqDao {
 
     List<BcqHeader> findAllHeaders(Map<String, String> params);
 
-    List<BcqHeader> findPrevHeadersWithStatusIn(BcqHeader header, List<BcqStatus> statuses);
+    List<BcqHeader> findSameHeadersWithStatusIn(BcqHeader header, List<BcqStatus> statuses);
 
-    List<BcqHeader> findPrevHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses);
+    List<BcqHeader> findSameHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses);
 
     BcqHeader findHeader(long headerId);
 

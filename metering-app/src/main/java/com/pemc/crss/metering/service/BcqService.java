@@ -23,7 +23,7 @@ public interface BcqService {
 
     List<BcqHeader> findAllHeaders(Map<String, String> mapParams);
 
-    List<BcqHeader> findPrevHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses);
+    List<BcqHeader> findSameHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses);
 
     boolean isHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList);
 
