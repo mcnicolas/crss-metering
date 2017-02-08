@@ -529,7 +529,7 @@ public class JdbcBcqDao implements BcqDao {
         for (int i = 0; i < tradingDateList.size(); i ++) {
             sourceArray[i] = new MapSqlParameterSource()
                     .addValue("eventId", eventId)
-                    .addValue("tradingDate", tradingDateList.get(i));
+                    .addValue("tradingDate", DateTimeUtils.startOfDay(tradingDateList.get(i)));
         }
         namedParameterJdbcTemplate.batchUpdate(insertEventTradingDate, sourceArray);
         log.debug("[DAO-BCQ] Saved event trading date list");
