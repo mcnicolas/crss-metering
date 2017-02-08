@@ -40,7 +40,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                 .withCode(NTF_BCQ_VALIDATION_SELLER.toString())
                 .withRecipientId(sellerDetails.getUserId())
                 .addLoad("submittedDate", formattedSubmittedDate)
-                .addLoad("errorMessage", declaration.getValidationResult().getErrorMessage())
+                .addLoad("errorMessage", declaration.getValidationResult().getErrorMessage().getFormattedMessage())
                 .build()));
         eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
                 .withCode(NTF_BCQ_VALIDATION_DEPT.toString())
@@ -48,7 +48,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                 .addLoad("submittedDate", formattedSubmittedDate)
                 .addLoad("sellerName", sellerDetails.getName())
                 .addLoad("sellerShortName", sellerDetails.getShortName())
-                .addLoad("errorMessage", declaration.getValidationResult().getErrorMessage())
+                .addLoad("errorMessage", declaration.getValidationResult().getErrorMessage().getFormattedMessage())
                 .build()));
     }
 
@@ -92,7 +92,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                 .withRecipientDeptCode(DEPT_BILLING)
                 .addLoad("submittedDate", formattedSubmittedDate)
                 .addLoad("settlementUser", getSettlementName())
-                .addLoad("errorMessage", declaration.getValidationResult().getErrorMessage())
+                .addLoad("errorMessage", declaration.getValidationResult().getErrorMessage().getFormattedMessage())
                 .build()));
     }
 
