@@ -176,8 +176,8 @@ public class BcqServiceImpl implements BcqService {
             String uniqueParticipants = result.stream().map(BcqEventValidationData::getTradingParticipant)
                     .distinct().collect(Collectors.joining(", "));
 
-            throw new RuntimeException("The following participants have duplicate trading dates from another special event: "
-                    + uniqueParticipants);
+            throw new RuntimeException("The following participants have duplicate trading dates from another special event: <b>"
+                    + uniqueParticipants + "</b>");
         }
 
         return bcqDao.saveSpecialEvent(specialEvent);
