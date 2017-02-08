@@ -3,6 +3,7 @@ package com.pemc.crss.metering.dao;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.BcqUpdateType;
+import com.pemc.crss.metering.dao.exception.InvalidStateException;
 import com.pemc.crss.metering.dao.query.ComparisonOperator;
 import com.pemc.crss.metering.dao.query.QueryBuilder;
 import com.pemc.crss.metering.dao.query.QueryData;
@@ -50,6 +51,7 @@ import static com.pemc.crss.metering.dao.query.ComparisonOperator.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
+import static java.lang.String.format;
 import static java.sql.Types.VARCHAR;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -280,8 +282,9 @@ public class JdbcBcqDao implements BcqDao {
     @Override
     public void updateHeaderStatus(long headerId, BcqStatus status) {
         log.debug("[DAO-BCQ] Updating status of header to {} with ID: {}", status, headerId);
+        BcqHeader header = findHeader(headerId);
+        validateUpdateStatus(header.getStatus(), status);
         if (status == CONFIRMED || status == SETTLEMENT_READY) {
-            BcqHeader header = findHeader(headerId);
             List<BcqStatus> statusToCheck;
             if (status == CONFIRMED) {
                 statusToCheck = singletonList(CONFIRMED);
@@ -314,6 +317,10 @@ public class JdbcBcqDao implements BcqDao {
     public List<BcqSpecialEventList> getAllSpecialEvents() {
         log.debug("[DAO-BCQ] Querying all special Events");
         return namedParameterJdbcTemplate.query(bcqEventList, new BcqSpecialEventMapper());
+    }
+
+    public List<BcqSpecialEventList> getAllSpecialEvents(Map<String, String> mapParams) {
+        return null;
     }
 
     @Override
@@ -416,7 +423,6 @@ public class JdbcBcqDao implements BcqDao {
                 .from(headerJoinFile)
                 .where(uniqueHeader);
         QueryData queryData = addParams(queryBuilder, mapParams).build();
-        log.debug("QUERY: {}", queryData.getSql());
         return namedParameterJdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Integer.class);
     }
 
@@ -466,6 +472,54 @@ public class JdbcBcqDao implements BcqDao {
             queryBuilder = queryBuilder.and().filter(new QueryFilter("STATUS", status));
         }
         return queryBuilder;
+    }
+
+    private void validateUpdateStatus(BcqStatus oldStatus, BcqStatus newStatus) {
+        if (asList(VOID, NULLIFIED, CONFIRMED, CANCELLED).contains(oldStatus)) {
+            String pastAction = "";
+            String pastActor = "";
+            String currentAction = "";
+            switch (oldStatus) {
+                case CANCELLED:
+                    pastAction = "cancelled";
+                    pastActor = "seller";
+                    break;
+                case CONFIRMED:
+                    if (newStatus == CANCELLED) {
+                        return;
+                    }
+                    pastAction = "confirmed";
+                    pastActor = "buyer";
+                    break;
+                case NULLIFIED:
+                    pastAction = "nullified";
+                    pastActor = "buyer";
+                    break;
+                default:
+                    break;
+            }
+            switch (newStatus) {
+                case CANCELLED:
+                    currentAction = "cancel";
+                    break;
+                case CONFIRMED:
+                    currentAction = "confirm";
+                    break;
+                case NULLIFIED:
+                    currentAction = "nullify";
+                    break;
+                default:
+                    break;
+            }
+
+            if (oldStatus == VOID) {
+                throw new InvalidStateException(format("Unable to %s BCQ. BCQ declaration has a new version.",
+                        currentAction));
+            } else {
+                throw new InvalidStateException(format("Unable to %s BCQ. BCQ declaration has already been %s by the %s",
+                        currentAction, pastAction, pastActor));
+            }
+        }
     }
 
     private void saveEventTradingDates(List<Date> tradingDateList, long eventId) {
