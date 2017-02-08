@@ -4,6 +4,7 @@ import com.pemc.crss.metering.utils.BcqDateUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,13 +13,14 @@ import java.util.stream.Collectors;
 public class BcqSpecialEventList extends BcqSpecialEvent {
 
     private List<String> tradingParticipantsLabel;
-
-    public String getDeadlineDateStr() {
-        return BcqDateUtils.formatDate(getDeadlineDate());
-    }
+    private Date createdDate;
 
     public String getTradingDatesStr() {
         return getTradingDates().stream().map(BcqDateUtils::formatDate).collect(Collectors.joining(", "));
+    }
+
+    public String getCreatedDateTime() {
+        return BcqDateUtils.formatDateTime12Hr(getCreatedDate());
     }
 
     public String getTradingParticipantsStr() {

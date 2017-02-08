@@ -360,6 +360,7 @@ bcq:
     list: >
       SELECT
         se.event_id,
+        se.created_date,
         se.deadline_date,
         se.remarks,
         ARRAY_AGG(DISTINCT ep.participant_name || ' (' || ep.trading_participant || ')') AS trading_participants,
@@ -370,4 +371,4 @@ bcq:
         INNER JOIN txn_bcq_event_trading_date etd
           ON se.event_id = etd.event_id
       GROUP BY se.event_id, se.deadline_date, se.remarks
-      ORDER BY se.deadline_date ASC, se.created_date DESC;
+      ORDER BY se.created_date DESC;

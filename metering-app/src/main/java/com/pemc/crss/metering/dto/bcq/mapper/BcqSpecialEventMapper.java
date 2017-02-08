@@ -15,6 +15,7 @@ public class BcqSpecialEventMapper implements RowMapper<BcqSpecialEventList> {
         BcqSpecialEventList specialEvent = new BcqSpecialEventList();
         specialEvent.setEventId(rs.getLong("event_id"));
         specialEvent.setDeadlineDate(rs.getDate("deadline_date"));
+        specialEvent.setCreatedDate(rs.getTimestamp("created_date"));
         specialEvent.setRemarks(rs.getString("remarks"));
         specialEvent.setTradingDates(ResultSetUtils.getListFromRsArray(rs, "trading_dates", Date.class));
         specialEvent.setTradingParticipantsLabel(ResultSetUtils.getListFromRsArray(rs, "trading_participants", String.class));
