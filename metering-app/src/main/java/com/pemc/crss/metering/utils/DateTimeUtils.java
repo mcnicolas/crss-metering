@@ -92,11 +92,10 @@ public final class DateTimeUtils {
     public static Date endOfDay(Date date) {
         Calendar retVal = Calendar.getInstance();
         retVal.setTime(date);
-        retVal.add(DAY_OF_MONTH, 1);
-        retVal.set(HOUR_OF_DAY, 0);
-        retVal.set(MINUTE, 0);
-        retVal.set(SECOND, 0);
-        retVal.set(MILLISECOND, 0);
+        retVal.set(HOUR_OF_DAY, 23);
+        retVal.set(MINUTE, 59);
+        retVal.set(SECOND, 59);
+        retVal.set(MILLISECOND, 999);
 
         return retVal.getTime();
     }

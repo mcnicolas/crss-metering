@@ -328,7 +328,7 @@ public class JdbcBcqDao implements BcqDao {
         log.debug("[DAO-BCQ] Saving new special event");
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource source = new MapSqlParameterSource()
-                .addValue("deadlineDate", specialEvent.getDeadlineDate())
+                .addValue("deadlineDate", DateTimeUtils.endOfDay(specialEvent.getDeadlineDate()))
                 .addValue("remarks", specialEvent.getRemarks())
                 .addValue("createdDate", DateTimeUtils.now());
         namedParameterJdbcTemplate.update(insertEvent, source, keyHolder, new String[]{"event_id"});
