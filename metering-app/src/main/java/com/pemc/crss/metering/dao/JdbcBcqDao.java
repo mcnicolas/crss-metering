@@ -336,10 +336,6 @@ public class JdbcBcqDao implements BcqDao {
         return namedParameterJdbcTemplate.query(bcqEventList, new BcqSpecialEventMapper());
     }
 
-    public List<BcqSpecialEventList> getAllSpecialEvents(Map<String, String> mapParams) {
-        return null;
-    }
-
     @Override
     public long saveSpecialEvent(BcqSpecialEvent specialEvent) {
         log.debug("[DAO-BCQ] Saving new special event");
