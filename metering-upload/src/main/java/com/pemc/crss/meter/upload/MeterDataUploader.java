@@ -107,6 +107,19 @@ public class MeterDataUploader extends JFrame {
         }
     }
 
+    public void updateFilePath(String path) {
+        try {
+            properties.put("path", path);
+            properties.store(new FileWriter("config.properties"), "Updated file path");
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    public String getFilePath() {
+        return (String) properties.get("path");
+    }
+
     public void configureComponents() {
 //        centerOnScreen();
 

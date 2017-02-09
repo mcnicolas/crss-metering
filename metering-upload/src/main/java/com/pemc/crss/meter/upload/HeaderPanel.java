@@ -24,6 +24,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -340,7 +341,8 @@ public class HeaderPanel extends JPanel {
     }//GEN-END:initComponents
 
     private void selectFilesActionPerformed(ActionEvent evt) {//GEN-FIRST:event_selectFilesActionPerformed
-        JFileChooser fileChooser = new JFileChooser();
+        String path = parent.getFilePath();
+        JFileChooser fileChooser = new JFileChooser(path);
 
         String selectedCategory = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
         if (equalsIgnoreCase(selectedCategory, "DAILY")) {
@@ -359,6 +361,7 @@ public class HeaderPanel extends JPanel {
         if (action == APPROVE_OPTION) {
             FileNameFilter fileFilter = (FileNameFilter) fileChooser.getFileFilter();
 
+            updateFilePath(fileChooser.getSelectedFiles());
             List<FileBean> selectedFiles = retrieveFileListing(fileChooser.getSelectedFiles(), fileFilter.getExtensions());
 
             if (selectedFiles.isEmpty()) {
@@ -378,6 +381,10 @@ public class HeaderPanel extends JPanel {
             }
         }
     }//GEN-LAST:event_selectFilesActionPerformed
+
+    private void updateFilePath(File[] selectedFiles) {
+        parent.updateFilePath(selectedFiles[0].getParent());
+    }
 
     private void uploadActionPerformed(ActionEvent evt) {//GEN-FIRST:event_uploadActionPerformed
         String category = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
