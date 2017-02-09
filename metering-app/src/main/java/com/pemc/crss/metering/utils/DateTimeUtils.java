@@ -8,6 +8,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -123,10 +124,15 @@ public final class DateTimeUtils {
                 && calendar1.get(DATE) == calendar2.get(DATE);
     }
 
-    public static Long parseDateAsLong(String strDate, String time) {
-        LocalDateTime date = LocalDateTime.parse(strDate + " " + time, DATE_TIME_FORMATTER);
+    public static Long parseDateAsLong(String strDate, String time) throws com.pemc.crss.metering.parser.ParseException {
+        try {
+            LocalDateTime date = LocalDateTime.parse(strDate + " " + time, DATE_TIME_FORMATTER);
 
-        return Long.parseLong(date.format(READING_DATETIME));
+            return Long.parseLong(date.format(READING_DATETIME));
+        } catch (DateTimeParseException e) {
+            log.error(e.getMessage(), e);
+            throw new com.pemc.crss.metering.parser.ParseException("Incorrect Date/Time Format.");
+        }
     }
 
     public static String dateToString(Date date) {

@@ -23,6 +23,7 @@ import java.util.List;
 
 import static com.pemc.crss.metering.utils.DateTimeUtils.parseDateAsLong;
 import static java.math.RoundingMode.HALF_UP;
+import static org.apache.commons.lang3.math.NumberUtils.isParsable;
 import static org.supercsv.prefs.CsvPreference.STANDARD_PREFERENCE;
 
 @Slf4j
@@ -84,7 +85,7 @@ public class MeterQuantityCSVReader implements QuantityReader {
         return meterDataHeader;
     }
 
-    private MeterDataDetail populateBean(List<String> row) {
+    private MeterDataDetail populateBean(List<String> row) throws ParseException {
         MeterDataDetail retVal = new MeterDataDetail();
 
         retVal.setSein(row.get(0));
@@ -103,11 +104,16 @@ public class MeterQuantityCSVReader implements QuantityReader {
         return retVal;
     }
 
-    private BigDecimal getNumericValue(List<String> row, int index) {
+    private BigDecimal getNumericValue(List<String> row, int index) throws ParseException {
         BigDecimal retVal = null;
 
-        if (row.size() > index && NumberUtils.isParsable(row.get(index))) {
-            retVal = new BigDecimal(row.get(index)).setScale(17, HALF_UP);
+        if (row.size() > index) {
+            String value = row.get(index);
+            if (isParsable(value)) {
+                retVal = new BigDecimal(value).setScale(17, HALF_UP);
+            } else {
+                throw new ParseException("Meter reading is not a number.");
+            }
         }
 
         return retVal;

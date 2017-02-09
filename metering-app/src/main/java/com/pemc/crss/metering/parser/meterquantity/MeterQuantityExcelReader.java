@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.pemc.crss.metering.utils.DateTimeUtils.parseDateAsLong;
-import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.HALF_UP;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 
@@ -71,7 +70,13 @@ public class MeterQuantityExcelReader implements QuantityReader {
             retVal.setHeader(header);
             retVal.setDetails(meterDataList);
         } catch (Exception e) {
-            throw new ParseException(e.getMessage(), e);
+            String message = e.getMessage();
+
+            if (e instanceof NumberFormatException) {
+                message = "Meter reading is not a number.";
+            }
+
+            throw new ParseException(message, e);
         } finally {
             closeQuietly(inputStream);
         }
@@ -79,7 +84,7 @@ public class MeterQuantityExcelReader implements QuantityReader {
         return retVal;
     }
 
-    private MeterDataDetail populateBean(Row row) {
+    private MeterDataDetail populateBean(Row row) throws ParseException {
         MeterDataDetail retVal = new MeterDataDetail();
 
         retVal.setSein(row.getCell(0).getStringCellValue());
@@ -137,7 +142,7 @@ public class MeterQuantityExcelReader implements QuantityReader {
                     retVal = String.valueOf(cell.getBooleanCellValue());
                     break;
                 case ERROR:
-                    retVal = new String(new byte[] {cell.getErrorCellValue()});
+                    retVal = new String(new byte[]{cell.getErrorCellValue()});
                     break;
                 case BLANK:
                 case STRING:
@@ -167,10 +172,12 @@ public class MeterQuantityExcelReader implements QuantityReader {
         String time = formatter.formatCellValue(cell);
 
         return StringUtils.leftPad(time, 5, "0");
+
+        // TODO: Trap parsing exception and throw "Incorrect Time Format. Format should be HH:mm"
     }
 
     private BigDecimal getNumericValue(Cell cell) {
-        BigDecimal retVal = ZERO;
+        BigDecimal retVal = null;
 
         if (cell != null) {
             switch (CellType.forInt(cell.getCellType())) {
@@ -180,9 +187,11 @@ public class MeterQuantityExcelReader implements QuantityReader {
                 case NUMERIC:
                     retVal = new BigDecimal(String.valueOf(cell.getNumericCellValue()));
             }
+
+            retVal.setScale(17, HALF_UP);
         }
 
-        return retVal.setScale(17, HALF_UP);
+        return retVal;
     }
 
 }
