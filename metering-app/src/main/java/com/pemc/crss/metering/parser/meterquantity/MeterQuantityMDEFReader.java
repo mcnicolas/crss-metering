@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.pemc.crss.metering.parser.ParserUtil.parseText;
+import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.HALF_UP;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static java.util.Calendar.MINUTE;
@@ -37,6 +38,8 @@ public class MeterQuantityMDEFReader implements QuantityReader {
 
     private int minuteInterval = 15;
     private static final int MINUTES_IN_HOUR = 60;
+    private boolean channelStatusPresent;
+    private boolean intervalStatusPresent;
 
     // TODO: UGLY CODE. NEED TO OPTIMIZE!
     @Override
@@ -81,8 +84,8 @@ public class MeterQuantityMDEFReader implements QuantityReader {
 
                         BigDecimal meterReading = meterReadingList.get(i);
 
-                        int channelStatus = channelStatusList.get(i);
-                        int intervalStatus = intervalStatusList.get(i);
+                        Integer channelStatus = channelStatusList.get(i);
+                        Integer intervalStatus = intervalStatusList.get(i);
 
                         UnitOfMeasure uom = UnitOfMeasure.fromCode(channel.getMeterNo());
 
@@ -175,14 +178,14 @@ public class MeterQuantityMDEFReader implements QuantityReader {
 
     public MDEFMeterData readMDEF(InputStream inputStream) throws IOException {
 
-        MDEFMeterData MDEFMeterData = new MDEFMeterData();
+        MDEFMeterData mdefMeterData = new MDEFMeterData();
 
         try (InputStream data = new BufferedInputStream(inputStream)) {
             byte[] buffer = new byte[RECORD_BLOCK_SIZE];
 
             String channelHeaderTaStop = "";
 
-            MDEFChannelHeader MDEFChannelHeader = null;
+            MDEFChannelHeader mdefChannelHeader = null;
 
             while (data.read(buffer, 0, RECORD_BLOCK_SIZE) >= 0) {
 
@@ -191,37 +194,42 @@ public class MeterQuantityMDEFReader implements QuantityReader {
                 // TODO: Change to strategy pattern
                 switch (recordCode) {
                     case METER_HEADER:
-                        MDEFChannelHeader = null;
+                        mdefChannelHeader = null;
 
-                        MDEFMeterData.setMDEFHeader(readMeterHeader(buffer));
+                        mdefMeterData.setMDEFHeader(readMeterHeader(buffer));
 
                         break;
                     case CHANNEL_HEADER:
-                        MDEFChannelHeader = readChannelHeader(buffer);
-                        MDEFMeterData.addChannel(MDEFChannelHeader);
+                        mdefChannelHeader = readChannelHeader(buffer);
 
-                        intervalStartDateForChannel = MDEFChannelHeader.getStartTime();
-                        channelHeaderTaStop = MDEFChannelHeader.getStopTime();
-                        int channelIntervalPerHour = MDEFChannelHeader.getIntervalPerHour();
+                        channelStatusPresent = mdefChannelHeader.isChannelStatusPresent();
+                        intervalStatusPresent = mdefChannelHeader.isIntervalStatusPresent();
+
+                        mdefMeterData.addChannel(mdefChannelHeader);
+
+                        intervalStartDateForChannel = mdefChannelHeader.getStartTime();
+                        channelHeaderTaStop = mdefChannelHeader.getStopTime();
+                        int channelIntervalPerHour = mdefChannelHeader.getIntervalPerHour();
 
                         minuteInterval = MINUTES_IN_HOUR / channelIntervalPerHour;
 
                         break;
                     case INTERVAL_DATA:
-                        MDEFIntervalData MDEFIntervalData = readIntervalData(buffer, intervalStartDateForChannel, channelHeaderTaStop);
+                        MDEFIntervalData mdefIntervalData = readIntervalData(buffer, intervalStartDateForChannel, channelHeaderTaStop,
+                                channelStatusPresent, intervalStatusPresent);
 
-                        if (MDEFIntervalData != null && MDEFChannelHeader != null) {
-                            MDEFChannelHeader.addInterval(MDEFIntervalData);
+                        if (mdefIntervalData != null && mdefChannelHeader != null) {
+                            mdefChannelHeader.addInterval(mdefIntervalData);
                         }
 
                         break;
                     case TRAILER_RECORD:
                     default:
-                        MDEFMeterData.setMDEFTrailerRecord(readTrailer(buffer));
+                        mdefMeterData.setMDEFTrailerRecord(readTrailer(buffer));
                 }
             }
 
-            return MDEFMeterData;
+            return mdefMeterData;
         }
     }
 
@@ -282,7 +290,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
     }
 
     // TODO: Use of intervalStartDateForChannel has a side-effect. Need to refactor
-    private MDEFIntervalData readIntervalData(byte[] buffer, String intervalStartDate, String channelHeaderTaStop) {
+    private MDEFIntervalData readIntervalData(byte[] buffer, String intervalStartDate, String channelHeaderTaStop, boolean channelStatusPresent, boolean intervalStatusPresent) {
         MDEFIntervalData retVal = new MDEFIntervalData();
 
         List<BigDecimal> meterReadings = new ArrayList<>();
@@ -327,16 +335,24 @@ public class MeterQuantityMDEFReader implements QuantityReader {
                 break;
             }
 
-            BigDecimal value = new BigDecimal(byteBuffer.getFloat());
-            meterReadings.add(value.setScale(17, HALF_UP));
-
-            if (byteBuffer.hasRemaining()) {
-                channelStatusList.add((int) byteBuffer.getChar());
+            BigDecimal value = ZERO;
+            float floatValue = byteBuffer.getFloat();
+            if (floatValue != 0) {
+                value = new BigDecimal(floatValue).setScale(17, HALF_UP);
             }
+            meterReadings.add(value);
 
-            if (byteBuffer.hasRemaining()) {
-                intervalStatusList.add((int) byteBuffer.getChar());
+            Integer channelStatus = null;
+            if (channelStatusPresent) {
+                channelStatus = (int) byteBuffer.getChar();
             }
+            channelStatusList.add(channelStatus);
+
+            Integer intervalStatus = null;
+            if (intervalStatusPresent) {
+                intervalStatus = (int) byteBuffer.getChar();
+            }
+            intervalStatusList.add(intervalStatus);
 
             readingDate = format.format(cal.getTime());
             readingDates.add(readingDate);

@@ -24,7 +24,7 @@ public class MeterQuantityMDEFReaderTest {
         // given
         String[][] files = new String[][] {
                 {"normal_mdef_01.mde", "1090"},
-                {"normal_mdef_02.mde", "168"},
+                {"normal_mdef_02.mde", "224"},
                 {"normal_mdef_03.mde", "69"},
                 {"normal_mdef_04.mde", "117"}
         };
