@@ -8,8 +8,10 @@ import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay2;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
 import org.springframework.data.domain.Page;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -44,5 +46,7 @@ public interface BcqService {
     List<BcqSpecialEventList> getSpecialEvents();
 
     long saveSpecialEvent(BcqSpecialEvent specialEvent);
+
+    List<BcqSpecialEventParticipant> findEventParticipantsByTradingDate(Date tradingDate);
 
 }

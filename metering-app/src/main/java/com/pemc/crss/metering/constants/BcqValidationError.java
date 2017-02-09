@@ -1,5 +1,9 @@
 package com.pemc.crss.metering.constants;
 
+import java.util.List;
+
+import static java.util.Arrays.asList;
+
 public enum BcqValidationError {
 
     INVALID_CSV_FILE("Invalid CSV file."),
@@ -44,7 +48,10 @@ public enum BcqValidationError {
     REFERENCE_MTN_UNREGISTERED("Unregistered reference MTN. Reference MTN <b>%s</b> does not exist."),
     REFERENCE_MTN_NOT_IN_CONTRACT("Unregistered reference MTN. "
             + "Reference MTN <b>%s</b> is not registered under contract of "
-            + "Seller <b>%s (%s)</b> and Buyer <b>%s (%s)</b>.");
+            + "Seller <b>%s (%s)</b> and Buyer <b>%s (%s)</b>."),
+    NO_SPECIAL_EVENT_FOUND(""),
+    PARTICIPANTS_NOT_PRESENT_IN_SPECIAL_EVENT("Following participant/s are not included in the special event for "
+            + "the trading date of %s.<br />%s");
 
     private final String errorMessage;
 
@@ -55,5 +62,8 @@ public enum BcqValidationError {
     public String getErrorMessage() {
         return errorMessage;
     }
+
+    public static List<BcqValidationError> CRSS_SIDE_ERRORS = asList(SELLING_MTN_UNREGISTERED, SELLING_MTN_NOT_OWNED,
+            BILLING_ID_NOT_EXIST, NO_ACTIVE_CONTRACT, REFERENCE_MTN_UNREGISTERED, REFERENCE_MTN_NOT_IN_CONTRACT);
 
 }

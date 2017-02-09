@@ -354,6 +354,24 @@ public class JdbcBcqDao implements BcqDao {
                 new BeanPropertyRowMapper<>(BcqEventValidationData.class));
     }
 
+    @Override
+    public List<BcqSpecialEventParticipant> findEventParticipantsByTradingDate(Date tradingDate) {
+        log.debug("[DAO-BCQ] Finding event participants with trading date: {}", tradingDate);
+        QueryData queryData = new QueryBuilder()
+                .select()
+                .column("TRADING_PARTICIPANT").as("SHORT_NAME")
+                .column("PARTICIPANT_NAME")
+                .from("TXN_BCQ_SPECIAL_EVENT SE"
+                        + " INNER JOIN TXN_BCQ_EVENT_PARTICIPANT EP ON SE.EVENT_ID = EP.EVENT_ID"
+                        + " INNER JOIN TXN_BCQ_EVENT_TRADING_DATE ETD ON SE.EVENT_ID = ETD.EVENT_ID")
+                .where()
+                .filter(new QueryFilter("ETD.TRADING_DATE", tradingDate))
+                .build();
+        log.debug("[DAO-BCQ] Finding event query: {}", queryData.getSql());
+        return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
+                new BeanPropertyRowMapper<>(BcqSpecialEventParticipant.class));
+    }
+
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/

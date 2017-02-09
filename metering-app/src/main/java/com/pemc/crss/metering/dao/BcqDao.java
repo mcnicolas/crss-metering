@@ -9,6 +9,7 @@ import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
 import org.springframework.data.domain.Page;
 
 import java.util.Date;
@@ -43,5 +44,7 @@ public interface BcqDao {
 
     List<BcqEventValidationData> checkDuplicateParticipantTradingDates(List<String> tradingParticipants,
                                                                        List<Date> tradingDates);
+
+    List<BcqSpecialEventParticipant> findEventParticipantsByTradingDate(Date tradingDate);
 
 }

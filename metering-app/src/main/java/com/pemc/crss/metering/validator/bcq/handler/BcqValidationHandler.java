@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.validator.bcq.handler;
 
 import com.pemc.crss.metering.constants.BcqInterval;
+import com.pemc.crss.metering.constants.BcqValidationError;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.validator.bcq.*;
@@ -22,6 +23,7 @@ import static com.pemc.crss.metering.constants.BcqInterval.FIVE_MINUTES_PERIOD;
 import static com.pemc.crss.metering.constants.BcqInterval.fromDescription;
 import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
 import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
+import static com.pemc.crss.metering.constants.BcqValidationError.*;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static java.lang.Integer.parseInt;
 import static java.math.BigDecimal.ROUND_HALF_UP;
@@ -29,6 +31,7 @@ import static java.math.BigDecimal.valueOf;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.ListUtils.union;
 
 @Slf4j
 @Component
@@ -43,6 +46,7 @@ public class BcqValidationHandler {
 
     private final CsvValidator csvValidator;
     private final HeaderListValidator headerListValidator;
+    private final SpecialEventValidator specialEventValidator;
     private final ResubmissionValidator resubmissionValidator;
     private final OverrideValidator overrideValidator;
     private final ResourceTemplate resourceTemplate;
@@ -60,7 +64,18 @@ public class BcqValidationHandler {
         BcqPopulator populator = new BcqPopulator();
         List<BcqHeader> headerList = populator.populate(csv, interval);
         validationResult = headerListValidator.validate(headerList, interval);
+
         if (validationResult.getStatus() == REJECTED) {
+            if (validationResult.getErrorMessage().getValidationError() == CLOSED_TRADING_DATE) {
+                BcqDeclaration specialEventDeclaration = processAndValidateForSpecialEvent(headerList, declaration,
+                        sellerDetails, interval);
+                BcqValidationError specialEventDeclarationError = specialEventDeclaration.getValidationResult()
+                        .getErrorMessage().getValidationError();
+                if (!union(CRSS_SIDE_ERRORS, singletonList(NO_SPECIAL_EVENT_FOUND))
+                        .contains(specialEventDeclarationError)) {
+                    return specialEventDeclaration;
+                }
+            }
             return declaration.withValidationResult(validationResult);
         }
 
@@ -71,22 +86,45 @@ public class BcqValidationHandler {
 
         headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
 
-        validationResult = resubmissionValidator.validate(headerList,
-                sellerDetails.getShortName(),
+        validationResult = resubmissionValidator.validate(headerList, sellerDetails.getShortName(),
                 headerList.get(0).getTradingDate());
         if (validationResult.getStatus() == REJECTED) {
             return declaration.withValidationResult(validationResult);
         }
 
-        if (interval != FIVE_MINUTES_PERIOD) {
-            int intervalConfig = getIntervalConfig();
-            headerList.forEach(header -> {
-                List<BcqData> dividedDataList = new ArrayList<>();
-                header.getDataList().forEach(data ->
-                        dividedDataList.addAll(divideDataByInterval(data, interval, intervalConfig)));
-                header.setDataList(dividedDataList);
-            });
+        headerList = divideDataOfHeaderList(headerList, interval);
+
+        List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
+        headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
+        return declaration.withHeaderDetailsList(headerDetailsList);
+    }
+
+    private BcqDeclaration processAndValidateForSpecialEvent(List<BcqHeader> headerList, BcqDeclaration declaration,
+                                                             ParticipantSellerDetails sellerDetails,
+                                                             BcqInterval interval) {
+
+        BcqValidationResult validationResult;
+        BcqParticipantDetails participantDetails = getAndValidate(getUniqueItems(headerList));
+        if (participantDetails.getValidationResult().getStatus() == REJECTED) {
+            return declaration.withValidationResult(participantDetails.getValidationResult());
         }
+
+        headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
+
+        specialEventValidator.validate(headerList);
+
+        validationResult = specialEventValidator.validate(headerList);
+        if (validationResult.getStatus() == REJECTED) {
+            return declaration.withValidationResult(validationResult);
+        }
+
+        validationResult = resubmissionValidator.validate(headerList, sellerDetails.getShortName(),
+                headerList.get(0).getTradingDate());
+        if (validationResult.getStatus() == REJECTED) {
+            return declaration.withValidationResult(validationResult);
+        }
+
+        headerList = divideDataOfHeaderList(headerList, interval);
 
         List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
         headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
@@ -119,8 +157,7 @@ public class BcqValidationHandler {
 
         headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
 
-        validationResult = overrideValidator.validate(headerList,
-                sellerDetails.getShortName(),
+        validationResult = overrideValidator.validate(headerList, sellerDetails.getShortName(),
                 headerList.get(0).getTradingDate());
         if (validationResult.getStatus() == REJECTED) {
             return declaration.withValidationResult(validationResult);
@@ -135,15 +172,7 @@ public class BcqValidationHandler {
             return declaration.withValidationResult(validationResult);
         }
 
-        if (interval != FIVE_MINUTES_PERIOD) { //TODO: Remove duplicate
-            int intervalConfig = getIntervalConfig();
-            headerList.forEach(header -> {
-                List<BcqData> dividedDataList = new ArrayList<>();
-                header.getDataList().forEach(data ->
-                        dividedDataList.addAll(divideDataByInterval(data, interval, intervalConfig)));
-                header.setDataList(dividedDataList);
-            });
-        }
+        headerList = divideDataOfHeaderList(headerList, interval);
 
         List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
         headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
@@ -191,6 +220,20 @@ public class BcqValidationHandler {
         Cache configCache = cacheManager.getCache("config");
         ValueWrapper valueWrapper = configCache.get("BCQ_INTERVAL");
         return valueWrapper == null ? 15 : parseInt(valueWrapper.get().toString());
+    }
+
+    private List<BcqHeader> divideDataOfHeaderList(List<BcqHeader> headerList, BcqInterval interval) {
+        if (interval != FIVE_MINUTES_PERIOD) {
+            int intervalConfig = getIntervalConfig();
+            headerList.forEach(header -> {
+                List<BcqData> dividedDataList = new ArrayList<>();
+                header.getDataList().forEach(data ->
+                        dividedDataList.addAll(divideDataByInterval(data, interval, intervalConfig)));
+                header.setDataList(dividedDataList);
+            });
+            return headerList;
+        }
+        return headerList;
     }
 
     private List<BcqData> divideDataByInterval(BcqData data, BcqInterval interval, int intervalConfig) {

@@ -183,6 +183,11 @@ public class BcqServiceImpl implements BcqService {
         return bcqDao.saveSpecialEvent(specialEvent);
     }
 
+    @Override
+    public List<BcqSpecialEventParticipant> findEventParticipantsByTradingDate(Date tradingDate) {
+        return bcqDao.findEventParticipantsByTradingDate(tradingDate);
+    }
+
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/
