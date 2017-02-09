@@ -69,10 +69,14 @@ public class BcqValidationHandler {
             if (validationResult.getErrorMessage().getValidationError() == CLOSED_TRADING_DATE) {
                 BcqDeclaration specialEventDeclaration = processAndValidateForSpecialEvent(headerList, declaration,
                         sellerDetails, interval);
-                BcqValidationError specialEventDeclarationError = specialEventDeclaration.getValidationResult()
-                        .getErrorMessage().getValidationError();
-                if (!union(CRSS_SIDE_ERRORS, singletonList(NO_SPECIAL_EVENT_FOUND))
-                        .contains(specialEventDeclarationError)) {
+                if (specialEventDeclaration.getValidationResult().getStatus() == REJECTED) {
+                    BcqValidationError specialEventDeclarationError = specialEventDeclaration.getValidationResult()
+                            .getErrorMessage().getValidationError();
+                    if (!union(CRSS_SIDE_ERRORS, singletonList(NO_SPECIAL_EVENT_FOUND))
+                            .contains(specialEventDeclarationError)) {
+                        return specialEventDeclaration;
+                    }
+                } else {
                     return specialEventDeclaration;
                 }
             }
@@ -110,8 +114,6 @@ public class BcqValidationHandler {
         }
 
         headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
-
-        specialEventValidator.validate(headerList);
 
         validationResult = specialEventValidator.validate(headerList);
         if (validationResult.getStatus() == REJECTED) {
