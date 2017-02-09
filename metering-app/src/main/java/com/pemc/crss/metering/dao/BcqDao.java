@@ -20,7 +20,7 @@ public interface BcqDao {
 
     long saveUploadFile(BcqUploadFile uploadFile);
 
-    List<BcqHeader> saveHeaderList(List<BcqHeader> headerList);
+    List<BcqHeader> saveHeaderList(List<BcqHeader> headerList, boolean isSpecialEvent);
 
     Page<BcqHeaderDisplay2> findAllHeaders(PageableRequest pageableRequest);
 

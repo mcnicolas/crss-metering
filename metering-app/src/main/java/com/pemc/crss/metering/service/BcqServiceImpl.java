@@ -51,7 +51,7 @@ public class BcqServiceImpl implements BcqService {
         List<BcqHeader> headerList = extractHeaderList(declaration);
         headerList = setUploadFileOfHeaders(headerList, uploadFile);
         headerList = setUpdatedViaOfHeaders(headerList, declaration);
-        bcqNotificationManager.sendUploadNotification(bcqDao.saveHeaderList(headerList));
+        bcqNotificationManager.sendUploadNotification(bcqDao.saveHeaderList(headerList, declaration.isSpecialEvent()));
     }
 
     @Override
@@ -66,7 +66,7 @@ public class BcqServiceImpl implements BcqService {
         List<BcqHeader> headerList = extractHeaderList(declaration);
         headerList = setUploadFileOfHeaders(headerList, uploadFile);
         headerList = setUpdatedViaOfHeadersBySettlement(headerList, declaration);
-        bcqNotificationManager.sendSettlementUploadNotification(bcqDao.saveHeaderList(headerList));
+        bcqNotificationManager.sendSettlementUploadNotification(bcqDao.saveHeaderList(headerList, false));
     }
 
     @Override

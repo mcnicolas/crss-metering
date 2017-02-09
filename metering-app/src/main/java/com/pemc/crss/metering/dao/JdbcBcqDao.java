@@ -133,10 +133,10 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public List<BcqHeader> saveHeaderList(List<BcqHeader> headerList) {
+    public List<BcqHeader> saveHeaderList(List<BcqHeader> headerList, boolean isSpecialEvent) {
         List<BcqHeader> savedHeaderList = new ArrayList<>();
         for (BcqHeader header: headerList) {
-            long headerId = saveHeader(header);
+            long headerId = saveHeader(header, isSpecialEvent);
             List<BcqData> dataList = header.getDataList();
             BeanPropertySqlParameterSource[] sourceArray = new BeanPropertySqlParameterSource[dataList.size()];
             for (int i = 0; i < dataList.size(); i ++) {
@@ -375,13 +375,18 @@ public class JdbcBcqDao implements BcqDao {
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/
-    private long saveHeader(BcqHeader header) {
+    private long saveHeader(BcqHeader header, boolean isSpecialEvent) {
         log.debug("[DAO-BCQ] Saving header: {}, {}, {}",
                 header.getSellingMtn(), header.getBillingId(), header.getTradingDate());
-        long tradingDateInMillis = header.getTradingDate().getTime();
-        long deadlineConfigInSeconds = DAYS.toSeconds(getDeadlineConfig());
+        if (isSpecialEvent) {
+            header.setDeadlineDate(findDeadlineDateByTradingDateAndParticipant(header.getTradingDate(),
+                    header.getBuyingParticipantShortName()));
+        } else {
+            long tradingDateInMillis = header.getTradingDate().getTime();
+            long deadlineConfigInSeconds = DAYS.toSeconds(getDeadlineConfig());
+            header.setDeadlineDate(new Date(tradingDateInMillis + SECONDS.toMillis(deadlineConfigInSeconds - 1)));
+        }
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        header.setDeadlineDate(new Date(tradingDateInMillis + SECONDS.toMillis(deadlineConfigInSeconds - 1)));
         List<BcqHeader> prevHeaders = findSameHeadersWithStatusIn(header,
                 asList(FOR_NULLIFICATION, FOR_CONFIRMATION, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATED));
         BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
@@ -565,6 +570,23 @@ public class JdbcBcqDao implements BcqDao {
         }
         namedParameterJdbcTemplate.batchUpdate(insertEventParticipant, sourceArray);
         log.debug("[DAO-BCQ] Saved event participant list");
+    }
+
+    private Date findDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName) {
+        log.debug("[DAO-BCQ] Finding event deadline date of: {}", shortName);
+        QueryData queryData = new QueryBuilder()
+                .select()
+                .column("DEADLINE_DATE")
+                .from("TXN_BCQ_SPECIAL_EVENT SE"
+                        + " INNER JOIN TXN_BCQ_EVENT_PARTICIPANT EP ON SE.EVENT_ID = EP.EVENT_ID"
+                        + " INNER JOIN TXN_BCQ_EVENT_TRADING_DATE ETD ON SE.EVENT_ID = ETD.EVENT_ID")
+                .where()
+                .filter(new QueryFilter("ETD.TRADING_DATE", tradingDate))
+                .and()
+                .filter(new QueryFilter("EP.TRADING_PARTICIPANT", shortName))
+                .build();
+        log.debug("[DAO-BCQ] Finding event query: {}", queryData.getSql());
+        return namedParameterJdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Date.class);
     }
 
     private class BcqHeaderRowMapper implements RowMapper<BcqHeader> {

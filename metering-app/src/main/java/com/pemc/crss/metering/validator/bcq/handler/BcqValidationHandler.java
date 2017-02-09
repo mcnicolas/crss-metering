@@ -130,6 +130,7 @@ public class BcqValidationHandler {
 
         List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
         headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
+        declaration.setSpecialEvent(true);
         return declaration.withHeaderDetailsList(headerDetailsList);
     }
 
