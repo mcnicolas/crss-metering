@@ -145,9 +145,7 @@ public class BcqResource {
             log.debug("[REST-BCQ] No found header with ID: {}", headerId);
             return null;
         }
-        if (header.getStatus() == VOID) {
-            header = bcqService.findSameHeadersWithStatusNotIn(header, singletonList(VOID)).get(0);
-        }
+        header = bcqService.findSameHeadersWithStatusNotIn(header, singletonList(VOID)).get(0);
         BcqHeaderDisplay headerDisplay = new BcqHeaderDisplay(bcqService.findHeader(header.getHeaderId()));
         log.debug("[REST-BCQ] Found header display: {}", headerDisplay);
         return headerDisplay;
