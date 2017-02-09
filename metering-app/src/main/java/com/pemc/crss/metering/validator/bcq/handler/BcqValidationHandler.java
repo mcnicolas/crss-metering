@@ -115,7 +115,7 @@ public class BcqValidationHandler {
 
         headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
 
-        validationResult = specialEventValidator.validate(headerList);
+        validationResult = specialEventValidator.validate(headerList, sellerDetails.getShortName());
         if (validationResult.getStatus() == REJECTED) {
             return declaration.withValidationResult(validationResult);
         }

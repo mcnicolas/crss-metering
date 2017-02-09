@@ -36,9 +36,6 @@ public enum BcqValidationError {
     INCOMPLETE_OVERRIDE_ENTRIES("Incomplete BCQ entries. " +
             "Override for date <b>%s</b> should also have entries of the ff. "
             + "Selling MTN and Billing ID pair(s):<br />%s"),
-    EXCESS_OVERRIDE_ENTRIES("Excess BCQ entries. " +
-            "Override for date <b>%s</b> shouldn't have entries of the ff. "
-            + "Selling MTN and Billing ID pair(s):<br />%s"),
     SELLING_MTN_UNREGISTERED("Unregistered selling MTN. Selling MTN <b>%s</b> does not exist."),
     SELLING_MTN_NOT_OWNED("Unregistered selling MTN. "
             + "Selling MTN <b>%s</b> is not registered under Seller <b>%s (%s)</b>."),
@@ -50,8 +47,9 @@ public enum BcqValidationError {
             + "Reference MTN <b>%s</b> is not registered under contract of "
             + "Seller <b>%s (%s)</b> and Buyer <b>%s (%s)</b>."),
     NO_SPECIAL_EVENT_FOUND(""),
-    PARTICIPANTS_NOT_PRESENT_IN_SPECIAL_EVENT("Following participant/s are not included in the special event for "
-            + "the trading date of %s.<br />%s");
+    PARTICIPANTS_NOT_PRESENT_IN_SPECIAL_EVENT("Following participant(s) were not included in the special event for "
+            + "the trading date of %s.<br />%s"),
+    OVERRIDDEN_ENTRIES("Following entry(ies) have already been overridden for the trading date of %s.<br />%s.");
 
     private final String errorMessage;
 

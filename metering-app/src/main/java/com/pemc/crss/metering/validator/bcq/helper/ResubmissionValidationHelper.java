@@ -14,6 +14,7 @@ import java.util.function.Predicate;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqValidationError.INCOMPLETE_RESUBMISSION_ENTRIES;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
+import static com.pemc.crss.metering.validator.bcq.helper.BcqValidationHelperUtils.getFormattedSellingMtnAndBillingIdPair;
 import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation.emptyInst;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -32,21 +33,8 @@ public class ResubmissionValidationHelper {
                     .collect(toList());
 
             if (missingHeaderList.size() > 0) {
-                StringJoiner pairs = new StringJoiner("<br />");
-                Set<String> pairsSet = new HashSet<>();
-                missingHeaderList.forEach(missingHeader -> {
-                    StringBuilder pair = new StringBuilder();
-                    pair.append("<b>[")
-                            .append(missingHeader.getSellingMtn())
-                            .append(" - ")
-                            .append(missingHeader.getBillingId())
-                            .append("]</b>");
-                    if (pairsSet.add(pair.toString())) {
-                        pairs.add(pair);
-                    }
-                });
                 BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INCOMPLETE_RESUBMISSION_ENTRIES,
-                        asList(formatDate(tradingDate), pairs.toString()));
+                        asList(formatDate(tradingDate), getFormattedSellingMtnAndBillingIdPair(missingHeaderList)));
                 validation.setErrorMessage(errorMessage);
                 return false;
             }

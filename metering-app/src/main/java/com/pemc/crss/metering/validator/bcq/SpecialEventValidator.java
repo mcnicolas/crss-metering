@@ -16,9 +16,9 @@ public class SpecialEventValidator {
 
     private final SpecialEventValidationHelper validationHelper;
 
-    public BcqValidationResult validate(List<BcqHeader> headerList) {
+    public BcqValidationResult validate(List<BcqHeader> headerList, String sellingParticipant) {
         log.info("Start validation for special event upload");
-        BcqValidationResult result = validationHelper.validSpecialEventUpload().test(headerList);
+        BcqValidationResult result = validationHelper.validSpecialEventUpload(sellingParticipant).test(headerList);
         log.info("Finish validation for special event upload, Result: {}", result);
         return result;
     }

@@ -11,13 +11,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 
-import static com.pemc.crss.metering.constants.BcqValidationError.NO_SPECIAL_EVENT_FOUND;
-import static com.pemc.crss.metering.constants.BcqValidationError.PARTICIPANTS_NOT_PRESENT_IN_SPECIAL_EVENT;
+import static com.google.common.collect.ImmutableMap.of;
+import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
+import static com.pemc.crss.metering.constants.BcqValidationError.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
+import static com.pemc.crss.metering.validator.bcq.helper.BcqValidationHelperUtils.getFormattedSellingMtnAndBillingIdPair;
 import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation.emptyInst;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
@@ -31,8 +32,9 @@ public class SpecialEventValidationHelper {
 
     private final BcqService bcqService;
 
-    public Validation<List<BcqHeader>> validSpecialEventUpload() {
-        return participantsWithTradingDateExist();
+    public Validation<List<BcqHeader>> validSpecialEventUpload(String sellingParticipant) {
+        return participantsWithTradingDateExist()
+                .and(noManualOverridden(sellingParticipant));
     }
 
     private HeaderListValidation participantsWithTradingDateExist() {
@@ -68,6 +70,37 @@ public class SpecialEventValidationHelper {
         };
         validation.setPredicate(predicate);
         return validation;
+    }
+
+    private HeaderListValidation noManualOverridden(String sellingParticipant) {
+        HeaderListValidation validation = emptyInst();
+        Predicate<List<BcqHeader>> predicate = headerList -> {
+            Date tradingDate = headerList.get(0).getTradingDate();
+            List<BcqHeader> currentHeaderList = getCurrentHeaderList(sellingParticipant, tradingDate);
+            List<BcqHeader> manualOverriddenHeaderList = currentHeaderList.stream()
+                    .filter(header -> header.getUpdatedVia() != null && header.getUpdatedVia() == MANUAL_OVERRIDE)
+                    .collect(toList());
+            if (manualOverriddenHeaderList.size() > 0) {
+                BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(OVERRIDDEN_ENTRIES,
+                        asList(formatDate(tradingDate),
+                                getFormattedSellingMtnAndBillingIdPair(manualOverriddenHeaderList)));
+                validation.setErrorMessage(errorMessage);
+                return false;
+            }
+            return true;
+        };
+        validation.setPredicate(predicate);
+        return validation;
+    }
+
+    /****************************************************
+     * SUPPORT METHODS
+     ****************************************************/
+    private List<BcqHeader> getCurrentHeaderList(String sellingParticipant, Date tradingDate) {
+        return bcqService.findAllHeaders(of(
+                "sellingParticipant", sellingParticipant,
+                "tradingDate", formatDate(tradingDate)
+        ));
     }
 
 }

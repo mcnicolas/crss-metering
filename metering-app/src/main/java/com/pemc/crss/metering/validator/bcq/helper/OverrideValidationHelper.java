@@ -15,6 +15,7 @@ import java.util.function.Predicate;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqValidationError.INCOMPLETE_OVERRIDE_ENTRIES;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
+import static com.pemc.crss.metering.validator.bcq.helper.BcqValidationHelperUtils.getFormattedSellingMtnAndBillingIdPair;
 import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation.emptyInst;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -38,22 +39,9 @@ public class OverrideValidationHelper {
                     .collect(toList());
 
             if (missingHeaderList.size() > 0) {
-                StringJoiner pairs = new StringJoiner("<br />");
-                Set<String> pairsSet = new HashSet<>();
-                missingHeaderList.forEach(missingHeader -> {
-                    StringBuilder pair = new StringBuilder();
-                    pair.append("<b>[")
-                            .append(missingHeader.getSellingMtn())
-                            .append(" - ")
-                            .append(missingHeader.getBillingId())
-                            .append("]</b>");
-                    pairs.add(pair);
-                    if (pairsSet.add(pair.toString())) {
-                        pairs.add(pair);
-                    }
-                });
                 BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INCOMPLETE_OVERRIDE_ENTRIES,
-                        asList(formatDate(currentHeaderList.get(0).getTradingDate()), pairs.toString()));
+                        asList(formatDate(currentHeaderList.get(0).getTradingDate()),
+                                getFormattedSellingMtnAndBillingIdPair(missingHeaderList)));
                 validation.setErrorMessage(errorMessage);
                 return false;
             }
