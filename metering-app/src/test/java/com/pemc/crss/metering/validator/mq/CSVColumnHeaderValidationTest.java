@@ -69,6 +69,7 @@ public class CSVColumnHeaderValidationTest {
         assertThat(result.getStatus(), is(equalTo(ACCEPTED)));
     }
 
+    @Ignore
     @Test
     public void validateWrongColumnNames() throws ParseException, IOException, URISyntaxException {
         // given
