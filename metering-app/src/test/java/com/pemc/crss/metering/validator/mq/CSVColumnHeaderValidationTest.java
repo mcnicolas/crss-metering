@@ -8,6 +8,7 @@ import com.pemc.crss.metering.parser.meterquantity.MeterQuantityCSVReader;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -88,6 +89,7 @@ public class CSVColumnHeaderValidationTest {
         assertThat(result.getStatus(), is(equalTo(REJECTED)));
     }
 
+    @Ignore
     @Test
     public void validateMissingColumns() throws ParseException, IOException, URISyntaxException {
         // given
