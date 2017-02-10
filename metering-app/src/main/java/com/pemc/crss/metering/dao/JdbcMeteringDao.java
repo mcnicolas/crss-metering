@@ -168,6 +168,11 @@ public class JdbcMeteringDao implements MeteringDao {
         String transactionID = params.get("transactionID");
         String mspShortName = params.get("shortName");
         String createdDateTime = params.get("createdDateTime");
+        String version = params.get("version");
+
+        if (isNotBlank(version)) {
+            transactionID = version.trim();
+        }
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
         BuilderData query = queryBuilder.selectMeterData(category, readingDateFrom, readingDateTo, createdDateTime)
@@ -273,6 +278,11 @@ public class JdbcMeteringDao implements MeteringDao {
         String sein = params.get("sein");
         String transactionID = params.get("transactionID");
         String mspShortName = params.get("shortName");
+        String version = params.get("version");
+
+        if (isNotBlank(version)) {
+            transactionID = version.trim();
+        }
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
         BuilderData query = queryBuilder.countMeterData(category, readingDateFrom, readingDateTo)
