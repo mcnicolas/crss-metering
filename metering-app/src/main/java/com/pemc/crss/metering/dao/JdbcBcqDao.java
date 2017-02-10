@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.dao;
 
+import com.pemc.crss.commons.reports.ReportBean;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.BcqUpdateType;
@@ -12,6 +13,7 @@ import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay2;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
+import com.pemc.crss.metering.dto.bcq.mapper.BcqDataReportMapper;
 import com.pemc.crss.metering.dto.bcq.mapper.BcqSpecialEventMapper;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
@@ -45,9 +47,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.pemc.crss.metering.constants.BcqStatus.*;
+import static com.pemc.crss.metering.constants.BcqStatus.CANCELLED;
+import static com.pemc.crss.metering.constants.BcqStatus.CONFIRMED;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_NEW;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_UPDATED;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
+import static com.pemc.crss.metering.constants.BcqStatus.NULLIFIED;
+import static com.pemc.crss.metering.constants.BcqStatus.SETTLEMENT_READY;
+import static com.pemc.crss.metering.constants.BcqStatus.VOID;
+import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
-import static com.pemc.crss.metering.dao.query.ComparisonOperator.*;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.IN;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.LESS_THAN_EQUALS;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.LIKE;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.NOT_IN;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
@@ -116,6 +130,9 @@ public class JdbcBcqDao implements BcqDao {
 
     @Value("${bcq.event.list}")
     private String bcqEventList;
+
+    @Value("${bcq.report.flattened}")
+    private String bcqReportFlattened;
 
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final CacheManager cacheManager;
@@ -370,6 +387,12 @@ public class JdbcBcqDao implements BcqDao {
         log.debug("[DAO-BCQ] Finding event query: {}", queryData.getSql());
         return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
                 new BeanPropertyRowMapper<>(BcqSpecialEventParticipant.class));
+    }
+
+    @Override
+    public List<ReportBean> queryBcqDataReport(final Map<String, String> mapParams) {
+        // TODO add query filters here
+        return namedParameterJdbcTemplate.query(bcqReportFlattened, new BcqDataReportMapper());
     }
 
     /****************************************************

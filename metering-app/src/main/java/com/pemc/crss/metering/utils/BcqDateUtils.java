@@ -9,7 +9,7 @@ import static org.apache.commons.lang3.time.DateFormatUtils.format;
 
 public class BcqDateUtils {
 
-    private static final String DATE_FORMAT = "yyyy-MM-dd";
+    public static final String DATE_FORMAT = "yyyy-MM-dd";
     public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm";
     public static final String DATE_TIME_12_HR_FORMAT = "yyyy-MM-dd hh:mm a";
     private static final String LONG_DATE_FORMAT = "MMM. dd, yyyy";

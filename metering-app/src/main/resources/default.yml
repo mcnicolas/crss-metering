@@ -322,6 +322,28 @@ bcq:
         END_TIME,
         BCQ)
       VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), :headerId, :referenceMtn, :startTime, :endTime, :bcq)
+  report:
+    flattened: >
+      SELECT
+        header.selling_participant_name || ' (' ||
+          header.selling_participant_short_name || ')' as selling_participant,
+        header.buying_participant_name || ' (' ||
+          header.buying_participant_short_name || ')' as buying_participant,
+        header.selling_mtn,
+        header.billing_id,
+        header.trading_date,
+        file.transaction_id,
+        file.submitted_date,
+        header.deadline_date,
+        header.status,
+        header.updated_via,
+        data.reference_mtn,
+        data.end_time,
+        data.bcq
+      FROM txn_bcq_data data
+        INNER JOIN txn_bcq_header header ON data.header_id = header.header_id
+        INNER JOIN txn_bcq_upload_file file ON header.file_id = file.file_id
+      WHERE header.status != 'VOID'
   event:
     insert: >
       INSERT INTO TXN_BCQ_SPECIAL_EVENT (

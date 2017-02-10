@@ -8,7 +8,11 @@ import java.util.List;
 @Data
 public abstract class AbstractReportBuilder {
 
-    List<ReportBean> reportBeans;
+    final List<ReportBean> reportBeans;
+
+    public AbstractReportBuilder(final List<ReportBean> reportBeans) {
+        this.reportBeans = reportBeans;
+    }
 
     protected abstract String[] getHeaders();
 

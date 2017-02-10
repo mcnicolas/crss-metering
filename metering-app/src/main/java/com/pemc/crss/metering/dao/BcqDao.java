@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.dao;
 
+import com.pemc.crss.commons.reports.ReportBean;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.bcq.BcqData;
@@ -46,5 +47,7 @@ public interface BcqDao {
                                                                        List<Date> tradingDates);
 
     List<BcqSpecialEventParticipant> findEventParticipantsByTradingDate(Date tradingDate);
+
+    List<ReportBean> queryBcqDataReport(Map<String, String> mapParams);
 
 }

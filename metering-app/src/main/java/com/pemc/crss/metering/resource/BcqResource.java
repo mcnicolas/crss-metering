@@ -3,11 +3,19 @@ package com.pemc.crss.metering.resource;
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.ValidationStatus;
-import com.pemc.crss.metering.dto.bcq.*;
+import com.pemc.crss.metering.dto.bcq.BcqDataDisplay;
+import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay;
+import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay2;
+import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
+import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
+import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventForm;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
 import com.pemc.crss.metering.service.BcqService;
+import com.pemc.crss.metering.service.reports.BcqReportService;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
 import com.pemc.crss.metering.validator.bcq.handler.BcqValidationHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -15,12 +23,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqStatus.VOID;
@@ -31,7 +53,9 @@ import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.lang.Long.parseLong;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static org.springframework.http.ResponseEntity.*;
+import static org.springframework.http.ResponseEntity.badRequest;
+import static org.springframework.http.ResponseEntity.ok;
+import static org.springframework.http.ResponseEntity.unprocessableEntity;
 
 @Slf4j
 @RestController
@@ -43,12 +67,16 @@ public class BcqResource {
     private final BcqReader bcqReader;
     private final BcqValidationHandler validationHandler;
     private final BcqService bcqService;
+    private final BcqReportService reportService;
 
     @Autowired
-    public BcqResource(BcqReader bcqReader, BcqValidationHandler validationHandler, BcqService bcqService) {
+    public BcqResource(final BcqReader bcqReader, final BcqValidationHandler validationHandler,
+                       final BcqService bcqService, final BcqReportService reportService) {
+
         this.bcqReader = bcqReader;
         this.validationHandler = validationHandler;
         this.bcqService = bcqService;
+        this.reportService = reportService;
     }
 
     @PostMapping(value = "/list")
@@ -231,6 +259,18 @@ public class BcqResource {
         List<BcqSpecialEventList> result = bcqService.getSpecialEvents();
         return ResponseEntity.ok(result);
     }
+
+    @PostMapping("/data/report")
+    public void generateBcqDataReport(@RequestBody Map<String, String> mapParams, HttpServletResponse response)
+            throws IOException {
+        final String encodeFile = URLEncoder.encode("BCQ_DATA_" + (LocalDateTime.now()).toString() + ".csv", "UTF-8");
+        final String filename = URLDecoder.decode(encodeFile, "ISO8859_1");
+        response.setContentType("application/x-msdownload");
+        response.setHeader("Content-disposition", "attachment; filename=" + filename);
+
+        reportService.generateBcqDataReport(mapParams, response.getOutputStream());
+    }
+
 
     /****************************************************
      * SUPPORT METHODS
