@@ -166,7 +166,9 @@ public class BcqResource {
 
     @GetMapping("/declaration/{headerId}")
     @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
-    public BcqHeaderDisplay getHeader(@PathVariable long headerId) {
+    public BcqHeaderDisplay getHeader(@PathVariable long headerId,
+                                      @RequestParam(required = false) boolean searchForLatest) {
+
         log.debug("[REST-BCQ] Request for getting header with ID: {}", headerId);
         BcqHeader header = bcqService.findHeader(headerId);
         if (header == null) {
@@ -174,7 +176,8 @@ public class BcqResource {
             return null;
         }
         header = bcqService.findSameHeadersWithStatusNotIn(header, singletonList(VOID)).get(0);
-        BcqHeaderDisplay headerDisplay = new BcqHeaderDisplay(bcqService.findHeader(header.getHeaderId()));
+        long idToSearch = searchForLatest ? header.getHeaderId() : headerId;
+        BcqHeaderDisplay headerDisplay = new BcqHeaderDisplay(bcqService.findHeader(idToSearch));
         log.debug("[REST-BCQ] Found header display: {}", headerDisplay);
         return headerDisplay;
     }
