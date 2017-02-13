@@ -262,6 +262,7 @@ public class BcqResource {
         return ResponseEntity.ok(result);
     }
 
+    @PreAuthorize("hasAuthority('BCQ_EXPORT')")
     @PostMapping("/data/report")
     public void generateBcqDataReport(@RequestBody Map<String, String> mapParams, HttpServletResponse response)
             throws IOException {
