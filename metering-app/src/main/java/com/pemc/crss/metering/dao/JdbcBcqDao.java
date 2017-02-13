@@ -387,8 +387,12 @@ public class JdbcBcqDao implements BcqDao {
 
     @Override
     public List<ReportBean> queryBcqDataReport(final Map<String, String> mapParams) {
-        // TODO add query filters here
-        return namedParameterJdbcTemplate.query(bcqReportFlattened, new BcqDataReportMapper());
+        QueryBuilder builder = new QueryBuilder(bcqReportFlattened);
+        QueryData queryData = addParams(builder, mapParams).build();
+
+        log.debug("[BCQ Data Report] Querying sql: {} source: {}", queryData.getSql(), queryData.getSource().getValues());
+
+        return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(), new BcqDataReportMapper());
     }
 
     /****************************************************

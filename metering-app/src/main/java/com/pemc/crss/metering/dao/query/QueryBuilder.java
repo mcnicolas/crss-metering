@@ -36,6 +36,14 @@ public class QueryBuilder {
     private static final String OPEN_PARENTHESIS = "(";
     private static final String CLOSE_PARENTHESIS = ")";
 
+    public QueryBuilder() {
+
+    }
+
+    public QueryBuilder(final String initQuery) {
+        this.sqlBuilder = new StringBuilder(initQuery);
+    }
+
     public QueryBuilder select(String... columns) {
         sqlBuilder.append(SELECT);
         for (int i = 0; i < columns.length; i ++) {

@@ -29,12 +29,12 @@ public class BcqDataReportBuilder extends AbstractReportBuilder {
             "Billing ID",
             "Trading Date",
             "Transaction ID",
-            "Submitted Date",
+            "Submitted Date / Time",
             "Deadline Date",
             "Status",
             "Updated Via",
             "Reference MTN",
-            "End Time",
+            "Time",
             "BCQ"
         };
     }

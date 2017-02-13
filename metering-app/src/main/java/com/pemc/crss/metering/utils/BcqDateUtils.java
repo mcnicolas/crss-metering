@@ -14,6 +14,7 @@ public class BcqDateUtils {
     public static final String DATE_TIME_12_HR_FORMAT = "yyyy-MM-dd hh:mm a";
     private static final String LONG_DATE_FORMAT = "MMM. dd, yyyy";
     private static final String LONG_DATE_TIME_FORMAT = "MMM. dd, yyyy hh:mm a";
+    private static final String REPORT_FILENAME_DT_FORMAT = "yyyyMMddHHmm";
 
     private BcqDateUtils() {}
 
@@ -51,6 +52,10 @@ public class BcqDateUtils {
 
     public static String formatLongDateTime(Date date) {
         return format(date, LONG_DATE_TIME_FORMAT);
+    }
+
+    public static String getReportFilenameDateFormat(Date date) {
+        return format(date, REPORT_FILENAME_DT_FORMAT);
     }
 
 }

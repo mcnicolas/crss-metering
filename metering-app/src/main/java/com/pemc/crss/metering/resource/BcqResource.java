@@ -16,6 +16,8 @@ import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.service.reports.BcqReportService;
+import com.pemc.crss.metering.utils.BcqDateUtils;
+import com.pemc.crss.metering.utils.DateTimeUtils;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
 import com.pemc.crss.metering.validator.bcq.handler.BcqValidationHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -33,14 +35,11 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -266,7 +265,15 @@ public class BcqResource {
     @PostMapping("/data/report")
     public void generateBcqDataReport(@RequestBody Map<String, String> mapParams, HttpServletResponse response)
             throws IOException {
-        final String encodeFile = URLEncoder.encode("BCQ_DATA_" + (LocalDateTime.now()).toString() + ".csv", "UTF-8");
+        // Inform frontend just in case
+        if (!mapParams.containsKey("tradingDate")) {
+            throw new RuntimeException("No Trading Date Provided for BCQ Report Generation");
+        }
+
+        final String tradingDate = mapParams.get("tradingDate");
+        final String timestamp = BcqDateUtils.getReportFilenameDateFormat(DateTimeUtils.now());
+
+        final String encodeFile = URLEncoder.encode("BCQ_REPORT_" + tradingDate + "_" + timestamp + ".csv", "UTF-8");
         final String filename = URLDecoder.decode(encodeFile, "ISO8859_1");
         response.setContentType("application/x-msdownload");
         response.setHeader("Content-disposition", "attachment; filename=" + filename);
