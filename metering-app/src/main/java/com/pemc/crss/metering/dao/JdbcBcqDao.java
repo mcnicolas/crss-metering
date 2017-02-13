@@ -191,7 +191,7 @@ public class JdbcBcqDao implements BcqDao {
                     .column(subSelectUpdatedVia).as("UPDATED_VIA")
                 .from(headerJoinFile)
                 .where().filter(uniqueHeader);
-        QueryData queryData = addParams(queryBuilder, mapParams)
+        QueryData queryData = addParams(queryBuilder, mapParams, false)
                 .orderBy(pageableRequest.getOrderList())
                 .paginate(pageableRequest.getPageNo(), pageableRequest.getPageSize())
                 .build();
@@ -223,7 +223,7 @@ public class JdbcBcqDao implements BcqDao {
                     .column("TRANSACTION_ID")
                     .column("SUBMITTED_DATE")
                 .from(headerJoinFile);
-        QueryData queryData = addParams(queryBuilder, mapParams).build();
+        QueryData queryData = addParams(queryBuilder, mapParams, false).build();
         log.debug("[DAO-BCQ] Finding all headers with query: {}, and args: {}", queryData.getSql(),
                 queryData.getSource());
         List<BcqHeader> headerList = namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
@@ -388,7 +388,7 @@ public class JdbcBcqDao implements BcqDao {
     @Override
     public List<ReportBean> queryBcqDataReport(final Map<String, String> mapParams) {
         QueryBuilder builder = new QueryBuilder(bcqReportFlattened);
-        QueryData queryData = addParams(builder, mapParams).build();
+        QueryData queryData = addParams(builder, mapParams, true).build();
 
         log.debug("[BCQ Data Report] Querying sql: {} source: {}", queryData.getSql(), queryData.getSource().getValues());
 
@@ -468,11 +468,11 @@ public class JdbcBcqDao implements BcqDao {
                 .select().count()
                 .from(headerJoinFile)
                 .where(uniqueHeader);
-        QueryData queryData = addParams(queryBuilder, mapParams).build();
+        QueryData queryData = addParams(queryBuilder, mapParams, false).build();
         return namedParameterJdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Integer.class);
     }
 
-    private QueryBuilder addParams(QueryBuilder queryBuilder, Map<String, String> mapParams) {
+    private QueryBuilder addParams(QueryBuilder queryBuilder, Map<String, String> mapParams, boolean forReports) {
         Long headerId = mapParams.get("headerId") == null ? null : parseLong(mapParams.get("headerId"));
         Date tradingDate = mapParams.get("tradingDate") == null ? null : parseDate(mapParams.get("tradingDate"));
         String sellingMtn = mapParams.get("sellingMtn") == null ? "" : mapParams.get("sellingMtn");
@@ -492,8 +492,9 @@ public class JdbcBcqDao implements BcqDao {
                     .and().filter(new QueryFilter("UPPER(SELLING_MTN)", "%" + sellingMtn.toUpperCase() + "%", LIKE));
         }
         if (isNotBlank(billingId)) {
+            String column = forReports ? "UPPER(BILLING_ID)" : "UPPER(A.BILLING_ID)";
             queryBuilder = queryBuilder
-                    .and().filter(new QueryFilter("UPPER(A.BILLING_ID)", "%" + billingId.toUpperCase() + "%", LIKE));
+                    .and().filter(new QueryFilter(column, "%" + billingId.toUpperCase() + "%", LIKE));
         }
         if (isNotBlank(sellingParticipant)) {
             queryBuilder = queryBuilder
