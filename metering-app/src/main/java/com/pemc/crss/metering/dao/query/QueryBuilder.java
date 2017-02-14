@@ -44,15 +44,12 @@ public class QueryBuilder {
         this.sqlBuilder = new StringBuilder(initQuery);
     }
 
-    public QueryBuilder select(String... columns) {
-        sqlBuilder.append(SELECT);
-        for (int i = 0; i < columns.length; i ++) {
-            if (i > 0) {
-                sqlBuilder.append(COMMA);
-            }
-            sqlBuilder.append(columns[i]);
-        }
-        return this;
+    public MapSqlParameterSource getSource() {
+        return source;
+    }
+
+    public void setSource(MapSqlParameterSource source) {
+        this.source = source;
     }
 
     public QueryBuilder select() {

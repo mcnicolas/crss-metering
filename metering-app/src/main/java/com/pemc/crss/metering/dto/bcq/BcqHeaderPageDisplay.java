@@ -3,7 +3,7 @@ package com.pemc.crss.metering.dto.bcq;
 import lombok.Data;
 
 @Data
-public class BcqHeaderDisplay2 {
+public class BcqHeaderPageDisplay {
 
     private long headerId;
     private String sellingMtn;

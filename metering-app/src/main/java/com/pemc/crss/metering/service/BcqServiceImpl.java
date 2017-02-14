@@ -70,7 +70,7 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public Page<BcqHeaderDisplay2> findAllHeaders(PageableRequest pageableRequest) {
+    public Page<BcqHeaderPageDisplay> findAllHeaders(PageableRequest pageableRequest) {
         return bcqDao.findAllHeaders(pageableRequest);
     }
 

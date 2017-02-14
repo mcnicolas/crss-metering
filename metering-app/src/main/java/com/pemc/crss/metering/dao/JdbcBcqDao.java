@@ -11,7 +11,7 @@ import com.pemc.crss.metering.dao.query.QueryData;
 import com.pemc.crss.metering.dao.query.QueryFilter;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay2;
+import com.pemc.crss.metering.dto.bcq.BcqHeaderPageDisplay;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.mapper.BcqDataReportMapper;
 import com.pemc.crss.metering.dto.bcq.mapper.BcqSpecialEventMapper;
@@ -169,36 +169,13 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public Page<BcqHeaderDisplay2> findAllHeaders(PageableRequest pageableRequest) {
+    public Page<BcqHeaderPageDisplay> findAllHeaders(PageableRequest pageableRequest) {
         int totalRecords = getTotalRecords(pageableRequest);
-        Map<String, String> mapParams = pageableRequest.getMapParams();
-        QueryBuilder queryBuilder = new QueryBuilder()
-                .select()
-                    .column("HEADER_ID")
-                    .column("SELLING_MTN")
-                    .column("BILLING_ID")
-                    .column("TO_CHAR(TRADING_DATE, 'YYYY-MM-DD')").as("TRADING_DATE")
-                    .column("SELLING_PARTICIPANT_USER_ID")
-                    .column("SELLING_PARTICIPANT_NAME")
-                    .column("SELLING_PARTICIPANT_SHORT_NAME")
-                    .column("BUYING_PARTICIPANT_USER_ID")
-                    .column("BUYING_PARTICIPANT_NAME")
-                    .column("BUYING_PARTICIPANT_SHORT_NAME")
-                    .column(subSelectTransactionId).as("TRANSACTION_ID")
-                    .column(subSelectSubmittedDate).as("SUBMITTED_DATE")
-                    .column(subSelectDeadlineDate).as("DEADLINE_DATE")
-                    .column(subSelectStatus).as("STATUS")
-                    .column(subSelectUpdatedVia).as("UPDATED_VIA")
-                .from(headerJoinFile)
-                .where().filter(uniqueHeader);
-        QueryData queryData = addParams(queryBuilder, mapParams, false)
-                .orderBy(pageableRequest.getOrderList())
-                .paginate(pageableRequest.getPageNo(), pageableRequest.getPageSize())
-                .build();
+        QueryData queryData = new BcqQueryHelper().queryHeaderPageDisplay(pageableRequest);
         log.debug("[DAO-BCQ] Finding page of headers with query: {}, and args: {}",
-                queryData.getSql(), queryData.getSource());
-        List<BcqHeaderDisplay2> headerList = namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
-                new BeanPropertyRowMapper<>(BcqHeaderDisplay2.class));
+                queryData.getSql(), queryData.getSource().getValues());
+        List<BcqHeaderPageDisplay> headerList = namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
+                new BeanPropertyRowMapper<>(BcqHeaderPageDisplay.class));
         log.debug("[DAO-BCQ] Found {} headers", headerList.size());
         return new PageImpl<>(headerList, pageableRequest.getPageable(), totalRecords);
     }
@@ -463,12 +440,8 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     private int getTotalRecords(PageableRequest pageableRequest) {
-        Map<String, String> mapParams = pageableRequest.getMapParams();
-        QueryBuilder queryBuilder = new QueryBuilder()
-                .select().count()
-                .from(headerJoinFile)
-                .where(uniqueHeader);
-        QueryData queryData = addParams(queryBuilder, mapParams, false).build();
+        QueryData queryData = new BcqQueryHelper().queryHeaderPageCount(pageableRequest);
+        log.debug("QUERY: {}, {}", queryData.getSql(), queryData.getSource().getValues());
         return namedParameterJdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Integer.class);
     }
 

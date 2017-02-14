@@ -7,7 +7,7 @@ import com.pemc.crss.metering.dto.bcq.BcqDataDisplay;
 import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay2;
+import com.pemc.crss.metering.dto.bcq.BcqHeaderPageDisplay;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
 import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
@@ -80,9 +80,9 @@ public class BcqResource {
 
     @PostMapping(value = "/list")
     @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
-    public ResponseEntity<DataTableResponse<BcqHeaderDisplay2>> executeSearch(@RequestBody final PageableRequest request) {
-        Page<BcqHeaderDisplay2> headerPage = bcqService.findAllHeaders(request);
-        DataTableResponse<BcqHeaderDisplay2> response = new DataTableResponse<BcqHeaderDisplay2>()
+    public ResponseEntity<DataTableResponse<BcqHeaderPageDisplay>> executeSearch(@RequestBody final PageableRequest request) {
+        Page<BcqHeaderPageDisplay> headerPage = bcqService.findAllHeaders(request);
+        DataTableResponse<BcqHeaderPageDisplay> response = new DataTableResponse<BcqHeaderPageDisplay>()
                 .withData(headerPage.getContent())
                 .withRecordsTotal(headerPage.getTotalElements());
         return ok(response);

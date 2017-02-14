@@ -5,7 +5,7 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay2;
+import com.pemc.crss.metering.dto.bcq.BcqHeaderPageDisplay;
 import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
@@ -23,7 +23,7 @@ public interface BcqDao {
 
     List<BcqHeader> saveHeaderList(List<BcqHeader> headerList, boolean isSpecialEvent);
 
-    Page<BcqHeaderDisplay2> findAllHeaders(PageableRequest pageableRequest);
+    Page<BcqHeaderPageDisplay> findAllHeaders(PageableRequest pageableRequest);
 
     List<BcqHeader> findAllHeaders(Map<String, String> params);
 
