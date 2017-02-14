@@ -14,11 +14,13 @@ import java.util.Arrays;
 @EnableAsync
 public class CacheConfig {
 
+    // TODO: Change implementation to ehcache 3.x JSR 107
     @Bean
     public CacheManager cacheManager() {
         SimpleCacheManager cacheManager = new SimpleCacheManager();
-        Cache cache = new ConcurrentMapCache("config");
-        cacheManager.setCaches(Arrays.asList(cache));
+        Cache configCache = new ConcurrentMapCache("config");
+        Cache mspCache = new ConcurrentMapCache("msp");
+        cacheManager.setCaches(Arrays.asList(configCache, mspCache));
 
         return cacheManager;
     }

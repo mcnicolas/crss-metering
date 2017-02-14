@@ -1,10 +1,13 @@
 package com.pemc.crss.metering.notification;
 
-import com.google.common.base.MoreObjects;
+import lombok.Data;
+import lombok.ToString;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Data
+@ToString
 public class Notification {
     // TODO: check for correlated id if it was needed here
     /**
@@ -42,62 +45,4 @@ public class Notification {
         this.serial = timestamp;
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public Long getSerial() {
-        return serial;
-    }
-
-    public void setSerial(Long serial) {
-        this.serial = serial;
-    }
-
-    public String getRecipientDeptCode() {
-        return recipientDeptCode;
-    }
-
-    public void setRecipientDeptCode(String recipientDeptCode) {
-        this.recipientDeptCode = recipientDeptCode;
-    }
-
-    public Long getSenderId() {
-        return senderId;
-    }
-
-    public void setSenderId(Long senderId) {
-        this.senderId = senderId;
-    }
-
-    public Long getRecipientId() {
-        return recipientId;
-    }
-
-    public void setRecipientId(Long recipientId) {
-        this.recipientId = recipientId;
-    }
-
-    public Map<String, Object> getPayload() {
-        return payload;
-    }
-
-    public void setPayload(Map<String, Object> payload) {
-        this.payload = payload;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("code", code)
-                .add("senderId", senderId)
-                .add("recipientId", recipientId)
-                .add("recipientDeptCode", recipientDeptCode)
-                .add("payload", payload)
-                .toString();
-    }
 }

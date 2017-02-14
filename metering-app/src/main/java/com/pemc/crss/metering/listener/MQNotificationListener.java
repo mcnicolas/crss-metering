@@ -5,7 +5,6 @@ import com.pemc.crss.metering.notification.NotificationService;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
@@ -16,9 +15,6 @@ public class MQNotificationListener extends AbstractNotificationListener
 
     private final MeterService meterService;
     private final NotificationService notificationService;
-
-    @Value("${mq.manifest.upload.notif.target.department}")
-    private String targetDepartments[];
 
     @Autowired
     public MQNotificationListener(MeterService meterService, NotificationService notificationService) {

@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.listener;
 
 import com.pemc.crss.metering.dto.mq.FileManifest;
+import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -10,7 +11,6 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
@@ -22,6 +22,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.Set;
 
 import static com.pemc.crss.metering.utils.FileTypeUtils.getFileType;
 import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
@@ -32,9 +33,6 @@ import static org.springframework.amqp.core.ExchangeTypes.DIRECT;
 public class MeterQuantityListener {
 
     private final MeterService meterService;
-
-    @Value("${mq.manifest.upload.notif.target.department}")
-    private String targetDepartments[];
 
     @Autowired
     public MeterQuantityListener(MeterService meterService) {
