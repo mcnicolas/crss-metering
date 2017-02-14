@@ -36,8 +36,6 @@ public class MeterQuantityExcelReader implements QuantityReader {
 
         MeterData retVal = new MeterData();
 
-        Date parseDate = new Date();
-
         try {
             // TODO: Use poi eventmodel for faster processing
             Workbook workbook = WorkbookFactory.create(inputStream);
@@ -62,7 +60,7 @@ public class MeterQuantityExcelReader implements QuantityReader {
                 meterData.setFileID(fileManifest.getFileID());
                 meterData.setUploadType(fileManifest.getUploadType());
                 meterData.setMspShortName(fileManifest.getMspShortName());
-                meterData.setCreatedDateTime(parseDate);
+                meterData.setCreatedDateTime(fileManifest.getUploadDateTime());
 
                 meterDataList.add(meterData);
             }

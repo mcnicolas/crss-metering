@@ -58,7 +58,6 @@ public class MeterQuantityListener {
         fileManifest.setFileType(getFileType(fileName));
         fileManifest.setFileSize(fileContent.length);
         fileManifest.setChecksum(checksum);
-        fileManifest.setUploadDateTime(new Date());
 
         try {
             meterService.processMeterData(fileManifest, fileContent);

@@ -51,8 +51,6 @@ public class MeterQuantityMDEFReader implements QuantityReader {
 
             Map<String, MeterDataDetail> meterDataMap = new HashMap<>();
 
-            Date createdDateTime = new Date();
-
             for (MDEFChannelHeader channel : mdefMeterData.getChannels()) {
                 int intervalPerHour = MINUTES_IN_HOUR / channel.getIntervalPerHour();
 
@@ -73,7 +71,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
                             value.setFileID(fileManifest.getFileID());
                             value.setUploadType(fileManifest.getUploadType());
                             value.setMspShortName(fileManifest.getMspShortName());
-                            value.setCreatedDateTime(createdDateTime);
+                            value.setCreatedDateTime(fileManifest.getUploadDateTime());
 
                             value.setSein(interval.getCustomerID());
                             value.setInterval(intervalPerHour);

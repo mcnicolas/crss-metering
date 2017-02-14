@@ -109,6 +109,7 @@ public class DefaultMeterService implements MeterService {
 
         fileManifest.setTransactionID(headerManifest.getTransactionID());
         fileManifest.setMspShortName(headerManifest.getMspShortName());
+        fileManifest.setUploadDateTime(headerManifest.getUploadDateTime());
 
         UploadType uploadType = UploadType.valueOf(headerManifest.getCategory().toUpperCase());
         fileManifest.setUploadType(uploadType);

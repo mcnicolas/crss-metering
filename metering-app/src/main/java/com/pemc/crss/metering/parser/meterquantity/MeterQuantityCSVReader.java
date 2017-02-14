@@ -33,8 +33,6 @@ public class MeterQuantityCSVReader implements QuantityReader {
     public MeterData readData(FileManifest fileManifest, InputStream inputStream) throws ParseException {
         MeterData meterData = new MeterData();
 
-        Date parseDate = new Date();
-
         try (ICsvListReader reader = new CsvListReader(new InputStreamReader(inputStream), STANDARD_PREFERENCE)) {
             List<MeterDataDetail> meterDataDetails = new ArrayList<>();
 
@@ -54,7 +52,7 @@ public class MeterQuantityCSVReader implements QuantityReader {
                 detail.setFileID(fileManifest.getFileID());
                 detail.setUploadType(fileManifest.getUploadType());
                 detail.setMspShortName(fileManifest.getMspShortName());
-                detail.setCreatedDateTime(parseDate);
+                detail.setCreatedDateTime(fileManifest.getUploadDateTime());
 
                 meterDataDetails.add(detail);
             }
