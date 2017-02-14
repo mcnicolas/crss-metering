@@ -49,4 +49,6 @@ public interface BcqService {
 
     List<BcqSpecialEventParticipant> findEventParticipantsByTradingDate(Date tradingDate);
 
+    Date findEventDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName);
+
 }

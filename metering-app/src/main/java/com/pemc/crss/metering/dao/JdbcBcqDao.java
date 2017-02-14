@@ -363,6 +363,24 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
+    public Date findEventDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName) {
+        log.debug("[DAO-BCQ] Finding event deadline date of: {}", shortName);
+        QueryData queryData = new QueryBuilder()
+                .select()
+                .column("DEADLINE_DATE")
+                .from("TXN_BCQ_SPECIAL_EVENT SE"
+                        + " INNER JOIN TXN_BCQ_EVENT_PARTICIPANT EP ON SE.EVENT_ID = EP.EVENT_ID"
+                        + " INNER JOIN TXN_BCQ_EVENT_TRADING_DATE ETD ON SE.EVENT_ID = ETD.EVENT_ID")
+                .where()
+                .filter(new QueryFilter("ETD.TRADING_DATE", tradingDate))
+                .and()
+                .filter(new QueryFilter("EP.TRADING_PARTICIPANT", shortName))
+                .build();
+        log.debug("[DAO-BCQ] Finding event query: {}", queryData.getSql());
+        return namedParameterJdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Date.class);
+    }
+
+    @Override
     public List<ReportBean> queryBcqDataReport(final Map<String, String> mapParams) {
         QueryBuilder builder = new QueryBuilder(bcqReportFlattened);
         QueryData queryData = addParams(builder, mapParams, true).build();
@@ -379,7 +397,7 @@ public class JdbcBcqDao implements BcqDao {
         log.debug("[DAO-BCQ] Saving header: {}, {}, {}",
                 header.getSellingMtn(), header.getBillingId(), header.getTradingDate());
         if (isSpecialEvent) {
-            header.setDeadlineDate(findDeadlineDateByTradingDateAndParticipant(header.getTradingDate(),
+            header.setDeadlineDate(findEventDeadlineDateByTradingDateAndParticipant(header.getTradingDate(),
                     header.getBuyingParticipantShortName()));
         } else {
             long tradingDateInMillis = header.getTradingDate().getTime();
@@ -567,23 +585,6 @@ public class JdbcBcqDao implements BcqDao {
         }
         namedParameterJdbcTemplate.batchUpdate(insertEventParticipant, sourceArray);
         log.debug("[DAO-BCQ] Saved event participant list");
-    }
-
-    private Date findDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName) {
-        log.debug("[DAO-BCQ] Finding event deadline date of: {}", shortName);
-        QueryData queryData = new QueryBuilder()
-                .select()
-                .column("DEADLINE_DATE")
-                .from("TXN_BCQ_SPECIAL_EVENT SE"
-                        + " INNER JOIN TXN_BCQ_EVENT_PARTICIPANT EP ON SE.EVENT_ID = EP.EVENT_ID"
-                        + " INNER JOIN TXN_BCQ_EVENT_TRADING_DATE ETD ON SE.EVENT_ID = ETD.EVENT_ID")
-                .where()
-                .filter(new QueryFilter("ETD.TRADING_DATE", tradingDate))
-                .and()
-                .filter(new QueryFilter("EP.TRADING_PARTICIPANT", shortName))
-                .build();
-        log.debug("[DAO-BCQ] Finding event query: {}", queryData.getSql());
-        return namedParameterJdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Date.class);
     }
 
     private class BcqHeaderRowMapper implements RowMapper<BcqHeader> {

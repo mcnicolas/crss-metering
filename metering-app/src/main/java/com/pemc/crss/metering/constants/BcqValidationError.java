@@ -49,7 +49,8 @@ public enum BcqValidationError {
     NO_SPECIAL_EVENT_FOUND(""),
     PARTICIPANTS_NOT_PRESENT_IN_SPECIAL_EVENT("Following participant(s) were not included in the special event for "
             + "the trading date of %s.<br />%s"),
-    OVERRIDDEN_ENTRIES("Following entry(ies) have already been overridden for the trading date of %s.<br />%s.");
+    OVERRIDDEN_ENTRIES("Following entry(ies) have already been overridden for the trading date of %s.<br />%s."),
+    DEADLINE_DATE_PASSED("Deadline date of special event for <b>%s</b> has passed");
 
     private final String errorMessage;
 

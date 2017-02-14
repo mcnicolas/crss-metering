@@ -48,6 +48,8 @@ public interface BcqDao {
 
     List<BcqSpecialEventParticipant> findEventParticipantsByTradingDate(Date tradingDate);
 
+    Date findEventDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName);
+
     List<ReportBean> queryBcqDataReport(Map<String, String> mapParams);
 
 }

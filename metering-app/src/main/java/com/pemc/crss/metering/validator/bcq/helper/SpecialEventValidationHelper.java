@@ -11,16 +11,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
 import static com.pemc.crss.metering.constants.BcqValidationError.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
+import static com.pemc.crss.metering.utils.DateTimeUtils.now;
 import static com.pemc.crss.metering.validator.bcq.helper.BcqValidationHelperUtils.getFormattedSellingMtnAndBillingIdPair;
 import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation.emptyInst;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
@@ -31,10 +35,12 @@ import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 public class SpecialEventValidationHelper {
 
     private final BcqService bcqService;
+    private final List<BcqSpecialEventParticipant> eventParticipants = new ArrayList<>();
 
     public Validation<List<BcqHeader>> validSpecialEventUpload(String sellingParticipant) {
         return participantsWithTradingDateExist()
-                .and(noManualOverridden(sellingParticipant));
+                .and(noManualOverridden(sellingParticipant))
+                .and(deadlineDateNotPassed());
     }
 
     private HeaderListValidation participantsWithTradingDateExist() {
@@ -52,6 +58,7 @@ public class SpecialEventValidationHelper {
                 validation.setErrorMessage(new BcqValidationErrorMessage(NO_SPECIAL_EVENT_FOUND));
                 return false;
             }
+            eventParticipants.addAll(headerParticipants);
             headerParticipants.removeAll(participants);
             if (headerParticipants.size() > 0) {
                 String notPresentParticipants = headerParticipants.stream()
@@ -88,6 +95,28 @@ public class SpecialEventValidationHelper {
                 return false;
             }
             return true;
+        };
+        validation.setPredicate(predicate);
+        return validation;
+    }
+
+    private HeaderListValidation deadlineDateNotPassed() {
+        HeaderListValidation validation = emptyInst();
+        Predicate<List<BcqHeader>> predicate = headerList -> {
+            Date tradingDate = headerList.get(0).getTradingDate();
+            return eventParticipants.stream().allMatch(eventParticipant -> {
+                Date deadlineDate = bcqService.findEventDeadlineDateByTradingDateAndParticipant(tradingDate,
+                        eventParticipant.getShortName());
+
+                if (now().getTime() > deadlineDate.getTime()) {
+                    String participantName = eventParticipant.getParticipantName() + " ("
+                            + eventParticipant.getShortName() + ")";
+                    validation.setErrorMessage(new BcqValidationErrorMessage(DEADLINE_DATE_PASSED,
+                            singletonList(participantName)));
+                    return false;
+                }
+                return true;
+            });
         };
         validation.setPredicate(predicate);
         return validation;

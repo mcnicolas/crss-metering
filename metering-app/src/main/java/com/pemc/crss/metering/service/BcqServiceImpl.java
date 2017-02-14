@@ -188,6 +188,11 @@ public class BcqServiceImpl implements BcqService {
         return bcqDao.findEventParticipantsByTradingDate(tradingDate);
     }
 
+    @Override
+    public Date findEventDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName) {
+        return bcqDao.findEventDeadlineDateByTradingDateAndParticipant(tradingDate, shortName);
+    }
+
     /****************************************************
      * SUPPORT METHODS
      ****************************************************/
