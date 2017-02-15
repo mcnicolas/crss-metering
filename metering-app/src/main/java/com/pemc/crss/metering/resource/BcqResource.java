@@ -2,6 +2,7 @@ package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
+import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.ValidationStatus;
 import com.pemc.crss.metering.dto.bcq.BcqDataDisplay;
 import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
@@ -44,12 +45,12 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static com.pemc.crss.metering.constants.BcqStatus.VOID;
-import static com.pemc.crss.metering.constants.BcqStatus.fromString;
+import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.lang.Long.parseLong;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.http.ResponseEntity.badRequest;
@@ -183,14 +184,21 @@ public class BcqResource {
 
     @GetMapping("/declaration/{headerId}/previous")
     @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
-    public List<BcqHeaderDisplay> getPrevHeaders(@PathVariable long headerId) {
+    public List<BcqHeaderDisplay> getPrevHeaders(@PathVariable long headerId,
+                                                 @RequestParam(required = false) boolean isSettlement) {
         log.debug("[REST-BCQ] Request for getting previous headers of header with ID: {}", headerId);
         BcqHeader header = bcqService.findHeader(headerId);
         if (header == null) {
             log.debug("[REST-BCQ] No found header with ID: {}", headerId);
             return null;
         }
-        List<BcqHeader> prevHeaders = bcqService.findSameHeadersWithStatusNotIn(header, singletonList(VOID));
+        List<BcqStatus> excludedStatus;
+        if (isSettlement) {
+            excludedStatus = singletonList(VOID);
+        } else {
+            excludedStatus = asList(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATED, FOR_APPROVAL_CANCEL);
+        }
+        List<BcqHeader> prevHeaders = bcqService.findSameHeadersWithStatusNotIn(header, excludedStatus);
         List<BcqHeaderDisplay> prevHeadersDisplay = prevHeaders.stream().map(BcqHeaderDisplay::new).collect(toList());
         log.debug("[REST-BCQ] Found {} prev headers display: {}", prevHeadersDisplay.size());
         return prevHeadersDisplay;
