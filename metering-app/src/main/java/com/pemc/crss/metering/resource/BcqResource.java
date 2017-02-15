@@ -23,6 +23,8 @@ import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
 import com.pemc.crss.metering.validator.bcq.handler.BcqValidationHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -49,6 +51,7 @@ import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
+import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -68,15 +71,18 @@ public class BcqResource {
     private final BcqValidationHandler validationHandler;
     private final BcqService bcqService;
     private final BcqReportService reportService;
+    private final CacheManager cacheManager;
 
     @Autowired
     public BcqResource(final BcqReader bcqReader, final BcqValidationHandler validationHandler,
-                       final BcqService bcqService, final BcqReportService reportService) {
+                       final BcqService bcqService, final BcqReportService reportService,
+                       final CacheManager cacheManager) {
 
         this.bcqReader = bcqReader;
         this.validationHandler = validationHandler;
         this.bcqService = bcqService;
         this.reportService = reportService;
+        this.cacheManager = cacheManager;
     }
 
     @PostMapping(value = "/list")
@@ -288,6 +294,13 @@ public class BcqResource {
         response.setHeader("Content-disposition", "attachment; filename=" + filename);
 
         reportService.generateBcqDataReport(mapParams, response.getOutputStream());
+    }
+
+    @GetMapping("/settlement/config")
+    public int TradingDateconfig() {
+        Cache configCache = cacheManager.getCache("config");
+        Cache.ValueWrapper valueWrapper = configCache.get("BCQ_ALLOWABLE_TRADING_DATE");
+        return valueWrapper == null ? 1 : parseInt(valueWrapper.get().toString());
     }
 
 
