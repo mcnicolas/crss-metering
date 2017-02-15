@@ -26,7 +26,7 @@ public class BcqDataReportBuilder extends AbstractReportBuilder {
             "Selling Participant",
             "Buying Participant",
             "Selling MTN",
-            "Billing ID",
+            "Buyer Billing ID",
             "Trading Date",
             "Transaction ID",
             "Submitted Date / Time",
