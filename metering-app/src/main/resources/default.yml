@@ -247,19 +247,26 @@ bcq:
         STATUS,
         TRADING_DATE,
         DEADLINE_DATE,
-        UPDATED_VIA)
+        UPDATED_VIA,
+        CREATED_DATE,
+        MODIFIED_DATE)
       VALUES (NEXTVAL('HIBERNATE_SEQUENCE'),
         :fileId, :sellingMtn, :billingId,
         :buyingParticipantUserId, :buyingParticipantName, :buyingParticipantShortName,
         :sellingParticipantUserId, :sellingParticipantName, :sellingParticipantShortName,
-        :status, :tradingDate, :deadlineDate, :updatedVia)
+        :status, :tradingDate, :deadlineDate, :updatedVia,
+        now(), now())
     status:
       update: >
-        UPDATE TXN_BCQ_HEADER SET STATUS = :status WHERE HEADER_ID = :headerId
+        UPDATE TXN_BCQ_HEADER SET
+          STATUS = :status,
+          MODIFIED_DATE = now()
+        WHERE HEADER_ID = :headerId
       update-settlement: >
         UPDATE TXN_BCQ_HEADER SET
           STATUS = :status,
-          UPDATED_VIA = :updatedVia
+          UPDATED_VIA = :updatedVia,
+          MODIFIED_DATE = now()
         WHERE HEADER_ID = :headerId
     list:
       header-join-file: >
@@ -351,7 +358,7 @@ bcq:
         DEADLINE_DATE,
         REMARKS,
         CREATED_DATE)
-      VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), :deadlineDate, :remarks, :createdDate)
+      VALUES (NEXTVAL('HIBERNATE_SEQUENCE'), :deadlineDate, :remarks, now())
     trading-date:
       insert: >
         INSERT INTO TXN_BCQ_EVENT_TRADING_DATE (

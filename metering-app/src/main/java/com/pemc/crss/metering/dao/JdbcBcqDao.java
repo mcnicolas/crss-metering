@@ -305,8 +305,7 @@ public class JdbcBcqDao implements BcqDao {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource source = new MapSqlParameterSource()
                 .addValue("deadlineDate", DateTimeUtils.endOfDay(specialEvent.getDeadlineDate()))
-                .addValue("remarks", specialEvent.getRemarks())
-                .addValue("createdDate", DateTimeUtils.now());
+                .addValue("remarks", specialEvent.getRemarks());
         namedParameterJdbcTemplate.update(insertEvent, source, keyHolder, new String[]{"event_id"});
         long eventId = keyHolder.getKey().longValue();
         saveEventTradingDates(specialEvent.getTradingDates(), eventId);
