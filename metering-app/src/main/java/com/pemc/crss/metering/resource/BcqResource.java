@@ -102,7 +102,7 @@ public class BcqResource {
         return ok(declaration);
     }
 
-    @PostMapping(value = "/settlement/upload")
+    @PostMapping("/settlement/upload")
     @PreAuthorize("hasAuthority('BCQ_UPLOAD_BILATERAL_CONTRACT_QUANTITY')")
     public ResponseEntity<?> uploadBySettlement(@RequestParam("file") MultipartFile multipartFile,
                                                 @RequestPart String sellerDetailsString,
@@ -114,7 +114,7 @@ public class BcqResource {
         String sellerShortName = sellerDetailsArray[2];
         ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerUserId, sellerName,
                 sellerShortName);
-        BcqDeclaration declaration = processAndValidateDeclaration(multipartFile, sellerDetails,
+        BcqDeclaration declaration = processAndValidateSettlementDeclaration(multipartFile, sellerDetails,
                 parseDate(tradingDateString));
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("[REST-BCQ] Finished uploading and rejecting of: {}", multipartFile.getOriginalFilename());
@@ -298,9 +298,9 @@ public class BcqResource {
         return declaration;
     }
 
-    private BcqDeclaration processAndValidateDeclaration(MultipartFile multipartFile,
-                                                         ParticipantSellerDetails sellerDetails,
-                                                         Date tradingDate) throws IOException {
+    private BcqDeclaration processAndValidateSettlementDeclaration(MultipartFile multipartFile,
+                                                                   ParticipantSellerDetails sellerDetails,
+                                                                   Date tradingDate) throws IOException {
 
         List<List<String>> csv = bcqReader.readCsv(multipartFile.getInputStream());
         BcqDeclaration declaration = validationHandler.processAndValidateForSettlement(csv, sellerDetails, tradingDate);
