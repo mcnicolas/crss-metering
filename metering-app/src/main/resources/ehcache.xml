@@ -1,0 +1,22 @@
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="ehcache.xsd"
+         updateCheck="false" dynamicConfig="false" maxBytesLocalHeap="5M">
+
+    <cache name="config"
+           eternal="true">
+        <persistence strategy="none"/>
+    </cache>
+
+    <cache name="msp"
+           eternal="false"
+           timeToLiveSeconds="86400">
+        <persistence strategy="none"/>
+    </cache>
+
+    <cache name="user"
+           eternal="false"
+           timeToLiveSeconds="86400">
+        <persistence strategy="none"/>
+    </cache>
+
+</ehcache>

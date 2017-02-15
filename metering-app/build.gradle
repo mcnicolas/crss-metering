@@ -58,11 +58,14 @@ dependencies {
 
     compile 'org.springframework.security.oauth:spring-security-oauth2'
 
+    compile 'net.sf.ehcache:ehcache'
+
     runtime 'com.zaxxer:HikariCP'
     runtime 'org.postgresql:postgresql'
     runtime files("$rootDir/libs/ojdbc6-11.2.0.4.jar")
 
     compile 'commons-io:commons-io'
+    compile 'commons-beanutils:commons-beanutils'
     compile 'org.apache.commons:commons-lang3'
 
     runtime 'de.appelgriepsch.logback:logback-gelf-appender'

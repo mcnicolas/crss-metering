@@ -3,11 +3,10 @@ package com.pemc.crss.metering.validator.mq;
 import com.pemc.crss.metering.constants.FileType;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
+import com.pemc.crss.metering.service.CacheService;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +15,7 @@ import static com.pemc.crss.metering.constants.FileType.XLS;
 import static com.pemc.crss.metering.constants.UploadType.DAILY;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Component
 @Order(value = 2)
@@ -23,11 +23,11 @@ public class CompleteDataValidator implements Validator {
 
     private static final int DEFAULT_INTERVAL = 15;
 
-    private final CacheManager cacheManager;
+    private final CacheService cacheService;
 
     @Autowired
-    public CompleteDataValidator(CacheManager cacheManager) {
-        this.cacheManager = cacheManager;
+    public CompleteDataValidator(CacheService cacheService) {
+        this.cacheService = cacheService;
     }
 
     @Override
@@ -38,11 +38,9 @@ public class CompleteDataValidator implements Validator {
         if ((fileType == XLS || fileType == CSV)
                 && fileManifest.getUploadType() == DAILY) {
 
-            Cache cache = cacheManager.getCache("config");
-
             int interval = DEFAULT_INTERVAL;
-            String intervalObj = cache.get("MQ_INTERVAL", String.class);
-            if (intervalObj != null) {
+            String intervalObj = cacheService.getConfig("MQ_INTERVAL");
+            if (isNotBlank(intervalObj)) {
                 interval = Integer.parseInt(intervalObj);
             }
 

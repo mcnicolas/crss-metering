@@ -79,6 +79,8 @@ subprojects {
             dependency 'commons-beanutils:commons-beanutils:1.9.3'
             dependency 'org.apache.commons:commons-lang3:3.5'
 
+            dependency 'net.sf.ehcache:ehcache:2.10.3'
+
             dependencySet(group:'org.apache.httpcomponents', version:'4.5.2') {
                 entry 'httpclient'
                 entry 'httpmime'

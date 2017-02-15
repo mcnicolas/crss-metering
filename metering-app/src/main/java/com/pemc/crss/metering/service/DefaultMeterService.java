@@ -45,8 +45,8 @@ public class DefaultMeterService implements MeterService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public DefaultMeterService(MeteringDao meteringDao, MeterQuantityParser meterQuantityParser,
-                               MQValidationHandler validationHandler, ApplicationEventPublisher eventPublisher) {
+    public DefaultMeterService(MeteringDao meteringDao, MeterQuantityParser meterQuantityParser, MQValidationHandler validationHandler,
+                               ApplicationEventPublisher eventPublisher) {
 
         this.meteringDao = meteringDao;
         this.meterQuantityParser = meterQuantityParser;
@@ -76,7 +76,8 @@ public class DefaultMeterService implements MeterService {
         return meteringDao.isHeaderValid(headerID);
     }
 
-    private String getUserName() {
+    @Override
+    public String getUserName() {
         String retVal = "";
 
         if (SecurityContextHolder.getContext() == null) {

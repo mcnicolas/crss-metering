@@ -6,18 +6,16 @@ import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.QuantityReader;
 import com.pemc.crss.metering.parser.meterquantity.MeterQuantityExcelReader;
+import com.pemc.crss.metering.resource.template.ResourceTemplate;
+import com.pemc.crss.metering.service.CacheService;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
-import org.springframework.cache.Cache;
-import org.springframework.cache.concurrent.ConcurrentMapCache;
-import org.springframework.cache.support.SimpleCacheManager;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.pemc.crss.metering.constants.FileType.XLS;
 import static com.pemc.crss.metering.constants.UploadType.DAILY;
@@ -79,17 +77,8 @@ public class CorrectIntervalValidatorTest {
         assertThat(result.getStatus(), is(equalTo(REJECTED)));
     }
 
-    private SimpleCacheManager initializeCache() {
-        Cache cache = new ConcurrentMapCache("config");
-        cache.put("MQ_INTERVAL", "15");
-
-        List<Cache> cacheList = new ArrayList<>();
-        cacheList.add(cache);
-
-        SimpleCacheManager cacheManager = new SimpleCacheManager();
-        cacheManager.setCaches(cacheList);
-        cacheManager.initializeCaches();
-        return cacheManager;
+    private CacheService initializeCache() {
+        return new CacheService(new ResourceTemplate(new RestTemplate()));
     }
 
 }

@@ -1,13 +1,12 @@
 package com.pemc.crss.metering.listener;
 
+import com.pemc.crss.metering.service.CacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -19,11 +18,11 @@ import static org.springframework.amqp.core.ExchangeTypes.TOPIC;
 @Component
 public class ConfigurationListener {
 
-    private final CacheManager cacheManager;
+    private final CacheService cacheService;
 
     @Autowired
-    public ConfigurationListener(CacheManager cacheManager) {
-        this.cacheManager = cacheManager;
+    public ConfigurationListener(CacheService cacheService) {
+        this.cacheService = cacheService;
     }
 
     @RabbitListener(bindings = @QueueBinding(
@@ -43,11 +42,7 @@ public class ConfigurationListener {
     }
 
     private void updateCache(Map<String, String> config) {
-        Cache cache = cacheManager.getCache("config");
-        config.forEach((k, v) -> {
-            log.debug("Key:{} Value:{}", k, v);
-            cache.put(k, v);
-        });
+        config.forEach((k, v) -> cacheService.updateConfig(k, v));
     }
 
 }

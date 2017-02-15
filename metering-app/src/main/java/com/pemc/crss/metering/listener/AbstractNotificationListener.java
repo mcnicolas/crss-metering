@@ -1,14 +1,15 @@
 package com.pemc.crss.metering.listener;
 
+import com.pemc.crss.metering.dto.UserDetail;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
+import com.pemc.crss.metering.dto.mq.ParticipantUserDetail;
 import com.pemc.crss.metering.notification.Notification;
 import com.pemc.crss.metering.notification.NotificationService;
+import com.pemc.crss.metering.service.CacheService;
 import com.pemc.crss.metering.service.MeterService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -31,7 +33,7 @@ public abstract class AbstractNotificationListener {
     private NotificationService notificationService;
 
     @Autowired
-    private CacheManager cacheManager;
+    private CacheService cacheService;
 
     public void notify(Long headerID) {
         MeterQuantityReport report = meterService.getReport(headerID);
@@ -67,40 +69,45 @@ public abstract class AbstractNotificationListener {
             map.put("rejectedFiles", rejectedFiles);
             map.put("unprocessedFileCount", totalUnprocessedFileCount);
             map.put("unprocessedFiles", unprocessedFiles);
-            map.put("uploadedBy", report.getUploadedBy());
+
+            ParticipantUserDetail participantUserDetail = cacheService.getParticipantUserDetail(headerManifest.getMspShortName());
+            Set<Long> userIDSet = participantUserDetail.getAssociatedUserID();
+
+            UserDetail userDetail = cacheService.getUserDetail(report.getUploadedBy());
+            if (userDetail.isPemcUser()) {
+                map.put("uploadedBy",
+                        String.format("%1$s (%2$s)", userDetail.getFullName(), userDetail.getUsername()));
+            } else {
+                map.put("uploadedBy",
+                        String.format("%1$s (%2$s)", participantUserDetail.getParticipantName(), participantUserDetail.getShortName()));
+            }
 
             long now = System.currentTimeMillis();
-            notifyDepartment(headerID, now, map);
-            notifyMSP(headerID, headerManifest.getMspShortName(), now, map);
+            notifyDepartment(now, map);
+            notifyMSP(now, map, userIDSet);
+
+            meterService.updateNotificationFlag(headerID);
         }
     }
 
-    private void notifyDepartment(long headerID, long now, Map<String, Object> map) {
+    private void notifyDepartment(long now, Map<String, Object> map) {
         Notification payload = new Notification("NTF_MQ_UPLOAD_DEPT", now);
         payload.setRecipientDeptCode("METERING");
 
         payload.setPayload(map);
         notificationService.notify(payload);
-
-        meterService.updateNotificationFlag(headerID);
     }
 
-    private void notifyMSP(long headerID, String mspShortName, long now, Map<String, Object> map) {
-        Cache mspCache = cacheManager.getCache("msp");
-        Cache.ValueWrapper wrapper = mspCache.get(mspShortName);
-        if (wrapper != null) {
-            Set<Integer> userIDSet = (Set<Integer>) wrapper.get();
-
+    private void notifyMSP(long now, Map<String, Object> map, Set<Long> userIDSet) {
+        if (isNotEmpty(userIDSet)) {
             userIDSet.forEach(userID -> {
                 Notification payload = new Notification("NTF_MQ_UPLOAD_MSP", now);
-                payload.setRecipientId((long)userID);
+                payload.setRecipientId(userID);
 
                 payload.setPayload(map);
                 notificationService.notify(payload);
             });
         }
-
-        meterService.updateNotificationFlag(headerID);
     }
 
 }

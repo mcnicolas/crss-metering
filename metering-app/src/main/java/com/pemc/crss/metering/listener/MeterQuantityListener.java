@@ -1,7 +1,6 @@
 package com.pemc.crss.metering.listener;
 
 import com.pemc.crss.metering.dto.mq.FileManifest;
-import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -21,8 +20,6 @@ import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.Set;
 
 import static com.pemc.crss.metering.utils.FileTypeUtils.getFileType;
 import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;

@@ -4,12 +4,11 @@ import com.pemc.crss.metering.constants.FileType;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.service.CacheService;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +23,9 @@ import static com.pemc.crss.metering.constants.FileType.CSV;
 import static com.pemc.crss.metering.constants.FileType.XLS;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
+import static java.lang.Integer.parseInt;
 import static java.util.Calendar.MINUTE;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Slf4j
 @Component
@@ -34,11 +35,11 @@ public class CorrectIntervalValidator implements Validator {
     private static final int DEFAULT_INTERVAL = 15;
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
 
-    private final CacheManager cacheManager;
+    private final CacheService cacheService;
 
     @Autowired
-    public CorrectIntervalValidator(CacheManager cacheManager) {
-        this.cacheManager = cacheManager;
+    public CorrectIntervalValidator(CacheService cacheService) {
+        this.cacheService = cacheService;
     }
 
     @Override
@@ -80,15 +81,9 @@ public class CorrectIntervalValidator implements Validator {
     }
 
     private int getInterval() {
-        Cache cache = cacheManager.getCache("config");
+        String interval = cacheService.getConfig("MQ_INTERVAL");
 
-        int interval = DEFAULT_INTERVAL;
-        String intervalObj = cache.get("MQ_INTERVAL", String.class);
-        if (intervalObj != null) {
-            interval = Integer.parseInt(intervalObj);
-        }
-
-        return interval;
+        return isNotBlank(interval) ? parseInt(interval) : DEFAULT_INTERVAL;
     }
 
 }

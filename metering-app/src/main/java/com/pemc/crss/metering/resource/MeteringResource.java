@@ -5,8 +5,8 @@ import com.pemc.crss.metering.dto.mq.FileParam;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.HeaderParam;
 import com.pemc.crss.metering.dto.mq.TrailerParam;
-import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.resource.validator.FileUploadValidator;
+import com.pemc.crss.metering.service.CacheService;
 import com.pemc.crss.metering.service.MeterService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -14,8 +14,6 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
@@ -33,7 +31,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -49,17 +46,15 @@ public class MeteringResource {
     private final MeterService meterService;
     private final RabbitTemplate rabbitTemplate;
     private final FileUploadValidator fileUploadValidator;
-    private final ResourceTemplate resourceTemplate;
-    private final CacheManager cacheManager;
+    private final CacheService cacheService;
 
     @Autowired
     public MeteringResource(MeterService meterService, RabbitTemplate rabbitTemplate, FileUploadValidator fileUploadValidator,
-                            ResourceTemplate resourceTemplate, CacheManager cacheManager) {
+                            CacheService cacheService) {
         this.meterService = meterService;
         this.rabbitTemplate = rabbitTemplate;
         this.fileUploadValidator = fileUploadValidator;
-        this.resourceTemplate = resourceTemplate;
-        this.cacheManager = cacheManager;
+        this.cacheService = cacheService;
     }
 
     @PreAuthorize("hasAuthority('MQ_UPLOAD_METER_DATA')")
@@ -69,21 +64,13 @@ public class MeteringResource {
     public ResponseEntity<Long> uploadHeader(@Valid @RequestBody HeaderParam headerParam) {
         log.debug("Received header record: {}", headerParam);
 
-        updateMSPCache(headerParam.getMspShortName());
+        cacheService.getParticipantUserDetail(headerParam.getMspShortName());
+        cacheService.getUserDetail(meterService.getUserName());
+
         Long headerID = meterService.saveHeader(headerParam);
         log.debug("Saved manifest header: {}", headerID);
 
         return ok(headerID);
-    }
-
-    private void updateMSPCache(String mspShortName) {
-        Cache mspCache = cacheManager.getCache("msp");
-        Cache.ValueWrapper wrapper = mspCache.get(mspShortName);
-        if (wrapper == null) {
-            Class<Set<Long>> clazz = (Class) Set.class;
-            Set<Long> userIDSet = resourceTemplate.get("/reg/participants/msp/userID/" + mspShortName, clazz);
-            mspCache.put(mspShortName, userIDSet);
-        }
     }
 
     @PreAuthorize("hasAuthority('MQ_UPLOAD_METER_DATA')")

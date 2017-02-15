@@ -8,6 +8,7 @@ import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.HeaderParam;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
+import com.pemc.crss.metering.dto.mq.ParticipantUserDetail;
 import com.pemc.crss.metering.validator.ValidationResult;
 import org.springframework.data.domain.Page;
 
@@ -19,6 +20,8 @@ public interface MeterService {
     Long saveHeader(HeaderParam headerParam);
 
     boolean isHeaderValid(long headerID);
+
+    String getUserName();
 
     String saveTrailer(long transactionID);
 
@@ -47,5 +50,7 @@ public interface MeterService {
     HeaderManifest getHeader(Long headerID);
 
     List<VersionData> getVersionedData(Map<String, String> request);
+
+//    ParticipantUserDetail getParticipantUserDetail(String shortName);
 
 }
