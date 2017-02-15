@@ -284,7 +284,6 @@ public class JdbcBcqDao implements BcqDao {
     @Override
     public void updateHeaderStatusBySettlement(long headerId, BcqStatus status) {
         log.debug("[DAO-BCQ] Updating status by settlement of header to {} with ID: {}", status, headerId);
-        BcqHeader header = findHeader(headerId);
         MapSqlParameterSource source = new MapSqlParameterSource()
                 .addValue("headerId", headerId)
                 .addValue("status", status.toString())
