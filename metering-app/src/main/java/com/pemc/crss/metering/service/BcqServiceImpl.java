@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.service;
 
+import com.pemc.crss.commons.cache.service.CacheConfigService;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
@@ -39,6 +40,7 @@ public class BcqServiceImpl implements BcqService {
 
     private final BcqDao bcqDao;
     private final BcqNotificationManager bcqNotificationManager;
+    private final CacheConfigService configService;
 
     @Override
     @Transactional
@@ -172,7 +174,8 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     public void processHeadersToSettlementReady() {
-        List<Long> headerIdsToUpdate = bcqDao.selectByStatusAndDeadlineDatePlusDays(CONFIRMED, 2);
+        int plusDays = configService.getIntegerValueForKey("BCQ_SETTLEMENT_READY_DEADLINE_PLUS_DAYS", 2);
+        List<Long> headerIdsToUpdate = bcqDao.selectByStatusAndDeadlineDatePlusDays(CONFIRMED, plusDays);
         log.info("[BCQ Service] Found the following header ids to be updated to {}: {}", SETTLEMENT_READY, headerIdsToUpdate);
         headerIdsToUpdate.forEach(id -> bcqDao.updateHeaderStatusById(id, SETTLEMENT_READY));
     }
