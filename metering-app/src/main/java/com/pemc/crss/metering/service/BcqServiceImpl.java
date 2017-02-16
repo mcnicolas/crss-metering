@@ -110,7 +110,7 @@ public class BcqServiceImpl implements BcqService {
     public void updateHeaderStatus(long headerId, BcqStatus status) {
         BcqHeader header = bcqDao.findHeader(headerId);
         validateUpdateStatus(header.getStatus(), status);
-        bcqDao.updateHeaderStatus(headerId, status);
+        bcqDao.checkAndUpdateHeaderStatus(headerId, status);
         bcqNotificationManager.sendUpdateStatusNotification(findHeader(headerId));
     }
 
@@ -146,7 +146,7 @@ public class BcqServiceImpl implements BcqService {
                 break;
         }
         validateUpdateStatus(header.getStatus(), statusToBe);
-        bcqDao.updateHeaderStatus(headerId, statusToBe);
+        bcqDao.checkAndUpdateHeaderStatus(headerId, statusToBe);
         bcqNotificationManager.sendApprovalNotification(header);
     }
 
@@ -154,7 +154,7 @@ public class BcqServiceImpl implements BcqService {
     @Transactional
     public void processUnconfirmedHeaders() {
         List<BcqHeader> unconfirmedHeaders = getExpiredHeadersByStatus(FOR_CONFIRMATION);
-        unconfirmedHeaders.forEach(header -> bcqDao.updateHeaderStatus(header.getHeaderId(), NOT_CONFIRMED));
+        unconfirmedHeaders.forEach(header -> bcqDao.checkAndUpdateHeaderStatus(header.getHeaderId(), NOT_CONFIRMED));
         Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unconfirmedHeaders);
         groupedHeaders.forEach((map, headerList) -> bcqNotificationManager
                 .sendUnprocessedNotification(headerList, NOT_CONFIRMED));
@@ -164,10 +164,17 @@ public class BcqServiceImpl implements BcqService {
     @Transactional
     public void processUnnullifiedHeaders() {
         List<BcqHeader> unnullifiedHeaders = getExpiredHeadersByStatus(FOR_NULLIFICATION);
-        unnullifiedHeaders.forEach(header -> bcqDao.updateHeaderStatus(header.getHeaderId(), CONFIRMED));
+        unnullifiedHeaders.forEach(header -> bcqDao.checkAndUpdateHeaderStatus(header.getHeaderId(), CONFIRMED));
         Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unnullifiedHeaders);
         groupedHeaders.forEach((map, headerList) -> bcqNotificationManager
                 .sendUnprocessedNotification(headerList, CONFIRMED));
+    }
+
+    @Override
+    public void processHeadersToSettlementReady() {
+        List<Long> headerIdsToUpdate = bcqDao.selectByStatusAndDeadlineDatePlusDays(CONFIRMED, 2);
+        log.info("[BCQ Service] Found the following header ids to be updated to {}: {}", SETTLEMENT_READY, headerIdsToUpdate);
+        headerIdsToUpdate.forEach(id -> bcqDao.updateHeaderStatusById(id, SETTLEMENT_READY));
     }
 
     @Override

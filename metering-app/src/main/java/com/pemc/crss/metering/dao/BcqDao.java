@@ -35,7 +35,9 @@ public interface BcqDao {
 
     List<BcqData> findDataByHeaderId(long headerId);
 
-    void updateHeaderStatus(long headerId, BcqStatus status);
+    void checkAndUpdateHeaderStatus(long headerId, BcqStatus status);
+
+    void updateHeaderStatusById(long headerId, BcqStatus status);
 
     void updateHeaderStatusBySettlement(long headerId, BcqStatus status);
 
@@ -51,5 +53,7 @@ public interface BcqDao {
     Date findEventDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName);
 
     List<ReportBean> queryBcqDataReport(Map<String, String> mapParams);
+
+    List<Long> selectByStatusAndDeadlineDatePlusDays(BcqStatus status, Integer plusDays);
 
 }

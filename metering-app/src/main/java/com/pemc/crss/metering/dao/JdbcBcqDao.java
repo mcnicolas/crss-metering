@@ -46,9 +46,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.pemc.crss.metering.constants.BcqStatus.*;
+import static com.pemc.crss.metering.constants.BcqStatus.CONFIRMED;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_NEW;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_UPDATED;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
+import static com.pemc.crss.metering.constants.BcqStatus.SETTLEMENT_READY;
+import static com.pemc.crss.metering.constants.BcqStatus.VOID;
+import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
-import static com.pemc.crss.metering.dao.query.ComparisonOperator.*;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.IN;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.LESS_THAN_EQUALS;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.LIKE;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.NOT_IN;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
@@ -77,6 +87,9 @@ public class JdbcBcqDao implements BcqDao {
 
     @Value("${bcq.header.status.update-settlement}")
     private String updateHeaderStatusBySettlement;
+
+    @Value("${bcq.header.status.select-by-status-and-deadlinedate-plus-days}")
+    private String selectByStatusAndDeadlineDatePlusDays;
 
     @Value("${bcq.header.list.header-join-file}")
     private String headerJoinFile;
@@ -260,7 +273,7 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public void updateHeaderStatus(long headerId, BcqStatus status) {
+    public void checkAndUpdateHeaderStatus(long headerId, BcqStatus status) {
         log.debug("[DAO-BCQ] Updating status of header to {} with ID: {}", status, headerId);
         BcqHeader header = findHeader(headerId);
         if (status == CONFIRMED || status == SETTLEMENT_READY) {
@@ -274,6 +287,12 @@ public class JdbcBcqDao implements BcqDao {
             BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
             updateHeaderStatusToVoid(prevHeader);
         }
+
+        updateHeaderStatusById(headerId, status);
+    }
+
+    @Override
+    public void updateHeaderStatusById(long headerId, BcqStatus status) {
         MapSqlParameterSource source = new MapSqlParameterSource()
                 .addValue("headerId", headerId)
                 .addValue("status", status.toString());
@@ -372,6 +391,16 @@ public class JdbcBcqDao implements BcqDao {
         log.debug("[BCQ Data Report] Querying sql: {} source: {}", queryData.getSql(), queryData.getSource().getValues());
 
         return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(), new BcqDataReportMapper());
+    }
+
+    @Override
+    public List<Long> selectByStatusAndDeadlineDatePlusDays(BcqStatus status, Integer plusDays) {
+        MapSqlParameterSource source = new MapSqlParameterSource()
+                .addValue("plusDays", plusDays)
+                .addValue("status", status.toString());
+
+        return namedParameterJdbcTemplate.queryForList(selectByStatusAndDeadlineDatePlusDays,
+                source, Long.class);
     }
 
     /****************************************************

@@ -43,6 +43,8 @@ public interface BcqService {
 
     void processUnnullifiedHeaders();
 
+    void processHeadersToSettlementReady();
+
     List<BcqSpecialEventList> getSpecialEvents();
 
     long saveSpecialEvent(BcqSpecialEvent specialEvent);
