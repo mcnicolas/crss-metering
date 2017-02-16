@@ -16,10 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -30,6 +27,7 @@ import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -119,6 +117,14 @@ public class BcqServiceImpl implements BcqService {
     @Override
     @Transactional
     public void updateHeaderStatusBySettlement(long headerId, BcqStatus status) {
+        BcqHeader header = bcqDao.findHeader(headerId);
+        List<BcqHeader> sameHeaders = findSameHeadersWithStatusNotIn(header, singletonList(VOID));
+        if (sameHeaders.size() > 1) {
+            BcqHeader latestHeader = sameHeaders.get(0);
+            if (headerId != latestHeader.getHeaderId()) {
+                throw new InvalidStateException("Unable to cancel BCQ. BCQ declaration has a new version.");
+            }
+        }
         bcqDao.updateHeaderStatusBySettlement(headerId, status);
         bcqNotificationManager.sendSettlementUpdateStatusNotification(findHeader(headerId));
     }
@@ -304,8 +310,6 @@ public class BcqServiceImpl implements BcqService {
                         "tradingDate", header.getTradingDate()
                 )));
     }
-
-
 
     private void validateUpdateStatus(BcqStatus oldStatus, BcqStatus newStatus) {
         if (asList(VOID, NULLIFIED, CONFIRMED, CANCELLED).contains(oldStatus)) {

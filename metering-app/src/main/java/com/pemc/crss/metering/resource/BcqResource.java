@@ -297,7 +297,7 @@ public class BcqResource {
     }
 
     @GetMapping("/settlement/config")
-    public int TradingDateconfig() {
+    public int getAllowableTradingDateConfig() {
         Cache configCache = cacheManager.getCache("config");
         Cache.ValueWrapper valueWrapper = configCache.get("BCQ_ALLOWABLE_TRADING_DATE");
         return valueWrapper == null ? 1 : parseInt(valueWrapper.get().toString());
