@@ -1,17 +1,28 @@
 package com.pemc.crss.metering.validator.bcq.handler;
 
+import com.pemc.crss.commons.cache.service.CacheConfigService;
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.constants.BcqValidationError;
-import com.pemc.crss.metering.dto.bcq.*;
+import com.pemc.crss.metering.dto.bcq.BcqData;
+import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqHeaderDetails;
+import com.pemc.crss.metering.dto.bcq.BcqItem;
+import com.pemc.crss.metering.dto.bcq.BcqParticipantDetails;
+import com.pemc.crss.metering.dto.bcq.ParticipantBuyerDetails;
+import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
+import com.pemc.crss.metering.dto.bcq.SellerWithItems;
 import com.pemc.crss.metering.resource.template.ResourceTemplate;
-import com.pemc.crss.metering.validator.bcq.*;
+import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
+import com.pemc.crss.metering.validator.bcq.CsvValidator;
+import com.pemc.crss.metering.validator.bcq.HeaderListValidator;
+import com.pemc.crss.metering.validator.bcq.OverrideValidator;
+import com.pemc.crss.metering.validator.bcq.ResubmissionValidator;
+import com.pemc.crss.metering.validator.bcq.SpecialEventValidator;
 import com.pemc.crss.metering.validator.bcq.helper.BcqPopulator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.Cache.ValueWrapper;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -23,9 +34,10 @@ import static com.pemc.crss.metering.constants.BcqInterval.FIVE_MINUTES_PERIOD;
 import static com.pemc.crss.metering.constants.BcqInterval.fromDescription;
 import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
 import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
-import static com.pemc.crss.metering.constants.BcqValidationError.*;
+import static com.pemc.crss.metering.constants.BcqValidationError.CLOSED_TRADING_DATE;
+import static com.pemc.crss.metering.constants.BcqValidationError.CRSS_SIDE_ERRORS;
+import static com.pemc.crss.metering.constants.BcqValidationError.NO_SPECIAL_EVENT_FOUND;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
-import static java.lang.Integer.parseInt;
 import static java.math.BigDecimal.ROUND_HALF_UP;
 import static java.math.BigDecimal.valueOf;
 import static java.util.Collections.singletonList;
@@ -50,7 +62,7 @@ public class BcqValidationHandler {
     private final ResubmissionValidator resubmissionValidator;
     private final OverrideValidator overrideValidator;
     private final ResourceTemplate resourceTemplate;
-    private final CacheManager cacheManager;
+    private final CacheConfigService configService;
 
     public BcqDeclaration processAndValidate(List<List<String>> csv) {
         ParticipantSellerDetails sellerDetails = getSellerDetails();
@@ -219,15 +231,9 @@ public class BcqValidationHandler {
         }).collect(toList());
     }
 
-    private int getIntervalConfig() {
-        Cache configCache = cacheManager.getCache("config");
-        ValueWrapper valueWrapper = configCache.get("BCQ_INTERVAL");
-        return valueWrapper == null ? 15 : parseInt(valueWrapper.get().toString());
-    }
-
     private List<BcqHeader> divideDataOfHeaderList(List<BcqHeader> headerList, BcqInterval interval) {
         if (interval != FIVE_MINUTES_PERIOD) {
-            int intervalConfig = getIntervalConfig();
+            int intervalConfig = configService.getIntegerValueForKey("BCQ_INTERVAL", 15);
             headerList.forEach(header -> {
                 List<BcqData> dividedDataList = new ArrayList<>();
                 header.getDataList().forEach(data ->

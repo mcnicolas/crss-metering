@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.resource;
 
+import com.pemc.crss.commons.cache.service.CacheConfigService;
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
@@ -23,8 +24,6 @@ import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
 import com.pemc.crss.metering.validator.bcq.handler.BcqValidationHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,11 +46,14 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static com.pemc.crss.metering.constants.BcqStatus.*;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_CANCEL;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_NEW;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_UPDATED;
+import static com.pemc.crss.metering.constants.BcqStatus.VOID;
+import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
-import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -71,18 +73,18 @@ public class BcqResource {
     private final BcqValidationHandler validationHandler;
     private final BcqService bcqService;
     private final BcqReportService reportService;
-    private final CacheManager cacheManager;
+    private final CacheConfigService configService;
 
     @Autowired
     public BcqResource(final BcqReader bcqReader, final BcqValidationHandler validationHandler,
                        final BcqService bcqService, final BcqReportService reportService,
-                       final CacheManager cacheManager) {
+                       final CacheConfigService configService) {
 
         this.bcqReader = bcqReader;
         this.validationHandler = validationHandler;
         this.bcqService = bcqService;
         this.reportService = reportService;
-        this.cacheManager = cacheManager;
+        this.configService = configService;
     }
 
     @PostMapping(value = "/list")
@@ -298,9 +300,7 @@ public class BcqResource {
 
     @GetMapping("/settlement/config")
     public int getAllowableTradingDateConfig() {
-        Cache configCache = cacheManager.getCache("config");
-        Cache.ValueWrapper valueWrapper = configCache.get("BCQ_ALLOWABLE_TRADING_DATE");
-        return valueWrapper == null ? 1 : parseInt(valueWrapper.get().toString());
+        return configService.getIntegerValueForKey("BCQ_ALLOWABLE_TRADING_DATE", 1);
     }
 
 

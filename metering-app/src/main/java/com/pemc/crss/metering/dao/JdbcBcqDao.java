@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.dao;
 
+import com.pemc.crss.commons.cache.service.CacheConfigService;
 import com.pemc.crss.commons.reports.ReportBean;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
@@ -23,9 +24,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
-import org.springframework.cache.Cache.ValueWrapper;
-import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -60,7 +58,6 @@ import static com.pemc.crss.metering.dao.query.ComparisonOperator.LESS_THAN_EQUA
 import static com.pemc.crss.metering.dao.query.ComparisonOperator.LIKE;
 import static com.pemc.crss.metering.dao.query.ComparisonOperator.NOT_IN;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
-import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.sql.Types.VARCHAR;
 import static java.util.Arrays.asList;
@@ -134,7 +131,7 @@ public class JdbcBcqDao implements BcqDao {
     private String bcqReportFlattened;
 
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private final CacheManager cacheManager;
+    private final CacheConfigService configService;
 
     @Override
     public long saveUploadFile(BcqUploadFile uploadFile) {
@@ -416,8 +413,9 @@ public class JdbcBcqDao implements BcqDao {
                 header.setDeadlineDate(findEventDeadlineDateByTradingDateAndParticipant(header.getTradingDate(),
                         header.getBuyingParticipantShortName()));
             } else {
+                int deadlineDays = configService.getIntegerValueForKey("BCQ_DECLARATION_DEADLINE", 1) + 1;
                 long tradingDateInMillis = header.getTradingDate().getTime();
-                long deadlineConfigInSeconds = DAYS.toSeconds(getDeadlineConfig());
+                long deadlineConfigInSeconds = DAYS.toSeconds(deadlineDays);
                 header.setDeadlineDate(new Date(tradingDateInMillis + SECONDS.toMillis(deadlineConfigInSeconds - 1)));
             }
         }
@@ -466,12 +464,6 @@ public class JdbcBcqDao implements BcqDao {
                     .addValue("headerId", header.getHeaderId());
             namedParameterJdbcTemplate.update(updateHeaderStatus, mapSource);
         }
-    }
-
-    private int getDeadlineConfig() {
-        Cache configCache = cacheManager.getCache("config");
-        ValueWrapper valueWrapper = configCache.get("BCQ_DECLARATION_DEADLINE");
-        return valueWrapper == null ? 2 : parseInt(valueWrapper.get().toString()) + 1;
     }
 
     private int getTotalRecords(PageableRequest pageableRequest) {
