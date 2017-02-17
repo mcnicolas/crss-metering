@@ -7,4 +7,6 @@ public interface BcqReportService {
 
     void generateBcqDataReport(Map<String, String> mapParams, OutputStream outputStream);
 
+    void generateBcqUploadTemplate(OutputStream outputStream);
+
 }

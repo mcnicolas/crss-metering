@@ -8,11 +8,12 @@ import org.supercsv.prefs.CsvPreference;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.List;
 
 @Slf4j
 public class ReportCsvWriter {
 
-    public static <T extends AbstractReportBuilder> void write(T reportBuilder, OutputStream outputStream) {
+    public static <T extends AbstractReportBuilder> void write(final T reportBuilder, final OutputStream outputStream) {
 
         try (ICsvBeanWriter beanWriter = new CsvBeanWriter(new OutputStreamWriter(outputStream),
                 CsvPreference.STANDARD_PREFERENCE)) {
@@ -23,6 +24,17 @@ public class ReportCsvWriter {
                 beanWriter.write(row, reportBuilder.getFieldMapper(), reportBuilder.getProcessors());
             }
 
+        } catch (IOException e) {
+            log.error("There was an error writing the csv file: " + e.getMessage());
+        }
+    }
+
+    public static void writeHeaders(final List<String[]> headerList, final OutputStream outputStream) {
+        try (ICsvBeanWriter writer = new CsvBeanWriter(new OutputStreamWriter(outputStream),
+                CsvPreference.STANDARD_PREFERENCE)) {
+            for (String[] header : headerList) {
+                writer.writeHeader(header);
+            }
         } catch (IOException e) {
             log.error("There was an error writing the csv file: " + e.getMessage());
         }

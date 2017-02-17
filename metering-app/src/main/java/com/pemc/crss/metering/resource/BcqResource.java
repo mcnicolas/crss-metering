@@ -305,6 +305,14 @@ public class BcqResource {
         reportService.generateBcqDataReport(mapParams, response.getOutputStream());
     }
 
+    @GetMapping("/template")
+    public void getBcqTemplate(final HttpServletResponse response) throws IOException {
+        response.setContentType("application/x-msdownload");
+        response.setHeader("Content-disposition", "attachment; filename=bcq_template.csv");
+
+        reportService.generateBcqUploadTemplate(response.getOutputStream());
+    }
+
     @GetMapping("/settlement/config")
     public int getAllowableTradingDateConfig() {
         return configService.getIntegerValueForKey("BCQ_ALLOWABLE_TRADING_DATE", 1);
