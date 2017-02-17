@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -24,7 +25,6 @@ import static com.pemc.crss.metering.utils.DateTimeUtils.now;
 import static com.pemc.crss.metering.validator.bcq.helper.BcqValidationHelperUtils.getFormattedSellingMtnAndBillingIdPair;
 import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation.emptyInst;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
@@ -104,19 +104,24 @@ public class SpecialEventValidationHelper {
         HeaderListValidation validation = emptyInst();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             Date tradingDate = headerList.get(0).getTradingDate();
-            return eventParticipants.stream().allMatch(eventParticipant -> {
+            StringJoiner eventParticipantsWithDeadlineDatePassed = new StringJoiner(", ");
+            for (BcqSpecialEventParticipant eventParticipant : eventParticipants.stream().distinct().collect(toList())) {
                 Date deadlineDate = bcqService.findEventDeadlineDateByTradingDateAndParticipant(tradingDate,
                         eventParticipant.getShortName());
 
                 if (now().getTime() > deadlineDate.getTime()) {
                     String participantName = eventParticipant.getParticipantName() + " ("
                             + eventParticipant.getShortName() + ")";
-                    validation.setErrorMessage(new BcqValidationErrorMessage(DEADLINE_DATE_PASSED,
-                            singletonList(participantName)));
-                    return false;
+                    eventParticipantsWithDeadlineDatePassed.add(participantName);
                 }
-                return true;
-            });
+            }
+            if (eventParticipantsWithDeadlineDatePassed.length() > 0) {
+                BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(DEADLINE_DATE_PASSED,
+                        asList(formatDate(tradingDate), eventParticipantsWithDeadlineDatePassed.toString()));
+                validation.setErrorMessage(errorMessage);
+                return false;
+            }
+            return true;
         };
         validation.setPredicate(predicate);
         return validation;
