@@ -107,10 +107,12 @@ public class MeterQuantityCSVReader implements QuantityReader {
 
         if (row.size() > index) {
             String value = row.get(index);
-            if (isParsable(value)) {
-                retVal = new BigDecimal(value).setScale(17, HALF_UP);
-            } else {
-                throw new ParseException("Meter reading is not a number.");
+            if (value != null) {
+                if (isParsable(value)) {
+                    retVal = new BigDecimal(value).setScale(17, HALF_UP);
+                } else {
+                    throw new ParseException("Meter reading is not a number.");
+                }
             }
         }
 

@@ -184,9 +184,12 @@ public class MeterQuantityExcelReader implements QuantityReader {
                     break;
                 case NUMERIC:
                     retVal = new BigDecimal(String.valueOf(cell.getNumericCellValue()));
+                    break;
             }
 
-            retVal.setScale(17, HALF_UP);
+            if (retVal != null) {
+                retVal.setScale(17, HALF_UP);
+            }
         }
 
         return retVal;
