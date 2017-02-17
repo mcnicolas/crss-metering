@@ -17,7 +17,7 @@ public class MQDisplayQueryBuilder {
     private List arguments = new ArrayList();
 
     public MQDisplayQueryBuilder selectMeterData(String category, Long readingDateFrom, Long readingDateTo, String version) {
-        sqlBuilder.append("SELECT DISTINCT ON (B.SEIN, B.READING_DATETIME)")
+        sqlBuilder.append("SELECT DISTINCT ON (A.TRANSACTION_ID, B.SEIN, B.READING_DATETIME)")
                 .append(" B.METER_DATA_ID, B.SEIN, A.TRANSACTION_ID, B.READING_DATETIME,")
                 .append(" B.KWD, B.KWHD, B.KVARHD, B.KWR, B.KWHR, B.KVARHR, B.ESTIMATION_FLAG");
 
