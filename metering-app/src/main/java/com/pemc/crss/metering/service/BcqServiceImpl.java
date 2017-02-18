@@ -3,6 +3,7 @@ package com.pemc.crss.metering.service;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
+import com.pemc.crss.metering.dao.exception.InvalidStateException;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
@@ -27,6 +28,8 @@ import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
 import static com.pemc.crss.metering.constants.BcqUpdateType.RESUBMISSION;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -107,6 +110,8 @@ public class BcqServiceImpl implements BcqService {
     @Override
     @Transactional
     public void updateHeaderStatus(long headerId, BcqStatus status) {
+        BcqHeader header = bcqDao.findHeader(headerId);
+        validateUpdateStatus(header.getStatus(), status);
         bcqDao.updateHeaderStatus(headerId, status);
         bcqNotificationManager.sendUpdateStatusNotification(findHeader(headerId));
     }
@@ -134,6 +139,7 @@ public class BcqServiceImpl implements BcqService {
             default:
                 break;
         }
+        validateUpdateStatus(header.getStatus(), statusToBe);
         bcqDao.updateHeaderStatus(headerId, statusToBe);
         bcqNotificationManager.sendApprovalNotification(header);
     }
@@ -297,6 +303,60 @@ public class BcqServiceImpl implements BcqService {
                         "status", header.getStatus(),
                         "tradingDate", header.getTradingDate()
                 )));
+    }
+
+
+
+    private void validateUpdateStatus(BcqStatus oldStatus, BcqStatus newStatus) {
+        if (asList(VOID, NULLIFIED, CONFIRMED, CANCELLED).contains(oldStatus)) {
+            String pastAction = "";
+            String pastActor = "";
+            String currentAction = "";
+            switch (oldStatus) {
+                case CANCELLED:
+                    pastAction = "cancelled";
+                    pastActor = "seller";
+                    break;
+                case CONFIRMED:
+                    if (newStatus == CANCELLED) {
+                        return;
+                    }
+                    pastAction = "confirmed";
+                    pastActor = "buyer";
+                    break;
+                case NULLIFIED:
+                    pastAction = "nullified";
+                    pastActor = "buyer";
+                    break;
+                default:
+                    break;
+            }
+            if (newStatus == null) {
+                currentAction = "approve";
+            } else {
+                switch (newStatus) {
+                    case CANCELLED:
+                        currentAction = "cancel";
+                        break;
+                    case CONFIRMED:
+                        currentAction = "confirm";
+                        break;
+                    case NULLIFIED:
+                        currentAction = "nullify";
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if (oldStatus == VOID) {
+                throw new InvalidStateException(format("Unable to %s BCQ. BCQ declaration has a new version.",
+                        currentAction));
+            } else {
+                throw new InvalidStateException(format("Unable to %s BCQ. BCQ declaration has already been %s by the %s",
+                        currentAction, pastAction, pastActor));
+            }
+        }
     }
 
 }

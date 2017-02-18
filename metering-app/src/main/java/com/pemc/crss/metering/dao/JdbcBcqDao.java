@@ -4,7 +4,6 @@ import com.pemc.crss.commons.reports.ReportBean;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.BcqUpdateType;
-import com.pemc.crss.metering.dao.exception.InvalidStateException;
 import com.pemc.crss.metering.dao.query.ComparisonOperator;
 import com.pemc.crss.metering.dao.query.QueryBuilder;
 import com.pemc.crss.metering.dao.query.QueryData;
@@ -47,25 +46,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.pemc.crss.metering.constants.BcqStatus.CANCELLED;
-import static com.pemc.crss.metering.constants.BcqStatus.CONFIRMED;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_NEW;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_UPDATED;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
-import static com.pemc.crss.metering.constants.BcqStatus.NULLIFIED;
-import static com.pemc.crss.metering.constants.BcqStatus.SETTLEMENT_READY;
-import static com.pemc.crss.metering.constants.BcqStatus.VOID;
-import static com.pemc.crss.metering.constants.BcqStatus.fromString;
+import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
-import static com.pemc.crss.metering.dao.query.ComparisonOperator.IN;
-import static com.pemc.crss.metering.dao.query.ComparisonOperator.LESS_THAN_EQUALS;
-import static com.pemc.crss.metering.dao.query.ComparisonOperator.LIKE;
-import static com.pemc.crss.metering.dao.query.ComparisonOperator.NOT_IN;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
-import static java.lang.String.format;
 import static java.sql.Types.VARCHAR;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -277,7 +263,6 @@ public class JdbcBcqDao implements BcqDao {
     public void updateHeaderStatus(long headerId, BcqStatus status) {
         log.debug("[DAO-BCQ] Updating status of header to {} with ID: {}", status, headerId);
         BcqHeader header = findHeader(headerId);
-        validateUpdateStatus(header.getStatus(), status);
         if (status == CONFIRMED || status == SETTLEMENT_READY) {
             List<BcqStatus> statusToCheck;
             if (status == CONFIRMED) {
@@ -299,6 +284,7 @@ public class JdbcBcqDao implements BcqDao {
     @Override
     public void updateHeaderStatusBySettlement(long headerId, BcqStatus status) {
         log.debug("[DAO-BCQ] Updating status by settlement of header to {} with ID: {}", status, headerId);
+        BcqHeader header = findHeader(headerId);
         MapSqlParameterSource source = new MapSqlParameterSource()
                 .addValue("headerId", headerId)
                 .addValue("status", status.toString())
@@ -514,54 +500,6 @@ public class JdbcBcqDao implements BcqDao {
             queryBuilder = queryBuilder.and().filter(new QueryFilter("STATUS", status));
         }
         return queryBuilder;
-    }
-
-    private void validateUpdateStatus(BcqStatus oldStatus, BcqStatus newStatus) {
-        if (asList(VOID, NULLIFIED, CONFIRMED, CANCELLED).contains(oldStatus)) {
-            String pastAction = "";
-            String pastActor = "";
-            String currentAction = "";
-            switch (oldStatus) {
-                case CANCELLED:
-                    pastAction = "cancelled";
-                    pastActor = "seller";
-                    break;
-                case CONFIRMED:
-                    if (newStatus == CANCELLED) {
-                        return;
-                    }
-                    pastAction = "confirmed";
-                    pastActor = "buyer";
-                    break;
-                case NULLIFIED:
-                    pastAction = "nullified";
-                    pastActor = "buyer";
-                    break;
-                default:
-                    break;
-            }
-            switch (newStatus) {
-                case CANCELLED:
-                    currentAction = "cancel";
-                    break;
-                case CONFIRMED:
-                    currentAction = "confirm";
-                    break;
-                case NULLIFIED:
-                    currentAction = "nullify";
-                    break;
-                default:
-                    break;
-            }
-
-            if (oldStatus == VOID) {
-                throw new InvalidStateException(format("Unable to %s BCQ. BCQ declaration has a new version.",
-                        currentAction));
-            } else {
-                throw new InvalidStateException(format("Unable to %s BCQ. BCQ declaration has already been %s by the %s",
-                        currentAction, pastAction, pastActor));
-            }
-        }
     }
 
     private void saveEventTradingDates(List<Date> tradingDateList, long eventId) {
