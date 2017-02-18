@@ -48,7 +48,7 @@ public class BcqQueryHelper {
                             isSettlement)).as("TRANSACTION_ID")
                     .column(subQuery("STRING_AGG(TO_CHAR(D.SUBMITTED_DATE, 'YYYY-MM-DD hh:MI AM'), ', ' "
                             + "ORDER BY D.SUBMITTED_DATE)", status, isSettlement)).as("SUBMITTED_DATE")
-                    .column(subQuery("STRING_AGG(TO_CHAR(C.DEADLINE_DATE, 'YYYY-MM-DD'), ', ' "
+                    .column(subQuery("STRING_AGG(COALESCE(TO_CHAR(C.DEADLINE_DATE, 'YYYY-MM-DD'), ' '), ', ' "
                             + "ORDER BY D.SUBMITTED_DATE)", status, isSettlement)).as("DEADLINE_DATE")
                     .column(subQuery("STRING_AGG(C.STATUS, ', ' ORDER BY D.SUBMITTED_DATE)", status, isSettlement))
                         .as("STATUS")

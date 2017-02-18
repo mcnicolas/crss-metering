@@ -396,13 +396,17 @@ public class JdbcBcqDao implements BcqDao {
     private long saveHeader(BcqHeader header, boolean isSpecialEvent) {
         log.debug("[DAO-BCQ] Saving header: {}, {}, {}",
                 header.getSellingMtn(), header.getBillingId(), header.getTradingDate());
-        if (isSpecialEvent) {
-            header.setDeadlineDate(findEventDeadlineDateByTradingDateAndParticipant(header.getTradingDate(),
-                    header.getBuyingParticipantShortName()));
+        if (header.getUpdatedVia() == MANUAL_OVERRIDE) {
+            header.setDeadlineDate(null);
         } else {
-            long tradingDateInMillis = header.getTradingDate().getTime();
-            long deadlineConfigInSeconds = DAYS.toSeconds(getDeadlineConfig());
-            header.setDeadlineDate(new Date(tradingDateInMillis + SECONDS.toMillis(deadlineConfigInSeconds - 1)));
+            if (isSpecialEvent) {
+                header.setDeadlineDate(findEventDeadlineDateByTradingDateAndParticipant(header.getTradingDate(),
+                        header.getBuyingParticipantShortName()));
+            } else {
+                long tradingDateInMillis = header.getTradingDate().getTime();
+                long deadlineConfigInSeconds = DAYS.toSeconds(getDeadlineConfig());
+                header.setDeadlineDate(new Date(tradingDateInMillis + SECONDS.toMillis(deadlineConfigInSeconds - 1)));
+            }
         }
         KeyHolder keyHolder = new GeneratedKeyHolder();
         List<BcqHeader> prevHeaders = findSameHeadersWithStatusIn(header,
