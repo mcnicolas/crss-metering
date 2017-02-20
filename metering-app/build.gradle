@@ -70,6 +70,9 @@ dependencies {
 
     runtime 'de.appelgriepsch.logback:logback-gelf-appender'
 
+    testCompile 'org.codehaus.groovy:groovy-all'
+    testCompile 'org.spockframework:spock-core'
+    testCompile 'org.spockframework:spock-spring'
     testCompile 'org.springframework.boot:spring-boot-starter-test'
 }
 
