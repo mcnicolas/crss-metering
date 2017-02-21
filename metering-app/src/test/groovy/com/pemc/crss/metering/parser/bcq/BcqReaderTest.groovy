@@ -42,7 +42,7 @@ class BcqReaderTest extends Specification {
     def 'reader must return null if csv is invalid'() {
         given:
         def csvFileName = 'sample_bcq_file_invalid.csv'
-        def csvFile = new File(BcqReaderTest.class.getClassLoader().getResource('bcq/sample-invalid/'
+        def csvFile = new File(BcqReaderTest.class.getClassLoader().getResource('bcq/sample/'
                 + csvFileName).getFile())
 
         when:
