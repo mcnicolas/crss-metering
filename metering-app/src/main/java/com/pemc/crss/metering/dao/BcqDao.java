@@ -3,10 +3,7 @@ package com.pemc.crss.metering.dao;
 import com.pemc.crss.commons.reports.ReportBean;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
-import com.pemc.crss.metering.dto.bcq.BcqData;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderPageDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
+import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
@@ -55,5 +52,7 @@ public interface BcqDao {
     List<ReportBean> queryBcqDataReport(Map<String, String> mapParams);
 
     List<Long> selectByStatusAndDeadlineDatePlusDays(BcqStatus status, Integer plusDays);
+
+    List<BillingIdShortNamePair> findAllBillingIdShortNamePair(List<String> billingIds, Date tradingDate);
 
 }

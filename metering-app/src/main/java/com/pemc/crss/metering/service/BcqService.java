@@ -2,10 +2,7 @@ package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
-import com.pemc.crss.metering.dto.bcq.BcqData;
-import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderPageDisplay;
+import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
@@ -52,5 +49,7 @@ public interface BcqService {
     List<BcqSpecialEventParticipant> findEventParticipantsByTradingDate(Date tradingDate);
 
     Date findEventDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName);
+
+    List<BillingIdShortNamePair> findAllBillingIdShortNamePair(List<String> billingIds, Date tradingDate);
 
 }

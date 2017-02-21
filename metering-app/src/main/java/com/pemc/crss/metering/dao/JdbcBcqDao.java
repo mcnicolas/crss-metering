@@ -9,10 +9,7 @@ import com.pemc.crss.metering.dao.query.ComparisonOperator;
 import com.pemc.crss.metering.dao.query.QueryBuilder;
 import com.pemc.crss.metering.dao.query.QueryData;
 import com.pemc.crss.metering.dao.query.QueryFilter;
-import com.pemc.crss.metering.dto.bcq.BcqData;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderPageDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
+import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.mapper.BcqDataReportMapper;
 import com.pemc.crss.metering.dto.bcq.mapper.BcqSpecialEventMapper;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
@@ -44,20 +41,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.pemc.crss.metering.constants.BcqStatus.CONFIRMED;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_NEW;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_UPDATED;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
-import static com.pemc.crss.metering.constants.BcqStatus.SETTLEMENT_READY;
-import static com.pemc.crss.metering.constants.BcqStatus.VOID;
-import static com.pemc.crss.metering.constants.BcqStatus.fromString;
+import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
-import static com.pemc.crss.metering.dao.query.ComparisonOperator.IN;
-import static com.pemc.crss.metering.dao.query.ComparisonOperator.LESS_THAN_EQUALS;
-import static com.pemc.crss.metering.dao.query.ComparisonOperator.LIKE;
-import static com.pemc.crss.metering.dao.query.ComparisonOperator.NOT_IN;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
+import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
 import static java.lang.Long.parseLong;
 import static java.sql.Types.VARCHAR;
 import static java.util.Arrays.asList;
@@ -336,7 +324,7 @@ public class JdbcBcqDao implements BcqDao {
                 .collect(Collectors.toList());
 
         MapSqlParameterSource paramSource = new MapSqlParameterSource()
-                .addValue("dateToday", DateTimeUtils.startOfDay(new Date()))
+                .addValue("dateToday", startOfDay(new Date()))
                 .addValue("tradingParticipants", tradingParticipants)
                 .addValue("tradingDates", tradingDatesAtStartOfDay);
 
@@ -398,6 +386,31 @@ public class JdbcBcqDao implements BcqDao {
 
         return namedParameterJdbcTemplate.queryForList(selectByStatusAndDeadlineDatePlusDays,
                 source, Long.class);
+    }
+
+    @Override
+    public List<BillingIdShortNamePair> findAllBillingIdShortNamePair(List<String> billingIds, Date tradingDate) {
+        log.debug("[DAO-BCQ] Finding pair with billing ids: {}, trading date: {}", billingIds, tradingDate);
+        tradingDate = startOfDay(tradingDate);
+        QueryData queryData = new QueryBuilder()
+                .select()
+                .column("BILLING_ID")
+                .column("TRADING_PARTICIPANT_SHORT_NAME")
+                .from("MAP_BILLING_ID_TAX_DATA")
+                .where()
+                .filter(new QueryFilter("BILLING_ID", billingIds, IN))
+                .and()
+                .filter(new QueryFilter("EFFECTIVE_START_DATE", tradingDate, LESS_THAN_EQUALS))
+                .and()
+                .openParenthesis()
+                .filter(new QueryFilter("EFFECTIVE_END_DATE", tradingDate, GREATER_THAN))
+                .or()
+                .filter("EFFECTIVE_END_DATE IS NULL")
+                .closeParenthesis()
+                .build();
+        log.debug("[DAO-BCQ] Finding pair query: {}", queryData.getSql());
+        return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
+                new BeanPropertyRowMapper<>(BillingIdShortNamePair.class));
     }
 
     /****************************************************
@@ -528,7 +541,7 @@ public class JdbcBcqDao implements BcqDao {
         for (int i = 0; i < tradingDateList.size(); i ++) {
             sourceArray[i] = new MapSqlParameterSource()
                     .addValue("eventId", eventId)
-                    .addValue("tradingDate", DateTimeUtils.startOfDay(tradingDateList.get(i)));
+                    .addValue("tradingDate", startOfDay(tradingDateList.get(i)));
         }
         namedParameterJdbcTemplate.batchUpdate(insertEventTradingDate, sourceArray);
         log.debug("[DAO-BCQ] Saved event trading date list");

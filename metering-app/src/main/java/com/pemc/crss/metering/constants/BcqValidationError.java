@@ -39,7 +39,7 @@ public enum BcqValidationError {
     SELLING_MTN_UNREGISTERED("Unregistered selling MTN. Selling MTN <b>%s</b> does not exist."),
     SELLING_MTN_NOT_OWNED("Unregistered selling MTN. "
             + "Selling MTN <b>%s</b> is not registered under Seller <b>%s (%s)</b>."),
-    BILLING_ID_NOT_EXIST("Billing ID: <b>%s</b> does not exist."),
+    BILLING_ID_NOT_EXIST("Following billing ID(s) do not exist.<br />%s"),
     NO_ACTIVE_CONTRACT("Active enrollment does not exist. "
             + "No active contract between Seller <b>%s (%s)</b> and Buyer <b>%s (%s)</b>."),
     REFERENCE_MTN_UNREGISTERED("Unregistered reference MTN. Reference MTN <b>%s</b> does not exist."),
@@ -49,7 +49,7 @@ public enum BcqValidationError {
     NO_SPECIAL_EVENT_FOUND(""),
     PARTICIPANTS_NOT_PRESENT_IN_SPECIAL_EVENT("Following participant(s) were not included in the special event for "
             + "the trading date of %s.<br />%s"),
-    OVERRIDDEN_ENTRIES("Following entry(ies) have already been overridden for the trading date of %s.<br />%s."),
+    OVERRIDDEN_ENTRIES("Following entry(ies) have already been overridden for the trading date of %s.<br />%s"),
     DEADLINE_DATE_PASSED("Deadline date of special event for trading date <b>%s</b> and participants <b>%s</b> has "
             + "passed.");
 
@@ -64,6 +64,6 @@ public enum BcqValidationError {
     }
 
     public static List<BcqValidationError> CRSS_SIDE_ERRORS = asList(SELLING_MTN_UNREGISTERED, SELLING_MTN_NOT_OWNED,
-            BILLING_ID_NOT_EXIST, NO_ACTIVE_CONTRACT, REFERENCE_MTN_UNREGISTERED, REFERENCE_MTN_NOT_IN_CONTRACT);
+            NO_ACTIVE_CONTRACT, REFERENCE_MTN_UNREGISTERED, REFERENCE_MTN_NOT_IN_CONTRACT);
 
 }

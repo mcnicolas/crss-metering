@@ -17,7 +17,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -213,6 +216,11 @@ public class BcqServiceImpl implements BcqService {
     @Override
     public Date findEventDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName) {
         return bcqDao.findEventDeadlineDateByTradingDateAndParticipant(tradingDate, shortName);
+    }
+
+    @Override
+    public List<BillingIdShortNamePair> findAllBillingIdShortNamePair(List<String> billingIds, Date tradingDate) {
+        return bcqDao.findAllBillingIdShortNamePair(billingIds, tradingDate);
     }
 
     /****************************************************
