@@ -36,9 +36,7 @@ public class QueryBuilder {
     private static final String OPEN_PARENTHESIS = "(";
     private static final String CLOSE_PARENTHESIS = ")";
 
-    public QueryBuilder() {
-
-    }
+    public QueryBuilder() {}
 
     public QueryBuilder(final String initQuery) {
         this.sqlBuilder = new StringBuilder(initQuery);
@@ -93,29 +91,9 @@ public class QueryBuilder {
         return this;
     }
 
-    public QueryBuilder where(String whereClause) {
-        sqlBuilder.append(WHERE);
-        sqlBuilder.append(whereClause);
-        return this;
-    }
-
-    public QueryBuilder where(QueryFilter queryFilter) {
-        return filter(WHERE, queryFilter);
-    }
-
     public QueryBuilder and() {
         sqlBuilder.append(AND);
         return this;
-    }
-
-    public QueryBuilder and(String andStatement) {
-        sqlBuilder.append(AND);
-        sqlBuilder.append(andStatement);
-        return this;
-    }
-
-    public QueryBuilder and(QueryFilter queryFilter) {
-        return filter(AND, queryFilter);
     }
 
     public QueryBuilder or() {
@@ -123,24 +101,9 @@ public class QueryBuilder {
         return this;
     }
 
-    public QueryBuilder or(String orStatement) {
-        sqlBuilder.append(OR);
-        sqlBuilder.append(orStatement);
-        return this;
-    }
-
-    public QueryBuilder or(QueryFilter queryFilter) {
-        return filter(OR, queryFilter);
-    }
-
     public QueryBuilder openParenthesis() {
         sqlBuilder.append(OPEN_PARENTHESIS);
         return this;
-    }
-
-    public QueryBuilder openParenthesis(QueryFilter queryFilter) {
-        sqlBuilder.append(OPEN_PARENTHESIS);
-        return filter(queryFilter);
     }
 
     public QueryBuilder closeParenthesis() {
@@ -179,11 +142,6 @@ public class QueryBuilder {
         sqlBuilder.append(OFFSET);
         sqlBuilder.append(pageNo * pageSize);
         return this;
-    }
-
-    private QueryBuilder filter(String clause, QueryFilter queryFilter) {
-        sqlBuilder.append(clause);
-        return filter(queryFilter);
     }
 
     public QueryBuilder filter(String customFilter) {
