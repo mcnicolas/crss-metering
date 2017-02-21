@@ -13,6 +13,5 @@ public class ParticipantBuyerDetails {
     private String name;
     private String shortName;
     private boolean bcqConfirmation;
-    private String billingId;
 
 }

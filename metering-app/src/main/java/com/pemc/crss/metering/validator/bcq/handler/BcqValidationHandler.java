@@ -91,7 +91,11 @@ public class BcqValidationHandler {
             return declaration.withValidationResult(validationResult);
         }
 
-        List<BcqItem> uniqueItems = getUniqueItems(headerList, billingIdShortNamePairs);
+        headerList.forEach(header ->
+                header.setBuyingParticipantShortName(getShortNameByBillingId(header.getBillingId(),
+                        billingIdShortNamePairs)));
+
+        List<BcqItem> uniqueItems = getUniqueItems(headerList);
         BcqParticipantDetails participantDetails = getAndValidate(uniqueItems);
         if (participantDetails.getValidationResult().getStatus() == REJECTED) {
             return declaration.withValidationResult(participantDetails.getValidationResult());
@@ -125,7 +129,11 @@ public class BcqValidationHandler {
             return declaration.withValidationResult(validationResult);
         }
 
-        List<BcqItem> uniqueItems = getUniqueItems(headerList, billingIdShortNamePairs);
+        headerList.forEach(header ->
+                header.setBuyingParticipantShortName(getShortNameByBillingId(header.getBillingId(),
+                        billingIdShortNamePairs)));
+
+        List<BcqItem> uniqueItems = getUniqueItems(headerList);
         BcqParticipantDetails participantDetails = getAndValidate(uniqueItems);
         if (participantDetails.getValidationResult().getStatus() == REJECTED) {
             return declaration.withValidationResult(participantDetails.getValidationResult());
@@ -178,7 +186,11 @@ public class BcqValidationHandler {
             return declaration.withValidationResult(validationResult);
         }
 
-        List<BcqItem> uniqueItems = getUniqueItems(headerList, billingIdShortNamePairs);
+        headerList.forEach(header ->
+                header.setBuyingParticipantShortName(getShortNameByBillingId(header.getBillingId(),
+                        billingIdShortNamePairs)));
+
+        List<BcqItem> uniqueItems = getUniqueItems(headerList);
         SellerWithItems sellerWithItems = new SellerWithItems(sellerDetails, uniqueItems);
         BcqParticipantDetails participantDetails = getAndValidate(sellerWithItems);
         if (participantDetails.getValidationResult().getStatus() == REJECTED) {
@@ -209,8 +221,7 @@ public class BcqValidationHandler {
         return declaration.withHeaderDetailsList(headerDetailsList);
     }
 
-    private List<BcqItem> getUniqueItems(List<BcqHeader> headerList,
-                                         List<BillingIdShortNamePair> billingIdShortNamePairs) {
+    private List<BcqItem> getUniqueItems(List<BcqHeader> headerList) {
 
         return headerList.stream().
                 map(header -> {
@@ -219,11 +230,8 @@ public class BcqValidationHandler {
                             .distinct()
                             .collect(toList());
                     BcqItem item = new BcqItem();
-                    String billingId = header.getBillingId();
-                    String tradingParticipantShortName = getShortNameByBillingId(billingId, billingIdShortNamePairs);
-
                     item.setSellingMtn(header.getSellingMtn());
-                    item.setTradingParticipantShortName(tradingParticipantShortName);
+                    item.setTradingParticipantShortName(header.getBuyingParticipantShortName());
                     item.setReferenceMtns(referenceMtns);
                     return item;
                 })
@@ -242,16 +250,16 @@ public class BcqValidationHandler {
                                                               BcqParticipantDetails participantDetails) {
 
         return headerList.stream().map(header -> {
+            header.setSellingParticipantUserId(sellerDetails.getUserId());
             header.setSellingParticipantName(sellerDetails.getName());
-            header.setBuyingParticipantShortName(sellerDetails.getShortName());
+            header.setSellingParticipantShortName(sellerDetails.getShortName());
             ParticipantBuyerDetails buyerDetails =
                     participantDetails.getBuyerDetailsList().stream()
-                            .filter(buyer -> buyer.getBillingId().equals(header.getBillingId()))
+                            .filter(buyer -> buyer.getShortName().equals(header.getBuyingParticipantShortName()))
                             .collect(toList())
                             .get(0);
             header.setBuyingParticipantUserId(buyerDetails.getUserId());
             header.setBuyingParticipantName(buyerDetails.getName());
-            header.setBuyingParticipantShortName(buyerDetails.getShortName());
             header.setStatus(buyerDetails.isBcqConfirmation() ? FOR_NULLIFICATION : FOR_CONFIRMATION);
             return header;
         }).collect(toList());
