@@ -29,8 +29,6 @@ public class BillingIdValidationHelper {
             billingIds.removeAll(billingIdShortNamePairs.stream()
                     .map(BillingIdShortNamePair::getBillingId).collect(toList()));
 
-            log.debug("SHORTNAME: {}", billingIdShortNamePairs);
-            log.debug("BILLINGIDS: {}", billingIds);
             if (billingIds.size() > 0) {
                 StringJoiner noRecordBillingIds = new StringJoiner(", ");
                 billingIds.forEach(noRecordBillingIds::add);
