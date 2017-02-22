@@ -68,7 +68,7 @@ public class BcqDataReportBuilder extends AbstractReportBuilder {
             new FmtDate(BcqDateUtils.DATE_FORMAT),
             new NotNull(),
             new FmtDate(BcqDateUtils.DATE_TIME_FORMAT),
-            new FmtDate(BcqDateUtils.DATE_FORMAT),
+            new Optional(new FmtDate(BcqDateUtils.DATE_FORMAT)),
             new NotNull(),
             new Optional(),
             new NotNull(),
