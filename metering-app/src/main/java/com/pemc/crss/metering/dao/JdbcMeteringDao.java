@@ -256,10 +256,14 @@ public class JdbcMeteringDao implements MeteringDao {
 
         log.debug("Version query:{}", query.getSql());
 
-        return jdbcTemplate.query(
-                query.getSql(),
-                query.getArguments(),
-                new BeanPropertyRowMapper<>(VersionData.class));
+        if (query.getArguments().length > 0) {
+            return jdbcTemplate.query(
+                    query.getSql(),
+                    query.getArguments(),
+                    new BeanPropertyRowMapper<>(VersionData.class));
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     private String getValue(BigDecimal reading) {
@@ -326,8 +330,12 @@ public class JdbcMeteringDao implements MeteringDao {
             localDate = dateFrom;
         }
 
-        LocalDateTime dateTime = LocalDate.parse(localDate, DATE_FORMAT).atTime(23, 59);
-        return Long.valueOf(dateTime.format(DATETIME_FORMAT));
+        if (isNotBlank(localDate)) {
+            LocalDateTime dateTime = LocalDate.parse(localDate, DATE_FORMAT).atTime(23, 59);
+            return Long.valueOf(dateTime.format(DATETIME_FORMAT));
+        } else {
+            return null;
+        }
     }
 
     @Override
