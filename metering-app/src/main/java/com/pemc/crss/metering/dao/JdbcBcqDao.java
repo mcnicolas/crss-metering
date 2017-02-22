@@ -45,6 +45,7 @@ import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
 import static com.pemc.crss.metering.dao.query.ComparisonOperator.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
+import static com.pemc.crss.metering.utils.DateTimeUtils.now;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
 import static java.lang.Long.parseLong;
 import static java.sql.Types.VARCHAR;
@@ -344,6 +345,8 @@ public class JdbcBcqDao implements BcqDao {
                         + " INNER JOIN TXN_BCQ_EVENT_TRADING_DATE ETD ON SE.EVENT_ID = ETD.EVENT_ID")
                 .where()
                 .filter(new QueryFilter("ETD.TRADING_DATE", tradingDate))
+                .and()
+                .filter(new QueryFilter("SE.DEADLINE_DATE", now(), GREATER_THAN))
                 .build();
         log.debug("[DAO-BCQ] Finding event query: {}", queryData.getSql());
         return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
@@ -363,6 +366,8 @@ public class JdbcBcqDao implements BcqDao {
                 .filter(new QueryFilter("ETD.TRADING_DATE", tradingDate))
                 .and()
                 .filter(new QueryFilter("EP.TRADING_PARTICIPANT", shortName))
+                .and()
+                .filter(new QueryFilter("SE.DEADLINE_DATE", now(), GREATER_THAN))
                 .build();
         log.debug("[DAO-BCQ] Finding event query: {}", queryData.getSql());
         return namedParameterJdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Date.class);
