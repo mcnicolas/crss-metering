@@ -5,14 +5,7 @@ import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.ValidationStatus;
-import com.pemc.crss.metering.dto.bcq.BcqDataDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderPageDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
-import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
+import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventForm;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
@@ -27,14 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -46,21 +32,14 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_CANCEL;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_NEW;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_UPDATED;
-import static com.pemc.crss.metering.constants.BcqStatus.VOID;
-import static com.pemc.crss.metering.constants.BcqStatus.fromString;
+import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
-import static java.lang.Long.parseLong;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static org.springframework.http.ResponseEntity.badRequest;
-import static org.springframework.http.ResponseEntity.ok;
-import static org.springframework.http.ResponseEntity.unprocessableEntity;
+import static org.springframework.http.ResponseEntity.*;
 
 @Slf4j
 @RestController
@@ -118,11 +97,9 @@ public class BcqResource {
                                                 @RequestPart String tradingDateString) throws IOException {
         log.debug("[REST-BCQ] Request for settlement uploading of: {}", multipartFile.getOriginalFilename());
         String[] sellerDetailsArray = sellerDetailsString.split(", ");
-        long sellerUserId = parseLong(sellerDetailsArray[0]);
         String sellerName = sellerDetailsArray[1];
         String sellerShortName = sellerDetailsArray[2];
-        ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerUserId, sellerName,
-                sellerShortName);
+        ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerName, sellerShortName);
         BcqDeclaration declaration = processAndValidateSettlementDeclaration(multipartFile, sellerDetails,
                 parseDate(tradingDateString));
         if (declaration.getValidationResult().getStatus() == REJECTED) {
@@ -260,8 +237,7 @@ public class BcqResource {
                         "tradingDate", tradingDate,
                         "expired", "expired")
         ).stream().map(header ->
-                new ParticipantSellerDetails(header.getSellingParticipantUserId(),
-                        header.getSellingParticipantName(),
+                new ParticipantSellerDetails(header.getSellingParticipantName(),
                         header.getSellingParticipantShortName()))
                 .distinct()
                 .collect(toList());

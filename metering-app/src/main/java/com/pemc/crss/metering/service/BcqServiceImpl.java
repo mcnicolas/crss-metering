@@ -237,7 +237,6 @@ public class BcqServiceImpl implements BcqService {
         declaration.getHeaderDetailsList().forEach(headerDetails -> {
             ParticipantSellerDetails sellerDetails = declaration.getSellerDetails();
             BcqHeader header = headerDetails.target();
-            header.setSellingParticipantUserId(sellerDetails.getUserId());
             header.setSellingParticipantName(sellerDetails.getName());
             header.setSellingParticipantShortName(sellerDetails.getShortName());
             headerList.add(header);
@@ -322,8 +321,8 @@ public class BcqServiceImpl implements BcqService {
     private Map<Map<String, Object>, List<BcqHeader>> getGroupedHeaderList(List<BcqHeader> headerList) {
         return headerList.stream()
                 .collect(groupingBy(header -> of(
-                        "sellerUserId", header.getSellingParticipantUserId(),
-                        "buyerUserId", header.getBuyingParticipantUserId(),
+                        "sellerShortName", header.getSellingParticipantShortName(),
+                        "buyerShortName", header.getBuyingParticipantShortName(),
                         "status", header.getStatus(),
                         "tradingDate", header.getTradingDate()
                 )));

@@ -172,10 +172,8 @@ public class JdbcBcqDao implements BcqDao {
                     .column("HEADER_ID")
                     .column("SELLING_MTN")
                     .column("BILLING_ID")
-                    .column("BUYING_PARTICIPANT_USER_ID")
                     .column("BUYING_PARTICIPANT_NAME")
                     .column("BUYING_PARTICIPANT_SHORT_NAME")
-                    .column("SELLING_PARTICIPANT_USER_ID")
                     .column("SELLING_PARTICIPANT_NAME")
                     .column("SELLING_PARTICIPANT_SHORT_NAME")
                     .column("TRADING_DATE")
@@ -212,10 +210,8 @@ public class JdbcBcqDao implements BcqDao {
                     .column("HEADER_ID")
                     .column("SELLING_MTN")
                     .column("BILLING_ID")
-                    .column("BUYING_PARTICIPANT_USER_ID")
                     .column("BUYING_PARTICIPANT_NAME")
                     .column("BUYING_PARTICIPANT_SHORT_NAME")
-                    .column("SELLING_PARTICIPANT_USER_ID")
                     .column("SELLING_PARTICIPANT_NAME")
                     .column("SELLING_PARTICIPANT_SHORT_NAME")
                     .column("TRADING_DATE")
@@ -580,17 +576,11 @@ public class JdbcBcqDao implements BcqDao {
             if (doesColumnExist("billing_id", rs)) {
                 header.setBillingId(rs.getString("billing_id"));
             }
-            if (doesColumnExist("buying_participant_user_id", rs)) {
-                header.setBuyingParticipantUserId(rs.getLong("buying_participant_user_id"));
-            }
             if (doesColumnExist("buying_participant_name", rs)) {
                 header.setBuyingParticipantName(rs.getString("buying_participant_name"));
             }
             if (doesColumnExist("buying_participant_short_name", rs)) {
                 header.setBuyingParticipantShortName(rs.getString("buying_participant_short_name"));
-            }
-            if (doesColumnExist("selling_participant_user_id", rs)) {
-                header.setSellingParticipantUserId(rs.getLong("selling_participant_user_id"));
             }
             if (doesColumnExist("selling_participant_name", rs)) {
                 header.setSellingParticipantName(rs.getString("selling_participant_name"));

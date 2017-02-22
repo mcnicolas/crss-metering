@@ -250,7 +250,6 @@ public class BcqValidationHandler {
                                                               BcqParticipantDetails participantDetails) {
 
         return headerList.stream().map(header -> {
-            header.setSellingParticipantUserId(sellerDetails.getUserId());
             header.setSellingParticipantName(sellerDetails.getName());
             header.setSellingParticipantShortName(sellerDetails.getShortName());
             ParticipantBuyerDetails buyerDetails =
@@ -258,7 +257,6 @@ public class BcqValidationHandler {
                             .filter(buyer -> buyer.getShortName().equals(header.getBuyingParticipantShortName()))
                             .collect(toList())
                             .get(0);
-            header.setBuyingParticipantUserId(buyerDetails.getUserId());
             header.setBuyingParticipantName(buyerDetails.getName());
             header.setStatus(buyerDetails.isBcqConfirmation() ? FOR_NULLIFICATION : FOR_CONFIRMATION);
             return header;

@@ -38,10 +38,8 @@ public class BcqQueryHelper {
                     .column("SELLING_MTN")
                     .column("BILLING_ID")
                     .column("TO_CHAR(TRADING_DATE, 'YYYY-MM-DD')").as("TRADING_DATE")
-                    .column("SELLING_PARTICIPANT_USER_ID")
                     .column("SELLING_PARTICIPANT_NAME")
                     .column("SELLING_PARTICIPANT_SHORT_NAME")
-                    .column("BUYING_PARTICIPANT_USER_ID")
                     .column("BUYING_PARTICIPANT_NAME")
                     .column("BUYING_PARTICIPANT_SHORT_NAME")
                     .column(subQuery("STRING_AGG(D.TRANSACTION_ID, ', ' ORDER BY D.SUBMITTED_DATE)", status,

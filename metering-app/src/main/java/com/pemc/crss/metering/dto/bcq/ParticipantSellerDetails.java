@@ -11,7 +11,6 @@ import lombok.ToString;
 @AllArgsConstructor
 public class ParticipantSellerDetails {
 
-    private long userId;
     private String name;
     private String shortName;
 

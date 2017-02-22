@@ -9,7 +9,6 @@ import lombok.ToString;
 @NoArgsConstructor
 public class ParticipantBuyerDetails {
 
-    private long userId;
     private String name;
     private String shortName;
     private boolean bcqConfirmation;
