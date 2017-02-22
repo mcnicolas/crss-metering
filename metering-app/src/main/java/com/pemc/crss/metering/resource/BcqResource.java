@@ -97,8 +97,8 @@ public class BcqResource {
                                                 @RequestPart String tradingDateString) throws IOException {
         log.debug("[REST-BCQ] Request for settlement uploading of: {}", multipartFile.getOriginalFilename());
         String[] sellerDetailsArray = sellerDetailsString.split(", ");
-        String sellerName = sellerDetailsArray[1];
-        String sellerShortName = sellerDetailsArray[2];
+        String sellerName = sellerDetailsArray[0];
+        String sellerShortName = sellerDetailsArray[1];
         ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerName, sellerShortName);
         BcqDeclaration declaration = processAndValidateSettlementDeclaration(multipartFile, sellerDetails,
                 parseDate(tradingDateString));
