@@ -6,7 +6,7 @@ public enum BcqStatus {
 
     CANCELLED("Cancelled"),
     CONFIRMED("Confirmed"),
-    NOT_CONFIRMED("Non Confirmed"),
+    NOT_CONFIRMED("Not Confirmed"),
     FOR_CONFIRMATION("For Confirmation"),
     NULLIFIED("Nullified"),
     NOT_NULLIFIED("Not Nullified"),
