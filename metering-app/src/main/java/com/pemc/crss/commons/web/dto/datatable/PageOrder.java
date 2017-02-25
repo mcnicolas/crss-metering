@@ -1,30 +1,21 @@
 package com.pemc.crss.commons.web.dto.datatable;
 
-import org.springframework.data.domain.Sort;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 
+import static org.springframework.data.domain.Sort.NullHandling.NULLS_LAST;
+
+@Data
+@AllArgsConstructor
 public class PageOrder {
 
     private String sortColumn;
+    private Direction sortDirection;
 
-    private Sort.Direction sortDirection;
-
-    public String getSortColumn() {
-        return sortColumn;
+    public Order getOrder() {
+        return new Order(sortDirection, sortColumn, NULLS_LAST);
     }
 
-    public void setSortColumn(String sortColumn) {
-        this.sortColumn = sortColumn;
-    }
-
-    public Sort.Direction getSortDirection() {
-        return sortDirection;
-    }
-
-    public void setSortDirection(Sort.Direction sortDirection) {
-        this.sortDirection = sortDirection;
-    }
-
-    public Sort.Order getOrder() {
-        return new Sort.Order(this.sortDirection, this.sortColumn, Sort.NullHandling.NULLS_LAST);
-    }
 }

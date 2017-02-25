@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.dao;
 
+import com.pemc.crss.commons.web.dto.datatable.PageOrder;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dao.query.QueryBuilder;
 import com.pemc.crss.metering.dao.query.QueryData;
@@ -13,16 +14,14 @@ import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.dao.query.ComparisonOperator.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.lang.Long.parseLong;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.of;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 public class BcqQueryHelper {
-
-    private static final String UNIQUE_HEADER_ID_QUERY =
-            "SELECT DISTINCT ON (SELLING_MTN, BILLING_ID, TRADING_DATE) HEADER_ID FROM TXN_BCQ_HEADER A"
-                    + " INNER JOIN TXN_BCQ_UPLOAD_FILE B ON A.FILE_ID = B.FILE_ID"
-                    + " ORDER BY SELLING_MTN, BILLING_ID, TRADING_DATE, SUBMITTED_DATE DESC";
 
     private static final String HEADER_JOIN_FILE =
             "TXN_BCQ_HEADER A INNER JOIN TXN_BCQ_UPLOAD_FILE B ON A.FILE_ID = B.FILE_ID";
@@ -72,10 +71,18 @@ public class BcqQueryHelper {
     }
 
     private QueryData queryUniqueHeaderIds(Map<String, String> mapParams) {
+        List<PageOrder> pageOrders = asList(
+                new PageOrder("SELLING_MTN", ASC),
+                new PageOrder("BILLING_ID", ASC),
+                new PageOrder("TRADING_DATE", ASC),
+                new PageOrder("HEADER_ID", DESC));
         QueryBuilder queryBuilder = new QueryBuilder()
                 .select().column("DISTINCT ON (SELLING_MTN, BILLING_ID, TRADING_DATE) HEADER_ID")
                 .from(HEADER_JOIN_FILE);
-        return addFilters(queryBuilder, mapParams).build();
+
+        return addFilters(queryBuilder, mapParams)
+                .orderBy(pageOrders)
+                .build();
     }
 
     private String subQuery(String query, String status, boolean isSettlement) {

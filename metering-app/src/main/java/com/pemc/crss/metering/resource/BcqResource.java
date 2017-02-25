@@ -174,6 +174,16 @@ public class BcqResource {
         return headerDisplay;
     }
 
+    @GetMapping("/declaration/{headerId}/data")
+    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
+    public List<BcqDataDisplay> getData(@PathVariable long headerId) {
+        log.debug("[REST-BCQ] Request for getting data of header with ID: {}", headerId);
+        List<BcqDataDisplay> dataDisplayList = bcqService.findDataByHeaderId(headerId).stream()
+                .map(BcqDataDisplay::new).collect(toList());
+        log.debug("[REST-BCQ] Found {} data of header with ID: {}", dataDisplayList.size(), headerId);
+        return dataDisplayList;
+    }
+
     @GetMapping("/declaration/{headerId}/previous")
     @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
     public List<BcqHeaderDisplay> getPrevHeaders(@PathVariable long headerId,
@@ -194,16 +204,6 @@ public class BcqResource {
         List<BcqHeaderDisplay> prevHeadersDisplay = prevHeaders.stream().map(BcqHeaderDisplay::new).collect(toList());
         log.debug("[REST-BCQ] Found {} prev headers display: {}", prevHeadersDisplay.size());
         return prevHeadersDisplay;
-    }
-
-    @GetMapping("/declaration/{headerId}/data")
-    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
-    public List<BcqDataDisplay> getData(@PathVariable long headerId) {
-        log.debug("[REST-BCQ] Request for getting data of header with ID: {}", headerId);
-        List<BcqDataDisplay> dataDisplayList = bcqService.findDataByHeaderId(headerId).stream()
-                .map(BcqDataDisplay::new).collect(toList());
-        log.debug("[REST-BCQ] Found {} data of header with ID: {}", dataDisplayList.size(), headerId);
-        return dataDisplayList;
     }
 
     @PostMapping("/declaration/{headerId}/{status}")
