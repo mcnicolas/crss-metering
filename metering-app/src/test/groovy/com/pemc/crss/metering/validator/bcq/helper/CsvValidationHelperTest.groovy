@@ -1,15 +1,14 @@
 package com.pemc.crss.metering.validator.bcq.helper
 
-import com.pemc.crss.metering.parser.bcq.BcqReader
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import static com.pemc.crss.metering.constants.BcqValidationError.*
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED
+import static com.pemc.crss.metering.validator.bcq.helper.ValidationHelperTestUtils.readCsv
 
 class CsvValidationHelperTest extends Specification {
 
-    def reader = new BcqReader()
     def CsvValidationHelper validationHelper = new CsvValidationHelper()
 
     @Unroll
@@ -44,16 +43,6 @@ class CsvValidationHelperTest extends Specification {
         'bcq_file_invalid_bcq_fractional_length' || INVALID_BCQ_LENGTH
         'bcq_file_duplicate'                     || DUPLICATE_DATE
         'bcq_file_different_date'                || INVALID_TRADING_DATE
-    }
-
-    def readCsv(String csvFileName) {
-        if (csvFileName == null) {
-            return null
-        }
-        def csvPath = 'bcq/validation/csv/'.concat(csvFileName).concat('.csv');
-        def file = new File(CsvValidationHelperTest.class.getClassLoader().getResource(csvPath).getFile())
-
-        return reader.readCsv(new FileInputStream(file))
     }
 
 }
