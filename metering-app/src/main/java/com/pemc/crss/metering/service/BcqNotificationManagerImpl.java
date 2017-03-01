@@ -64,10 +64,12 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
         String sellerName = firstHeader.getSellingParticipantName();
         String sellerShortName = firstHeader.getSellingParticipantShortName();
         Set<Integer> sellerUserIds = getUserIdsByShortName(sellerShortName);
+        String formattedTradingDate = formatLongDate(firstHeader.getTradingDate());
         sellerUserIds.forEach(sellerUserId ->
                 eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
                         .withCode(NTF_BCQ_SUBMIT_SELLER.toString())
                         .withRecipientId(sellerUserId)
+                        .addLoad("tradingDate", formattedTradingDate)
                         .addLoad("submittedDate", formattedSubmittedDate)
                         .addLoad("recordCount", recordCount)
                         .build())));
@@ -75,10 +77,8 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
             Set<Integer> buyerUserIds = getUserIdsByShortName(header.getBuyingParticipantShortName());
             buyerUserIds.forEach(buyerUserId -> {
                 BcqEventCode code = NTF_BCQ_SUBMIT_BUYER;
-                String formattedTradingDate = null;
                 if (header.isExists()) {
                     code = NTF_BCQ_UPDATE_BUYER;
-                    formattedTradingDate = formatLongDate(firstHeader.getTradingDate());
                 }
                 eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
                         .withCode(code.toString())
@@ -220,6 +220,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                         eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
                                 .withCode(NTF_BCQ_APPROVE_NEW_SELLER.toString())
                                 .withRecipientId(sellerUserId)
+                                .addLoad("tradingDate", formattedTradingDate)
                                 .addLoad("submittedDate", formattedSubmittedDate)
                                 .addLoad("buyerName", header.getBuyingParticipantName())
                                 .addLoad("buyerShortName", header.getBuyingParticipantShortName())
@@ -231,6 +232,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                         eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
                                 .withCode(NTF_BCQ_APPROVE_NEW_BUYER.toString())
                                 .withRecipientId(buyerUserId)
+                                .addLoad("tradingDate", formattedTradingDate)
                                 .addLoad("submittedDate", formattedSubmittedDate)
                                 .addLoad("sellerName", header.getSellingParticipantName())
                                 .addLoad("sellerShortName", header.getSellingParticipantShortName())
@@ -311,7 +313,6 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
 
     @SuppressWarnings("unchecked")
     private Set<Integer> getUserIdsByShortName(String shortName) {
-        log.debug("CLASS: {}", resourceTemplate.get(String.format(NOTIF_URL, shortName), Set.class).getClass().getClass());
         return resourceTemplate.get(String.format(NOTIF_URL, shortName), Set.class);
     }
 
