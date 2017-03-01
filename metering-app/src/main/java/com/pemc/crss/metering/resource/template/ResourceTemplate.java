@@ -38,19 +38,30 @@ public class ResourceTemplate {
     }
 
     private HttpServletRequest getRequest() {
-        return ((ServletRequestAttributes) getRequestAttributes()).getRequest();
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) getRequestAttributes();
+        if (requestAttributes == null) {
+            return null;
+        }
+        return requestAttributes.getRequest();
     }
 
     private HttpEntity getHttpEntity(Object requestBody) {
+        HttpServletRequest request = getRequest();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(APPLICATION_JSON);
-        headers.set(AUTHORIZATION, getRequest().getHeader(AUTHORIZATION));
+        if (request != null) {
+            headers.set(AUTHORIZATION, request.getHeader(AUTHORIZATION));
+        }
         return new HttpEntity<>(requestBody, headers);
     }
 
     private String getRequestUrl(String path) {
-        return getRequest().getHeader(X_FORWARDED_PROTO) + "://"
-                + getRequest().getHeader(X_FORWARDED_HOST) + path;
+        HttpServletRequest request = getRequest();
+        if (request == null) {
+            return "http://localhost:8080" + path;
+        }
+        return request.getHeader(X_FORWARDED_PROTO) + "://"
+                + request.getHeader(X_FORWARDED_HOST) + path;
     }
 
 }
