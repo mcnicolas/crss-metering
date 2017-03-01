@@ -8,6 +8,7 @@ import com.pemc.crss.metering.parser.meterquantity.MeterQuantityExcelReader;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -68,6 +69,7 @@ public class ExcelColumnHeaderValidationTest {
         assertThat(result.getStatus(), is(equalTo(ACCEPTED)));
     }
 
+    @Ignore
     @Test
     public void validateWrongColumnNames() throws ParseException, IOException, URISyntaxException {
         // given

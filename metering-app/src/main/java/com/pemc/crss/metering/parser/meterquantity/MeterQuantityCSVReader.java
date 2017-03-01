@@ -8,19 +8,20 @@ import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.supercsv.io.CsvListReader;
 import org.supercsv.io.ICsvListReader;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import static com.google.common.base.CaseFormat.LOWER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static com.pemc.crss.metering.utils.DateTimeUtils.parseDateAsLong;
 import static java.math.RoundingMode.HALF_UP;
 import static org.apache.commons.lang3.math.NumberUtils.isParsable;
@@ -48,7 +49,7 @@ public class MeterQuantityCSVReader implements QuantityReader {
                     continue;
                 }
 
-                MeterDataDetail detail = populateBean(row);
+                MeterDataDetail detail = populateBean(row, header);
                 detail.setFileID(fileManifest.getFileID());
                 detail.setUploadType(fileManifest.getUploadType());
                 detail.setMspShortName(fileManifest.getMspShortName());
@@ -80,23 +81,55 @@ public class MeterQuantityCSVReader implements QuantityReader {
         MeterDataHeader meterDataHeader = new MeterDataHeader();
         meterDataHeader.setColumnNames(Arrays.asList(header));
 
+        // Validation:
+        // 1. Should not contain empty headers
+
         return meterDataHeader;
     }
 
-    private MeterDataDetail populateBean(List<String> row) throws ParseException {
+    private Map<String, String> convertMeterData(List<String> row, MeterDataHeader header) throws ParseException {
+        List<String> columnNames = header.getColumnNames();
+
+        Map<String, String> map = new HashMap<>();
+        for (int i = 0; i < columnNames.size(); i++) {
+            if (columnNames.get(i) == null) {
+                throw new ParseException("Invalid column header");
+            }
+
+            String columnName = UPPER_UNDERSCORE.to(LOWER_CAMEL, columnNames.get(i));
+            String value = row.get(i);
+            map.put(columnName, value);
+        }
+
+        return map;
+    }
+
+    private MeterDataDetail populateBean(List<String> row, MeterDataHeader header) throws ParseException {
+        Map<String, String> map = convertMeterData(row, header);
+
         MeterDataDetail retVal = new MeterDataDetail();
+        retVal.setSein(map.get("seil"));
+        retVal.setReadingDateTime(parseDateAsLong(map.get("bdate"), map.get("time")));
+        retVal.setKwd(getNumericValue(map.get("kwDel")));
+        retVal.setKwhd(getNumericValue(map.get("kwhDel")));
+        retVal.setKvarhd(getNumericValue(map.get("kvarhDel")));
+        retVal.setKwr(getNumericValue(map.get("kwRec")));
+        retVal.setKwhr(getNumericValue(map.get("kwhRec")));
+        retVal.setKvarhr(getNumericValue(map.get("kvarhRec")));
+        retVal.setEstimationFlag(map.get("estimationFlag"));
 
-        retVal.setSein(row.get(0));
-        retVal.setReadingDateTime(parseDateAsLong(row.get(1), row.get(2)));
-        retVal.setKwd(getNumericValue(row, 3));
-        retVal.setKwhd(getNumericValue(row, 4));
-        retVal.setKvarhd(getNumericValue(row, 5));
-        retVal.setKwr(getNumericValue(row, 6));
-        retVal.setKwhr(getNumericValue(row, 7));
-        retVal.setKvarhr(getNumericValue(row, 8));
+        return retVal;
+    }
 
-        if (row.size() > 9) {
-            retVal.setEstimationFlag(row.get(9));
+    private BigDecimal getNumericValue(String value) throws ParseException {
+        BigDecimal retVal = null;
+
+        if (value != null) {
+            if (isParsable(value)) {
+                retVal = new BigDecimal(value).setScale(17, HALF_UP);
+            } else {
+                throw new ParseException("Meter reading is not a number. [" + value + "]");
+            }
         }
 
         return retVal;

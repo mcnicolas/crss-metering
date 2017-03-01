@@ -19,13 +19,17 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import static com.google.common.base.CaseFormat.LOWER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static com.pemc.crss.metering.utils.DateTimeUtils.parseDateAsLong;
 import static java.math.RoundingMode.HALF_UP;
 import static org.apache.commons.io.IOUtils.closeQuietly;
+import static org.apache.commons.lang3.math.NumberUtils.isParsable;
 
 @Slf4j
 public class MeterQuantityExcelReader implements QuantityReader {
@@ -56,7 +60,7 @@ public class MeterQuantityExcelReader implements QuantityReader {
                     continue;
                 }
 
-                MeterDataDetail meterData = populateBean(row);
+                MeterDataDetail meterData = populateBean(row, header);
                 meterData.setFileID(fileManifest.getFileID());
                 meterData.setUploadType(fileManifest.getUploadType());
                 meterData.setMspShortName(fileManifest.getMspShortName());
@@ -82,23 +86,34 @@ public class MeterQuantityExcelReader implements QuantityReader {
         return retVal;
     }
 
-    private MeterDataDetail populateBean(Row row) throws ParseException {
+    private Map<String, Cell> convertMeterData(Row row, MeterDataHeader header) {
+        List<String> columnNames = header.getColumnNames();
+
+        Map<String, Cell> map = new HashMap<>();
+        for (int i = 0; i < columnNames.size(); i++) {
+            String columnName = UPPER_UNDERSCORE.to(LOWER_CAMEL, columnNames.get(i));
+            map.put(columnName, row.getCell(i));
+        }
+
+        return map;
+    }
+
+    private MeterDataDetail populateBean(Row row, MeterDataHeader header) throws ParseException {
+        Map<String, Cell> map = convertMeterData(row, header);
+
         MeterDataDetail retVal = new MeterDataDetail();
 
-        retVal.setSein(row.getCell(0).getStringCellValue());
-
-        String readingDate = getDateValue(row.getCell(1));
-        String readingTime = getTimeValue(row.getCell(2));
-
-        retVal.setReadingDateTime(parseDateAsLong(readingDate, readingTime));
-
-        retVal.setKwd(getNumericValue(row.getCell(3)));
-        retVal.setKwhd(getNumericValue(row.getCell(4)));
-        retVal.setKvarhd(getNumericValue(row.getCell(5)));
-        retVal.setKwr(getNumericValue(row.getCell(6)));
-        retVal.setKwhr(getNumericValue(row.getCell(7)));
-        retVal.setKvarhr(getNumericValue(row.getCell(8)));
-        retVal.setEstimationFlag(getStringValue(row.getCell(9)));
+        retVal.setSein(getStringValue(map.get("seil")));
+        retVal.setReadingDateTime(parseDateAsLong(
+                getDateValue(map.get("bdate")),
+                getTimeValue(map.get("time"))));
+        retVal.setKwd(getNumericValue(map.get("kwDel")));
+        retVal.setKwhd(getNumericValue(map.get("kwhDel")));
+        retVal.setKvarhd(getNumericValue(map.get("kvarhDel")));
+        retVal.setKwr(getNumericValue(map.get("kwRec")));
+        retVal.setKwhr(getNumericValue(map.get("kwhRec")));
+        retVal.setKvarhr(getNumericValue(map.get("kvarhRec")));
+        retVal.setEstimationFlag(getStringValue(map.get("estimationFlag")));
 
         return retVal;
     }
@@ -172,6 +187,20 @@ public class MeterQuantityExcelReader implements QuantityReader {
         return StringUtils.leftPad(time, 5, "0");
 
         // TODO: Trap parsing exception and throw "Incorrect Time Format. Format should be HH:mm"
+    }
+
+    private BigDecimal getNumericValue(String value) throws ParseException {
+        BigDecimal retVal = null;
+
+        if (value != null) {
+            if (isParsable(value)) {
+                retVal = new BigDecimal(value).setScale(17, HALF_UP);
+            } else {
+                throw new ParseException("Meter reading is not a number. [" + value + "]");
+            }
+        }
+
+        return retVal;
     }
 
     private BigDecimal getNumericValue(Cell cell) {
