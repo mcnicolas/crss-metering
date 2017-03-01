@@ -207,7 +207,7 @@ public class BcqResource {
     }
 
     @PostMapping("/declaration/{headerId}/{status}")
-    @PreAuthorize("hasAuthority('BCQ_ASSESS_BILATERAL_CONTRACT_QUANTITY')")
+    @PreAuthorize("hasAnyAuthority('BCQ_ASSESS_BILATERAL_CONTRACT_QUANTITY', 'BCQ_CANCEL_BILATERAL_CONTRACT_QUANTITY')")
     public void updateStatus(@PathVariable long headerId, @PathVariable String status) {
         log.debug("[REST-BCQ] Request for updating status to {} of header with ID: {}", status, headerId);
         bcqService.updateHeaderStatus(headerId, fromString(status));
