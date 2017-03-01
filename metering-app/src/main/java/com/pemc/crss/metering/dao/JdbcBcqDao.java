@@ -366,7 +366,12 @@ public class JdbcBcqDao implements BcqDao {
                 .filter(new QueryFilter("SE.DEADLINE_DATE", now(), GREATER_THAN))
                 .build();
         log.debug("[DAO-BCQ] Finding event query: {}", queryData.getSql());
-        return namedParameterJdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Date.class);
+        List<Date> foundDeadlineDates = namedParameterJdbcTemplate.queryForList(queryData.getSql(),
+                queryData.getSource(), Date.class);
+        if (foundDeadlineDates.size() > 1) {
+            log.error("[DAO-BCQ] Deadline date must be only one");
+        }
+        return foundDeadlineDates.size() > 0 ? foundDeadlineDates.get(0) : null;
     }
 
     @Override
