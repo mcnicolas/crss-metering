@@ -19,9 +19,6 @@ import static org.springframework.web.context.request.RequestContextHolder.getRe
 @Component
 public class ResourceTemplate {
 
-    private static final String X_FORWARDED_PROTO = "x-forwarded-proto";
-    private static final String X_FORWARDED_HOST = "x-forwarded-host";
-
     private final RestTemplate restTemplate;
 
     @Autowired
@@ -56,12 +53,7 @@ public class ResourceTemplate {
     }
 
     private String getRequestUrl(String path) {
-        HttpServletRequest request = getRequest();
-        if (request == null) {
-            return "http://localhost:8080" + path;
-        }
-        return request.getHeader(X_FORWARDED_PROTO) + "://"
-                + request.getHeader(X_FORWARDED_HOST) + path;
+        return "http://app:8080" + path;
     }
 
 }
