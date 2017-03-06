@@ -1,9 +1,5 @@
 package com.pemc.crss.metering.constants;
 
-import java.util.List;
-
-import static java.util.Arrays.asList;
-
 public enum BcqValidationError {
 
     INVALID_CSV_FILE("Invalid CSV file."),
@@ -36,16 +32,7 @@ public enum BcqValidationError {
     INCOMPLETE_OVERRIDE_ENTRIES("Incomplete BCQ entries. " +
             "Override for date <b>%s</b> should also have entries of the ff. "
             + "Selling MTN and Billing ID pair(s):<br />%s"),
-    SELLING_MTN_UNREGISTERED("Unregistered selling MTN. Selling MTN <b>%s</b> does not exist."),
-    SELLING_MTN_NOT_OWNED("Unregistered selling MTN. "
-            + "Selling MTN <b>%s</b> is not registered under Seller <b>%s (%s)</b>."),
     BILLING_ID_NOT_EXIST("Following billing ID(s) do not exist.<br />%s"),
-    NO_ACTIVE_CONTRACT("Active enrollment does not exist. "
-            + "No active contract between Seller <b>%s (%s)</b> and Buyer <b>%s (%s)</b>."),
-    REFERENCE_MTN_UNREGISTERED("Unregistered reference MTN. Reference MTN <b>%s</b> does not exist."),
-    REFERENCE_MTN_NOT_IN_CONTRACT("Unregistered reference MTN. "
-            + "Reference MTN <b>%s</b> is not registered under contract of "
-            + "Seller <b>%s (%s)</b> and Buyer <b>%s (%s)</b>."),
     NO_SPECIAL_EVENT_FOUND(""),
     PARTICIPANTS_NOT_PRESENT_IN_SPECIAL_EVENT("Following participant(s) were not included in the special event for "
             + "the trading date of %s.<br />%s"),
