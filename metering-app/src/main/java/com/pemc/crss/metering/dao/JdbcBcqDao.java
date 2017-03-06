@@ -440,7 +440,7 @@ public class JdbcBcqDao implements BcqDao {
         }
         KeyHolder keyHolder = new GeneratedKeyHolder();
         List<BcqHeader> prevHeaders = findSameHeadersWithStatusIn(header,
-                asList(FOR_NULLIFICATION, FOR_CONFIRMATION, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATED));
+                asList(FOR_NULLIFICATION, FOR_CONFIRMATION, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE));
         BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
         updateHeaderStatusToVoid(prevHeader);
         BeanPropertySqlParameterSource beanSource = new BeanPropertySqlParameterSource(header);

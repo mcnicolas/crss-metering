@@ -140,7 +140,7 @@ public class BcqServiceImpl implements BcqService {
         BcqHeader header = findHeader(headerId);
         BcqStatus statusToBe = null;
         switch (header.getStatus()) {
-            case FOR_APPROVAL_UPDATED:
+            case FOR_APPROVAL_UPDATE:
             case FOR_APPROVAL_NEW:
                 statusToBe = SETTLEMENT_READY;
                 break;
@@ -285,7 +285,7 @@ public class BcqServiceImpl implements BcqService {
                 if (headerInList.getStatus() == FOR_APPROVAL_NEW) {
                     header.setStatus(FOR_APPROVAL_NEW);
                 } else {
-                    header.setStatus(FOR_APPROVAL_UPDATED);
+                    header.setStatus(FOR_APPROVAL_UPDATE);
                 }
                 header.setExists(true);
             } else {

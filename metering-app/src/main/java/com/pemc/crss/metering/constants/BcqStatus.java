@@ -9,11 +9,10 @@ public enum BcqStatus {
     NOT_CONFIRMED("Not Confirmed"),
     FOR_CONFIRMATION("For Confirmation"),
     NULLIFIED("Nullified"),
-    NOT_NULLIFIED("Not Nullified"),
     FOR_NULLIFICATION("For Nullification"),
-    FOR_APPROVAL_UPDATED("For Approval Updated"),
-    FOR_APPROVAL_NEW("For Approval New"),
-    FOR_APPROVAL_CANCEL("For Approval Cancel"),
+    FOR_APPROVAL_UPDATE("For Approval (Update)"),
+    FOR_APPROVAL_NEW("For Approval (New)"),
+    FOR_APPROVAL_CANCEL("For Approval (Cancel)"),
     VOID("Void"),
     SETTLEMENT_READY("Settlement Ready");
 

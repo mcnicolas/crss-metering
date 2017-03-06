@@ -194,7 +194,7 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
         Set<Integer> sellerUserIds = getUserIdsByShortName(header.getSellingParticipantShortName());
         Set<Integer> buyerUserIds = getUserIdsByShortName(header.getBuyingParticipantShortName());
         switch (header.getStatus()) {
-            case FOR_APPROVAL_UPDATED:
+            case FOR_APPROVAL_UPDATE:
                 sellerUserIds.forEach(sellerUserId ->
                     eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
                             .withCode(NTF_BCQ_APPROVE_UPDATE_SELLER.toString())

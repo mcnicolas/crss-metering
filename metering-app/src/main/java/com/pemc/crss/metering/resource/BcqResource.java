@@ -165,7 +165,7 @@ public class BcqResource {
         if (isSettlement) {
             excludedStatus = singletonList(VOID);
         } else {
-            excludedStatus = asList(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATED, FOR_APPROVAL_CANCEL);
+            excludedStatus = asList(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL);
         }
         header = bcqService.findSameHeadersWithStatusNotIn(header, excludedStatus).get(0);
         long idToSearch = searchForLatest ? header.getHeaderId() : headerId;
@@ -198,7 +198,7 @@ public class BcqResource {
         if (isSettlement) {
             excludedStatus = singletonList(VOID);
         } else {
-            excludedStatus = asList(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATED, FOR_APPROVAL_CANCEL);
+            excludedStatus = asList(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL);
         }
         List<BcqHeader> prevHeaders = bcqService.findSameHeadersWithStatusNotIn(header, excludedStatus);
         List<BcqHeaderDisplay> prevHeadersDisplay = prevHeaders.stream().map(BcqHeaderDisplay::new).collect(toList());

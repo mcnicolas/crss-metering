@@ -63,7 +63,4 @@ public enum BcqValidationError {
         return errorMessage;
     }
 
-    public static List<BcqValidationError> CRSS_SIDE_ERRORS = asList(SELLING_MTN_UNREGISTERED, SELLING_MTN_NOT_OWNED,
-            BILLING_ID_NOT_EXIST, NO_ACTIVE_CONTRACT, REFERENCE_MTN_UNREGISTERED, REFERENCE_MTN_NOT_IN_CONTRACT);
-
 }

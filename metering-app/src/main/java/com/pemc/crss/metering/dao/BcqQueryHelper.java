@@ -99,7 +99,7 @@ public class BcqQueryHelper {
             if (isSettlement) {
                 statusList = of(VOID).map(Enum::toString).collect(toList());
             } else {
-                statusList = of(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATED, FOR_APPROVAL_CANCEL).map(Enum::toString)
+                statusList = of(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL).map(Enum::toString)
                         .collect(toList());
             }
             queryBuilder = queryBuilder.filter(new QueryFilter("C.STATUS", statusList, NOT_IN));
@@ -131,7 +131,7 @@ public class BcqQueryHelper {
         if (isSettlement) {
             statusList = of(VOID).map(Enum::toString).collect(toList());
         } else {
-            statusList = of(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATED, FOR_APPROVAL_CANCEL).map(Enum::toString)
+            statusList = of(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL).map(Enum::toString)
                     .collect(toList());
         }
         return queryBuilder.where().filter(new QueryFilter("STATUS", statusList, NOT_IN));
