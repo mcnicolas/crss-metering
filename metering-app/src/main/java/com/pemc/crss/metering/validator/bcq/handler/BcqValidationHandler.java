@@ -22,14 +22,14 @@ import static com.pemc.crss.metering.constants.BcqInterval.FIVE_MINUTES_PERIOD;
 import static com.pemc.crss.metering.constants.BcqInterval.fromDescription;
 import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
 import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
-import static com.pemc.crss.metering.constants.BcqValidationError.*;
+import static com.pemc.crss.metering.constants.BcqValidationError.CLOSED_TRADING_DATE;
+import static com.pemc.crss.metering.constants.BcqValidationError.NO_SPECIAL_EVENT_FOUND;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static java.math.BigDecimal.ROUND_HALF_UP;
 import static java.math.BigDecimal.valueOf;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.collections.ListUtils.union;
 
 @Slf4j
 @Component
@@ -72,8 +72,7 @@ public class BcqValidationHandler {
                 if (specialEventDeclaration.getValidationResult().getStatus() == REJECTED) {
                     BcqValidationError specialEventDeclarationError = specialEventDeclaration.getValidationResult()
                             .getErrorMessage().getValidationError();
-                    if (!union(CRSS_SIDE_ERRORS, singletonList(NO_SPECIAL_EVENT_FOUND))
-                            .contains(specialEventDeclarationError)) {
+                    if (NO_SPECIAL_EVENT_FOUND != specialEventDeclarationError) {
                         return specialEventDeclaration;
                     }
                 } else {
@@ -233,6 +232,7 @@ public class BcqValidationHandler {
                     item.setSellingMtn(header.getSellingMtn());
                     item.setTradingParticipantShortName(header.getBuyingParticipantShortName());
                     item.setReferenceMtns(referenceMtns);
+                    item.setTradingDate(header.getTradingDate());
                     return item;
                 })
                 .distinct()
