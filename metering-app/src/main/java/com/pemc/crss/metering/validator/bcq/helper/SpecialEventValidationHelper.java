@@ -23,7 +23,6 @@ import static com.pemc.crss.metering.constants.BcqValidationError.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.utils.DateTimeUtils.now;
 import static com.pemc.crss.metering.validator.bcq.helper.BcqValidationHelperUtils.getFormattedSellingMtnAndBillingIdPair;
-import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation.emptyInst;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -44,7 +43,7 @@ public class SpecialEventValidationHelper {
     }
 
     private HeaderListValidation participantsWithTradingDateExist() {
-        HeaderListValidation validation = emptyInst();
+        HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             Date tradingDate = headerList.get(0).getTradingDate();
             List<BcqSpecialEventParticipant> participants = bcqService.findEventParticipantsByTradingDate(tradingDate);
@@ -80,7 +79,7 @@ public class SpecialEventValidationHelper {
     }
 
     private HeaderListValidation noManualOverridden(String sellingParticipant) {
-        HeaderListValidation validation = emptyInst();
+        HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             Date tradingDate = headerList.get(0).getTradingDate();
             List<BcqHeader> currentHeaderList = getCurrentHeaderList(sellingParticipant, tradingDate);
@@ -101,7 +100,7 @@ public class SpecialEventValidationHelper {
     }
 
     private HeaderListValidation deadlineDateNotPassed() {
-        HeaderListValidation validation = emptyInst();
+        HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             Date tradingDate = headerList.get(0).getTradingDate();
             StringJoiner eventParticipantsWithDeadlineDatePassed = new StringJoiner(", ");
@@ -127,9 +126,6 @@ public class SpecialEventValidationHelper {
         return validation;
     }
 
-    /****************************************************
-     * SUPPORT METHODS
-     ****************************************************/
     private List<BcqHeader> getCurrentHeaderList(String sellingParticipant, Date tradingDate) {
         return bcqService.findAllHeaders(of(
                 "sellingParticipant", sellingParticipant,

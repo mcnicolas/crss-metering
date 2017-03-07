@@ -9,14 +9,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Date;
+import java.util.List;
 import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqValidationError.INCOMPLETE_OVERRIDE_ENTRIES;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.validator.bcq.helper.BcqValidationHelperUtils.getFormattedSellingMtnAndBillingIdPair;
-import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation.emptyInst;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
@@ -32,7 +32,7 @@ public class OverrideValidationHelper {
     }
 
     private HeaderListValidation noMissingHeaders(List<BcqHeader> currentHeaderList) {
-        HeaderListValidation validation = emptyInst();
+        HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             List<BcqHeader> missingHeaderList = currentHeaderList.stream()
                     .filter(header -> !bcqService.isHeaderInList(header, headerList))
@@ -51,9 +51,6 @@ public class OverrideValidationHelper {
         return validation;
     }
 
-    /****************************************************
-     * SUPPORT METHODS
-     ****************************************************/
     private List<BcqHeader> getCurrentHeaderList(String sellingParticipant, Date tradingDate) {
         return bcqService.findAllHeaders(of(
                 "sellingParticipant", sellingParticipant,

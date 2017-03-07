@@ -15,7 +15,6 @@ import java.util.function.Predicate;
 import static com.pemc.crss.metering.constants.BcqValidationError.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
-import static com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation.emptyInst;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
@@ -36,7 +35,7 @@ public class HeaderListValidationHelper {
     }
 
     private HeaderListValidation openTradingDate(int declarationDateConfig) {
-        HeaderListValidation validation = emptyInst();
+        HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             Date tradingDate = headerList.get(0).getTradingDate();
             Date today = new Date();
@@ -54,7 +53,7 @@ public class HeaderListValidationHelper {
     }
 
     private HeaderListValidation sameTradingDate(Date tradingDate) {
-        HeaderListValidation validation = emptyInst();
+        HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             Date headerTradingDate = headerList.get(0).getTradingDate();
             if (tradingDate.equals(headerTradingDate)) {
@@ -69,7 +68,7 @@ public class HeaderListValidationHelper {
 
     private HeaderListValidation validDataSize(BcqInterval interval) {
         int validBcqSize = interval.getValidNoOfRecords();
-        HeaderListValidation validation = emptyInst();
+        HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList ->
                 headerList.stream().allMatch(header -> {
                     if (header.getDataList().size() == validBcqSize) {
@@ -85,7 +84,7 @@ public class HeaderListValidationHelper {
     }
 
     private HeaderListValidation validTimeIntervals(BcqInterval interval) {
-        HeaderListValidation validation = emptyInst();
+        HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList ->
                 headerList.stream()
                         .allMatch(header -> {

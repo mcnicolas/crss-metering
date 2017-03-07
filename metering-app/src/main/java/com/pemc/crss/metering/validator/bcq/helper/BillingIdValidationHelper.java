@@ -14,7 +14,6 @@ import java.util.StringJoiner;
 import java.util.function.Predicate;
 
 import static com.pemc.crss.metering.constants.BcqValidationError.BILLING_ID_NOT_EXIST;
-import static com.pemc.crss.metering.validator.bcq.validation.BillingIdValidation.emptyInst;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
@@ -24,7 +23,7 @@ import static java.util.stream.Collectors.toList;
 public class BillingIdValidationHelper {
 
     public Validation<List<String>> validBillingIds(List<BillingIdShortNamePair> billingIdShortNamePairs) {
-        BillingIdValidation validation = emptyInst();
+        BillingIdValidation validation = new BillingIdValidation();
         Predicate<List<String>> predicate = billingIds -> {
             billingIds.removeAll(billingIdShortNamePairs.stream()
                     .map(BillingIdShortNamePair::getBillingId).collect(toList()));

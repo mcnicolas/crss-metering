@@ -19,8 +19,6 @@ import static com.pemc.crss.metering.constants.BcqValidationError.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDateTime;
 import static com.pemc.crss.metering.utils.DateTimeUtils.isStartOfDay;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
-import static com.pemc.crss.metering.validator.bcq.validation.CsvValidation.emptyInst;
-import static com.pemc.crss.metering.validator.bcq.validation.CsvValidation.from;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -64,32 +62,32 @@ public class CsvValidationHelper {
      * VALIDATIONS
      ****************************************************/
     private CsvValidation validCsvFile() {
-        return from(csv -> csv != null, new BcqValidationErrorMessage(INVALID_CSV_FILE));
+        return new CsvValidation(csv -> csv != null, new BcqValidationErrorMessage(INVALID_CSV_FILE));
     }
 
     private CsvValidation nonEmpty() {
-        return from(csv -> csv.size() > VALID_NO_OF_LINES, new BcqValidationErrorMessage(EMPTY));
+        return new CsvValidation(csv -> csv.size() > VALID_NO_OF_LINES, new BcqValidationErrorMessage(EMPTY));
     }
 
     private CsvValidation validColumnHeaders() {
-        return from(csv -> csv.get(1).stream()
+        return new CsvValidation(csv -> csv.get(1).stream()
                         .noneMatch(StringUtils::isBlank)
                         && csv.get(1).size() == VALID_NO_OF_COLUMNS,
                 new BcqValidationErrorMessage(INCORRECT_COLUMN_HEADER_COUNT));
     }
 
     private CsvValidation noEmptyLines() {
-        return from(csv -> csv.stream()
+        return new CsvValidation(csv -> csv.stream()
                         .noneMatch(line -> line.stream().allMatch(StringUtils::isBlank)),
                 new BcqValidationErrorMessage(EMPTY_LINE));
     }
 
     private CsvValidation intervalIsSet() {
-        return from(csv -> !isBlank(getInterval(csv)), new BcqValidationErrorMessage(MISSING_INTERVAL));
+        return new CsvValidation(csv -> !isBlank(getInterval(csv)), new BcqValidationErrorMessage(MISSING_INTERVAL));
     }
 
     private CsvValidation validInterval(int intervalConfig) {
-        CsvValidation validation = emptyInst();
+        CsvValidation validation = new CsvValidation();
         Predicate<List<List<String>>> predicate = csv -> {
             String intervalString = getInterval(csv);
             BcqInterval interval = fromDescription(intervalString);
@@ -105,55 +103,55 @@ public class CsvValidationHelper {
     }
 
     private CsvValidation sellingMtnIsSet() {
-        return from(csv -> getDataList(csv).stream()
+        return new CsvValidation(csv -> getDataList(csv).stream()
                         .noneMatch(line -> isBlank(line.get(SELLING_MTN_INDEX))),
                 new BcqValidationErrorMessage(MISSING_SELLING_MTN));
     }
 
     private CsvValidation billingIdIsSet() {
-        return from(csv -> getDataList(csv).stream()
+        return new CsvValidation(csv -> getDataList(csv).stream()
                         .noneMatch(line -> isBlank(line.get(BILLING_ID_INDEX))),
                 new BcqValidationErrorMessage(MISSING_BILLING_ID));
     }
 
     private CsvValidation referenceMtnIsSet() {
-        return from(csv -> !getDataList(csv).stream()
+        return new CsvValidation(csv -> !getDataList(csv).stream()
                         .anyMatch(line -> isBlank(line.get(REFERENCE_MTN_INDEX))),
                 new BcqValidationErrorMessage(MISSING_REFERENCE_MTN));
     }
 
     private CsvValidation dateIsSet() {
-        return from(csv -> !getDataList(csv).stream()
+        return new CsvValidation(csv -> !getDataList(csv).stream()
                         .anyMatch(line -> isBlank(line.get(DATE_INDEX))),
                 new BcqValidationErrorMessage(MISSING_DATE));
     }
 
     private CsvValidation bcqIsSet() {
-        return from(csv -> getDataList(csv).stream()
+        return new CsvValidation(csv -> getDataList(csv).stream()
                         .noneMatch(line -> isBlank(line.get(BCQ_INDEX))),
                 new BcqValidationErrorMessage(MISSING_BCQ));
     }
 
     private CsvValidation validDate() {
-        return from(csv -> getDataList(csv).stream()
+        return new CsvValidation(csv -> getDataList(csv).stream()
                         .noneMatch(line -> parseDateTime(line.get(DATE_INDEX)) == null),
                 new BcqValidationErrorMessage(INCORRECT_DATE_FORMAT));
     }
 
     private CsvValidation validBcq() {
-        return from(csv -> getDataList(csv).stream()
+        return new CsvValidation(csv -> getDataList(csv).stream()
                         .allMatch(line -> isParsable(line.get(BCQ_INDEX))),
                 new BcqValidationErrorMessage(INCORRECT_DATA_TYPE));
     }
 
     private CsvValidation positiveBcq() {
-        return from(csv -> getDataList(csv).stream()
+        return new CsvValidation(csv -> getDataList(csv).stream()
                         .noneMatch(line -> new BigDecimal(line.get(BCQ_INDEX)).signum() == -1),
                 new BcqValidationErrorMessage(NEGATIVE_BCQ));
     }
 
     private CsvValidation validBcqLength() {
-        return from(csv -> getDataList(csv).stream()
+        return new CsvValidation(csv -> getDataList(csv).stream()
                 .noneMatch(line -> {
                     BigDecimal bcq = new BigDecimal(line.get(BCQ_INDEX));
                     bcq = bcq.stripTrailingZeros();
@@ -171,7 +169,7 @@ public class CsvValidationHelper {
     }
 
     private CsvValidation noDuplicates() {
-        CsvValidation validation = emptyInst();
+        CsvValidation validation = new CsvValidation();
         Predicate<List<List<String>>> predicate =  csv -> {
             Set<List<String>> uniqueSet = new HashSet<>();
             return csv.subList(2, csv.size()).stream()
@@ -192,7 +190,7 @@ public class CsvValidationHelper {
     }
 
     private CsvValidation sameTradingDate() {
-        return from(csv -> {
+        return new CsvValidation(csv -> {
             Date firstTradingDate = getTradingDate(getDataList(csv).get(0).get(DATE_INDEX));
             return firstTradingDate != null
                     && getDataList(csv).stream()
@@ -200,9 +198,6 @@ public class CsvValidationHelper {
         }, new BcqValidationErrorMessage(INVALID_TRADING_DATE));
     }
 
-    /****************************************************
-     * SUPPORT METHODS
-     ****************************************************/
     private String getInterval(List<List<String>> csv) {
         return csv.get(0).get(1);
     }
