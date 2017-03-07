@@ -361,7 +361,7 @@ public class JdbcBcqDao implements BcqDao {
                 .where()
                 .filter(new QueryFilter("ETD.TRADING_DATE", tradingDate))
                 .and()
-                .filter(new QueryFilter("EP.TRADING_PARTICIPANT", shortName))
+                .filter(new QueryFilter("UPPER(EP.TRADING_PARTICIPANT)", shortName.toUpperCase()))
                 .and()
                 .filter(new QueryFilter("SE.DEADLINE_DATE", now(), GREATER_THAN))
                 .build();
@@ -398,13 +398,14 @@ public class JdbcBcqDao implements BcqDao {
     public List<BillingIdShortNamePair> findAllBillingIdShortNamePair(List<String> billingIds, Date tradingDate) {
         log.debug("[DAO-BCQ] Finding pair with billing ids: {}, trading date: {}", billingIds, tradingDate);
         tradingDate = startOfDay(tradingDate);
+        List<String> upperCasedBillingIds = billingIds.stream().map(String::toUpperCase).collect(toList());
         QueryData queryData = new QueryBuilder()
                 .select()
                 .column("BILLING_ID")
                 .column("TRADING_PARTICIPANT_SHORT_NAME")
                 .from("MAP_BILLING_ID_TAX_DATA")
                 .where()
-                .filter(new QueryFilter("BILLING_ID", billingIds, IN))
+                .filter(new QueryFilter("BILLING_ID", upperCasedBillingIds, IN))
                 .and()
                 .filter(new QueryFilter("EFFECTIVE_START_DATE", tradingDate, LESS_THAN_EQUALS))
                 .and()
@@ -461,9 +462,9 @@ public class JdbcBcqDao implements BcqDao {
                     .column("STATUS")
                 .from(headerJoinFile)
                 .where()
-                    .filter(new QueryFilter("SELLING_MTN", header.getSellingMtn()))
+                    .filter(new QueryFilter("UPPER(SELLING_MTN)", header.getSellingMtn().toUpperCase()))
                     .and()
-                    .filter(new QueryFilter("BILLING_ID", header.getBillingId()))
+                    .filter(new QueryFilter("UPPER(BILLING_ID)", header.getBillingId().toUpperCase()))
                     .and()
                     .filter(new QueryFilter("TRADING_DATE", header.getTradingDate()))
                     .and()
@@ -487,7 +488,6 @@ public class JdbcBcqDao implements BcqDao {
 
     private int getTotalRecords(PageableRequest pageableRequest) {
         QueryData queryData = new BcqQueryHelper().queryHeaderPageCount(pageableRequest);
-        log.debug("QUERY: {}, {}", queryData.getSql(), queryData.getSource().getValues());
         return namedParameterJdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Integer.class);
     }
 

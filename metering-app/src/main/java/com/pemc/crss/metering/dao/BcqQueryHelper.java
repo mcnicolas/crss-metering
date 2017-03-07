@@ -109,7 +109,7 @@ public class BcqQueryHelper {
         return "(" + queryBuilder.build().getSql() + ")";
     }
 
-    public QueryBuilder addFilters(QueryBuilder queryBuilder, Map<String, String> mapParams) {
+    private QueryBuilder addFilters(QueryBuilder queryBuilder, Map<String, String> mapParams) {
         String status = getValue(mapParams, "status");
         if (status == null) {
             queryBuilder = addIsSettlementFilter(queryBuilder, getValue(mapParams, "isSettlement") != null);
