@@ -237,7 +237,7 @@ public class HeaderPanel extends JPanel {
         toolbarPanel.add(btnLogout);
 
         btnLogin.setIcon(new ImageIcon(getClass().getResource("/images/Key-48.png"))); // NOI18N
-        btnLogin.setToolTipText("Settings");
+        btnLogin.setToolTipText("Login");
         btnLogin.setFocusable(false);
         btnLogin.setHorizontalTextPosition(SwingConstants.CENTER);
         btnLogin.addActionListener(new ActionListener() {
