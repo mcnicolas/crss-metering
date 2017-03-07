@@ -31,9 +31,10 @@ public class BcqReader {
                 csv.add(line);
                 lastLineNumber = reader.getLineNumber();
             }
-        } catch (IOException | SuperCsvException ex) {
-            return null;
+        } catch (SuperCsvException ex) {
+            throw new IOException(ex);
         }
+
         return csv;
     }
 

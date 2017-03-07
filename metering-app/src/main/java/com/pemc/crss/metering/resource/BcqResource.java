@@ -39,6 +39,8 @@ import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.io.FilenameUtils.getExtension;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.springframework.http.ResponseEntity.*;
 
 @Slf4j
@@ -114,11 +116,14 @@ public class BcqResource {
     @PostMapping("/webservice/upload")
     @PreAuthorize("hasAuthority('BCQ_UPLOAD_BILATERAL_CONTRACT_QUANTITY')")
     public ResponseEntity<String> uploadByWebService(@RequestParam("file") MultipartFile multipartFile) throws IOException {
-        log.debug("[REST-BCQ] Request for uploading by web service of: {}", multipartFile.getOriginalFilename());
-        if (!multipartFile.getContentType().equalsIgnoreCase(CSV_CONTENT_TYPE)) {
+        String fileName = multipartFile.getOriginalFilename();
+        log.debug("[REST-BCQ] Request for uploading by web service of: {}", fileName);
+
+        if (!equalsIgnoreCase(getExtension(fileName), "CSV")) {
             log.debug("[REST-BCQ] Uploading failed, {} is not a CSV file", multipartFile.getOriginalFilename());
             return badRequest().body("Only CSV files are allowed.");
         }
+
         BcqDeclaration declaration = processAndValidateDeclaration(multipartFile);
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("[REST-BCQ] Finished uploading and rejecting by web service of: {}",
