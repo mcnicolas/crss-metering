@@ -54,6 +54,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.of;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 
@@ -500,6 +501,7 @@ public class JdbcBcqDao implements BcqDao {
         String buyingParticipant = mapParams.get("buyingParticipant") == null ? "" : mapParams.get("buyingParticipant");
         String status = mapParams.get("status") == null ? null : mapParams.get("status");
         boolean expired = mapParams.get("expired") != null;
+        boolean isSettlement = mapParams.get("expired") != null;
         if (headerId != null) {
             queryBuilder = queryBuilder.and().filter(new QueryFilter("HEADER_ID", headerId));
         }
@@ -536,6 +538,15 @@ public class JdbcBcqDao implements BcqDao {
         }
         if (isNotBlank(status)) {
             queryBuilder = queryBuilder.and().filter(new QueryFilter("STATUS", status));
+        } else {
+            List<String> statusList;
+            if (isSettlement) {
+                statusList = of(VOID).map(Enum::toString).collect(toList());
+            } else {
+                statusList = of(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL).map(Enum::toString)
+                        .collect(toList());
+            }
+            queryBuilder = queryBuilder.and().filter(new QueryFilter("STATUS", statusList, NOT_IN));
         }
         return queryBuilder;
     }
