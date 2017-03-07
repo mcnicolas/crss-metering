@@ -309,15 +309,18 @@ public class HeaderPanel extends JPanel {
         transactionPanel.add(txtTransactionID, gridBagConstraints);
 
         lblProcessDuration.setText("Process Duration:");
+        lblProcessDuration.setMaximumSize(new Dimension(120, 16));
+        lblProcessDuration.setMinimumSize(new Dimension(120, 16));
+        lblProcessDuration.setPreferredSize(new Dimension(120, 16));
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 4;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.insets = new Insets(5, 10, 5, 0);
         transactionPanel.add(lblProcessDuration, gridBagConstraints);
 
-        processDuration.setMaximumSize(new Dimension(40, 16));
-        processDuration.setMinimumSize(new Dimension(40, 16));
-        processDuration.setPreferredSize(new Dimension(40, 16));
+        processDuration.setMaximumSize(new Dimension(60, 16));
+        processDuration.setMinimumSize(new Dimension(60, 16));
+        processDuration.setPreferredSize(new Dimension(60, 16));
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 5;
         gridBagConstraints.gridy = 0;
@@ -326,12 +329,18 @@ public class HeaderPanel extends JPanel {
 
         uploadProcessStatus.setBackground(Color.blue);
         uploadProcessStatus.setForeground(new Color(255, 255, 255));
+        uploadProcessStatus.setHorizontalAlignment(SwingConstants.CENTER);
         uploadProcessStatus.setText("Finished Processing");
         uploadProcessStatus.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        uploadProcessStatus.setMaximumSize(new Dimension(150, 26));
+        uploadProcessStatus.setMinimumSize(new Dimension(150, 26));
         uploadProcessStatus.setOpaque(true);
+        uploadProcessStatus.setPreferredSize(new Dimension(150, 26));
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 6;
         gridBagConstraints.gridy = 0;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
         gridBagConstraints.insets = new Insets(5, 20, 5, 5);
         transactionPanel.add(uploadProcessStatus, gridBagConstraints);
 
