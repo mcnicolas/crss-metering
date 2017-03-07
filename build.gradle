@@ -115,7 +115,3 @@ subprojects {
     }
 
 }
-
-configure(subprojects) {
-    apply plugin: 'org.springframework.boot'
-}

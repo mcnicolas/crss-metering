@@ -25,6 +25,7 @@ configurations {
 }
 
 apply plugin: 'org.liquibase.gradle'
+apply plugin: 'org.springframework.boot'
 apply from: file('docker.gradle')
 
 bootRun {
