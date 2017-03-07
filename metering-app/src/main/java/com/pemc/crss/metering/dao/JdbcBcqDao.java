@@ -501,7 +501,7 @@ public class JdbcBcqDao implements BcqDao {
         String buyingParticipant = mapParams.get("buyingParticipant") == null ? "" : mapParams.get("buyingParticipant");
         String status = mapParams.get("status") == null ? null : mapParams.get("status");
         boolean expired = mapParams.get("expired") != null;
-        boolean isSettlement = mapParams.get("expired") != null;
+        boolean isSettlement = mapParams.get("isSettlement") != null;
         if (headerId != null) {
             queryBuilder = queryBuilder.and().filter(new QueryFilter("HEADER_ID", headerId));
         }
