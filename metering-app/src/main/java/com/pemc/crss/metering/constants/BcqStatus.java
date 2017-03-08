@@ -1,6 +1,10 @@
 package com.pemc.crss.metering.constants;
 
+import java.util.List;
 import java.util.Locale;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 public enum BcqStatus {
 
@@ -18,12 +22,22 @@ public enum BcqStatus {
 
     private final String label;
 
+    public static final List<BcqStatus> FOR_STATUSES = asList(FOR_CONFIRMATION, FOR_NULLIFICATION, FOR_APPROVAL_NEW,
+            FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL);
+
     BcqStatus(final String label) {
         this.label = label;
     }
 
     public String getLabel() {
         return this.label;
+    }
+
+    public static List<BcqStatus> getExcludedStatuses(boolean isSettlement) {
+        if (isSettlement) {
+            return singletonList(VOID);
+        }
+        return asList(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL);
     }
 
     public static BcqStatus fromString(String value) {
@@ -43,4 +57,5 @@ public enum BcqStatus {
                     "Invalid value '%s' for BcqStatus enum", value), e);
         }
     }
+
 }
