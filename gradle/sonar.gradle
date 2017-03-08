@@ -1,0 +1,20 @@
+apply plugin: "org.sonarqube"
+
+subprojects {
+    apply plugin: 'jacoco'
+
+    sonarqube {
+        properties {
+            property "sonar.jacoco.reportPath", "${project.buildDir}/jacoco/test.exec"
+        }
+    }
+}
+
+sonarqube {
+    properties {
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.projectName", "Centralize Registration and Settlement System"
+        property "sonar.projectDescription", rootProject.description
+        property "sonar.exclusions", 'file:**/generated-sources/**'
+    }
+}
