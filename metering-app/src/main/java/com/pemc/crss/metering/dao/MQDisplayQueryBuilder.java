@@ -61,8 +61,8 @@ public class MQDisplayQueryBuilder {
 
     public MQDisplayQueryBuilder addSEINFilter(String sein) {
         if (isNotBlank(sein)) {
-            sqlBuilder.append(" AND SEIN LIKE ?");
-            arguments.add("%" + sein + "%");
+            sqlBuilder.append(" AND UPPER(SEIN) LIKE ?");
+            arguments.add("%" + sein.toUpperCase() + "%");
         }
 
         return this;
@@ -70,8 +70,8 @@ public class MQDisplayQueryBuilder {
 
     public MQDisplayQueryBuilder addTransactionIDFilter(String transactionID) {
         if (isNotBlank(transactionID)) {
-            sqlBuilder.append(" AND A.TRANSACTION_ID LIKE ?");
-            arguments.add("%" + transactionID + "%");
+            sqlBuilder.append(" AND UPPER(A.TRANSACTION_ID) LIKE ?");
+            arguments.add("%" + transactionID.toUpperCase() + "%");
         }
 
         return this;
@@ -79,8 +79,8 @@ public class MQDisplayQueryBuilder {
 
     public MQDisplayQueryBuilder addMSPFilter(String mspShortName) {
         if (isNotBlank(mspShortName)) {
-            sqlBuilder.append(" AND B.MSP_SHORTNAME LIKE ?");
-            arguments.add("%" + mspShortName + "%");
+            sqlBuilder.append(" AND UPPER(B.MSP_SHORTNAME) LIKE ?");
+            arguments.add("%" + mspShortName.toUpperCase() + "%");
         }
 
         return this;
