@@ -51,9 +51,6 @@ public class MeterQuantityCSVReaderTest {
     }
 
     private InputStream getInputStream(String filename) throws FileNotFoundException {
-        return new FileInputStream(
-                new File(MeterQuantityCSVReaderTest.class.getClassLoader().getResource(
-                        filename).getFile()));
+        return getClass().getClassLoader().getResourceAsStream(filename);
     }
-
 }

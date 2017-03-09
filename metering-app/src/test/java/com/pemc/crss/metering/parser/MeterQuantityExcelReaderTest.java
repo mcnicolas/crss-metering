@@ -21,9 +21,9 @@ public class MeterQuantityExcelReaderTest {
     public void shouldParseXLS() throws FileNotFoundException, ParseException {
         QuantityReader reader = new MeterQuantityExcelReader();
         FileManifest fileManifest = new FileManifest();
-        MeterData meterData = reader.readData(fileManifest, new FileInputStream(
-                new File(MeterQuantityExcelReaderTest.class.getClassLoader().getResource(
-                        "meterdata/xls/MF3MABAMSUZ01.xls").getFile())));
+        MeterData meterData = reader.readData(fileManifest,
+                this.getClass().getClassLoader().getResourceAsStream(
+                        "meterdata/xls/MF3MABAMSUZ01.xls"));
 
         assertThat(meterData.getDetails().size(), is(equalTo(2976)));
     }
@@ -32,9 +32,9 @@ public class MeterQuantityExcelReaderTest {
     public void shouldParseXLSX() throws IOException, ParseException {
         QuantityReader reader = new MeterQuantityExcelReader();
         FileManifest fileManifest = new FileManifest();
-        MeterData meterData = reader.readData(fileManifest, new FileInputStream(
-                new File(MeterQuantityExcelReaderTest.class.getClassLoader().getResource(
-                        "meterdata/xls/MF3MABAMSUZ01.xls").getFile())));
+        MeterData meterData = reader.readData(fileManifest,
+                this.getClass().getClassLoader().getResourceAsStream(
+                        "meterdata/xls/MF3MABAMSUZ01.xls"));
 
         assertThat(meterData.getDetails().size(), is(equalTo(2976)));
     }
