@@ -46,10 +46,10 @@ class BcqReaderTest extends Specification {
                 + csvFileName).getFile())
 
         when:
-        def csv = reader.readCsv(new FileInputStream(csvFile))
+        reader.readCsv(new FileInputStream(csvFile))
 
         then:
-        csv == null
+        thrown(IOException)
     }
 
 }
