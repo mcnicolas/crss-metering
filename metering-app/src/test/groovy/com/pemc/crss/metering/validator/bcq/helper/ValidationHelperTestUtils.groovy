@@ -10,10 +10,9 @@ class ValidationHelperTestUtils {
         if (csvFileName == null) {
             return null
         }
-        def csvPath = 'bcq/validation/csv/'.concat(csvFileName).concat('.csv');
-        def file = new File(CsvValidationHelperTest.class.getClassLoader().getResource(csvPath).getFile())
 
-        return reader.readCsv(new FileInputStream(file))
+        def csvPath = 'bcq/validation/csv/'.concat(csvFileName).concat('.csv');
+        return reader.readCsv(this.classLoader.getResourceAsStream(csvPath))
     }
 
 }
