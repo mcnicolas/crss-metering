@@ -9,11 +9,8 @@ class BcqReaderTest extends Specification {
 
     @Unroll
     def 'reader must read correctly the csv'() {
-        given:
-        def csvFile = new File(BcqReaderTest.class.getClassLoader().getResource('bcq/sample/' + csvFileName).getFile())
-
         when:
-        def csv = reader.readCsv(new FileInputStream(csvFile))
+        def csv = reader.readCsv(this.class.classLoader.getResourceAsStream('bcq/sample/' + csvFileName))
         def firstLineList = csv.get(0)
         def thirdLineList = csv.get(2)
         def intervalString = firstLineList.get(1)
@@ -39,14 +36,13 @@ class BcqReaderTest extends Specification {
         'sample_bcq_file_hourly.csv' | 'Hourly' | 'MTN3'     | 'BILL3'   | 'MTN3' | '02-22-2016 01:00' | "3"
     }
 
-    def 'reader must return null if csv is invalid'() {
+    def 'reader must throw an exception if csv is invalid'() {
         given:
         def csvFileName = 'sample_bcq_file_invalid.csv'
-        def csvFile = new File(BcqReaderTest.class.getClassLoader().getResource('bcq/sample/'
-                + csvFileName).getFile())
+        def csvPath = 'bcq/sample/'.concat(csvFileName);
 
         when:
-        reader.readCsv(new FileInputStream(csvFile))
+        reader.readCsv(this.class.classLoader.getResourceAsStream(csvPath))
 
         then:
         thrown(IOException)
