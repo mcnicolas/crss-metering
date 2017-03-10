@@ -1,6 +1,7 @@
 package com.pemc.crss.commons.advice;
 
-import com.pemc.crss.metering.dao.exception.InvalidStateException;
+import com.pemc.crss.metering.service.exception.InvalidStateException;
+import com.pemc.crss.metering.service.exception.OldRecordException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,6 +17,14 @@ public class ExceptionControllerAdvice {
     public ErrorResponseDto invalidState(InvalidStateException e) {
         log.error(e.getMessage() == null ? "Uncaught exception." : e.getMessage(), e);
         String errorMessage = e.getMessage() == null ? "Bad Request" : e.getMessage();
+        return new ErrorResponseDto(errorMessage);
+    }
+
+    @ExceptionHandler(OldRecordException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponseDto oldRecord(OldRecordException e) {
+        log.error(e.getMessage() == null ? "Uncaught exception." : e.getMessage(), e);
+        String errorMessage = e.getMessage() == null ? "Internal Server Error" : e.getMessage();
         return new ErrorResponseDto(errorMessage);
     }
 
