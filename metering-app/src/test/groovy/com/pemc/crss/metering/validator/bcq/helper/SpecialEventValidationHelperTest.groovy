@@ -25,7 +25,7 @@ class SpecialEventValidationHelperTest extends Specification {
 
         then:
         1 * bcqService.findEventParticipantsByTradingDate(_ as Date) >> participants
-        (0..1) * bcqService.findAllHeaders(_ as Map) >> currentHeaderList
+        (0..1) * bcqService.findHeadersOfParticipantByTradingDate(_ as String, _ as Date) >> currentHeaderList
         (0..1) * bcqService.findEventDeadlineDateByTradingDateAndParticipant(_ as Date, _ as String) >> deadlineDate
         result.status == status
         if (result.errorMessage) {

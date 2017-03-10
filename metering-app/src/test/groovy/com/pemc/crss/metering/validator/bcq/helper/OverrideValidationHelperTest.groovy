@@ -21,7 +21,7 @@ class OverrideValidationHelperTest extends Specification {
         def result = validationHelper.validOverride(_ as String, now()).test([])
 
         then:
-        1 * bcqService.findAllHeaders(_ as Map) >> currentHeaderList
+        1 * bcqService.findHeadersOfParticipantByTradingDate(_ as String, _ as Date) >> currentHeaderList
         currentHeaderList.size() * bcqService.isHeaderInList(_ as BcqHeader, _ as List) >> isHeaderInList
         result.status == status
         if (result.errorMessage) {
