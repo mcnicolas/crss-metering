@@ -1,9 +1,6 @@
 package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.commons.cache.service.CacheConfigService;
-import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
-import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.ValidationStatus;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventForm;
@@ -13,11 +10,11 @@ import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.service.reports.BcqReportService;
 import com.pemc.crss.metering.utils.BcqDateUtils;
 import com.pemc.crss.metering.utils.DateTimeUtils;
+import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
 import com.pemc.crss.metering.validator.bcq.handler.BcqValidationHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,14 +28,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static com.pemc.crss.metering.constants.BcqStatus.*;
+import static com.pemc.crss.metering.constants.BcqStatus.fromString;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
-import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.FilenameUtils.getExtension;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.springframework.http.ResponseEntity.*;
@@ -47,8 +39,6 @@ import static org.springframework.http.ResponseEntity.*;
 @RestController
 @RequestMapping("/bcq")
 public class BcqResource {
-
-    private static final String CSV_CONTENT_TYPE = "text/csv";
 
     private final BcqReader bcqReader;
     private final BcqValidationHandler validationHandler;
@@ -68,48 +58,19 @@ public class BcqResource {
         this.configService = configService;
     }
 
-    @PostMapping(value = "/list")
-    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
-    public ResponseEntity<DataTableResponse<BcqHeaderPageDisplay>> executeSearch(@RequestBody final PageableRequest request) {
-        Page<BcqHeaderPageDisplay> headerPage = bcqService.findAllHeaders(request);
-        DataTableResponse<BcqHeaderPageDisplay> response = new DataTableResponse<BcqHeaderPageDisplay>()
-                .withData(headerPage.getContent())
-                .withRecordsTotal(headerPage.getTotalElements());
-        return ok(response);
-    }
-
     @PostMapping("/upload")
     @PreAuthorize("hasAuthority('BCQ_UPLOAD_BILATERAL_CONTRACT_QUANTITY')")
     public ResponseEntity<?> upload(@RequestParam("file") MultipartFile multipartFile) throws IOException {
-        log.debug("[REST-BCQ] Request for uploading of: {}", multipartFile.getOriginalFilename());
-        BcqDeclaration declaration = processAndValidateDeclaration(multipartFile);
-        if (declaration.getValidationResult().getStatus() == REJECTED) {
-            log.debug("[REST-BCQ] Finished uploading and rejecting of: {}", multipartFile.getOriginalFilename());
-            bcqService.saveSellerDeclaration(declaration);
-            return unprocessableEntity().body(declaration.getValidationResult());
-        }
-        log.debug("[REST-BCQ] Finished uploading of: {}", multipartFile.getOriginalFilename());
-        return ok(declaration);
-    }
+        String fileName = multipartFile.getOriginalFilename();
+        log.debug("Request for uploading of: {}", fileName);
 
-    @PostMapping("/settlement/upload")
-    @PreAuthorize("hasAuthority('BCQ_UPLOAD_BILATERAL_CONTRACT_QUANTITY')")
-    public ResponseEntity<?> uploadBySettlement(@RequestParam("file") MultipartFile multipartFile,
-                                                @RequestPart String sellerDetailsString,
-                                                @RequestPart String tradingDateString) throws IOException {
-        log.debug("[REST-BCQ] Request for settlement uploading of: {}", multipartFile.getOriginalFilename());
-        String[] sellerDetailsArray = sellerDetailsString.split(", ");
-        String sellerName = sellerDetailsArray[0];
-        String sellerShortName = sellerDetailsArray[1];
-        ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerName, sellerShortName);
-        BcqDeclaration declaration = processAndValidateSettlementDeclaration(multipartFile, sellerDetails,
-                parseDate(tradingDateString));
+        BcqDeclaration declaration = validateCsvAndGetDeclaration(multipartFile);
         if (declaration.getValidationResult().getStatus() == REJECTED) {
-            log.debug("[REST-BCQ] Finished uploading and rejecting of: {}", multipartFile.getOriginalFilename());
-            bcqService.saveSettlementDeclaration(declaration);
+            log.debug("Finished uploading and rejecting of: {}", fileName);
+            bcqService.saveDeclaration(declaration, false);
             return unprocessableEntity().body(declaration.getValidationResult());
         }
-        log.debug("[REST-BCQ] Finished settlement uploading of: {}", multipartFile.getOriginalFilename());
+        log.debug("Finished uploading of: {}", fileName);
         return ok(declaration);
     }
 
@@ -117,158 +78,108 @@ public class BcqResource {
     @PreAuthorize("hasAuthority('BCQ_UPLOAD_BILATERAL_CONTRACT_QUANTITY')")
     public ResponseEntity<String> uploadByWebService(@RequestParam("file") MultipartFile multipartFile) throws IOException {
         String fileName = multipartFile.getOriginalFilename();
-        log.debug("[REST-BCQ] Request for uploading by web service of: {}", fileName);
+        log.debug("Request for uploading by web service of: {}", fileName);
 
         if (!equalsIgnoreCase(getExtension(fileName), "CSV")) {
-            log.debug("[REST-BCQ] Uploading failed, {} is not a CSV file", multipartFile.getOriginalFilename());
+            log.debug("Uploading failed, {} is not a CSV file", fileName);
             return badRequest().body("Only CSV files are allowed.");
         }
 
-        BcqDeclaration declaration = processAndValidateDeclaration(multipartFile);
+        BcqDeclaration declaration = validateCsvAndGetDeclaration(multipartFile);
+        bcqService.saveDeclaration(declaration, false);
         if (declaration.getValidationResult().getStatus() == REJECTED) {
-            log.debug("[REST-BCQ] Finished uploading and rejecting by web service of: {}",
-                    multipartFile.getOriginalFilename());
-            bcqService.saveSellerDeclaration(declaration);
-            return unprocessableEntity().body(removeHtmlTags(
-                    declaration.getValidationResult().getErrorMessage().getFormattedMessage()));
+            log.debug("Finished uploading and rejecting by web service of: {}", fileName);
+            BcqValidationErrorMessage errorMessage = declaration.getValidationResult().getErrorMessage();
+            return unprocessableEntity().body(removeHtmlTags(errorMessage.getFormattedMessage()));
         }
-        bcqService.saveSellerDeclaration(declaration);
-        log.debug("[REST-BCQ] Finished uploading and saving by web service of: {}", multipartFile.getOriginalFilename());
+
+        log.debug("Finished uploading and saving of: {}", fileName);
         if (declaration.isResubmission()) {
             return ok("Successfully saved resubmission.");
         }
         return ok("Successfully saved declaration.");
     }
 
+    @PostMapping("/settlement/upload")
+    @PreAuthorize("hasAuthority('BCQ_UPLOAD_BILATERAL_CONTRACT_QUANTITY')")
+    public ResponseEntity<?> uploadBySettlement(@RequestParam("file") MultipartFile multipartFile,
+                                                @RequestPart String sellerDetailsString,
+                                                @RequestPart String tradingDateString) throws IOException {
+
+        String fileName = multipartFile.getOriginalFilename();
+        log.debug("Request for settlement uploading of: {}", fileName);
+        String[] sellerDetailsArray = sellerDetailsString.split(", ");
+        String sellerName = sellerDetailsArray[0];
+        String sellerShortName = sellerDetailsArray[1];
+        ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerName, sellerShortName);
+        BcqDeclaration declaration = validateCsvAndGetDeclaration(multipartFile, sellerDetails,
+                parseDate(tradingDateString));
+        if (declaration.getValidationResult().getStatus() == REJECTED) {
+            log.debug("Finished uploading and rejecting of: {}", fileName);
+            bcqService.saveDeclaration(declaration, true);
+            return unprocessableEntity().body(declaration.getValidationResult());
+        }
+        log.debug("Finished settlement uploading of: {}", fileName);
+        return ok(declaration);
+    }
+
     @PostMapping("/save")
     public void save(@RequestBody BcqDeclaration declaration) throws IOException {
-        log.debug("[REST-BCQ] Request for saving declaration");
-        bcqService.saveSellerDeclaration(declaration);
-        log.debug("[REST-BCQ] Finished saving declaration");
+        log.debug("Request for saving declaration");
+        bcqService.saveDeclaration(declaration, false);
+        log.debug("Finished saving declaration");
     }
 
     @PostMapping("/settlement/save")
     public void saveBySettlement(@RequestBody BcqDeclaration declaration) throws IOException {
-        log.debug("[REST-BCQ] Request for saving declaration");
-        bcqService.saveSettlementDeclaration(declaration);
-        log.debug("[REST-BCQ] Finished saving declaration");
+        log.debug("Request for saving declaration");
+        bcqService.saveDeclaration(declaration, true);
+        log.debug("Finished saving declaration");
     }
 
-    @GetMapping("/declaration/{headerId}")
-    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
-    public BcqHeaderDisplay getHeader(@PathVariable long headerId,
-                                      @RequestParam(required = false) boolean searchForLatest,
-                                      @RequestParam(required = false) boolean isSettlement) {
-
-        log.debug("[REST-BCQ] Request for getting header with ID: {}", headerId);
-        BcqHeader header = bcqService.findHeader(headerId);
-        if (header == null) {
-            log.debug("[REST-BCQ] No found header with ID: {}", headerId);
-            return null;
-        }
-        List<BcqStatus> excludedStatus;
-        if (isSettlement) {
-            excludedStatus = singletonList(VOID);
-        } else {
-            excludedStatus = asList(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL);
-        }
-        header = bcqService.findSameHeadersWithStatusNotIn(header, excludedStatus).get(0);
-        long idToSearch = searchForLatest ? header.getHeaderId() : headerId;
-        BcqHeaderDisplay headerDisplay = new BcqHeaderDisplay(bcqService.findHeader(idToSearch));
-        log.debug("[REST-BCQ] Found header display: {}", headerDisplay);
-        return headerDisplay;
-    }
-
-    @GetMapping("/declaration/{headerId}/data")
-    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
-    public List<BcqDataDisplay> getData(@PathVariable long headerId) {
-        log.debug("[REST-BCQ] Request for getting data of header with ID: {}", headerId);
-        List<BcqDataDisplay> dataDisplayList = bcqService.findDataByHeaderId(headerId).stream()
-                .map(BcqDataDisplay::new).collect(toList());
-        log.debug("[REST-BCQ] Found {} data of header with ID: {}", dataDisplayList.size(), headerId);
-        return dataDisplayList;
-    }
-
-    @GetMapping("/declaration/{headerId}/previous")
-    @PreAuthorize("hasAuthority('BCQ_VIEW_BILATERAL_CONTRACT_QUANTITY')")
-    public List<BcqHeaderDisplay> getPrevHeaders(@PathVariable long headerId,
-                                                 @RequestParam(required = false) boolean isSettlement) {
-        log.debug("[REST-BCQ] Request for getting previous headers of header with ID: {}", headerId);
-        BcqHeader header = bcqService.findHeader(headerId);
-        if (header == null) {
-            log.debug("[REST-BCQ] No found header with ID: {}", headerId);
-            return null;
-        }
-        List<BcqStatus> excludedStatus;
-        if (isSettlement) {
-            excludedStatus = singletonList(VOID);
-        } else {
-            excludedStatus = asList(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL);
-        }
-        List<BcqHeader> prevHeaders = bcqService.findSameHeadersWithStatusNotIn(header, excludedStatus);
-        List<BcqHeaderDisplay> prevHeadersDisplay = prevHeaders.stream().map(BcqHeaderDisplay::new).collect(toList());
-        log.debug("[REST-BCQ] Found {} prev headers display: {}", prevHeadersDisplay.size());
-        return prevHeadersDisplay;
-    }
-
-    @PostMapping("/declaration/{headerId}/{status}")
+    @PostMapping("/declaration/update-status/{headerId}")
     @PreAuthorize("hasAnyAuthority('BCQ_ASSESS_BILATERAL_CONTRACT_QUANTITY', 'BCQ_CANCEL_BILATERAL_CONTRACT_QUANTITY')")
-    public void updateStatus(@PathVariable long headerId, @PathVariable String status) {
-        log.debug("[REST-BCQ] Request for updating status to {} of header with ID: {}", status, headerId);
+    public void updateStatus(@PathVariable long headerId, @RequestParam String status) {
+        log.debug("Request for updating status to {} of header with ID: {}", status, headerId);
         bcqService.updateHeaderStatus(headerId, fromString(status));
-        log.debug("[REST-BCQ] Finished updating status to {} of header with ID: {}", status, headerId);
+        log.debug("Finished updating status to {} of header with ID: {}", status, headerId);
     }
 
-    @PostMapping("/declaration/settlement/{headerId}/{status}")
+    @PostMapping("/declaration/settlement/request-cancel/{headerId}")
     @PreAuthorize("hasAuthority('BCQ_CANCEL_BILATERAL_CONTRACT_QUANTITY')")
-    public void updateStatusBySettlement(@PathVariable long headerId, @PathVariable String status) {
-        log.debug("[REST-BCQ] Request for settlement updating status to {} of header with ID: {}", status, headerId);
-        bcqService.updateHeaderStatusBySettlement(headerId, fromString(status));
-        log.debug("[REST-BCQ] Finished settlement updating status to {} of header with ID: {}", status, headerId);
+    public void requestForCancellation(@PathVariable long headerId) {
+        log.debug("Request for cancellation of header with ID: {}", headerId);
+        bcqService.requestForCancellation(headerId);
+        log.debug("Finished request for cancellation of header with ID: {}", headerId);
     }
 
     @PostMapping("/declaration/settlement/approve/{headerId}")
     @PreAuthorize("hasAuthority('BCQ_ASSESS_BILATERAL_CONTRACT_QUANTITY')")
     public void approve(@PathVariable long headerId) {
-        log.debug("[REST-BCQ] Request for approval of header with ID: {}", headerId);
+        log.debug("Request for approval of header with ID: {}", headerId);
         bcqService.approve(headerId);
-        log.debug("[REST-BCQ] Finished approval of header with ID: {}", headerId);
-    }
-
-    @GetMapping("/sellers")
-    public List<ParticipantSellerDetails> getSellersByTradingDate(@RequestParam String tradingDate) {
-        log.debug("[REST-BCQ] Request for getting sellers with trading date: {}", tradingDate);
-        List<ParticipantSellerDetails> sellerDetailsList = bcqService.findAllHeaders(of(
-                        "tradingDate", tradingDate,
-                        "expired", "expired")
-        ).stream().map(header ->
-                new ParticipantSellerDetails(header.getSellingParticipantName(),
-                        header.getSellingParticipantShortName()))
-                .distinct()
-                .collect(toList());
-        log.debug("[REST-BCQ] Found {} sellers with trading date: {}", sellerDetailsList.size(), tradingDate);
-        return sellerDetailsList;
+        log.debug("Finished approval of header with ID: {}", headerId);
     }
 
     @PreAuthorize("hasAuthority('BCQ_CREATE_SPECIAL_EVENT')")
     @PostMapping("/special-event/save")
     public void saveSpecialEvent(@RequestBody BcqSpecialEventForm specialEventForm) {
-        log.debug("[REST-BCQ] Request for saving special event");
+        log.debug("Request for saving special event");
         long eventId = bcqService.saveSpecialEvent(specialEventForm.target());
-        log.debug("[REST-BCQ] Saved special event with id: {}", eventId);
+        log.debug("Saved special event with id: {}", eventId);
     }
 
     @PreAuthorize("hasAuthority('BCQ_VIEW_SPECIAL_EVENT')")
     @GetMapping("/special-event/list")
     public ResponseEntity<List<BcqSpecialEventList>> getSpecialEvents() {
-        log.debug("[REST-BCQ] Request for getSpecialEvents");
-        List<BcqSpecialEventList> result = bcqService.getSpecialEvents();
+        log.debug("Request for getSpecialEvents");
+        List<BcqSpecialEventList> result = bcqService.findAllSpecialEvents();
         return ResponseEntity.ok(result);
     }
 
     @PreAuthorize("hasAuthority('BCQ_EXPORT')")
     @PostMapping("/data/report")
-    public void generateBcqDataReport(@RequestBody Map<String, String> mapParams, HttpServletResponse response)
+    public void generateDataReport(@RequestBody Map<String, String> mapParams, HttpServletResponse response)
             throws IOException {
         // Inform frontend just in case
         if (!mapParams.containsKey("tradingDate")) {
@@ -283,15 +194,15 @@ public class BcqResource {
         response.setContentType("application/x-msdownload");
         response.setHeader("Content-disposition", "attachment; filename=" + filename);
 
-        reportService.generateBcqDataReport(mapParams, response.getOutputStream());
+        reportService.generateDataReport(mapParams, response.getOutputStream());
     }
 
     @GetMapping("/template")
-    public void getBcqTemplate(final HttpServletResponse response) throws IOException {
+    public void getTemplate(final HttpServletResponse response) throws IOException {
         response.setContentType("application/x-msdownload");
         response.setHeader("Content-disposition", "attachment; filename=bcq_template.csv");
 
-        reportService.generateBcqUploadTemplate(response.getOutputStream());
+        reportService.generateTemplate(response.getOutputStream());
     }
 
     @GetMapping("/settlement/config")
@@ -299,25 +210,24 @@ public class BcqResource {
         return configService.getIntegerValueForKey("BCQ_ALLOWABLE_TRADING_DATE", 1);
     }
 
-
-    /****************************************************
-     * SUPPORT METHODS
-     ****************************************************/
-    private BcqDeclaration processAndValidateDeclaration(MultipartFile multipartFile) throws IOException {
+    private BcqDeclaration validateCsvAndGetDeclaration(MultipartFile multipartFile) throws IOException {
         List<List<String>> csv = bcqReader.readCsv(multipartFile.getInputStream());
         BcqDeclaration declaration = validationHandler.processAndValidate(csv);
         BcqValidationResult validationResult = declaration.getValidationResult();
         BcqUploadFile uploadFile = populateUploadFile(multipartFile, validationResult.getStatus());
         declaration.setUploadFileDetails(new BcqUploadFileDetails(uploadFile));
         if (declaration.getHeaderDetailsList() != null) {
-            declaration.setResubmission(getCurrentHeaders(declaration).size() > 0);
+            String shortName = declaration.getSellerDetails().getShortName();
+            Date tradingDate = declaration.getHeaderDetailsList().get(0).getTradingDate();
+            List<BcqHeader> currentHeaders = bcqService.findHeadersOfParticipantByTradingDate(shortName, tradingDate);
+            declaration.setResubmission(currentHeaders.size() > 0);
         }
         return declaration;
     }
 
-    private BcqDeclaration processAndValidateSettlementDeclaration(MultipartFile multipartFile,
-                                                                   ParticipantSellerDetails sellerDetails,
-                                                                   Date tradingDate) throws IOException {
+    private BcqDeclaration validateCsvAndGetDeclaration(MultipartFile multipartFile,
+                                                        ParticipantSellerDetails sellerDetails,
+                                                        Date tradingDate) throws IOException {
 
         List<List<String>> csv = bcqReader.readCsv(multipartFile.getInputStream());
         BcqDeclaration declaration = validationHandler.processAndValidateForSettlement(csv, sellerDetails, tradingDate);
@@ -325,7 +235,9 @@ public class BcqResource {
         BcqUploadFile uploadFile = populateUploadFile(multipartFile, validationResult.getStatus());
         declaration.setUploadFileDetails(new BcqUploadFileDetails(uploadFile));
         if (declaration.getHeaderDetailsList() != null) {
-            declaration.setResubmission(getCurrentHeaders(declaration).size() > 0);
+            String shortName = declaration.getSellerDetails().getShortName();
+            List<BcqHeader> currentHeaders = bcqService.findHeadersOfParticipantByTradingDate(shortName, tradingDate);
+            declaration.setResubmission(currentHeaders.size() > 0);
         }
         return declaration;
     }
@@ -336,13 +248,6 @@ public class BcqResource {
         uploadFile.setFileSize(multipartFile.getSize());
         uploadFile.setValidationStatus(status);
         return uploadFile;
-    }
-
-    private List<BcqHeader> getCurrentHeaders(BcqDeclaration declaration) {
-        return bcqService.findAllHeaders(of(
-                "sellingParticipant", declaration.getSellerDetails().getShortName(),
-                "tradingDate", formatDate(declaration.getHeaderDetailsList().get(0).getTradingDate())
-        ));
     }
 
     private String removeHtmlTags(String message) {

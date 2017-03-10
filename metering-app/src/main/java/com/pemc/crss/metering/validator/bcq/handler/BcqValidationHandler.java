@@ -221,7 +221,6 @@ public class BcqValidationHandler {
     }
 
     private List<BcqItem> getUniqueItems(List<BcqHeader> headerList) {
-
         return headerList.stream().
                 map(header -> {
                     List<String> referenceMtns = header.getDataList().stream()

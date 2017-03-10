@@ -5,8 +5,8 @@ import java.util.Map;
 
 public interface BcqReportService {
 
-    void generateBcqDataReport(Map<String, String> mapParams, OutputStream outputStream);
+    void generateDataReport(Map<String, String> mapParams, OutputStream outputStream);
 
-    void generateBcqUploadTemplate(OutputStream outputStream);
+    void generateTemplate(OutputStream outputStream);
 
 }

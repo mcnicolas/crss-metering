@@ -37,7 +37,7 @@ public enum BcqStatus {
         if (isSettlement) {
             return singletonList(VOID);
         }
-        return asList(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL);
+        return asList(VOID, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE);
     }
 
     public static BcqStatus fromString(String value) {

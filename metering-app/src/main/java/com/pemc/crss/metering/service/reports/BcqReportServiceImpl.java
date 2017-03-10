@@ -22,13 +22,13 @@ public class BcqReportServiceImpl implements BcqReportService {
     private final BcqDao bcqDao;
 
     @Override
-    public void generateBcqDataReport(final Map<String, String> mapParams, final OutputStream outputStream) {
+    public void generateDataReport(final Map<String, String> mapParams, final OutputStream outputStream) {
         final List<ReportBean> reportData = bcqDao.queryBcqDataReport(mapParams);
         ReportCsvWriter.write(new BcqDataReportBuilder(reportData), outputStream);
     }
 
     @Override
-    public void generateBcqUploadTemplate(final OutputStream outputStream) {
+    public void generateTemplate(final OutputStream outputStream) {
         List<String[]> headerList = new LinkedList<>();
         String[] firstLine = {"Interval","<Hourly/5mins/15mins>"};
         String[] secondLine = {"Selling MTN (Resource ID)","Buying Participant (Load Participant Name)",

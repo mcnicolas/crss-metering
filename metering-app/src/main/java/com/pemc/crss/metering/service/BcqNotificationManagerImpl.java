@@ -171,9 +171,9 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
 
     @Override
     public void sendSettlementUpdateStatusNotification(BcqHeader header) {
-        String formattedRespondedDate = formatLongDateTime(new Date());
-        String formattedTradingDate = formatLongDate(header.getTradingDate());
         if (header.getStatus() == FOR_APPROVAL_CANCEL) {
+            String formattedRespondedDate = formatLongDateTime(new Date());
+            String formattedTradingDate = formatLongDate(header.getTradingDate());
             eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
                     .withCode(NTF_BCQ_REQUEST_CANCEL_DEPT.toString())
                     .withRecipientDeptCode(DEPT_BILLING)

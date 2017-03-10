@@ -13,7 +13,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqValidationError.INCOMPLETE_OVERRIDE_ENTRIES;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.validator.bcq.helper.BcqValidationHelperUtils.getFormattedSellingMtnAndBillingIdPair;
@@ -27,7 +26,7 @@ public class OverrideValidationHelper {
     private final BcqService bcqService;
 
     public Validation<List<BcqHeader>> validOverride(String sellingParticipant, Date tradingDate) {
-        List<BcqHeader> currentHeaderList = getCurrentHeaderList(sellingParticipant, tradingDate);
+        List<BcqHeader> currentHeaderList = bcqService.findHeadersOfParticipantByTradingDate(sellingParticipant, tradingDate);
         return noMissingHeaders(currentHeaderList);
     }
 
@@ -49,13 +48,6 @@ public class OverrideValidationHelper {
         };
         validation.setPredicate(predicate);
         return validation;
-    }
-
-    private List<BcqHeader> getCurrentHeaderList(String sellingParticipant, Date tradingDate) {
-        return bcqService.findAllHeaders(of(
-                "sellingParticipant", sellingParticipant,
-                "tradingDate", formatDate(tradingDate)
-        ));
     }
 
 }

@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
 import static com.pemc.crss.metering.constants.BcqValidationError.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
@@ -82,7 +81,9 @@ public class SpecialEventValidationHelper {
         HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             Date tradingDate = headerList.get(0).getTradingDate();
-            List<BcqHeader> currentHeaderList = getCurrentHeaderList(sellingParticipant, tradingDate);
+            List<BcqHeader> currentHeaderList = bcqService.findHeadersOfParticipantByTradingDate(sellingParticipant,
+                    tradingDate);
+
             List<BcqHeader> manualOverriddenHeaderList = currentHeaderList.stream()
                     .filter(header -> header.getUpdatedVia() != null && header.getUpdatedVia() == MANUAL_OVERRIDE)
                     .collect(toList());
@@ -124,13 +125,6 @@ public class SpecialEventValidationHelper {
         };
         validation.setPredicate(predicate);
         return validation;
-    }
-
-    private List<BcqHeader> getCurrentHeaderList(String sellingParticipant, Date tradingDate) {
-        return bcqService.findAllHeaders(of(
-                "sellingParticipant", sellingParticipant,
-                "tradingDate", formatDate(tradingDate)
-        ));
     }
 
 }

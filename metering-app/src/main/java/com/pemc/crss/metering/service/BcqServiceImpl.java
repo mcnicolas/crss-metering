@@ -4,12 +4,14 @@ import com.pemc.crss.commons.cache.service.CacheConfigService;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
-import com.pemc.crss.metering.dao.exception.InvalidStateException;
+import com.pemc.crss.metering.dao.query.ComparisonOperator;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
+import com.pemc.crss.metering.service.exception.InvalidStateException;
+import com.pemc.crss.metering.service.exception.OldRecordException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +30,9 @@ import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
 import static com.pemc.crss.metering.constants.BcqUpdateType.RESUBMISSION;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.IN;
+import static com.pemc.crss.metering.dao.query.ComparisonOperator.NOT_IN;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
@@ -41,38 +44,47 @@ import static java.util.stream.Collectors.toList;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class BcqServiceImpl implements BcqService {
 
+    private static final String UNABLE_MESSAGE = "Unable to proceed, ";
+    private static final String RELOAD_MESSAGE = "Please reload the page.";
+    private static final String NEW_VERSION_ERROR = UNABLE_MESSAGE + "declaration has a new version. " + RELOAD_MESSAGE;
+    private static final String VOIDED_ERROR = UNABLE_MESSAGE + "declaration has been voided. " + RELOAD_MESSAGE;
+    private static final String UPDATED_ERROR = UNABLE_MESSAGE + "declaration has been updated. " + RELOAD_MESSAGE;
+
     private final BcqDao bcqDao;
     private final BcqNotificationManager bcqNotificationManager;
     private final CacheConfigService configService;
 
     @Override
     @Transactional
-    public void saveSellerDeclaration(BcqDeclaration declaration) {
+    public void saveDeclaration(BcqDeclaration declaration, boolean isSettlement) {
         BcqUploadFile uploadFile = declaration.getUploadFileDetails().target();
         uploadFile.setFileId(saveUploadFile(uploadFile));
         if (uploadFile.getValidationStatus() == REJECTED) {
-            bcqNotificationManager.sendValidationNotification(declaration, uploadFile.getSubmittedDate());
+            if (isSettlement) {
+                bcqNotificationManager.sendSettlementValidationNotification(declaration, uploadFile.getSubmittedDate());
+            } else {
+                bcqNotificationManager.sendValidationNotification(declaration, uploadFile.getSubmittedDate());
+            }
             return;
         }
         List<BcqHeader> headerList = extractHeaderList(declaration);
         headerList = setUploadFileOfHeaders(headerList, uploadFile);
-        headerList = setUpdatedViaOfHeaders(headerList, declaration);
-        bcqNotificationManager.sendUploadNotification(bcqDao.saveHeaderList(headerList, declaration.isSpecialEvent()));
+        if (isSettlement) {
+            headerList = setUpdatedViaOfHeadersBySettlement(headerList, declaration);
+        } else {
+            headerList = setUpdatedViaOfHeaders(headerList, declaration);
+        }
+        List<BcqHeader> savedHeaderList = bcqDao.saveHeaders(headerList, !isSettlement && declaration.isSpecialEvent());
+        if (isSettlement) {
+            bcqNotificationManager.sendSettlementUploadNotification(savedHeaderList);
+        } else {
+            bcqNotificationManager.sendUploadNotification(savedHeaderList);
+        }
     }
 
     @Override
-    @Transactional
-    public void saveSettlementDeclaration(BcqDeclaration declaration) {
-        BcqUploadFile uploadFile = declaration.getUploadFileDetails().target();
-        uploadFile.setFileId(saveUploadFile(uploadFile));
-        if (uploadFile.getValidationStatus() == REJECTED) {
-            bcqNotificationManager.sendSettlementValidationNotification(declaration, uploadFile.getSubmittedDate());
-            return;
-        }
-        List<BcqHeader> headerList = extractHeaderList(declaration);
-        headerList = setUploadFileOfHeaders(headerList, uploadFile);
-        headerList = setUpdatedViaOfHeadersBySettlement(headerList, declaration);
-        bcqNotificationManager.sendSettlementUploadNotification(bcqDao.saveHeaderList(headerList, false));
+    public BcqHeader findHeader(long headerId) {
+        return bcqDao.findHeader(headerId);
     }
 
     @Override
@@ -86,23 +98,20 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public List<BcqHeader> findSameHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses) {
-        return bcqDao.findSameHeadersWithStatusNotIn(header, statuses);
+    public List<BcqHeader> findSameHeaders(BcqHeader header, List<BcqStatus> statuses, ComparisonOperator operator) {
+        return bcqDao.findSameHeaders(header, statuses, operator);
+    }
+
+    @Override
+    public List<BcqHeader> findHeadersOfParticipantByTradingDate(String shortName, Date tradingDate) {
+        return findAllHeaders(of(
+                "sellingParticipant", shortName,
+                "tradingDate", formatDate(tradingDate)));
     }
 
     @Override
     public boolean isHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList) {
-        for(BcqHeader header : headerList) {
-            if (isSameHeader(header, headerToFind)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public BcqHeader findHeader(long headerId) {
-        return bcqDao.findHeader(headerId);
+        return headerList.stream().anyMatch(header -> isSameHeader(header, headerToFind));
     }
 
     @Override
@@ -112,46 +121,50 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     @Transactional
-    public void updateHeaderStatus(long headerId, BcqStatus status) {
-        BcqHeader header = bcqDao.findHeader(headerId);
-        validateUpdateStatus(header.getStatus(), status);
-        bcqDao.checkAndUpdateHeaderStatus(headerId, status);
+    public void updateHeaderStatus(long headerId, BcqStatus newStatus) {
+        BcqHeader header = findHeader(headerId);
+        validateIfLatest(header);
+        validateUpdateStatus(header.getStatus(), newStatus);
+
+        if (newStatus == CONFIRMED) {
+            updatePreviousHeaderStatus(header, CONFIRMED);
+        }
+
+        bcqDao.updateHeaderStatus(headerId, newStatus);
         bcqNotificationManager.sendUpdateStatusNotification(findHeader(headerId));
     }
 
     @Override
     @Transactional
-    public void updateHeaderStatusBySettlement(long headerId, BcqStatus status) {
-        BcqHeader header = bcqDao.findHeader(headerId);
-        List<BcqHeader> sameHeaders = findSameHeadersWithStatusNotIn(header, singletonList(VOID));
-        if (sameHeaders.size() > 1) {
-            BcqHeader latestHeader = sameHeaders.get(0);
-            if (headerId != latestHeader.getHeaderId()) {
-                throw new InvalidStateException("Unable to cancel BCQ. BCQ declaration has a new version.");
-            }
-        }
-        bcqDao.updateHeaderStatusBySettlement(headerId, status);
-        bcqNotificationManager.sendSettlementUpdateStatusNotification(findHeader(headerId));
+    public void requestForCancellation(long headerId) {
+        BcqHeader header = findHeader(headerId);
+        validateIfLatest(header);
+        validateRequestForCancellation(header.getStatus());
+
+        header.setStatus(FOR_APPROVAL_CANCEL);
+        bcqDao.updateHeaderStatusBySettlement(headerId, FOR_APPROVAL_CANCEL);
+        bcqNotificationManager.sendSettlementUpdateStatusNotification(header);
     }
 
     @Override
     @Transactional
     public void approve(long headerId) {
         BcqHeader header = findHeader(headerId);
-        BcqStatus statusToBe = null;
-        switch (header.getStatus()) {
-            case FOR_APPROVAL_UPDATE:
-            case FOR_APPROVAL_NEW:
-                statusToBe = SETTLEMENT_READY;
-                break;
-            case FOR_APPROVAL_CANCEL:
-                statusToBe = CANCELLED;
-                break;
-            default:
-                break;
+        validateIfLatest(header);
+        validateApproval(header.getStatus());
+
+        BcqStatus newStatus;
+        if (header.getStatus() == FOR_APPROVAL_CANCEL) {
+            newStatus = CANCELLED;
+        } else {
+            newStatus = SETTLEMENT_READY;
         }
-        validateUpdateStatus(header.getStatus(), statusToBe);
-        bcqDao.checkAndUpdateHeaderStatus(headerId, statusToBe);
+
+        if (newStatus == SETTLEMENT_READY) {
+            updatePreviousHeaderStatus(header, SETTLEMENT_READY);
+        }
+
+        bcqDao.updateHeaderStatus(headerId, newStatus);
         bcqNotificationManager.sendApprovalNotification(header);
     }
 
@@ -159,7 +172,7 @@ public class BcqServiceImpl implements BcqService {
     @Transactional
     public void processUnconfirmedHeaders() {
         List<BcqHeader> unconfirmedHeaders = getExpiredHeadersByStatus(FOR_CONFIRMATION);
-        unconfirmedHeaders.forEach(header -> bcqDao.checkAndUpdateHeaderStatus(header.getHeaderId(), NOT_CONFIRMED));
+        unconfirmedHeaders.forEach(header -> bcqDao.updateHeaderStatus(header.getHeaderId(), NOT_CONFIRMED));
         Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unconfirmedHeaders);
         groupedHeaders.forEach((map, headerList) -> bcqNotificationManager
                 .sendUnprocessedNotification(headerList, NOT_CONFIRMED));
@@ -169,23 +182,27 @@ public class BcqServiceImpl implements BcqService {
     @Transactional
     public void processUnnullifiedHeaders() {
         List<BcqHeader> unnullifiedHeaders = getExpiredHeadersByStatus(FOR_NULLIFICATION);
-        unnullifiedHeaders.forEach(header -> bcqDao.checkAndUpdateHeaderStatus(header.getHeaderId(), CONFIRMED));
+        unnullifiedHeaders.forEach(header -> {
+            updatePreviousHeaderStatus(header, CONFIRMED);
+            bcqDao.updateHeaderStatus(header.getHeaderId(), CONFIRMED);
+        });
         Map<Map<String, Object>, List<BcqHeader>> groupedHeaders = getGroupedHeaderList(unnullifiedHeaders);
         groupedHeaders.forEach((map, headerList) -> bcqNotificationManager
                 .sendUnprocessedNotification(headerList, CONFIRMED));
     }
 
     @Override
+    @Transactional
     public void processHeadersToSettlementReady() {
         int plusDays = configService.getIntegerValueForKey("BCQ_SETTLEMENT_READY_DEADLINE_PLUS_DAYS", 2);
         List<Long> headerIdsToUpdate = bcqDao.selectByStatusAndDeadlineDatePlusDays(CONFIRMED, plusDays);
         log.info("[BCQ Service] Found the following header ids to be updated to {}: {}", SETTLEMENT_READY, headerIdsToUpdate);
-        headerIdsToUpdate.forEach(id -> bcqDao.updateHeaderStatusById(id, SETTLEMENT_READY));
+        headerIdsToUpdate.forEach(id -> bcqDao.updateHeaderStatus(id, SETTLEMENT_READY));
     }
 
     @Override
-    public List<BcqSpecialEventList> getSpecialEvents() {
-        return bcqDao.getAllSpecialEvents();
+    public List<BcqSpecialEventList> findAllSpecialEvents() {
+        return bcqDao.findAllSpecialEvents();
     }
 
     @Override
@@ -223,9 +240,6 @@ public class BcqServiceImpl implements BcqService {
         return bcqDao.findAllBillingIdShortNamePair(billingIds, tradingDate);
     }
 
-    /****************************************************
-     * SUPPORT METHODS
-     ****************************************************/
     private long saveUploadFile(BcqUploadFile uploadFile) {
         uploadFile.setSubmittedDate(new Date());
         uploadFile.setTransactionId(randomUUID().toString());
@@ -233,15 +247,13 @@ public class BcqServiceImpl implements BcqService {
     }
 
     private List<BcqHeader> extractHeaderList(BcqDeclaration declaration) {
-        List<BcqHeader> headerList = new ArrayList<>();
-        declaration.getHeaderDetailsList().forEach(headerDetails -> {
+        return declaration.getHeaderDetailsList().stream().map(headerDetails -> {
             ParticipantSellerDetails sellerDetails = declaration.getSellerDetails();
             BcqHeader header = headerDetails.target();
             header.setSellingParticipantName(sellerDetails.getName());
             header.setSellingParticipantShortName(sellerDetails.getShortName());
-            headerList.add(header);
-        });
-        return headerList;
+            return header;
+        }).collect(toList());
     }
 
     private List<BcqHeader> setUploadFileOfHeaders(List<BcqHeader> headerList, BcqUploadFile uploadFile) {
@@ -262,8 +274,6 @@ public class BcqServiceImpl implements BcqService {
                 boolean exists = isHeaderInList(header, currentHeaderList);
                 header.setExists(exists);
                 if (exists) {
-                    BcqHeader headerInList = findHeaderInList(header, currentHeaderList);
-                    header.setHeaderId(headerInList.getHeaderId());
                     header.setUpdatedVia(RESUBMISSION);
                 }
                 return header;
@@ -281,7 +291,6 @@ public class BcqServiceImpl implements BcqService {
             boolean exists = isHeaderInList(header, currentHeaderList);
             if (exists) {
                 BcqHeader headerInList = findHeaderInList(header, currentHeaderList);
-                header.setHeaderId(headerInList.getHeaderId());
                 if (headerInList.getStatus() == FOR_APPROVAL_NEW) {
                     header.setStatus(FOR_APPROVAL_NEW);
                 } else {
@@ -328,55 +337,51 @@ public class BcqServiceImpl implements BcqService {
                 )));
     }
 
-    private void validateUpdateStatus(BcqStatus oldStatus, BcqStatus newStatus) {
-        if (asList(VOID, NULLIFIED, CONFIRMED, CANCELLED).contains(oldStatus)) {
-            String pastAction = "";
-            String pastActor = "";
-            String currentAction = "";
-            switch (oldStatus) {
-                case CANCELLED:
-                    pastAction = "cancelled";
-                    pastActor = "seller";
-                    break;
-                case CONFIRMED:
-                    if (newStatus == CANCELLED) {
-                        return;
-                    }
-                    pastAction = "confirmed";
-                    pastActor = "buyer";
-                    break;
-                case NULLIFIED:
-                    pastAction = "nullified";
-                    pastActor = "buyer";
-                    break;
-                default:
-                    break;
+    private void updatePreviousHeaderStatus(BcqHeader header, BcqStatus newStatus) {
+        List<BcqStatus> statusesToInclude = new ArrayList<>();
+        statusesToInclude.add(CONFIRMED);
+        if (newStatus == SETTLEMENT_READY) {
+            statusesToInclude.add(SETTLEMENT_READY);
+        }
+
+        List<BcqHeader> sameHeaders = bcqDao.findSameHeaders(header, statusesToInclude, IN);
+        if (sameHeaders.size() > 0) {
+            BcqHeader prevHeader = sameHeaders.get(0);
+            bcqDao.updateHeaderStatus(prevHeader.getHeaderId(), VOID);
+        }
+    }
+
+    private void validateIfLatest(BcqHeader header) {
+        List<BcqHeader> sameHeaders = bcqDao.findSameHeaders(header, singletonList(VOID), NOT_IN);
+        if (sameHeaders.size() > 0) {
+            BcqHeader latestHeader = sameHeaders.get(0);
+            if (header.getHeaderId() != latestHeader.getHeaderId()) {
+                throw new OldRecordException(NEW_VERSION_ERROR);
             }
-            if (newStatus == null) {
-                currentAction = "approve";
-            } else {
-                switch (newStatus) {
-                    case CANCELLED:
-                        currentAction = "cancel";
-                        break;
-                    case CONFIRMED:
-                        currentAction = "confirm";
-                        break;
-                    case NULLIFIED:
-                        currentAction = "nullify";
-                        break;
-                    default:
-                        break;
-                }
+        } else {
+            throw new InvalidStateException(VOIDED_ERROR);
+        }
+    }
+
+    private void validateUpdateStatus(BcqStatus oldStatus, BcqStatus newStatus) {
+        if (asList(CONFIRMED, NULLIFIED, CANCELLED).contains(oldStatus)) {
+            if (oldStatus == CONFIRMED && newStatus == CANCELLED) {
+                return;
             }
 
-            if (oldStatus == VOID) {
-                throw new InvalidStateException(format("Unable to %s BCQ. BCQ declaration has a new version.",
-                        currentAction));
-            } else {
-                throw new InvalidStateException(format("Unable to %s BCQ. BCQ declaration has already been %s by the %s",
-                        currentAction, pastAction, pastActor));
-            }
+            throw new InvalidStateException(UPDATED_ERROR);
+        }
+    }
+
+    private void validateRequestForCancellation(BcqStatus oldStatus) {
+        if (!asList(CONFIRMED, SETTLEMENT_READY).contains(oldStatus)) {
+            throw new InvalidStateException(UPDATED_ERROR);
+        }
+    }
+
+    private void validateApproval(BcqStatus oldStatus) {
+        if (!asList(FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL).contains(oldStatus)) {
+            throw new InvalidStateException(UPDATED_ERROR);
         }
     }
 

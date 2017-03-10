@@ -3,6 +3,7 @@ package com.pemc.crss.metering.dao;
 import com.pemc.crss.commons.reports.ReportBean;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
+import com.pemc.crss.metering.dao.query.ComparisonOperator;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
@@ -18,27 +19,23 @@ public interface BcqDao {
 
     long saveUploadFile(BcqUploadFile uploadFile);
 
-    List<BcqHeader> saveHeaderList(List<BcqHeader> headerList, boolean isSpecialEvent);
+    List<BcqHeader> saveHeaders(List<BcqHeader> headerList, boolean isSpecialEvent);
 
     Page<BcqHeaderPageDisplay> findAllHeaders(PageableRequest pageableRequest);
 
     List<BcqHeader> findAllHeaders(Map<String, String> params);
 
-    List<BcqHeader> findSameHeadersWithStatusIn(BcqHeader header, List<BcqStatus> statuses);
-
-    List<BcqHeader> findSameHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses);
+    List<BcqHeader> findSameHeaders(BcqHeader header, List<BcqStatus> statuses, ComparisonOperator operator);
 
     BcqHeader findHeader(long headerId);
 
     List<BcqData> findDataByHeaderId(long headerId);
 
-    void checkAndUpdateHeaderStatus(long headerId, BcqStatus status);
-
-    void updateHeaderStatusById(long headerId, BcqStatus status);
+    void updateHeaderStatus(long headerId, BcqStatus status);
 
     void updateHeaderStatusBySettlement(long headerId, BcqStatus status);
 
-    List<BcqSpecialEventList> getAllSpecialEvents();
+    List<BcqSpecialEventList> findAllSpecialEvents();
 
     long saveSpecialEvent(BcqSpecialEvent specialEvent);
 

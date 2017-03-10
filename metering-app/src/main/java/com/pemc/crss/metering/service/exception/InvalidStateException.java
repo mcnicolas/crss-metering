@@ -1,4 +1,4 @@
-package com.pemc.crss.metering.dao.exception;
+package com.pemc.crss.metering.service.exception;
 
 public class InvalidStateException extends RuntimeException {
 

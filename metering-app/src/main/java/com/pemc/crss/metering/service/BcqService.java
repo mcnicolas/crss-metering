@@ -2,6 +2,7 @@ package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
+import com.pemc.crss.metering.dao.query.ComparisonOperator;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
@@ -14,25 +15,25 @@ import java.util.Map;
 
 public interface BcqService {
 
-    void saveSellerDeclaration(BcqDeclaration declaration);
-
-    void saveSettlementDeclaration(BcqDeclaration declaration);
-
-    Page<BcqHeaderPageDisplay> findAllHeaders(PageableRequest pageableRequest);
-
-    List<BcqHeader> findAllHeaders(Map<String, String> mapParams);
-
-    List<BcqHeader> findSameHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses);
-
-    boolean isHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList);
+    void saveDeclaration(BcqDeclaration declaration, boolean isSettlement);
 
     BcqHeader findHeader(long headerId);
 
     List<BcqData> findDataByHeaderId(long headerId);
 
+    Page<BcqHeaderPageDisplay> findAllHeaders(PageableRequest pageableRequest);
+
+    List<BcqHeader> findAllHeaders(Map<String, String> mapParams);
+
+    List<BcqHeader> findSameHeaders(BcqHeader header, List<BcqStatus> statuses, ComparisonOperator operator);
+
+    List<BcqHeader> findHeadersOfParticipantByTradingDate(String shortName, Date tradingDate);
+
+    boolean isHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList);
+
     void updateHeaderStatus(long headerId, BcqStatus status);
 
-    void updateHeaderStatusBySettlement(long headerId, BcqStatus status);
+    void requestForCancellation(long headerId);
 
     void approve(long headerId);
 
@@ -42,7 +43,7 @@ public interface BcqService {
 
     void processHeadersToSettlementReady();
 
-    List<BcqSpecialEventList> getSpecialEvents();
+    List<BcqSpecialEventList> findAllSpecialEvents();
 
     long saveSpecialEvent(BcqSpecialEvent specialEvent);
 

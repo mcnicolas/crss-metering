@@ -6,9 +6,9 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.BcqUpdateType;
 import com.pemc.crss.metering.dao.query.ComparisonOperator;
-import com.pemc.crss.metering.dao.query.QueryBuilder;
 import com.pemc.crss.metering.dao.query.QueryData;
 import com.pemc.crss.metering.dao.query.QueryFilter;
+import com.pemc.crss.metering.dao.query.SelectQueryBuilder;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.mapper.BcqDataReportMapper;
 import com.pemc.crss.metering.dto.bcq.mapper.BcqSpecialEventMapper;
@@ -40,23 +40,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.pemc.crss.metering.constants.BcqStatus.*;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
 import static com.pemc.crss.metering.dao.query.ComparisonOperator.*;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
-import static com.pemc.crss.metering.utils.DateTimeUtils.now;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
 import static java.lang.Long.parseLong;
 import static java.sql.Types.VARCHAR;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.of;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @Slf4j
 @Repository
@@ -77,27 +74,6 @@ public class JdbcBcqDao implements BcqDao {
 
     @Value("${bcq.header.status.select-by-status-and-deadlinedate-plus-days}")
     private String selectByStatusAndDeadlineDatePlusDays;
-
-    @Value("${bcq.header.list.header-join-file}")
-    private String headerJoinFile;
-
-    @Value("${bcq.header.list.sub-select.transaction-id}")
-    private String subSelectTransactionId;
-
-    @Value("${bcq.header.list.sub-select.submitted-date}")
-    private String subSelectSubmittedDate;
-
-    @Value("${bcq.header.list.sub-select.deadline-date}")
-    private String subSelectDeadlineDate;
-
-    @Value("${bcq.header.list.sub-select.status}")
-    private String subSelectStatus;
-
-    @Value("${bcq.header.list.sub-select.updated-via}")
-    private String subSelectUpdatedVia;
-
-    @Value("${bcq.header.list.unique}")
-    private String uniqueHeader;
 
     @Value("${bcq.data.insert}")
     private String insertData;
@@ -120,34 +96,34 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.report.flattened}")
     private String bcqReportFlattened;
 
-    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final NamedParameterJdbcTemplate jdbcTemplate;
     private final CacheConfigService configService;
 
     @Override
     public long saveUploadFile(BcqUploadFile uploadFile) {
-        log.debug("[DAO-BCQ] Saving file: {}", uploadFile.getFileName());
+        log.debug("Saving file: {}", uploadFile.getFileName());
         KeyHolder keyHolder = new GeneratedKeyHolder();
         BeanPropertySqlParameterSource source = new BeanPropertySqlParameterSource(uploadFile);
         source.registerSqlType("validationStatus", VARCHAR);
-        namedParameterJdbcTemplate.update(insertFile, source, keyHolder, new String[]{"file_id"});
-        long id = keyHolder.getKey().longValue();
-        log.debug("[DAO-BCQ] Saved file: {} with ID: {}", uploadFile.getFileName(), id);
-        return id;
+        jdbcTemplate.update(insertFile, source, keyHolder, new String[]{"file_id"});
+        long fileId = keyHolder.getKey().longValue();
+        log.debug("Saved file: {} with ID: {}", uploadFile.getFileName(), fileId);
+        return fileId;
     }
 
     @Override
-    public List<BcqHeader> saveHeaderList(List<BcqHeader> headerList, boolean isSpecialEvent) {
+    public List<BcqHeader> saveHeaders(List<BcqHeader> headerList, boolean isSpecialEvent) {
         List<BcqHeader> savedHeaderList = new ArrayList<>();
         for (BcqHeader header: headerList) {
             long headerId = saveHeader(header, isSpecialEvent);
             List<BcqData> dataList = header.getDataList();
             BeanPropertySqlParameterSource[] sourceArray = new BeanPropertySqlParameterSource[dataList.size()];
-            for (int i = 0; i < dataList.size(); i ++) {
+            IntStream.range(0, dataList.size()).forEach(i -> {
                 BcqData data = dataList.get(i);
                 data.setHeaderId(headerId);
                 sourceArray[i] = new BeanPropertySqlParameterSource(data);
-            }
-            namedParameterJdbcTemplate.batchUpdate(insertData, sourceArray);
+            });
+            jdbcTemplate.batchUpdate(insertData, sourceArray);
             header.setHeaderId(headerId);
             savedHeaderList.add(header);
         }
@@ -157,161 +133,92 @@ public class JdbcBcqDao implements BcqDao {
     @Override
     public Page<BcqHeaderPageDisplay> findAllHeaders(PageableRequest pageableRequest) {
         int totalRecords = getTotalRecords(pageableRequest);
-        QueryData queryData = new BcqQueryHelper().queryHeaderPageDisplay(pageableRequest);
-        log.debug("[DAO-BCQ] Finding page of headers with query: {}, and args: {}",
-                queryData.getSql(), queryData.getSource().getValues());
-        List<BcqHeaderPageDisplay> headerList = namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
+        QueryData data = BcqQueryHolder.headerPage(pageableRequest);
+        log.debug("Finding page of headers with query: {}, and args: {}", data.getSql(), data.getSource().getValues());
+        List<BcqHeaderPageDisplay> headerList = jdbcTemplate.query(data.getSql(), data.getSource(),
                 new BeanPropertyRowMapper<>(BcqHeaderPageDisplay.class));
-        log.debug("[DAO-BCQ] Found {} headers", headerList.size());
+        log.debug("Found {} headers", headerList.size());
         return new PageImpl<>(headerList, pageableRequest.getPageable(), totalRecords);
     }
 
     @Override
     public List<BcqHeader> findAllHeaders(Map<String, String> mapParams) {
-        QueryBuilder queryBuilder = new QueryBuilder()
-                .select()
-                    .column("HEADER_ID")
-                    .column("SELLING_MTN")
-                    .column("BILLING_ID")
-                    .column("BUYING_PARTICIPANT_NAME")
-                    .column("BUYING_PARTICIPANT_SHORT_NAME")
-                    .column("SELLING_PARTICIPANT_NAME")
-                    .column("SELLING_PARTICIPANT_SHORT_NAME")
-                    .column("TRADING_DATE")
-                    .column("DEADLINE_DATE")
-                    .column("UPDATED_VIA")
-                    .column("STATUS")
-                    .column("TRANSACTION_ID")
-                    .column("SUBMITTED_DATE")
-                .from(headerJoinFile);
-        QueryData queryData = addParams(queryBuilder, mapParams, false).build();
-        log.debug("[DAO-BCQ] Finding all headers with query: {}, and args: {}", queryData.getSql(),
-                queryData.getSource());
-        List<BcqHeader> headerList = namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
-                new BcqHeaderRowMapper());
-        log.debug("[DAO-BCQ] Found {} headers", headerList.size());
+        QueryData data = BcqQueryHolder.headerList(mapParams);
+        log.debug("Finding list of headers with query: {}, and args: {}", data.getSql(), data.getSource().getValues());
+        List<BcqHeader> headerList = jdbcTemplate.query(data.getSql(), data.getSource(), new BcqHeaderRowMapper());
+        log.debug("Found {} headers", headerList.size());
         return headerList;
     }
 
     @Override
-    public List<BcqHeader> findSameHeadersWithStatusIn(BcqHeader header, List<BcqStatus> statuses) {
-        return getSameHeadersWithStatus(header, statuses, IN);
-    }
-
-    @Override
-    public List<BcqHeader> findSameHeadersWithStatusNotIn(BcqHeader header, List<BcqStatus> statuses) {
-        return getSameHeadersWithStatus(header, statuses, NOT_IN);
+    public List<BcqHeader> findSameHeaders(BcqHeader header, List<BcqStatus> statuses, ComparisonOperator operator) {
+        QueryData data = BcqQueryHolder.sameHeaders(header, statuses, operator);
+        log.debug("Finding same headers of: {} with query: {}, and args: {}", header, data.getSql(),
+                data.getSource().getValues());
+        return jdbcTemplate.query(data.getSql(), data.getSource(), new BcqHeaderRowMapper());
     }
 
     @Override
     public BcqHeader findHeader(long headerId) {
-        log.debug("[DAO-BCQ] Finding header with ID: {}", headerId);
-        QueryData queryData = new QueryBuilder()
-                .select()
-                    .column("HEADER_ID")
-                    .column("SELLING_MTN")
-                    .column("BILLING_ID")
-                    .column("BUYING_PARTICIPANT_NAME")
-                    .column("BUYING_PARTICIPANT_SHORT_NAME")
-                    .column("SELLING_PARTICIPANT_NAME")
-                    .column("SELLING_PARTICIPANT_SHORT_NAME")
-                    .column("TRADING_DATE")
-                    .column("DEADLINE_DATE")
-                    .column("UPDATED_VIA")
-                    .column("STATUS")
-                    .column("TRANSACTION_ID")
-                    .column("SUBMITTED_DATE")
-                .from(headerJoinFile)
-                .where()
-                    .filter(new QueryFilter("HEADER_ID", headerId))
-                .build();
-        List<BcqHeader> headerList = namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
-                new BcqHeaderRowMapper());
+        log.debug("Finding header with ID: {}", headerId);
+        QueryData data = BcqQueryHolder.headerById(headerId);
+        List<BcqHeader> headerList = jdbcTemplate.query(data.getSql(), data.getSource(), new BcqHeaderRowMapper());
         if (headerList.size() > 0) {
             BcqHeader header = headerList.get(0);
-            log.debug("[DAO-BCQ] Found header: {}", header);
+            log.debug("Found header: {}", header);
             return header;
-        } else {
-            log.debug("[DAO-BCQ] No header found with ID: {}", headerId);
-            return null;
         }
+        log.debug("No header found with ID: {}", headerId);
+        return null;
     }
 
     @Override
     public List<BcqData> findDataByHeaderId(long headerId) {
-        log.debug("[DAO-BCQ] Finding data of header with ID: {}", headerId);
-        QueryData queryData = new QueryBuilder()
-                .select()
-                    .column("REFERENCE_MTN")
-                    .column("END_TIME")
-                    .column("BCQ")
-                .from("TXN_BCQ_DATA")
-                .where()
-                    .filter(new QueryFilter("HEADER_ID", headerId))
-                .build();
-        List<BcqData> dataList = namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
-                new BeanPropertyRowMapper<>(BcqData.class));
-        log.debug("[DAO-BCQ] Found {} data of header with ID: {}", dataList.size(), headerId);
+        log.debug("Finding data of header with ID: {}", headerId);
+        QueryData data = BcqQueryHolder.dataByHeaderId(headerId);
+        List<BcqData> dataList = jdbcTemplate.query(data.getSql(), data.getSource(), new BeanPropertyRowMapper<>(BcqData.class));
+        log.debug("Found {} data of header with ID: {}", dataList.size(), headerId);
         return dataList;
     }
 
     @Override
-    public void checkAndUpdateHeaderStatus(long headerId, BcqStatus status) {
-        log.debug("[DAO-BCQ] Updating status of header to {} with ID: {}", status, headerId);
-        BcqHeader header = findHeader(headerId);
-        if (status == CONFIRMED || status == SETTLEMENT_READY) {
-            List<BcqStatus> statusToCheck;
-            if (status == CONFIRMED) {
-                statusToCheck = singletonList(CONFIRMED);
-            } else {
-                statusToCheck = asList(CONFIRMED, SETTLEMENT_READY);
-            }
-            List<BcqHeader> prevHeaders = findSameHeadersWithStatusIn(header, statusToCheck);
-            BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
-            updateHeaderStatusToVoid(prevHeader);
-        }
-
-        updateHeaderStatusById(headerId, status);
-    }
-
-    @Override
-    public void updateHeaderStatusById(long headerId, BcqStatus status) {
+    public void updateHeaderStatus(long headerId, BcqStatus status) {
         MapSqlParameterSource source = new MapSqlParameterSource()
                 .addValue("headerId", headerId)
                 .addValue("status", status.toString());
-        namedParameterJdbcTemplate.update(updateHeaderStatus, source);
-        log.debug("[DAO-BCQ] Updated status of header with ID: {} to {} ", headerId, status);
+        jdbcTemplate.update(updateHeaderStatus, source);
+        log.debug("Updated status of header with ID: {} to {} ", headerId, status);
     }
 
     @Override
     public void updateHeaderStatusBySettlement(long headerId, BcqStatus status) {
-        log.debug("[DAO-BCQ] Updating status by settlement of header to {} with ID: {}", status, headerId);
+        log.debug("Updating status by settlement of header to {} with ID: {}", status, headerId);
         MapSqlParameterSource source = new MapSqlParameterSource()
                 .addValue("headerId", headerId)
                 .addValue("status", status.toString())
                 .addValue("updatedVia", MANUAL_OVERRIDE.toString());
-        namedParameterJdbcTemplate.update(updateHeaderStatusBySettlement, source);
-        log.debug("[DAO-BCQ] Updated status by settlement of header with ID: {} to {} ", headerId, status);
+        jdbcTemplate.update(updateHeaderStatusBySettlement, source);
+        log.debug("Updated status by settlement of header with ID: {} to {} ", headerId, status);
     }
 
     @Override
-    public List<BcqSpecialEventList> getAllSpecialEvents() {
-        log.debug("[DAO-BCQ] Querying all special Events");
-        return namedParameterJdbcTemplate.query(bcqEventList, new BcqSpecialEventMapper());
+    public List<BcqSpecialEventList> findAllSpecialEvents() {
+        log.debug("Querying all special Events");
+        return jdbcTemplate.query(bcqEventList, new BcqSpecialEventMapper());
     }
 
     @Override
     public long saveSpecialEvent(BcqSpecialEvent specialEvent) {
-        log.debug("[DAO-BCQ] Saving new special event");
+        log.debug("Saving new special event");
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource source = new MapSqlParameterSource()
                 .addValue("deadlineDate", DateTimeUtils.endOfDay(specialEvent.getDeadlineDate()))
                 .addValue("remarks", specialEvent.getRemarks());
-        namedParameterJdbcTemplate.update(insertEvent, source, keyHolder, new String[]{"event_id"});
+        jdbcTemplate.update(insertEvent, source, keyHolder, new String[]{"event_id"});
         long eventId = keyHolder.getKey().longValue();
         saveEventTradingDates(specialEvent.getTradingDates(), eventId);
         saveEventParticipants(specialEvent.getTradingParticipants(), eventId);
-        log.debug("[DAO-BCQ] Saved special event with ID: {}", eventId);
+        log.debug("Saved special event with ID: {}", eventId);
         return eventId;
     }
 
@@ -326,63 +233,39 @@ public class JdbcBcqDao implements BcqDao {
                 .addValue("tradingParticipants", tradingParticipants)
                 .addValue("tradingDates", tradingDatesAtStartOfDay);
 
-        return namedParameterJdbcTemplate.query(validateSpecialEvent, paramSource,
+        return jdbcTemplate.query(validateSpecialEvent, paramSource,
                 new BeanPropertyRowMapper<>(BcqEventValidationData.class));
     }
 
     @Override
     public List<BcqSpecialEventParticipant> findEventParticipantsByTradingDate(Date tradingDate) {
-        log.debug("[DAO-BCQ] Finding event participants with trading date: {}", tradingDate);
-        QueryData queryData = new QueryBuilder()
-                .select()
-                .column("TRADING_PARTICIPANT").as("SHORT_NAME")
-                .column("PARTICIPANT_NAME")
-                .from("TXN_BCQ_SPECIAL_EVENT SE"
-                        + " INNER JOIN TXN_BCQ_EVENT_PARTICIPANT EP ON SE.EVENT_ID = EP.EVENT_ID"
-                        + " INNER JOIN TXN_BCQ_EVENT_TRADING_DATE ETD ON SE.EVENT_ID = ETD.EVENT_ID")
-                .where()
-                .filter(new QueryFilter("ETD.TRADING_DATE", tradingDate))
-                .and()
-                .filter(new QueryFilter("SE.DEADLINE_DATE", now(), GREATER_THAN))
-                .build();
-        log.debug("[DAO-BCQ] Finding event query: {}", queryData.getSql());
-        return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
+        log.debug("Finding event participants with trading date: {}", tradingDate);
+        QueryData data = BcqQueryHolder.eventParticipantsByTradingDate(tradingDate);
+        log.debug("Finding event query: {}", data.getSql());
+        return jdbcTemplate.query(data.getSql(), data.getSource(),
                 new BeanPropertyRowMapper<>(BcqSpecialEventParticipant.class));
     }
 
     @Override
     public Date findEventDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName) {
-        log.debug("[DAO-BCQ] Finding event deadline date of: {}", shortName);
-        QueryData queryData = new QueryBuilder()
-                .select()
-                .column("DEADLINE_DATE")
-                .from("TXN_BCQ_SPECIAL_EVENT SE"
-                        + " INNER JOIN TXN_BCQ_EVENT_PARTICIPANT EP ON SE.EVENT_ID = EP.EVENT_ID"
-                        + " INNER JOIN TXN_BCQ_EVENT_TRADING_DATE ETD ON SE.EVENT_ID = ETD.EVENT_ID")
-                .where()
-                .filter(new QueryFilter("ETD.TRADING_DATE", tradingDate))
-                .and()
-                .filter(new QueryFilter("UPPER(EP.TRADING_PARTICIPANT)", shortName.toUpperCase()))
-                .and()
-                .filter(new QueryFilter("SE.DEADLINE_DATE", now(), GREATER_THAN))
-                .build();
-        log.debug("[DAO-BCQ] Finding event query: {}", queryData.getSql());
-        List<Date> foundDeadlineDates = namedParameterJdbcTemplate.queryForList(queryData.getSql(),
-                queryData.getSource(), Date.class);
+        log.debug("Finding event deadline date of: {}", shortName);
+        QueryData data = BcqQueryHolder.eventDeadlineDateByTradingDateAndParticipant(tradingDate, shortName);
+        log.debug("Finding event query: {}", data.getSql());
+        List<Date> foundDeadlineDates = jdbcTemplate.queryForList(data.getSql(), data.getSource(), Date.class);
         if (foundDeadlineDates.size() > 1) {
-            log.error("[DAO-BCQ] Deadline date must be only one");
+            log.error("Deadline date must be only one");
         }
         return foundDeadlineDates.size() > 0 ? foundDeadlineDates.get(0) : null;
     }
 
     @Override
     public List<ReportBean> queryBcqDataReport(final Map<String, String> mapParams) {
-        QueryBuilder builder = new QueryBuilder(bcqReportFlattened);
+        SelectQueryBuilder builder = new SelectQueryBuilder(bcqReportFlattened);
         QueryData queryData = addParams(builder, mapParams, true).build();
 
         log.debug("[BCQ Data Report] Querying sql: {} source: {}", queryData.getSql(), queryData.getSource().getValues());
 
-        return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(), new BcqDataReportMapper());
+        return jdbcTemplate.query(queryData.getSql(), queryData.getSource(), new BcqDataReportMapper());
     }
 
     @Override
@@ -391,42 +274,23 @@ public class JdbcBcqDao implements BcqDao {
                 .addValue("plusDays", plusDays)
                 .addValue("status", status.toString());
 
-        return namedParameterJdbcTemplate.queryForList(selectByStatusAndDeadlineDatePlusDays,
+        return jdbcTemplate.queryForList(selectByStatusAndDeadlineDatePlusDays,
                 source, Long.class);
     }
 
     @Override
     public List<BillingIdShortNamePair> findAllBillingIdShortNamePair(List<String> billingIds, Date tradingDate) {
-        log.debug("[DAO-BCQ] Finding pair with billing ids: {}, trading date: {}", billingIds, tradingDate);
+        log.debug("Finding pair with billing ids: {}, trading date: {}", billingIds, tradingDate);
         tradingDate = startOfDay(tradingDate);
         List<String> upperCasedBillingIds = billingIds.stream().map(String::toUpperCase).collect(toList());
-        QueryData queryData = new QueryBuilder()
-                .select()
-                .column("BILLING_ID")
-                .column("TRADING_PARTICIPANT_SHORT_NAME")
-                .from("MAP_BILLING_ID_TAX_DATA")
-                .where()
-                .filter(new QueryFilter("BILLING_ID", upperCasedBillingIds, IN))
-                .and()
-                .filter(new QueryFilter("EFFECTIVE_START_DATE", tradingDate, LESS_THAN_EQUALS))
-                .and()
-                .openParenthesis()
-                .filter(new QueryFilter("EFFECTIVE_END_DATE", tradingDate, GREATER_THAN))
-                .or()
-                .filter("EFFECTIVE_END_DATE IS NULL")
-                .closeParenthesis()
-                .build();
-        log.debug("[DAO-BCQ] Finding pair query: {}", queryData.getSql());
-        return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
+        QueryData data = BcqQueryHolder.billingIdShortNamePair(upperCasedBillingIds, tradingDate);
+        log.debug("Finding pair query: {}", data.getSql());
+        return jdbcTemplate.query(data.getSql(), data.getSource(),
                 new BeanPropertyRowMapper<>(BillingIdShortNamePair.class));
     }
 
-    /****************************************************
-     * SUPPORT METHODS
-     ****************************************************/
     private long saveHeader(BcqHeader header, boolean isSpecialEvent) {
-        log.debug("[DAO-BCQ] Saving header: {}, {}, {}",
-                header.getSellingMtn(), header.getBillingId(), header.getTradingDate());
+        log.debug("Saving header: {}", header);
         if (header.getUpdatedVia() == MANUAL_OVERRIDE) {
             header.setDeadlineDate(null);
         } else {
@@ -441,58 +305,39 @@ public class JdbcBcqDao implements BcqDao {
             }
         }
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        List<BcqHeader> prevHeaders = findSameHeadersWithStatusIn(header,
-                asList(FOR_NULLIFICATION, FOR_CONFIRMATION, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE));
-        BcqHeader prevHeader = prevHeaders.size() > 0 ? prevHeaders.get(0) : null;
+        List<BcqHeader> sameHeaders = findSameHeaders(header, FOR_STATUSES, IN);
+        if (sameHeaders.size() > 0) {
+            BcqHeader prevHeader = sameHeaders.get(0);
+            updateHeaderStatus(prevHeader.getHeaderId(), VOID);
+        }
+        BcqHeader prevHeader = sameHeaders.size() > 0 ? sameHeaders.get(0) : null;
         updateHeaderStatusToVoid(prevHeader);
         BeanPropertySqlParameterSource beanSource = new BeanPropertySqlParameterSource(header);
         beanSource.registerSqlType("status", VARCHAR);
         beanSource.registerSqlType("updatedVia", VARCHAR);
-        namedParameterJdbcTemplate.update(insertHeader, beanSource, keyHolder, new String[]{"header_id"});
+        jdbcTemplate.update(insertHeader, beanSource, keyHolder, new String[]{"header_id"});
         return keyHolder.getKey().longValue();
-    }
-
-    private List<BcqHeader> getSameHeadersWithStatus(BcqHeader header, List<BcqStatus> statuses,
-                                                     ComparisonOperator operator) {
-
-        log.debug("[DAO-BCQ] Finding previous header of: {}", header);
-        QueryData queryData = new QueryBuilder()
-                .select()
-                    .column("HEADER_ID")
-                    .column("SUBMITTED_DATE")
-                    .column("STATUS")
-                .from(headerJoinFile)
-                .where()
-                    .filter(new QueryFilter("UPPER(SELLING_MTN)", header.getSellingMtn().toUpperCase()))
-                    .and()
-                    .filter(new QueryFilter("UPPER(BILLING_ID)", header.getBillingId().toUpperCase()))
-                    .and()
-                    .filter(new QueryFilter("TRADING_DATE", header.getTradingDate()))
-                    .and()
-                    .filter(new QueryFilter("STATUS", statuses.stream().map(Enum::toString).collect(toList()), operator))
-                .orderBy("SUBMITTED_DATE", DESC)
-                .build();
-        log.debug("SQL: {}", queryData.getSql());
-        return namedParameterJdbcTemplate.query(queryData.getSql(), queryData.getSource(),
-                new BcqHeaderRowMapper());
     }
 
     private void updateHeaderStatusToVoid(BcqHeader header) {
         if (header != null) {
-            log.debug("[DAO-BCQ] Previous header: {}", header);
+            log.debug("Previous header: {}", header);
             MapSqlParameterSource mapSource = new MapSqlParameterSource()
                     .addValue("status", VOID.toString())
                     .addValue("headerId", header.getHeaderId());
-            namedParameterJdbcTemplate.update(updateHeaderStatus, mapSource);
+            jdbcTemplate.update(updateHeaderStatus, mapSource);
         }
     }
 
     private int getTotalRecords(PageableRequest pageableRequest) {
-        QueryData queryData = new BcqQueryHelper().queryHeaderPageCount(pageableRequest);
-        return namedParameterJdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Integer.class);
+        log.debug("Getting total declaration records");
+        QueryData queryData = BcqQueryHolder.headerPageCount(pageableRequest);
+        int totalRecords = jdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Integer.class);
+        log.debug("Total records: {}", totalRecords);
+        return totalRecords;
     }
 
-    private QueryBuilder addParams(QueryBuilder queryBuilder, Map<String, String> mapParams, boolean forReports) {
+    private SelectQueryBuilder addParams(SelectQueryBuilder queryBuilder, Map<String, String> mapParams, boolean forReports) {
         Long headerId = mapParams.get("headerId") == null ? null : parseLong(mapParams.get("headerId"));
         Date tradingDate = mapParams.get("tradingDate") == null ? null : parseDate(mapParams.get("tradingDate"));
         String sellingMtn = mapParams.get("sellingMtn") == null ? "" : mapParams.get("sellingMtn");
@@ -552,7 +397,7 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     private void saveEventTradingDates(List<Date> tradingDateList, long eventId) {
-        log.debug("[DAO-BCQ] Saving event trading date list with size of: {} and event id: {}",
+        log.debug("Saving event trading date list with size of: {} and event id: {}",
                 tradingDateList.size(), eventId);
         MapSqlParameterSource[] sourceArray = new MapSqlParameterSource[tradingDateList.size()];
         for (int i = 0; i < tradingDateList.size(); i ++) {
@@ -560,12 +405,12 @@ public class JdbcBcqDao implements BcqDao {
                     .addValue("eventId", eventId)
                     .addValue("tradingDate", startOfDay(tradingDateList.get(i)));
         }
-        namedParameterJdbcTemplate.batchUpdate(insertEventTradingDate, sourceArray);
-        log.debug("[DAO-BCQ] Saved event trading date list");
+        jdbcTemplate.batchUpdate(insertEventTradingDate, sourceArray);
+        log.debug("Saved event trading date list");
     }
 
     private void saveEventParticipants(List<BcqSpecialEventParticipant> participants, long eventId) {
-        log.debug("[DAO-BCQ] Saving event participant list with size of: {} and event id: {}",
+        log.debug("Saving event participant list with size of: {} and event id: {}",
                 participants.size(), eventId);
         MapSqlParameterSource[] sourceArray = new MapSqlParameterSource[participants.size()];
         for (int i = 0; i < participants.size(); i ++) {
@@ -574,8 +419,8 @@ public class JdbcBcqDao implements BcqDao {
                     .addValue("participantName", participants.get(i).getParticipantName())
                     .addValue("shortName", participants.get(i).getShortName());
         }
-        namedParameterJdbcTemplate.batchUpdate(insertEventParticipant, sourceArray);
-        log.debug("[DAO-BCQ] Saved event participant list");
+        jdbcTemplate.batchUpdate(insertEventParticipant, sourceArray);
+        log.debug("Saved event participant list");
     }
 
     private class BcqHeaderRowMapper implements RowMapper<BcqHeader> {
