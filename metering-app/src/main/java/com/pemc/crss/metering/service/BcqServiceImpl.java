@@ -306,8 +306,8 @@ public class BcqServiceImpl implements BcqService {
     }
 
     private boolean isSameHeader(BcqHeader header1, BcqHeader header2) {
-        return header1.getSellingMtn().equals(header2.getSellingMtn()) &&
-                header1.getBillingId().equals(header2.getBillingId()) &&
+        return header1.getSellingMtn().equalsIgnoreCase(header2.getSellingMtn()) &&
+                header1.getBillingId().equalsIgnoreCase(header2.getBillingId()) &&
                 header1.getTradingDate().equals(header2.getTradingDate());
     }
 

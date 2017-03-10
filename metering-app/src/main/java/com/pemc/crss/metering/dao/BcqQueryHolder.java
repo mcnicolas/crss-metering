@@ -9,6 +9,7 @@ import com.pemc.crss.metering.dao.query.QueryFilter;
 import com.pemc.crss.metering.dao.query.SelectQueryBuilder;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -164,11 +165,12 @@ public final class BcqQueryHolder {
     }
 
     public static QueryData billingIdShortNamePair(List<String> upperCasedBillingIds, Date tradingDate) {
+        System.out.println("BILLING: " + Arrays.toString(upperCasedBillingIds.toArray()));
         return new SelectQueryBuilder()
-                .column("BILLING_ID")
+                .column("UPPER(BILLING_ID)").as("BILLING_ID")
                 .column("TRADING_PARTICIPANT_SHORT_NAME")
                 .from("MAP_BILLING_ID_TAX_DATA")
-                .where().filter(new QueryFilter("BILLING_ID", upperCasedBillingIds, IN))
+                .where().filter(new QueryFilter("UPPER(BILLING_ID)", upperCasedBillingIds, IN))
                 .and().filter(new QueryFilter("EFFECTIVE_START_DATE", tradingDate, LESS_THAN_EQUALS))
                 .and().openParenthesis().filter(new QueryFilter("EFFECTIVE_END_DATE", tradingDate, GREATER_THAN))
                     .or().filter("EFFECTIVE_END_DATE IS NULL")

@@ -240,7 +240,7 @@ public class BcqValidationHandler {
 
     private String getShortNameByBillingId(String billingId, List<BillingIdShortNamePair> billingIdShortNamePairs) {
         return billingIdShortNamePairs.stream()
-                .filter(billingIdShortNamePair -> billingIdShortNamePair.getBillingId().equals(billingId))
+                .filter(billingIdShortNamePair -> billingIdShortNamePair.getBillingId().equalsIgnoreCase(billingId))
                 .collect(toList()).get(0).getTradingParticipantShortName();
     }
 
@@ -253,7 +253,7 @@ public class BcqValidationHandler {
             header.setSellingParticipantShortName(sellerDetails.getShortName());
             ParticipantBuyerDetails buyerDetails =
                     participantDetails.getBuyerDetailsList().stream()
-                            .filter(buyer -> buyer.getShortName().equals(header.getBuyingParticipantShortName()))
+                            .filter(buyer -> buyer.getShortName().equalsIgnoreCase(header.getBuyingParticipantShortName()))
                             .collect(toList())
                             .get(0);
             header.setBuyingParticipantName(buyerDetails.getName());

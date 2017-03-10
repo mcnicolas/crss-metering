@@ -25,6 +25,7 @@ public class BillingIdValidationHelper {
     public Validation<List<String>> validBillingIds(List<BillingIdShortNamePair> billingIdShortNamePairs) {
         BillingIdValidation validation = new BillingIdValidation();
         Predicate<List<String>> predicate = billingIds -> {
+            billingIds = billingIds.stream().map(String::toUpperCase).distinct().collect(toList());
             billingIds.removeAll(billingIdShortNamePairs.stream()
                     .map(BillingIdShortNamePair::getBillingId).collect(toList()));
 

@@ -51,8 +51,8 @@ public class BcqPopulator {
 
     private BcqHeader populateHeader(List<String> line) {
         BcqHeader header = new BcqHeader();
-        String sellingMtn = line.get(SELLING_MTN_INDEX).toUpperCase();
-        String billingId = line.get(BILLING_ID_INDEX).toUpperCase();
+        String sellingMtn = line.get(SELLING_MTN_INDEX);
+        String billingId = line.get(BILLING_ID_INDEX);
         Date tradingDate = getTradingDate(line.get(DATE_INDEX));
 
         header.setSellingMtn(sellingMtn);
@@ -64,7 +64,7 @@ public class BcqPopulator {
 
     private BcqData populateData(List<String> line, BcqInterval interval) {
         BcqData data = new BcqData();
-        String referenceMtn = line.get(REFERENCE_MTN_INDEX).toUpperCase();
+        String referenceMtn = line.get(REFERENCE_MTN_INDEX);
         Date endTime = parseDateTime(line.get(DATE_INDEX));
 
         data.setReferenceMtn(referenceMtn);
