@@ -16,7 +16,7 @@ public class BcqDataDisplay extends AbstractWebDto<BcqData> {
     }
 
     public String getReferenceMtn() {
-        return target().getReferenceMtn();
+        return target().getReferenceMtn().toUpperCase();
     }
 
     public void setReferenceMtn(String referenceMtn) {

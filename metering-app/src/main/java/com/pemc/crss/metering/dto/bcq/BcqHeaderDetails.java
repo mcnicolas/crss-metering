@@ -22,7 +22,7 @@ public class BcqHeaderDetails extends AbstractWebDto<BcqHeader> {
     }
 
     public String getBillingId() {
-        return target().getBillingId();
+        return target().getBillingId().toUpperCase();
     }
 
     public void setBillingId(String billingId) {
@@ -30,7 +30,7 @@ public class BcqHeaderDetails extends AbstractWebDto<BcqHeader> {
     }
 
     public String getSellingMtn() {
-        return target().getSellingMtn();
+        return target().getSellingMtn().toUpperCase();
     }
 
     public void setSellingMtn(String sellingMtn) {

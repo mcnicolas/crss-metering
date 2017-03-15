@@ -19,4 +19,12 @@ public class BcqHeaderPageDisplay {
     private String status;
     private String updatedVia;
 
+    public String getBillingId() {
+        return billingId.toUpperCase();
+    }
+
+    public String getSellingMtn() {
+        return sellingMtn.toUpperCase();
+    }
+
 }
