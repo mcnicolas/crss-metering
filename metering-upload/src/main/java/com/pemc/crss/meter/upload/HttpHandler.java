@@ -5,6 +5,7 @@ import com.pemc.crss.meter.upload.http.HeaderStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -75,6 +76,8 @@ public class HttpHandler {
     private static final String PEMC_USERTYPE = "PEMC";
 
     private static final String METERING_DEPARTMENT = "METERING";
+    public static final String MARKET_OPERATOR = "MO";
+    public static final String SYSTEM_OPERATOR = "SO";
 
     private CloseableHttpClient httpClient;
     private PoolingHttpClientConnectionManager connectionManager;
@@ -213,18 +216,19 @@ public class HttpHandler {
                     throw new AuthorizationException("User is not authorized to access the MQ Uploader");
                 }
 
-                retVal.add(obj.getJSONObject("principal").getString("fullName"));
+                JSONObject principal = obj.getJSONObject("principal");
 
-                String userType = obj.getJSONObject("principal").get("department").toString();
-                isPemcUser = Boolean.valueOf(obj.getJSONObject("principal").get("pemcUser").toString());
+                retVal.add(principal.getString("fullName"));
 
-                if (isPemcUser) {
-                    if (equalsIgnoreCase(userType, METERING_DEPARTMENT)) {
+                String userType = principal.getString("userType");
+                if (equalsIgnoreCase(userType, MARKET_OPERATOR)) {
+                    String department = principal.getString("department");
+                    if (equalsIgnoreCase(department, METERING_DEPARTMENT)) {
                         retVal.add(PEMC_USERTYPE);
                     } else {
                         retVal.add("");
                     }
-                } else {
+                } else if (equalsIgnoreCase(userType, SYSTEM_OPERATOR)) {
                     retVal.add(getParticipant().getRegistrationCategory());
                 }
             } else {
