@@ -42,8 +42,8 @@ public class BcqHeader {
         BcqHeader that = (BcqHeader) o;
         return Objects.equals(headerId, that.headerId)
                 && Objects.equals(fileId, that.fileId)
-                && Objects.equals(billingId, that.billingId)
-                && Objects.equals(sellingMtn, that.sellingMtn)
+                && Objects.equals(billingId.toUpperCase(), that.billingId.toUpperCase())
+                && Objects.equals(sellingMtn.toUpperCase(), that.sellingMtn.toUpperCase())
                 && Objects.equals(buyingParticipantName, that.buyingParticipantName)
                 && Objects.equals(buyingParticipantShortName, that.buyingParticipantShortName)
                 && Objects.equals(sellingParticipantName, that.sellingParticipantName)
