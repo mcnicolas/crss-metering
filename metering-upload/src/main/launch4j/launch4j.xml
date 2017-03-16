@@ -2,8 +2,8 @@
 <launch4jConfig>
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>/Users/clim/opt/temp/metering-upload-2.0.0.BUILD-SNAPSHOT-all.jar</jar>
-  <outfile>/Users/clim/opt/temp/mq-uploader-2.0.0-SNAPSHOT.exe</outfile>
+  <jar>../../../target/libs/metering-upload-2.0.0.BUILD-SNAPSHOT-all.jar</jar>
+  <outfile>mq-uploader-2.0.0.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -13,7 +13,7 @@
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon></icon>
+  <icon>upload_icon.ico</icon>
   <singleInstance>
     <mutexName>mquploader</mutexName>
     <windowTitle>MQ Uploader</windowTitle>
@@ -28,22 +28,22 @@
     <runtimeBits>64/32</runtimeBits>
   </jre>
   <splash>
-    <file>/Users/clim/opt/temp/splashscreen.bmp</file>
+    <file>splashscreen.bmp</file>
     <waitForWindow>true</waitForWindow>
     <timeout>60</timeout>
     <timeoutErr>true</timeoutErr>
   </splash>
   <versionInfo>
     <fileVersion>2.0.0.0</fileVersion>
-    <txtFileVersion>2.0.0-SNAPSHOT</txtFileVersion>
+    <txtFileVersion>2.0.0</txtFileVersion>
     <fileDescription>Meter Quantity Uploader</fileDescription>
     <copyright>Philippine Electricity Market Corporation</copyright>
     <productVersion>2.0.0.0</productVersion>
-    <txtProductVersion>2.0.0-SNAPSHOT</txtProductVersion>
+    <txtProductVersion>2.0.0</txtProductVersion>
     <productName>Central Registration and Settlement System</productName>
     <companyName>Philippine Electricity Market Corporation</companyName>
     <internalName>PEMC</internalName>
-    <originalFilename>mq-uploade-2.0.0-SNAPSHOT.exe</originalFilename>
+    <originalFilename>mq-uploade-2.0.0.exe</originalFilename>
     <trademarks></trademarks>
     <language>ENGLISH_US</language>
   </versionInfo>
