@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.dto.bcq;
 
+import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.constants.BcqUpdateType;
 import lombok.Data;
@@ -28,6 +29,7 @@ public class BcqHeader {
     private BcqUploadFile uploadFile;
     private List<BcqData> dataList;
     private boolean exists;
+    private BcqInterval interval;
 
     @Override
     public boolean equals(Object o) {

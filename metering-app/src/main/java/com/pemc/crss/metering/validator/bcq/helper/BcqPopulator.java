@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.pemc.crss.metering.constants.BcqInterval.fromDescription;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDateTime;
 import static com.pemc.crss.metering.utils.DateTimeUtils.isStartOfDay;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
@@ -16,6 +17,8 @@ import static org.apache.commons.lang3.time.DateUtils.addDays;
 
 public class BcqPopulator {
 
+    private static final int INTERVAL_ROW_INDEX = 0;
+    private static final int INTERVAL_COLUMN_INDEX = 1;
     private static final int SELLING_MTN_INDEX = 0;
     private static final int BILLING_ID_INDEX = 1;
     private static final int REFERENCE_MTN_INDEX = 2;
@@ -23,12 +26,15 @@ public class BcqPopulator {
     private static final int BCQ_INDEX = 4;
     private static final int START_LINE_OF_DATA = 2;
 
-    public List<BcqHeader> populate(List<List<String>> csv, BcqInterval interval) {
+    public List<BcqHeader> populate(List<List<String>> csv) {
+        BcqInterval interval = fromDescription(csv.get(INTERVAL_ROW_INDEX).get(INTERVAL_COLUMN_INDEX));
         List<BcqHeader> headerList = new ArrayList<>();
+
         for (List<String> line : csv.subList(START_LINE_OF_DATA, csv.size())) {
             BcqHeader header = populateHeader(line);
             List<BcqData> dataList;
 
+            header.setInterval(interval);
             if (headerList.contains(header)) {
                 header = headerList.get(headerList.indexOf(header));
                 dataList = header.getDataList();

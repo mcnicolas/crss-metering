@@ -22,16 +22,16 @@ import static org.apache.commons.lang3.time.DateUtils.addDays;
 @Component
 public class HeaderListValidationHelper {
 
-    public Validation<List<BcqHeader>> validHeaderList(int declarationDateConfig, BcqInterval interval) {
+    public Validation<List<BcqHeader>> validHeaderList(int declarationDateConfig) {
         return openTradingDate(declarationDateConfig)
-                .and(validDataSize(interval))
-                .and(validTimeIntervals(interval));
+                .and(validDataSize())
+                .and(validTimeIntervals());
     }
 
-    public Validation<List<BcqHeader>> validHeaderList(Date tradingDate, BcqInterval interval) {
+    public Validation<List<BcqHeader>> validHeaderList(Date tradingDate) {
         return sameTradingDate(tradingDate).
-                and(validDataSize(interval)).
-                and(validTimeIntervals(interval));
+                and(validDataSize()).
+                and(validTimeIntervals());
     }
 
     private HeaderListValidation openTradingDate(int declarationDateConfig) {
@@ -66,11 +66,11 @@ public class HeaderListValidationHelper {
         return validation;
     }
 
-    private HeaderListValidation validDataSize(BcqInterval interval) {
-        int validBcqSize = interval.getValidNoOfRecords();
+    private HeaderListValidation validDataSize() {
         HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList ->
                 headerList.stream().allMatch(header -> {
+                    int validBcqSize = header.getInterval().getValidNoOfRecords();
                     if (header.getDataList().size() == validBcqSize) {
                         return true;
                     }
@@ -83,13 +83,15 @@ public class HeaderListValidationHelper {
         return validation;
     }
 
-    private HeaderListValidation validTimeIntervals(BcqInterval interval) {
+    private HeaderListValidation validTimeIntervals() {
         HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList ->
                 headerList.stream()
                         .allMatch(header -> {
+                            BcqInterval interval = header.getInterval();
                             Date previousDate = null;
                             long diff;
+
                             for (BcqData data : header.getDataList()) {
                                 if (previousDate == null) {
                                     Date startOfDay = startOfDay(data.getEndTime());
