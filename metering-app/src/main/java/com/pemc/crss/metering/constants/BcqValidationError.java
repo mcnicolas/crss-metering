@@ -47,7 +47,8 @@ public enum BcqValidationError {
             + "the trading date of %s.<br />%s"),
     OVERRIDDEN_ENTRIES("Following entry(ies) have already been overridden for the trading date of %s.<br />%s"),
     DEADLINE_DATE_PASSED("Deadline date of special event for trading date <b>%s</b> and participants <b>%s</b> has "
-            + "passed.");
+            + "passed."),
+    MULTIPLE_PARTICIPANT_BILLING_ID("Multiple participants are associated to billing ID <b>%s</b> for trading date <b>%s</b>.");
 
     private final String errorMessage;
 

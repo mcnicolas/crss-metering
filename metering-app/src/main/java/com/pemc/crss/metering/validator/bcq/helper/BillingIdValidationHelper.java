@@ -9,11 +9,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 
 import static com.pemc.crss.metering.constants.BcqValidationError.BILLING_ID_NOT_EXIST;
+import static com.pemc.crss.metering.constants.BcqValidationError.MULTIPLE_PARTICIPANT_BILLING_ID;
+import static com.pemc.crss.metering.utils.BcqDateUtils.formatLongDate;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
@@ -22,21 +27,32 @@ import static java.util.stream.Collectors.toList;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class BillingIdValidationHelper {
 
-    public Validation<List<String>> validBillingIds(List<BillingIdShortNamePair> billingIdShortNamePairs) {
+    public Validation<List<BillingIdShortNamePair>> validBillingIds(Date tradingDate) {
         BillingIdValidation validation = new BillingIdValidation();
-        Predicate<List<String>> predicate = billingIds -> {
-            billingIds = billingIds.stream().map(String::toUpperCase).distinct().collect(toList());
-            billingIds.removeAll(billingIdShortNamePairs.stream()
-                    .map(BillingIdShortNamePair::getBillingId).collect(toList()));
+        Predicate<List<BillingIdShortNamePair>> predicate = billingIdShortNamePairs -> {
+            List<String> notExistingBillingIds = new ArrayList<>();
+            for (BillingIdShortNamePair billingIdShortNamePair : billingIdShortNamePairs) {
+                billingIdShortNamePair.setTradingParticipantShortName(billingIdShortNamePair
+                        .getTradingParticipantShortName().stream().distinct().collect(toList()));
+                if (billingIdShortNamePair.getTradingParticipantShortName().size() > 1) {
+                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MULTIPLE_PARTICIPANT_BILLING_ID,
+                            asList(billingIdShortNamePair.getBillingId(), formatLongDate(tradingDate)));
+                    validation.setErrorMessage(errorMessage);
+                    return false;
+                } else if (billingIdShortNamePair.getTradingParticipantShortName().size() < 1) {
+                    notExistingBillingIds.add(billingIdShortNamePair.getBillingId());
+                }
+            }
 
-            if (billingIds.size() > 0) {
-                StringJoiner noRecordBillingIds = new StringJoiner(", ");
-                billingIds.forEach(noRecordBillingIds::add);
+            if (notExistingBillingIds.size() > 0) {
+                StringJoiner billingIds = new StringJoiner(", ");
+                notExistingBillingIds.forEach(billingIds::add);
                 BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(BILLING_ID_NOT_EXIST,
-                        singletonList("<b>" + noRecordBillingIds.toString() + "</b>"));
+                        singletonList("<b>" + billingIds.toString() + "</b>"));
                 validation.setErrorMessage(errorMessage);
                 return false;
             }
+
             return true;
         };
         validation.setPredicate(predicate);

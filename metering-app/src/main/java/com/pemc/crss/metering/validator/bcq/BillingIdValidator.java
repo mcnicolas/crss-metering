@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -16,9 +17,9 @@ public class BillingIdValidator {
 
     private final BillingIdValidationHelper validationHelper;
 
-    public BcqValidationResult validate(List<String> billingIds, List<BillingIdShortNamePair> billingIdShortNamePairs) {
+    public BcqValidationResult validate(List<BillingIdShortNamePair> billingIdShortNamePairs, Date tradingDate) {
         log.info("Start validation of billing id");
-        BcqValidationResult result = validationHelper.validBillingIds(billingIdShortNamePairs).test(billingIds);
+        BcqValidationResult result = validationHelper.validBillingIds(tradingDate).test(billingIdShortNamePairs);
         log.info("Finish validation of CSV file, Result: {}", result);
         return result;
     }

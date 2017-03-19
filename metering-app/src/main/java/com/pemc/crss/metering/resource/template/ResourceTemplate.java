@@ -27,7 +27,14 @@ public class ResourceTemplate {
     }
 
     public <T> T get(String path, Class<T> type) {
-        return restTemplate.exchange(getRequestUrl(path), GET, getHttpEntity(null), type).getBody();
+        return get(path, type, true);
+    }
+
+    public <T> T get(String path, Class<T> type, boolean useServerPath) {
+        if (useServerPath) {
+            path = getRequestUrl(path);
+        }
+        return restTemplate.exchange(path, GET, getHttpEntity(null), type).getBody();
     }
 
     public <T> T post(String path, Class<T> type, Object requestBody) {
