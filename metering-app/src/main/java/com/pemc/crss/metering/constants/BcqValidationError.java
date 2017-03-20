@@ -36,8 +36,11 @@ public enum BcqValidationError {
     SELLING_MTN_NOT_OWNED("Unregistered selling MTN. "
             + "Selling MTN <b>%s</b> is not registered under Seller <b>%s (%s)</b>."),
     BILLING_ID_NOT_EXIST("Following billing ID(s) do not exist.<br />%s"),
-    NO_ACTIVE_CONTRACT("Active enrollment does not exist. "
-            + "No active contract between Seller <b>%s (%s)</b> and Buyer <b>%s (%s)</b>."),
+    NO_ACTIVE_CONTRACT("Trading participant <b>%s (%s)</b> do not have active customer enrollment contract with "
+            + "selling participant <b>%s (%s)</b> for trading date <b>%s</b>."),
+    INDIRECT_NO_ACTIVE_CONTRACT("Indirect trading participant <b>%s (%s)</b> and its "
+            + "direct trading participant <b>%s (%s)</b> do not have active customer enrollment contract with "
+            + "selling participant <b>%s (%s)</b> for trading date <b>%s</b>."),
     REFERENCE_MTN_UNREGISTERED("Unregistered reference MTN. Reference MTN <b>%s</b> does not exist."),
     REFERENCE_MTN_NOT_IN_CONTRACT("Unregistered reference MTN. "
             + "Reference MTN <b>%s</b> is not registered under contract of "
