@@ -15,21 +15,20 @@ class BillingIdValidationHelperTest extends Specification {
     def 'validate billing id, validation status must be #status'() {
         given:
         def validBillingIds = [
-                new BillingIdShortNamePair(billingId: 'BILL1', tradingParticipantShortName: 'BUYER1'),
-                new BillingIdShortNamePair(billingId: 'BILL2', tradingParticipantShortName: 'BUYER2')
+                new BillingIdShortNamePair(billingId: 'BILL1', tradingParticipantShortName: shortNames)
         ]
 
         when:
-        def result = validationHelper.validBillingIds(validBillingIds).test(billingIds);
+        def result = validationHelper.validBillingIds(new Date()).test(validBillingIds);
 
         then:
         result.status == status
 
         where:
-        billingIds                  || status
-        ['BILL1']                   || ACCEPTED
-        ['BILL1', 'BILL2']          || ACCEPTED
-        ['BILL1', 'BILL2', 'BILL3'] || REJECTED
+        shortNames           || status
+        ['BUYER1']           || ACCEPTED
+        ['BUYER1', 'BUYER1'] || ACCEPTED
+        ['BUYER1', 'BUYER2'] || REJECTED
     }
 
 }
