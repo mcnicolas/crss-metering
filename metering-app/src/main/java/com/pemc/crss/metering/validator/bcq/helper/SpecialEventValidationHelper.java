@@ -52,16 +52,18 @@ public class SpecialEventValidationHelper {
                 eventParticipant.setShortName(header.getBuyingParticipantShortName());
                 return eventParticipant;
             }).collect(toList());
+
             if (isEmpty(participants)) {
                 validation.setErrorMessage(new BcqValidationErrorMessage(NO_SPECIAL_EVENT_FOUND));
                 return false;
             }
+
             eventParticipants.addAll(headerParticipants);
             headerParticipants.removeAll(participants);
             if (headerParticipants.size() > 0) {
                 String notPresentParticipants = headerParticipants.stream()
                         .map(headerParticipant ->
-                                "<b>" + headerParticipant.getParticipantName() + "("
+                                "<b>" + headerParticipant.getParticipantName() + " ("
                                         + headerParticipant.getShortName() + ")</b>")
                         .distinct()
                         .collect(joining(", "));
