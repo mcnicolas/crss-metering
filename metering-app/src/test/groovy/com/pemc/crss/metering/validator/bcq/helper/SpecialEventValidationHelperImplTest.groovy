@@ -3,6 +3,7 @@ package com.pemc.crss.metering.validator.bcq.helper
 import com.pemc.crss.metering.dto.bcq.BcqHeader
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant
 import com.pemc.crss.metering.service.BcqService
+import com.pemc.crss.metering.validator.bcq.helper.impl.SpecialEventValidationHelperImpl
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -13,10 +14,10 @@ import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED
 import static com.pemc.crss.metering.utils.DateTimeUtils.now
 import static org.apache.commons.lang3.time.DateUtils.addDays
 
-class SpecialEventValidationHelperTest extends Specification {
+class SpecialEventValidationHelperImplTest extends Specification {
 
     def bcqService = Mock(BcqService)
-    def validationHelper = new SpecialEventValidationHelper(bcqService)
+    def validationHelper = new SpecialEventValidationHelperImpl(bcqService)
 
     @Unroll
     def 'validate special event submission, validation status must be #status with an error: #validationError'() {

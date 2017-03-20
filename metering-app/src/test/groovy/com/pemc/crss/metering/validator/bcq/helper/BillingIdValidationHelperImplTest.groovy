@@ -1,15 +1,16 @@
 package com.pemc.crss.metering.validator.bcq.helper
 
 import com.pemc.crss.metering.dto.bcq.BillingIdShortNamePair
+import com.pemc.crss.metering.validator.bcq.helper.impl.BillingIdValidationHelperImpl
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED
 
-class BillingIdValidationHelperTest extends Specification {
+class BillingIdValidationHelperImplTest extends Specification {
 
-    def validationHelper = new BillingIdValidationHelper()
+    def validationHelper = new BillingIdValidationHelperImpl()
 
     @Unroll
     def 'validate billing id, validation status must be #status'() {

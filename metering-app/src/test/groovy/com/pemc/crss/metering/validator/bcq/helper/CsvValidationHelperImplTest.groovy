@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.validator.bcq.helper
 
+import com.pemc.crss.metering.validator.bcq.helper.impl.CsvValidationHelperImpl
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -7,9 +8,9 @@ import static com.pemc.crss.metering.constants.BcqValidationError.*
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED
 import static com.pemc.crss.metering.validator.bcq.helper.ValidationHelperTestUtils.readCsv
 
-class CsvValidationHelperTest extends Specification {
+class CsvValidationHelperImplTest extends Specification {
 
-    def CsvValidationHelper validationHelper = new CsvValidationHelper()
+    def CsvValidationHelper validationHelper = new CsvValidationHelperImpl()
 
     @Unroll
     def 'must reject csv file with validation error: #validationError'() {

@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.validator.bcq.helper
 
+import com.pemc.crss.metering.validator.bcq.helper.impl.HeaderListValidationHelperImpl
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -10,9 +11,9 @@ import static com.pemc.crss.metering.utils.DateTimeUtils.now
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay
 import static com.pemc.crss.metering.validator.bcq.helper.ValidationHelperTestUtils.readCsv
 
-class HeaderListValidationHelperTest extends Specification {
+class HeaderListValidationHelperImplTest extends Specification {
 
-    def validationHelper = new HeaderListValidationHelper()
+    def validationHelper = new HeaderListValidationHelperImpl()
     def populator = new BcqPopulator()
 
     @Unroll
