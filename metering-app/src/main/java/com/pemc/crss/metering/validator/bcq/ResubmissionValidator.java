@@ -17,9 +17,12 @@ public class ResubmissionValidator {
 
     private final ResubmissionValidationHelper validationHelper;
 
-    public BcqValidationResult validate(List<BcqHeader> headerList, String sellingParticipant, Date tradingDate) {
+    public BcqValidationResult<List<BcqHeader>> validate(List<BcqHeader> headerList, String sellingParticipant) {
         log.debug("Start validation of resubmission");
-        BcqValidationResult result = validationHelper.validResubmission(sellingParticipant, tradingDate).test(headerList);
+        Date tradingDate = headerList.get(0).getTradingDate();
+        BcqValidationResult<List<BcqHeader>> result = validationHelper.validResubmission(sellingParticipant, tradingDate)
+                .test(headerList);
+        result.setProcessedObject(headerList);
         log.debug("Finish validation of resubmission, Result: {}", result);
         return result;
     }

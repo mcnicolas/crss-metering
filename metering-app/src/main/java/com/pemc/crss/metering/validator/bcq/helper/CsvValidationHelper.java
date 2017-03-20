@@ -174,7 +174,9 @@ public class CsvValidationHelper {
             Set<List<String>> uniqueSet = new HashSet<>();
             return csv.subList(2, csv.size()).stream()
                     .noneMatch(line -> {
-                        List<String> uniqueRow = asList(line.get(SELLING_MTN_INDEX), line.get(BILLING_ID_INDEX),
+                        List<String> uniqueRow = asList(
+                                line.get(SELLING_MTN_INDEX).toUpperCase(),
+                                line.get(BILLING_ID_INDEX).toUpperCase(),
                                 line.get(DATE_INDEX));
                         if (!uniqueSet.add(uniqueRow)) {
                             BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(DUPLICATE_DATE,

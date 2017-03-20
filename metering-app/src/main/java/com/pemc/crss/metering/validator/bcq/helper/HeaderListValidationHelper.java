@@ -23,9 +23,9 @@ import static org.apache.commons.lang3.time.DateUtils.addDays;
 public class HeaderListValidationHelper {
 
     public Validation<List<BcqHeader>> validHeaderList(int declarationDateConfig) {
-        return openTradingDate(declarationDateConfig)
-                .and(validDataSize())
-                .and(validTimeIntervals());
+        return validDataSize()
+                .and(validTimeIntervals())
+                .and(openTradingDate(declarationDateConfig));
     }
 
     public Validation<List<BcqHeader>> validHeaderList(Date tradingDate) {

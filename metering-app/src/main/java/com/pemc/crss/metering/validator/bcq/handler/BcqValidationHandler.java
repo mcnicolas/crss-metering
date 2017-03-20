@@ -2,11 +2,9 @@ package com.pemc.crss.metering.validator.bcq.handler;
 
 import com.pemc.crss.commons.cache.service.CacheConfigService;
 import com.pemc.crss.metering.constants.BcqInterval;
-import com.pemc.crss.metering.constants.BcqValidationError;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.validator.bcq.*;
-import com.pemc.crss.metering.validator.bcq.helper.BcqPopulator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,18 +16,13 @@ import java.util.Date;
 import java.util.List;
 
 import static com.pemc.crss.metering.constants.BcqInterval.FIVE_MINUTES_PERIOD;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
-import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
 import static com.pemc.crss.metering.constants.BcqValidationError.CLOSED_TRADING_DATE;
 import static com.pemc.crss.metering.constants.BcqValidationError.NO_SPECIAL_EVENT_FOUND;
-import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
-import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
-import static java.lang.String.format;
+import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static java.math.BigDecimal.ROUND_HALF_UP;
 import static java.math.BigDecimal.valueOf;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @Component
@@ -46,6 +39,7 @@ public class BcqValidationHandler {
     private final HeaderListValidator headerListValidator;
     private final SpecialEventValidator specialEventValidator;
     private final BillingIdValidator billingIdValidator;
+    private final CrssSideValidator crssSideValidator;
     private final ResubmissionValidator resubmissionValidator;
     private final OverrideValidator overrideValidator;
     private final ResourceTemplate resourceTemplate;
@@ -54,116 +48,53 @@ public class BcqValidationHandler {
     public BcqDeclaration processAndValidate(List<List<String>> csv) {
         ParticipantSellerDetails sellerDetails = getSellerDetails();
         BcqDeclaration declaration = new BcqDeclaration(sellerDetails);
-        BcqValidationResult validationResult = csvValidator.validate(csv);
-        if (validationResult.getStatus() == REJECTED) {
-            return declaration.withValidationResult(validationResult);
-        }
 
-        List<BcqHeader> headerList = new BcqPopulator().populate(csv);
-        validationResult = headerListValidator.validate(headerList);
+        BcqValidationResult<List<BcqHeader>> result = csvValidator.validate(csv)
+                .then(csvResult -> headerListValidator.validate(csvResult.getProcessedObject()))
+                .then(headerListResult -> billingIdValidator.validate(headerListResult.getProcessedObject()))
+                .then(billingIdResult -> crssSideValidator.validate(billingIdResult.getProcessedObject(), sellerDetails))
+                .then(crssSideResult -> resubmissionValidator.validate(crssSideResult.getProcessedObject(),
+                        sellerDetails.getShortName()));
 
-        if (validationResult.getStatus() == REJECTED) {
-            if (validationResult.getErrorMessage().getValidationError() == CLOSED_TRADING_DATE) {
-                BcqDeclaration specialEventDeclaration = processAndValidateForSpecialEvent(headerList, declaration,
-                        sellerDetails);
-                if (specialEventDeclaration.getValidationResult().getStatus() == REJECTED) {
-                    BcqValidationError specialEventDeclarationError = specialEventDeclaration.getValidationResult()
-                            .getErrorMessage().getValidationError();
-                    if (NO_SPECIAL_EVENT_FOUND != specialEventDeclarationError) {
-                        return specialEventDeclaration;
-                    }
-                } else {
-                    return specialEventDeclaration;
-                }
-            }
-            return declaration.withValidationResult(validationResult);
-        }
-
-        List<String> uniqueBillingIds = headerList.stream().map(BcqHeader::getBillingId).distinct().collect(toList());
-        List<BillingIdShortNamePair> billingIdShortNamePairs = new ArrayList<>();
-        Date tradingDate = headerList.get(0).getTradingDate();
-
-        uniqueBillingIds.forEach(billingId -> {
-            List<String> shortNames = getShortNameByBillingIdAndTradingDate(billingId, tradingDate);
-            billingIdShortNamePairs.add(new BillingIdShortNamePair(billingId, shortNames));
-        });
-
-        validationResult = billingIdValidator.validate(billingIdShortNamePairs, tradingDate);
-        if (validationResult.getStatus() == REJECTED) {
-            return declaration.withValidationResult(validationResult);
-        }
-
-        headerList.forEach(header ->
-                header.setBuyingParticipantShortName(getShortNameByBillingId(header.getBillingId(),
-                        billingIdShortNamePairs)));
-
-        List<BcqItem> uniqueItems = getUniqueItems(headerList);
-        BcqParticipantDetails participantDetails = getAndValidate(uniqueItems);
-        if (participantDetails.getValidationResult().getStatus() == REJECTED) {
-            return declaration.withValidationResult(participantDetails.getValidationResult());
-        }
-
-        headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
-
-        validationResult = resubmissionValidator.validate(headerList, sellerDetails.getShortName(),
-                headerList.get(0).getTradingDate());
-        if (validationResult.getStatus() == REJECTED) {
-            return declaration.withValidationResult(validationResult);
-        }
-
-        headerList = divideDataOfHeaderList(headerList);
-
+        List<BcqHeader> headerList = result.getProcessedObject();
         List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
-        headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
-        return declaration.withHeaderDetailsList(headerDetailsList);
+        if (result.getStatus() == ACCEPTED) {
+            headerList = divideDataOfHeaderList(headerList);
+            headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
+            return declaration.withHeaderDetailsList(headerDetailsList);
+        } else {
+            if (result.getErrorMessage().getValidationError() == CLOSED_TRADING_DATE) {
+                return processAndValidateForSpecialEvent(headerList, sellerDetails, result);
+            }
+            return declaration.withValidationResult(result);
+        }
+
     }
 
-    private BcqDeclaration processAndValidateForSpecialEvent(List<BcqHeader> headerList, BcqDeclaration declaration,
-                                                             ParticipantSellerDetails sellerDetails) {
+    private BcqDeclaration processAndValidateForSpecialEvent(List<BcqHeader> headerList,
+                                                             ParticipantSellerDetails sellerDetails,
+                                                             BcqValidationResult<List<BcqHeader>> previousResult) {
 
-        BcqValidationResult validationResult;
-        List<String> uniqueBillingIds = headerList.stream().map(BcqHeader::getBillingId).distinct().collect(toList());
-        List<BillingIdShortNamePair> billingIdShortNamePairs = new ArrayList<>();
-        Date tradingDate = headerList.get(0).getTradingDate();
-
-        uniqueBillingIds.forEach(billingId -> {
-            List<String> shortNames = getShortNameByBillingIdAndTradingDate(billingId, tradingDate);
-            billingIdShortNamePairs.add(new BillingIdShortNamePair(billingId, shortNames));
-        });
-        validationResult = billingIdValidator.validate(billingIdShortNamePairs, tradingDate);
-        if (validationResult.getStatus() == REJECTED) {
-            return declaration.withValidationResult(validationResult);
-        }
-
-        headerList.forEach(header ->
-                header.setBuyingParticipantShortName(getShortNameByBillingId(header.getBillingId(),
-                            billingIdShortNamePairs)));
-
-        List<BcqItem> uniqueItems = getUniqueItems(headerList);
-        BcqParticipantDetails participantDetails = getAndValidate(uniqueItems);
-        if (participantDetails.getValidationResult().getStatus() == REJECTED) {
-            return declaration.withValidationResult(participantDetails.getValidationResult());
-        }
-
-        headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
-
-        validationResult = specialEventValidator.validate(headerList, sellerDetails.getShortName());
-        if (validationResult.getStatus() == REJECTED) {
-            return declaration.withValidationResult(validationResult);
-        }
-
-        validationResult = resubmissionValidator.validate(headerList, sellerDetails.getShortName(),
-                headerList.get(0).getTradingDate());
-        if (validationResult.getStatus() == REJECTED) {
-            return declaration.withValidationResult(validationResult);
-        }
-
-        headerList = divideDataOfHeaderList(headerList);
+        BcqDeclaration declaration = new BcqDeclaration(sellerDetails);
+        BcqValidationResult<List<BcqHeader>> result = billingIdValidator.validate(headerList)
+                .then(billingIdResult -> crssSideValidator.validate(billingIdResult.getProcessedObject(), sellerDetails))
+                .then(crssSideResult -> specialEventValidator.validate(crssSideResult.getProcessedObject(),
+                        sellerDetails.getShortName()))
+                .then(specialEventResult -> resubmissionValidator.validate(specialEventResult.getProcessedObject(),
+                        sellerDetails.getShortName()));
 
         List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
-        headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
-        declaration.setSpecialEvent(true);
-        return declaration.withHeaderDetailsList(headerDetailsList);
+        if (result.getStatus() == ACCEPTED) {
+            headerList = divideDataOfHeaderList(headerList);
+            headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
+            return declaration.withHeaderDetailsList(headerDetailsList);
+        } else {
+            if (result.getErrorMessage().getValidationError() == NO_SPECIAL_EVENT_FOUND) {
+                return declaration.withValidationResult(previousResult);
+            } else {
+                return declaration.withValidationResult(result);
+            }
+        }
     }
 
     public BcqDeclaration processAndValidateForSettlement(List<List<String>> csv,
@@ -171,103 +102,26 @@ public class BcqValidationHandler {
                                                           Date tradingDate) {
 
         BcqDeclaration declaration = new BcqDeclaration(sellerDetails);
-        BcqValidationResult validationResult = csvValidator.validate(csv);
-        if (validationResult.getStatus() == REJECTED) {
-            return declaration.withValidationResult(validationResult);
-        }
 
-        BcqPopulator populator = new BcqPopulator();
-        List<BcqHeader> headerList = populator.populate(csv);
-        validationResult = headerListValidator.validateForSettlement(headerList, tradingDate);
-        if (validationResult.getStatus() == REJECTED) {
-            return declaration.withValidationResult(validationResult);
-        }
+        BcqValidationResult<List<BcqHeader>> result = csvValidator.validate(csv)
+                .then(csvResult -> headerListValidator.validateForSettlement(csvResult.getProcessedObject(), tradingDate))
+                .then(headerListResult -> billingIdValidator.validate(headerListResult.getProcessedObject()))
+                .then(billingIdResult -> crssSideValidator.validateBySettlement(billingIdResult.getProcessedObject(),
+                        sellerDetails))
+                .then(resubmissionResult -> overrideValidator.validate(resubmissionResult.getProcessedObject(),
+                        sellerDetails.getShortName()))
+                .then(crssSideResult -> resubmissionValidator.validate(crssSideResult.getProcessedObject(),
+                        sellerDetails.getShortName()));
 
-        List<String> uniqueBillingIds = headerList.stream().map(BcqHeader::getBillingId).distinct().collect(toList());
-        List<BillingIdShortNamePair> billingIdShortNamePairs = new ArrayList<>();
-
-        uniqueBillingIds.forEach(billingId -> {
-            List<String> shortNames = getShortNameByBillingIdAndTradingDate(billingId, tradingDate);
-            billingIdShortNamePairs.add(new BillingIdShortNamePair(billingId, shortNames));
-        });
-        validationResult = billingIdValidator.validate(billingIdShortNamePairs, tradingDate);
-        if (validationResult.getStatus() == REJECTED) {
-            return declaration.withValidationResult(validationResult);
-        }
-
-        headerList.forEach(header ->
-                header.setBuyingParticipantShortName(getShortNameByBillingId(header.getBillingId(),
-                        billingIdShortNamePairs)));
-
-        List<BcqItem> uniqueItems = getUniqueItems(headerList);
-        SellerWithItems sellerWithItems = new SellerWithItems(sellerDetails, uniqueItems);
-        BcqParticipantDetails participantDetails = getAndValidate(sellerWithItems);
-        if (participantDetails.getValidationResult().getStatus() == REJECTED) {
-            return declaration.withValidationResult(participantDetails.getValidationResult());
-        }
-
-        headerList = addParticipantDetailsToHeaderList(headerList, sellerDetails, participantDetails);
-
-        validationResult = overrideValidator.validate(headerList, sellerDetails.getShortName(),
-                headerList.get(0).getTradingDate());
-        if (validationResult.getStatus() == REJECTED) {
-            return declaration.withValidationResult(validationResult);
-        }
-
-        validationResult = resubmissionValidator.validate(headerList,
-                sellerDetails.getShortName(),
-                headerList.get(0).getTradingDate());
-        if (validationResult.getStatus() == REJECTED) {
-            return declaration.withValidationResult(validationResult);
-        }
-
-        headerList = divideDataOfHeaderList(headerList);
-
+        List<BcqHeader> headerList = result.getProcessedObject();
         List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
-        headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
-        return declaration.withHeaderDetailsList(headerDetailsList);
-    }
-
-    private List<BcqItem> getUniqueItems(List<BcqHeader> headerList) {
-        return headerList.stream().
-                map(header -> {
-                    List<String> referenceMtns = header.getDataList().stream()
-                            .map(BcqData::getReferenceMtn)
-                            .distinct()
-                            .collect(toList());
-                    BcqItem item = new BcqItem();
-                    item.setSellingMtn(header.getSellingMtn());
-                    item.setTradingParticipantShortName(header.getBuyingParticipantShortName());
-                    item.setReferenceMtns(referenceMtns);
-                    item.setTradingDate(header.getTradingDate());
-                    return item;
-                })
-                .distinct()
-                .collect(toList());
-    }
-
-    private String getShortNameByBillingId(String billingId, List<BillingIdShortNamePair> billingIdShortNamePairs) {
-        return billingIdShortNamePairs.stream()
-                .filter(billingIdShortNamePair -> billingIdShortNamePair.getBillingId().equalsIgnoreCase(billingId))
-                .collect(toList()).get(0).getTradingParticipantShortName().get(0);
-    }
-
-    private List<BcqHeader> addParticipantDetailsToHeaderList(List<BcqHeader> headerList,
-                                                              ParticipantSellerDetails sellerDetails,
-                                                              BcqParticipantDetails participantDetails) {
-
-        return headerList.stream().map(header -> {
-            header.setSellingParticipantName(sellerDetails.getName());
-            header.setSellingParticipantShortName(sellerDetails.getShortName());
-            ParticipantBuyerDetails buyerDetails =
-                    participantDetails.getBuyerDetailsList().stream()
-                            .filter(buyer -> buyer.getShortName().equalsIgnoreCase(header.getBuyingParticipantShortName()))
-                            .collect(toList())
-                            .get(0);
-            header.setBuyingParticipantName(buyerDetails.getName());
-            header.setStatus(buyerDetails.isBcqConfirmation() ? FOR_NULLIFICATION : FOR_CONFIRMATION);
-            return header;
-        }).collect(toList());
+        if (result.getStatus() == ACCEPTED) {
+            headerList = divideDataOfHeaderList(headerList);
+            headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
+            return declaration.withHeaderDetailsList(headerDetailsList);
+        } else {
+            return declaration.withValidationResult(result);
+        }
     }
 
     private List<BcqHeader> divideDataOfHeaderList(List<BcqHeader> headerList) {
@@ -316,19 +170,6 @@ public class BcqValidationHandler {
 
     private ParticipantSellerDetails getSellerDetails() {
         return resourceTemplate.get(SELLER_URL, ParticipantSellerDetails.class);
-    }
-
-    private BcqParticipantDetails getAndValidate(List<BcqItem> itemList) {
-        return resourceTemplate.post(VALIDATE_URL, BcqParticipantDetails.class, itemList);
-    }
-
-    private BcqParticipantDetails getAndValidate(SellerWithItems sellerWithItems) {
-        return resourceTemplate.post(SETTLEMENT_VALIDATE_URL, BcqParticipantDetails.class, sellerWithItems);
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<String> getShortNameByBillingIdAndTradingDate(String billingId, Date tradingDate) {
-        return resourceTemplate.get(format(BILLING_VALIDATE_URL, billingId, formatDate(tradingDate)), List.class, false);
     }
 
 }

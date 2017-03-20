@@ -8,20 +8,17 @@ import lombok.NoArgsConstructor;
 
 import java.util.function.Predicate;
 
-import static com.pemc.crss.metering.validator.bcq.BcqValidationResult.accepted;
-import static com.pemc.crss.metering.validator.bcq.BcqValidationResult.rejected;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class AbstractValidation<T> implements Validation<T> {
+public abstract class AbstractValidation<T, R> implements Validation<T> {
 
     protected Predicate<T> predicate;
     protected BcqValidationErrorMessage errorMessage;
 
     @Override
-    public BcqValidationResult test(T objectToValidate) {
-        return predicate.test(objectToValidate) ? accepted() : rejected(errorMessage);
+    public BcqValidationResult<R> test(T objectToValidate) {
+        return predicate.test(objectToValidate) ? new BcqValidationResult<>() : new BcqValidationResult<>(errorMessage);
     }
 
 }

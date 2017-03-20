@@ -33,9 +33,9 @@ class HeaderListValidationHelperTest extends Specification {
 
         where:
         csv                              | validationError
-        'bcq_file_closed_trading_date'   | CLOSED_TRADING_DATE
         'bcq_file_invalid_data_size'     | INCOMPLETE_ENTRIES
         'bcq_file_invalid_time_interval' | INCORRECT_TIME_INTERVALS
+        'bcq_file_closed_trading_date'   | CLOSED_TRADING_DATE
     }
 
     @Unroll

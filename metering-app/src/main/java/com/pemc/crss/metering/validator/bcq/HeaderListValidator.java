@@ -19,17 +19,21 @@ public class HeaderListValidator {
     private final CacheConfigService configService;
     private final HeaderListValidationHelper validationHelper;
 
-    public BcqValidationResult validate(List<BcqHeader> headerList) {
+    @SuppressWarnings("unchecked")
+    public BcqValidationResult<List<BcqHeader>> validate(List<BcqHeader> headerList) {
         log.info("Start validation of header list");
         int tradingDateConfig = configService.getIntegerValueForKey("BCQ_ALLOWABLE_TRADING_DATE", 1);
-        BcqValidationResult result = validationHelper.validHeaderList(tradingDateConfig).test(headerList);
+        BcqValidationResult<List<BcqHeader>> result = validationHelper.validHeaderList(tradingDateConfig).test(headerList);
+        result.setProcessedObject(headerList);
         log.info("Finish validation of header list, Result: {}", result);
         return result;
     }
 
-    public BcqValidationResult validateForSettlement(List<BcqHeader> headerList, Date tradingDate) {
+    @SuppressWarnings("unchecked")
+    public BcqValidationResult<List<BcqHeader>> validateForSettlement(List<BcqHeader> headerList, Date tradingDate) {
         log.info("Start settlement validation of header list");
-        BcqValidationResult result = validationHelper.validHeaderList(tradingDate).test(headerList);
+        BcqValidationResult<List<BcqHeader>> result = validationHelper.validHeaderList(tradingDate).test(headerList);
+        result.setProcessedObject(headerList);
         log.info("Finish settlement validation of header list, Result: {}", result);
         return result;
     }

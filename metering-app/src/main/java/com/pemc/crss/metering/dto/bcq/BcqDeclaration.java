@@ -7,8 +7,6 @@ import lombok.ToString;
 
 import java.util.List;
 
-import static com.pemc.crss.metering.validator.bcq.BcqValidationResult.accepted;
-
 @Data
 @ToString
 @NoArgsConstructor
@@ -27,13 +25,12 @@ public class BcqDeclaration {
 
     public BcqDeclaration withHeaderDetailsList(List<BcqHeaderDetails> headerDetailsList) {
         this.headerDetailsList = headerDetailsList;
-        validationResult = accepted();
+        validationResult = new BcqValidationResult();
         return this;
     }
 
-    public BcqDeclaration withValidationResult(BcqValidationResult validationResult) {
+    public BcqDeclaration withValidationResult(BcqValidationResult<List<BcqHeader>> validationResult) {
         this.validationResult = validationResult;
-        headerDetailsList = null;
         return this;
     }
 

@@ -3,7 +3,6 @@ package com.pemc.crss.metering.validator.bcq.helper;
 import com.pemc.crss.metering.dto.bcq.BillingIdShortNamePair;
 import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.validation.BillingIdValidation;
-import com.pemc.crss.metering.validator.bcq.validation.Validation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +26,7 @@ import static java.util.stream.Collectors.toList;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class BillingIdValidationHelper {
 
-    public Validation<List<BillingIdShortNamePair>> validBillingIds(Date tradingDate) {
+    public BillingIdValidation validBillingIds(Date tradingDate) {
         BillingIdValidation validation = new BillingIdValidation();
         Predicate<List<BillingIdShortNamePair>> predicate = billingIdShortNamePairs -> {
             List<String> notExistingBillingIds = new ArrayList<>();

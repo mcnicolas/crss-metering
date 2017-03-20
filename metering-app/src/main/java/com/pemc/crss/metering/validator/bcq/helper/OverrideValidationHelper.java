@@ -4,7 +4,6 @@ import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation;
-import com.pemc.crss.metering.validator.bcq.validation.Validation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -25,7 +24,7 @@ public class OverrideValidationHelper {
 
     private final BcqService bcqService;
 
-    public Validation<List<BcqHeader>> validOverride(String sellingParticipant, Date tradingDate) {
+    public HeaderListValidation validOverride(String sellingParticipant, Date tradingDate) {
         List<BcqHeader> currentHeaderList = bcqService.findHeadersOfParticipantByTradingDate(sellingParticipant, tradingDate);
         return noMissingHeaders(currentHeaderList);
     }

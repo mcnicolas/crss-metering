@@ -16,10 +16,13 @@ public class SpecialEventValidator {
 
     private final SpecialEventValidationHelper validationHelper;
 
-    public BcqValidationResult validate(List<BcqHeader> headerList, String sellingParticipant) {
-        log.info("Start validation for special event upload");
-        BcqValidationResult result = validationHelper.validSpecialEventUpload(sellingParticipant).test(headerList);
-        log.info("Finish validation for special event upload, Result: {}", result);
+    @SuppressWarnings("unchecked")
+    public BcqValidationResult<List<BcqHeader>> validate(List<BcqHeader> headerList, String sellingParticipant) {
+        log.debug("Start validation for special event upload");
+        BcqValidationResult<List<BcqHeader>> result = validationHelper.validSpecialEventUpload(sellingParticipant)
+                .test(headerList);
+        result.setProcessedObject(headerList);
+        log.debug("Finish validation for special event upload, Result: {}", result);
         return result;
     }
 
