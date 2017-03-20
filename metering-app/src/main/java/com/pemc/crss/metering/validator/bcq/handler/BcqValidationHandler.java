@@ -40,7 +40,7 @@ public class BcqValidationHandler {
     private static final String VALIDATE_URL = "/reg/bcq/validate";
     private static final String SETTLEMENT_VALIDATE_URL = "/reg/bcq/settlement/validate";
     private static final String BILLING_VALIDATE_URL =
-            "http://qa.ui.pemc.manila.exist.com/settlement/billing/%s/tradingParticipants?date=%s";
+            "http://app.reg.settlement.pemc.com/billing/%s/tradingParticipants?date=%s";
 
     private final CsvValidator csvValidator;
     private final HeaderListValidator headerListValidator;
