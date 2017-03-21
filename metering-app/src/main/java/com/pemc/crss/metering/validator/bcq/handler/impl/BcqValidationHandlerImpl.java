@@ -1,7 +1,6 @@
 package com.pemc.crss.metering.validator.bcq.handler.impl;
 
 import com.pemc.crss.commons.cache.service.CacheConfigService;
-import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.validator.bcq.*;
@@ -15,13 +14,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static com.pemc.crss.metering.constants.BcqInterval.FIVE_MINUTES_PERIOD;
+import static com.pemc.crss.metering.constants.BcqInterval.HOURLY;
 import static com.pemc.crss.metering.constants.BcqValidationError.CLOSED_TRADING_DATE;
 import static com.pemc.crss.metering.constants.BcqValidationError.NO_SPECIAL_EVENT_FOUND;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static java.math.BigDecimal.ROUND_HALF_UP;
 import static java.math.BigDecimal.valueOf;
-import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 @Component
@@ -52,10 +50,8 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
                         sellerDetails.getShortName()));
 
         List<BcqHeader> headerList = result.getProcessedObject();
-        List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
         if (result.getStatus() == ACCEPTED) {
-            headerList = divideDataOfHeaderList(headerList);
-            headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
+            List<BcqHeaderDetails> headerDetailsList = convertHeaderListToHeaderDetailsList(headerList);
             return declaration.withHeaderDetailsList(headerDetailsList);
         } else {
             if (result.getErrorMessage().getValidationError() == CLOSED_TRADING_DATE) {
@@ -82,11 +78,9 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
                 .then(crssSideResult -> resubmissionValidator.validate(crssSideResult.getProcessedObject(),
                         sellerDetails.getShortName()));
 
-        List<BcqHeader> headerList = result.getProcessedObject();
-        List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
         if (result.getStatus() == ACCEPTED) {
-            headerList = divideDataOfHeaderList(headerList);
-            headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
+            List<BcqHeader> headerList = result.getProcessedObject();
+            List<BcqHeaderDetails> headerDetailsList = convertHeaderListToHeaderDetailsList(headerList);
             return declaration.withHeaderDetailsList(headerDetailsList);
         } else {
             return declaration.withValidationResult(result);
@@ -105,10 +99,9 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
                 .then(specialEventResult -> resubmissionValidator.validate(specialEventResult.getProcessedObject(),
                         sellerDetails.getShortName()));
 
-        List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
         if (result.getStatus() == ACCEPTED) {
-            headerList = divideDataOfHeaderList(headerList);
-            headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
+            headerList = result.getProcessedObject();
+            List<BcqHeaderDetails> headerDetailsList = convertHeaderListToHeaderDetailsList(headerList);
             return declaration.withHeaderDetailsList(headerDetailsList);
         } else {
             if (result.getErrorMessage().getValidationError() == NO_SPECIAL_EVENT_FOUND) {
@@ -119,37 +112,26 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
         }
     }
 
-    private List<BcqHeader> divideDataOfHeaderList(List<BcqHeader> headerList) {
-        BcqInterval interval = headerList.get(0).getInterval();
-        if (interval != FIVE_MINUTES_PERIOD) {
-            int intervalConfig = configService.getIntegerValueForKey("BCQ_INTERVAL", 15);
+    private List<BcqHeaderDetails> convertHeaderListToHeaderDetailsList(List<BcqHeader> headerList) {
+        List<BcqHeaderDetails> headerDetailsList = new ArrayList<>();
+        if (headerList.get(0).getInterval() == HOURLY) {
             headerList.forEach(header -> {
                 List<BcqData> dividedDataList = new ArrayList<>();
-                header.getDataList().forEach(data ->
-                        dividedDataList.addAll(divideDataByInterval(data, interval, intervalConfig)));
+                header.getDataList().forEach(data -> dividedDataList.addAll(divideHourlyData(data)));
                 header.setDataList(dividedDataList);
             });
-            return headerList;
         }
-        return headerList;
+        headerList.forEach(header -> headerDetailsList.add(new BcqHeaderDetails(header)));
+        return headerDetailsList;
     }
 
-    private List<BcqData> divideDataByInterval(BcqData data, BcqInterval interval, int intervalConfig) {
+    private List<BcqData> divideHourlyData(BcqData data) {
+        int intervalConfig = configService.getIntegerValueForKey("BCQ_INTERVAL", 15);
+        int totalCount = intervalConfig == 15 ? 4 : 12;
         List<BcqData> dividedDataList = new ArrayList<>();
-        int totalCount;
-        switch (interval) {
-            case QUARTERLY:
-                totalCount = intervalConfig == 5 ? 3 : 1;
-                break;
-            case HOURLY:
-                totalCount = intervalConfig == 5 ? 12 : 4;
-                break;
-            default:
-                return singletonList(data);
-        }
 
-        Date currentStartTime = data.getStartTime();
         BigDecimal dividedBcq = data.getBcq().divide(valueOf(totalCount), 9, ROUND_HALF_UP);
+        Date currentStartTime = data.getStartTime();
         while (totalCount > 0) {
             BcqData partialData = new BcqData();
             partialData.setReferenceMtn(data.getReferenceMtn());
