@@ -21,6 +21,7 @@ public class HeaderListValidatorImpl implements HeaderListValidator {
     private final CacheConfigService configService;
     private final HeaderListValidationHelper validationHelper;
 
+    @Override
     @SuppressWarnings("unchecked")
     public BcqValidationResult<List<BcqHeader>> validate(List<BcqHeader> headerList) {
         log.info("Start validation of header list");
@@ -31,6 +32,7 @@ public class HeaderListValidatorImpl implements HeaderListValidator {
         return result;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public BcqValidationResult<List<BcqHeader>> validateForSettlement(List<BcqHeader> headerList, Date tradingDate) {
         log.info("Start settlement validation of header list");

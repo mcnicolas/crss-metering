@@ -25,6 +25,7 @@ public class ResubmissionValidationHelperImpl implements ResubmissionValidationH
 
     private final BcqService bcqService;
 
+    @Override
     public HeaderListValidation validResubmission(String sellingParticipant, Date tradingDate) {
         HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> {

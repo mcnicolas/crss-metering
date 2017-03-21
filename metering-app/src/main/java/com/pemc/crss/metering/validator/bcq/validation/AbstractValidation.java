@@ -13,8 +13,8 @@ import java.util.function.Predicate;
 @AllArgsConstructor
 public abstract class AbstractValidation<T, R> implements Validation<T> {
 
-    protected Predicate<T> predicate;
-    protected BcqValidationErrorMessage errorMessage;
+    private Predicate<T> predicate;
+    private BcqValidationErrorMessage errorMessage;
 
     @Override
     public BcqValidationResult<R> test(T objectToValidate) {

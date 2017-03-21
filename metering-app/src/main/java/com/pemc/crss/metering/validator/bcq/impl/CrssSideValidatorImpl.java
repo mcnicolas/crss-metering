@@ -27,6 +27,7 @@ public class CrssSideValidatorImpl implements CrssSideValidator {
     private static final String VALIDATE_URL = "/reg/bcq/validate";
     private static final String SETTLEMENT_VALIDATE_URL = "/reg/bcq/settlement/validate";
 
+    @Override
     public BcqValidationResult<List<BcqHeader>> validate(List<BcqHeader> headerList,
                                                          ParticipantSellerDetails sellerDetails) {
         log.debug("Start validation in crss side");
@@ -47,6 +48,7 @@ public class CrssSideValidatorImpl implements CrssSideValidator {
         return result;
     }
 
+    @Override
     public BcqValidationResult<List<BcqHeader>> validateBySettlement(List<BcqHeader> headerList,
                                                                      ParticipantSellerDetails sellerDetails) {
 

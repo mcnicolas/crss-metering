@@ -22,6 +22,7 @@ import static java.util.stream.Collectors.toList;
 @Component
 public class BillingIdValidationHelperImpl implements BillingIdValidationHelper {
 
+    @Override
     public BillingIdValidation validBillingIds(Date tradingDate) {
         BillingIdValidation validation = new BillingIdValidation();
         Predicate<List<BillingIdShortNamePair>> predicate = billingIdShortNamePairs -> {

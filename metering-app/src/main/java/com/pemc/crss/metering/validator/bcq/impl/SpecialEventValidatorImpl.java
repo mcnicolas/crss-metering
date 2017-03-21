@@ -18,6 +18,7 @@ public class SpecialEventValidatorImpl implements SpecialEventValidator {
 
     private final SpecialEventValidationHelper validationHelper;
 
+    @Override
     @SuppressWarnings("unchecked")
     public BcqValidationResult<List<BcqHeader>> validate(List<BcqHeader> headerList, String sellingParticipant) {
         log.debug("Start validation for special event upload");

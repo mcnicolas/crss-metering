@@ -19,6 +19,7 @@ public class OverrideValidatorImpl implements OverrideValidator {
 
     private final OverrideValidationHelper validationHelper;
 
+    @Override
     public BcqValidationResult<List<BcqHeader>> validate(List<BcqHeader> headerList, String sellingParticipant) {
         log.debug("Start override validation");
         Date tradingDate = headerList.get(0).getTradingDate();

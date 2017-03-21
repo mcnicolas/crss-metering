@@ -42,6 +42,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
     private static final int VALID_NO_OF_LINES = 2;
     private static final int START_LINE_OF_DATA = 2;
 
+    @Override
     public Validation<List<List<String>>> validCsv(int intervalConfig) {
         return validCsvFile()
                 .and(nonEmpty())
@@ -62,9 +63,6 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                 .and(sameTradingDate());
     }
 
-    /****************************************************
-     * VALIDATIONS
-     ****************************************************/
     private CsvValidation validCsvFile() {
         return new CsvValidation(csv -> csv != null, new BcqValidationErrorMessage(INVALID_CSV_FILE));
     }

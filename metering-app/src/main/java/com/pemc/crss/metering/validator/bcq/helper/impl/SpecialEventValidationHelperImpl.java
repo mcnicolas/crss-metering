@@ -34,6 +34,7 @@ public class SpecialEventValidationHelperImpl implements SpecialEventValidationH
     private final BcqService bcqService;
     private final List<BcqSpecialEventParticipant> eventParticipants = new ArrayList<>();
 
+    @Override
     public Validation<List<BcqHeader>> validSpecialEventUpload(String sellingParticipant) {
         return participantsWithTradingDateExist()
                 .and(noManualOverridden(sellingParticipant))

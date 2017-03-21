@@ -25,12 +25,14 @@ import static org.apache.commons.lang3.time.DateUtils.addDays;
 @Component
 public class HeaderListValidationHelperImpl implements HeaderListValidationHelper {
 
+    @Override
     public Validation<List<BcqHeader>> validHeaderList(int declarationDateConfig) {
         return validDataSize()
                 .and(validTimeIntervals())
                 .and(openTradingDate(declarationDateConfig));
     }
 
+    @Override
     public Validation<List<BcqHeader>> validHeaderList(Date tradingDate) {
         return sameTradingDate(tradingDate).
                 and(validDataSize()).

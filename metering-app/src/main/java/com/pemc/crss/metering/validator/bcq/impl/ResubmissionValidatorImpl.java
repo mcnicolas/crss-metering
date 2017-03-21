@@ -19,6 +19,7 @@ public class ResubmissionValidatorImpl implements ResubmissionValidator {
 
     private final ResubmissionValidationHelper validationHelper;
 
+    @Override
     public BcqValidationResult<List<BcqHeader>> validate(List<BcqHeader> headerList, String sellingParticipant) {
         log.debug("Start validation of resubmission");
         Date tradingDate = headerList.get(0).getTradingDate();

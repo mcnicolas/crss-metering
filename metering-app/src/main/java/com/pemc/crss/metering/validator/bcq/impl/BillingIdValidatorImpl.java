@@ -31,6 +31,7 @@ public class BillingIdValidatorImpl implements BillingIdValidator {
     private final BillingIdValidationHelper validationHelper;
     private final ResourceTemplate resourceTemplate;
 
+    @Override
     public BcqValidationResult<List<BcqHeader>> validate(List<BcqHeader> headerList) {
         log.debug("Start validation of billing id");
         List<BillingIdShortNamePair> billingIdShortNamePairs = new ArrayList<>();

@@ -25,12 +25,9 @@ public class OverrideValidationHelperImpl implements OverrideValidationHelper {
 
     private final BcqService bcqService;
 
+    @Override
     public HeaderListValidation validOverride(String sellingParticipant, Date tradingDate) {
         List<BcqHeader> currentHeaderList = bcqService.findHeadersOfParticipantByTradingDate(sellingParticipant, tradingDate);
-        return noMissingHeaders(currentHeaderList);
-    }
-
-    private HeaderListValidation noMissingHeaders(List<BcqHeader> currentHeaderList) {
         HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> {
             List<BcqHeader> missingHeaderList = currentHeaderList.stream()
