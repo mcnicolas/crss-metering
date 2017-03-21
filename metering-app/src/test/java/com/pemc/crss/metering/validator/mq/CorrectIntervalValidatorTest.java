@@ -1,12 +1,11 @@
 package com.pemc.crss.metering.validator.mq;
 
-import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.QuantityReader;
 import com.pemc.crss.metering.parser.meterquantity.MeterQuantityExcelReader;
-import com.pemc.crss.metering.resource.template.ResourceTemplate;
+import com.pemc.crss.metering.resource.template.impl.ResourceTemplateImpl;
 import com.pemc.crss.metering.service.CacheService;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
@@ -78,7 +77,7 @@ public class CorrectIntervalValidatorTest {
     }
 
     private CacheService initializeCache() {
-        return new CacheService(new ResourceTemplate(new RestTemplate()));
+        return new CacheService(new ResourceTemplateImpl(new RestTemplate()));
     }
 
 }
