@@ -278,17 +278,6 @@ public class JdbcBcqDao implements BcqDao {
                 source, Long.class);
     }
 
-    @Override
-    public List<BillingIdShortNamePair> findAllBillingIdShortNamePair(List<String> billingIds, Date tradingDate) {
-        log.debug("Finding pair with billing ids: {}, trading date: {}", billingIds, tradingDate);
-        tradingDate = startOfDay(tradingDate);
-        List<String> upperCasedBillingIds = billingIds.stream().map(String::toUpperCase).distinct().collect(toList());
-        QueryData data = BcqQueryHolder.billingIdShortNamePair(upperCasedBillingIds, tradingDate);
-        log.debug("Finding pair query: {}", data.getSql());
-        return jdbcTemplate.query(data.getSql(), data.getSource(),
-                new BeanPropertyRowMapper<>(BillingIdShortNamePair.class));
-    }
-
     private long saveHeader(BcqHeader header, boolean isSpecialEvent) {
         log.debug("Saving header: {}", header);
         if (header.getUpdatedVia() == MANUAL_OVERRIDE) {
@@ -483,4 +472,5 @@ public class JdbcBcqDao implements BcqDao {
             return false;
         }
     }
+
 }

@@ -50,6 +50,4 @@ public interface BcqDao {
 
     List<Long> selectByStatusAndDeadlineDatePlusDays(BcqStatus status, Integer plusDays);
 
-    List<BillingIdShortNamePair> findAllBillingIdShortNamePair(List<String> billingIds, Date tradingDate);
-
 }

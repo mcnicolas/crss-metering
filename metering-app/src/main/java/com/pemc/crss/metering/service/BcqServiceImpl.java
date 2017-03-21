@@ -235,11 +235,6 @@ public class BcqServiceImpl implements BcqService {
         return bcqDao.findEventDeadlineDateByTradingDateAndParticipant(tradingDate, shortName);
     }
 
-    @Override
-    public List<BillingIdShortNamePair> findAllBillingIdShortNamePair(List<String> billingIds, Date tradingDate) {
-        return bcqDao.findAllBillingIdShortNamePair(billingIds, tradingDate);
-    }
-
     private long saveUploadFile(BcqUploadFile uploadFile) {
         uploadFile.setSubmittedDate(new Date());
         uploadFile.setTransactionId(randomUUID().toString());

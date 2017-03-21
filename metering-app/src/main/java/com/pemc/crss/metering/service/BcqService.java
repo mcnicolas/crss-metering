@@ -51,6 +51,4 @@ public interface BcqService {
 
     Date findEventDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName);
 
-    List<BillingIdShortNamePair> findAllBillingIdShortNamePair(List<String> billingIds, Date tradingDate);
-
 }
