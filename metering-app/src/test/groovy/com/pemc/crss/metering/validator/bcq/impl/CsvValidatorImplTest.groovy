@@ -12,8 +12,8 @@ import static com.pemc.crss.metering.validator.bcq.helper.ValidationHelperTestUt
 
 class CsvValidatorImplTest extends Specification {
 
-    def configService = Mock(CacheConfigService);
-    def validationHelper = Mock(CsvValidationHelper);
+    def configService = Mock(CacheConfigService)
+    def validationHelper = Mock(CsvValidationHelper)
     def sut = new CsvValidatorImpl(configService, validationHelper)
 
     @Unroll

@@ -23,7 +23,8 @@ class HeaderListValidatorImplTest extends Specification {
         def tradingDateConfig = 1;
         def predicate = { p1 -> predicateResult }
         def validation = new HeaderListValidation(predicate, null)
-        def headerList = new BcqPopulator().populate(readCsv('bcq_file_valid'))
+        def csv = readCsv('bcq_file_valid')
+        def headerList = new BcqPopulator().populate(csv)
 
         when:
         def result = sut.validate(headerList)
