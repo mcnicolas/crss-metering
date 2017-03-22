@@ -67,7 +67,6 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
                                                           Date tradingDate) {
 
         BcqDeclaration declaration = new BcqDeclaration(sellerDetails);
-
         BcqValidationResult<List<BcqHeader>> result = csvValidator.validate(csv)
                 .then(csvResult -> headerListValidator.validateForSettlement(csvResult.getProcessedObject(), tradingDate))
                 .then(headerListResult -> billingIdValidator.validate(headerListResult.getProcessedObject()))
@@ -102,6 +101,7 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
         if (result.getStatus() == ACCEPTED) {
             headerList = result.getProcessedObject();
             List<BcqHeaderDetails> headerDetailsList = convertHeaderListToHeaderDetailsList(headerList);
+            declaration.setSpecialEvent(true);
             return declaration.withHeaderDetailsList(headerDetailsList);
         } else {
             if (result.getErrorMessage().getValidationError() == NO_SPECIAL_EVENT_FOUND) {
