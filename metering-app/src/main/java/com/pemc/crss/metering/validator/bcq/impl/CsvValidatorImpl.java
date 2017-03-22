@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -27,7 +29,9 @@ public class CsvValidatorImpl implements CsvValidator {
         log.info("Start validation of CSV file");
         int intervalConfig = configService.getIntegerValueForKey("BCQ_INTERVAL", 15);
         BcqValidationResult<List<BcqHeader>> result = validationHelper.validCsv(intervalConfig).test(csv);
-        result.setProcessedObject(new BcqPopulator().populate(csv));
+        if (result.getStatus() == ACCEPTED) {
+            result.setProcessedObject(new BcqPopulator().populate(csv));
+        }
         log.info("Finish validation of CSV file, Result: {}", result);
         return result;
     }
