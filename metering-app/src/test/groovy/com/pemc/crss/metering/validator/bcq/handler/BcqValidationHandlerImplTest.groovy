@@ -270,6 +270,7 @@ class BcqValidationHandlerImplTest extends Specification {
         declaration.headerDetailsList[0].sellingMtn == 'MTN1'
         declaration.headerDetailsList[0].billingId == 'BILL1'
         declaration.headerDetailsList[0].tradingDate == tradingDate
+        declaration.isSpecialEvent == true
     }
 
     def "process and validate for settlement with failed validation in csv validator"() {

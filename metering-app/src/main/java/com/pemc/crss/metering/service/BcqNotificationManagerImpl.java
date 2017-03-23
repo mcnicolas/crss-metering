@@ -171,96 +171,27 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
 
     @Override
     public void sendSettlementUpdateStatusNotification(BcqHeader header) {
-        if (header.getStatus() == FOR_APPROVAL_CANCEL) {
-            String formattedRespondedDate = formatLongDateTime(new Date());
-            String formattedTradingDate = formatLongDate(header.getTradingDate());
-            eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
-                    .withCode(NTF_BCQ_REQUEST_CANCEL_DEPT.toString())
-                    .withRecipientDeptCode(DEPT_BILLING)
-                    .addLoad("tradingDate", formattedTradingDate)
-                    .addLoad("respondedDate", formattedRespondedDate)
-                    .addLoad("settlementUser", getSettlementName())
-                    .addLoad("headerId", header.getHeaderId())
-                    .build()));
-        }
+        String formattedRespondedDate = formatLongDateTime(new Date());
+        String formattedTradingDate = formatLongDate(header.getTradingDate());
+        eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                .withCode(NTF_BCQ_REQUEST_CANCEL_DEPT.toString())
+                .withRecipientDeptCode(DEPT_BILLING)
+                .addLoad("tradingDate", formattedTradingDate)
+                .addLoad("respondedDate", formattedRespondedDate)
+                .addLoad("settlementUser", getSettlementName())
+                .addLoad("headerId", header.getHeaderId())
+                .build()));
     }
 
     @Override
     public void sendApprovalNotification(BcqHeader header) {
-        String settlementUser = getSettlementName();
-        String formattedTradingDate = formatLongDate(header.getTradingDate());
-        String formattedSubmittedDate = formatLongDateTime(header.getUploadFile().getSubmittedDate());
-        String formattedRespondedDate = formatLongDateTime(new Date());
-        Set<Integer> sellerUserIds = getUserIdsByShortName(header.getSellingParticipantShortName());
-        Set<Integer> buyerUserIds = getUserIdsByShortName(header.getBuyingParticipantShortName());
-        switch (header.getStatus()) {
-            case FOR_APPROVAL_UPDATE:
-                sellerUserIds.forEach(sellerUserId ->
-                    eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
-                            .withCode(NTF_BCQ_APPROVE_UPDATE_SELLER.toString())
-                            .withRecipientId(sellerUserId)
-                            .addLoad("tradingDate", formattedTradingDate)
-                            .addLoad("submittedDate", formattedSubmittedDate)
-                            .addLoad("settlementUser", getSettlementName())
-                            .addLoad("headerId", header.getHeaderId())
-                            .build())));
-
-                buyerUserIds.forEach(buyerUserId ->
-                        eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
-                                .withCode(NTF_BCQ_APPROVE_UPDATE_BUYER.toString())
-                                .withRecipientId(buyerUserId)
-                                .addLoad("tradingDate", formattedTradingDate)
-                                .addLoad("submittedDate", formattedSubmittedDate)
-                                .addLoad("settlementUser", getSettlementName())
-                                .addLoad("headerId", header.getHeaderId())
-                                .build())));
-                break;
-            case FOR_APPROVAL_NEW:
-                sellerUserIds.forEach(sellerUserId ->
-                        eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
-                                .withCode(NTF_BCQ_APPROVE_NEW_SELLER.toString())
-                                .withRecipientId(sellerUserId)
-                                .addLoad("tradingDate", formattedTradingDate)
-                                .addLoad("submittedDate", formattedSubmittedDate)
-                                .addLoad("buyerName", header.getBuyingParticipantName())
-                                .addLoad("buyerShortName", header.getBuyingParticipantShortName())
-                                .addLoad("settlementUser", getSettlementName())
-                                .addLoad("headerId", header.getHeaderId())
-                                .build())));
-
-                buyerUserIds.forEach(buyerUserId ->
-                        eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
-                                .withCode(NTF_BCQ_APPROVE_NEW_BUYER.toString())
-                                .withRecipientId(buyerUserId)
-                                .addLoad("tradingDate", formattedTradingDate)
-                                .addLoad("submittedDate", formattedSubmittedDate)
-                                .addLoad("sellerName", header.getSellingParticipantName())
-                                .addLoad("sellerShortName", header.getSellingParticipantShortName())
-                                .addLoad("settlementUser", getSettlementName())
-                                .addLoad("headerId", header.getHeaderId())
-                                .build())));
-                break;
-            case FOR_APPROVAL_CANCEL:
-                sellerUserIds.forEach(sellerUserId ->
-                        eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
-                                .withCode(NTF_BCQ_APPROVE_CANCEL_SELLER.toString())
-                                .withRecipientId(sellerUserId)
-                                .addLoad("tradingDate", formattedTradingDate)
-                                .addLoad("respondedDate", formattedRespondedDate)
-                                .addLoad("settlementUser", settlementUser)
-                                .addLoad("headerId", header.getHeaderId())
-                                .build())));
-                buyerUserIds.forEach(buyerUserId ->
-                        eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
-                                .withCode(NTF_BCQ_APPROVE_CANCEL_BUYER.toString())
-                                .withRecipientId(buyerUserId)
-                                .addLoad("tradingDate", formattedTradingDate)
-                                .addLoad("respondedDate", formattedRespondedDate)
-                                .addLoad("settlementUser", settlementUser)
-                                .addLoad("headerId", header.getHeaderId())
-                                .build())));
-            default:
-                break;
+        BcqStatus status = header.getStatus();
+        if (status == FOR_APPROVAL_NEW) {
+            sendApprovalOfNewNotification(header);
+        } else if (status == FOR_APPROVAL_UPDATE) {
+            sendApprovalOfUpdateNotification(header);
+        } else {
+            sendApprovalOfCancelNotification(header);
         }
     }
 
@@ -298,6 +229,93 @@ public class BcqNotificationManagerImpl implements BcqNotificationManager {
                         .addLoad("sellerShortName", firstHeader.getSellingParticipantShortName())
                         .addLoad("deadlineDate", formattedDeadlineDate)
                         .addLoad("status", status)
+                        .build())));
+    }
+
+    private void sendApprovalOfUpdateNotification(BcqHeader header) {
+        String settlementUser = getSettlementName();
+        String formattedTradingDate = formatLongDate(header.getTradingDate());
+        String formattedSubmittedDate = formatLongDateTime(header.getUploadFile().getSubmittedDate());
+        Set<Integer> sellerUserIds = getUserIdsByShortName(header.getSellingParticipantShortName());
+        Set<Integer> buyerUserIds = getUserIdsByShortName(header.getBuyingParticipantShortName());
+
+        sellerUserIds.forEach(sellerUserId ->
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_UPDATE_SELLER.toString())
+                        .withRecipientId(sellerUserId)
+                        .addLoad("tradingDate", formattedTradingDate)
+                        .addLoad("submittedDate", formattedSubmittedDate)
+                        .addLoad("settlementUser", settlementUser)
+                        .addLoad("headerId", header.getHeaderId())
+                        .build())));
+
+        buyerUserIds.forEach(buyerUserId ->
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_UPDATE_BUYER.toString())
+                        .withRecipientId(buyerUserId)
+                        .addLoad("tradingDate", formattedTradingDate)
+                        .addLoad("submittedDate", formattedSubmittedDate)
+                        .addLoad("settlementUser", settlementUser)
+                        .addLoad("headerId", header.getHeaderId())
+                        .build())));
+    }
+
+    private void sendApprovalOfNewNotification(BcqHeader header) {
+        String settlementUser = getSettlementName();
+        String formattedTradingDate = formatLongDate(header.getTradingDate());
+        String formattedSubmittedDate = formatLongDateTime(header.getUploadFile().getSubmittedDate());
+        Set<Integer> sellerUserIds = getUserIdsByShortName(header.getSellingParticipantShortName());
+        Set<Integer> buyerUserIds = getUserIdsByShortName(header.getBuyingParticipantShortName());
+
+        sellerUserIds.forEach(sellerUserId ->
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_NEW_SELLER.toString())
+                        .withRecipientId(sellerUserId)
+                        .addLoad("tradingDate", formattedTradingDate)
+                        .addLoad("submittedDate", formattedSubmittedDate)
+                        .addLoad("buyerName", header.getBuyingParticipantName())
+                        .addLoad("buyerShortName", header.getBuyingParticipantShortName())
+                        .addLoad("settlementUser", settlementUser)
+                        .addLoad("headerId", header.getHeaderId())
+                        .build())));
+
+        buyerUserIds.forEach(buyerUserId ->
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_NEW_BUYER.toString())
+                        .withRecipientId(buyerUserId)
+                        .addLoad("tradingDate", formattedTradingDate)
+                        .addLoad("submittedDate", formattedSubmittedDate)
+                        .addLoad("sellerName", header.getSellingParticipantName())
+                        .addLoad("sellerShortName", header.getSellingParticipantShortName())
+                        .addLoad("settlementUser", settlementUser)
+                        .addLoad("headerId", header.getHeaderId())
+                        .build())));
+    }
+
+    private void sendApprovalOfCancelNotification(BcqHeader header) {
+        String settlementUser = getSettlementName();
+        String formattedTradingDate = formatLongDate(header.getTradingDate());
+        String formattedRespondedDate = formatLongDateTime(new Date());
+        Set<Integer> sellerUserIds = getUserIdsByShortName(header.getSellingParticipantShortName());
+        Set<Integer> buyerUserIds = getUserIdsByShortName(header.getBuyingParticipantShortName());
+
+        sellerUserIds.forEach(sellerUserId ->
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_CANCEL_SELLER.toString())
+                        .withRecipientId(sellerUserId)
+                        .addLoad("tradingDate", formattedTradingDate)
+                        .addLoad("respondedDate", formattedRespondedDate)
+                        .addLoad("settlementUser", settlementUser)
+                        .addLoad("headerId", header.getHeaderId())
+                        .build())));
+        buyerUserIds.forEach(buyerUserId ->
+                eventPublisher.publishEvent(new BcqEvent(new NotificationBuilder()
+                        .withCode(NTF_BCQ_APPROVE_CANCEL_BUYER.toString())
+                        .withRecipientId(buyerUserId)
+                        .addLoad("tradingDate", formattedTradingDate)
+                        .addLoad("respondedDate", formattedRespondedDate)
+                        .addLoad("settlementUser", settlementUser)
+                        .addLoad("headerId", header.getHeaderId())
                         .build())));
     }
 
