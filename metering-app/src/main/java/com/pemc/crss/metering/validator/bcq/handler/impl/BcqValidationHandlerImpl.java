@@ -72,9 +72,9 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
                 .then(headerListResult -> billingIdValidator.validate(headerListResult.getProcessedObject()))
                 .then(billingIdResult -> crssSideValidator.validateBySettlement(billingIdResult.getProcessedObject(),
                         sellerDetails))
-                .then(resubmissionResult -> overrideValidator.validate(resubmissionResult.getProcessedObject(),
+                .then(crssSideResult -> overrideValidator.validate(crssSideResult.getProcessedObject(),
                         sellerDetails.getShortName()))
-                .then(crssSideResult -> resubmissionValidator.validate(crssSideResult.getProcessedObject(),
+                .then(overrideResult -> resubmissionValidator.validate(overrideResult.getProcessedObject(),
                         sellerDetails.getShortName()));
 
         if (result.getStatus() == ACCEPTED) {
