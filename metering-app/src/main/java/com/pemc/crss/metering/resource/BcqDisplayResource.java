@@ -58,7 +58,7 @@ public class BcqDisplayResource {
         }
 
         List<BcqHeader> sameHeaders = bcqService.findSameHeaders(header, getExcludedStatuses(isSettlement), NOT_IN);
-        if (sameHeaders.size() < 1) {
+        if (sameHeaders.isEmpty()) {
             log.error("Header with ID: {} is voided and no latest version found");
             return new ResponseEntity<>("Declaration was already voided", INTERNAL_SERVER_ERROR);
         }
@@ -100,7 +100,7 @@ public class BcqDisplayResource {
         }
 
         List<BcqHeader> sameHeaders = bcqService.findSameHeaders(header, getExcludedStatuses(isSettlement), NOT_IN);
-        if (sameHeaders.size() < 1) {
+        if (sameHeaders.isEmpty()) {
             log.error("Header with ID: {} is voided and no latest version found");
             return new ResponseEntity<>("Declaration was already voided", INTERNAL_SERVER_ERROR);
         }
