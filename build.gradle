@@ -115,6 +115,12 @@ subprojects {
             dependency 'org.springframework.security.oauth:spring-security-oauth2:2.0.12.RELEASE'
 
             dependency 'junit:junit:4.12'
+
+            dependencySet(group: 'org.spockframework', version: '1.1-groovy-2.4-rc-2') {
+                entry 'spock-core'
+                entry 'spock-spring'
+            }
+
         }
     }
 

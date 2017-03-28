@@ -5,7 +5,7 @@ import spock.lang.Unroll
 
 class BcqReaderTest extends Specification {
 
-    BcqReader reader = new BcqReader()
+    def reader = new BcqReaderImpl()
 
     @Unroll
     def 'reader must read correctly the csv'() {
