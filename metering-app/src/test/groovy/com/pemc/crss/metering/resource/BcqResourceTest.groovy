@@ -3,22 +3,23 @@ package com.pemc.crss.metering.resource
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.pemc.crss.commons.cache.service.CacheConfigService
-import com.pemc.crss.metering.dto.bcq.BcqDeclaration
-import com.pemc.crss.metering.dto.bcq.BcqHeader
-import com.pemc.crss.metering.dto.bcq.BcqHeaderDetails
-import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails
+import com.pemc.crss.metering.constants.BcqStatus
+import com.pemc.crss.metering.dto.bcq.*
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList
+import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant
 import com.pemc.crss.metering.parser.bcq.BcqReader
 import com.pemc.crss.metering.service.BcqService
 import com.pemc.crss.metering.service.reports.BcqReportService
 import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult
 import com.pemc.crss.metering.validator.bcq.handler.BcqValidationHandler
+import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.MediaType
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.web.servlet.MockMvc
@@ -29,7 +30,9 @@ import spock.mock.DetachedMockFactory
 import static com.pemc.crss.metering.constants.BcqValidationError.EMPTY
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload
+import static java.util.Arrays.asList
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 
 @WebMvcTest(controllers = BcqResource, secure = false)
 class BcqResourceTest extends Specification {
@@ -63,8 +66,8 @@ class BcqResourceTest extends Specification {
         when:
         def response = mockMvc.perform(fileUpload('/bcq/upload')
                 .file(file)
-                .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
-                .header("Accept", MediaType.APPLICATION_JSON_UTF8_VALUE))
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
                 .andReturn().response
 
         then:
@@ -77,7 +80,7 @@ class BcqResourceTest extends Specification {
             1 * bcqService.saveDeclaration(_ as BcqDeclaration, false)
         }
 
-        response.contentType == MediaType.APPLICATION_JSON_UTF8_VALUE
+        response.contentType == APPLICATION_JSON_UTF8_VALUE
         def content = new JsonSlurper().parseText(response.contentAsString)
 
         if (status == REJECTED) {
@@ -108,8 +111,8 @@ class BcqResourceTest extends Specification {
         when:
         def response = mockMvc.perform(fileUpload('/bcq/webservice/upload')
                 .file(file)
-                .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
-                .header("Accept", MediaType.APPLICATION_JSON_UTF8_VALUE))
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
                 .andReturn().response
 
         then:
@@ -122,7 +125,7 @@ class BcqResourceTest extends Specification {
             1 * bcqService.findHeadersOfParticipantByTradingDate(_ as String, _ as Date) >> currentHeaders
         }
 
-        response.contentType == MediaType.APPLICATION_JSON_UTF8_VALUE
+        response.contentType == APPLICATION_JSON_UTF8_VALUE
         def content = response.contentAsString
         println content
         if (status == REJECTED) {
@@ -165,8 +168,8 @@ class BcqResourceTest extends Specification {
                 .file(file)
                 .param('sellerDetailsString', 'Gen 1, GEN1')
                 .param('tradingDateString', '2016-03-28')
-                .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
-                .header("Accept", MediaType.APPLICATION_JSON_UTF8_VALUE))
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
                 .andReturn().response
 
         then:
@@ -179,7 +182,7 @@ class BcqResourceTest extends Specification {
             1 * bcqService.saveDeclaration(_ as BcqDeclaration, true)
         }
 
-        response.contentType == MediaType.APPLICATION_JSON_UTF8_VALUE
+        response.contentType == APPLICATION_JSON_UTF8_VALUE
         def content = new JsonSlurper().parseText(response.contentAsString)
 
         if (status == REJECTED) {
@@ -196,6 +199,176 @@ class BcqResourceTest extends Specification {
         status   | headerDetailsList
         REJECTED | null
         ACCEPTED | [new BcqHeaderDetails(tradingDate: new Date(), sellingMtn: 'MTN1', billingId: 'BILL1', dataDetailsList: [])]
+    }
+
+    @Unroll
+    def "save declaration by #user"() {
+        given:
+        def builder = new JsonBuilder()
+        builder {
+            uploadFileDetails new BcqUploadFileDetails()
+            sellerDetails new ParticipantSellerDetails()
+            headerDetailsList asList(new BcqHeaderDetails())
+            validationResult new BcqValidationResult<>()
+            isResubmission false
+            isSpecialEvent false
+        }
+        and:
+        def requestBody = builder.toPrettyString()
+
+        when:
+        def response = mockMvc.perform(post(url)
+                .content(requestBody)
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        response.status == 200
+
+        where:
+        user         | url
+        'seller'     | '/bcq/save'
+        'settlement' | '/bcq/settlement/save'
+    }
+
+    @Unroll
+    def "update header with status: #status"() {
+        when:
+        def response = mockMvc.perform(post('/bcq/declaration/update-status/1')
+                .param('status', status)
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        1 * bcqService.updateHeaderStatus(1, BcqStatus.fromString(status))
+        response.status == 200
+
+        where:
+        status << ['CONFIRMED', 'NULLIFIED', 'CANCELLED']
+    }
+
+    @Unroll
+    def "#action of header"() {
+        when:
+        def response = mockMvc.perform(post('/bcq/declaration/settlement/' + url + '/1')
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        if (action == 'approval') {
+            1 * bcqService.approve(1)
+        } else {
+            1 * bcqService.requestForCancellation(1)
+        }
+        response.status == 200
+
+        where:
+        action                 | url
+        'request cancellation' | 'request-cancel'
+        'approval'             | 'approve'
+    }
+
+    def "save special event"() {
+        given:
+        def builder = new JsonBuilder()
+        builder {
+            tradingDates asList(new Date(), new Date())
+            deadlineDate new Date()
+            tradingParticipants asList(new BcqSpecialEventParticipant())
+            remarks 'remarks'
+        }
+        and:
+        def requestBody = builder.toPrettyString()
+
+        when:
+        def response = mockMvc.perform(post('/bcq/special-event/save')
+                .content(requestBody)
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        1 * bcqService.saveSpecialEvent(_ as BcqSpecialEvent)
+        response.status == 200
+    }
+
+    def "get special events list"() {
+        given:
+        def specialEventList = [new BcqSpecialEventList(
+                eventId: 1,
+                tradingDates: [new Date()],
+                deadlineDate: new Date(),
+                remarks: 'remarks',
+                tradingParticipants: [new BcqSpecialEventParticipant(participantName: 'Pdu 1', shortName: 'PDU1')],
+                createdDate: new Date(),
+                tradingParticipantsLabel: ['PDU1']
+        )]
+
+        when:
+        def response = mockMvc.perform(get('/bcq/special-event/list')
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        1 * bcqService.findAllSpecialEvents() >> specialEventList
+        response.status == 200
+        def content = new JsonSlurper().parseText(response.contentAsString)
+        content[0].eventId == specialEventList[0].eventId
+        content[0].remarks == specialEventList[0].remarks
+        content[0].tradingParticipants.participantName == specialEventList[0].tradingParticipants.participantName
+        content[0].tradingParticipants.shortName == specialEventList[0].tradingParticipants.shortName
+    }
+
+    def "generate data report"() {
+        given:
+        def builder = new JsonBuilder()
+        builder {
+            tradingDate new Date()
+        }
+        and:
+        def requestBody = builder.toPrettyString()
+
+        when:
+        def response = mockMvc.perform(post('/bcq/data/report')
+                .content(requestBody)
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        1 * reportService.generateDataReport(_ as Map, _ as OutputStream)
+        response.status == 200
+        response.contentType == 'application/x-msdownload'
+    }
+
+    def "generate template"() {
+        when:
+        def response = mockMvc.perform(get('/bcq/template')
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        1 * reportService.generateTemplate(_ as OutputStream)
+        response.status == 200
+        response.contentType == 'application/x-msdownload'
+    }
+
+    def "get allowable trading date config"() {
+        when:
+        def response = mockMvc.perform(get('/bcq/settlement/config')
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        1 * configService.getIntegerValueForKey(_ as String, _ as Integer) >> 1
+        response.status == 200
+        response.contentAsString == '1'
     }
 
     @Configuration
