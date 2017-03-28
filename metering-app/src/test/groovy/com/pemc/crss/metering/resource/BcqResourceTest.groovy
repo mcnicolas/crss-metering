@@ -152,6 +152,52 @@ class BcqResourceTest extends Specification {
         ]
     }
 
+    @Unroll
+    def "upload bcq by settlement with validation status: #status"() {
+        given:
+        def file = new MockMultipartFile('file', 'file.csv', 'text/csv', 'some data'.bytes)
+        def validationResult = new BcqValidationResult(status, null, null)
+        def declaration = new BcqDeclaration(sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1'),
+                validationResult: validationResult, headerDetailsList: headerDetailsList)
+
+        when:
+        def response = mockMvc.perform(fileUpload('/bcq/settlement/upload')
+                .file(file)
+                .param('sellerDetailsString', 'Gen 1, GEN1')
+                .param('tradingDateString', '2016-03-28')
+                .contentType(MediaType.APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", MediaType.APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        1 * bcqReader.readCsv(_ as InputStream) >> []
+        1 * validationHandler.processAndValidateForSettlement(_ as List, _ as ParticipantSellerDetails, _ as Date) >> declaration
+        if (declaration.getHeaderDetailsList() != null) {
+            1 * bcqService.findHeadersOfParticipantByTradingDate(_ as String, _ as Date) >> []
+        }
+        if (declaration.getValidationResult().getStatus() == REJECTED) {
+            1 * bcqService.saveDeclaration(_ as BcqDeclaration, true)
+        }
+
+        response.contentType == MediaType.APPLICATION_JSON_UTF8_VALUE
+        def content = new JsonSlurper().parseText(response.contentAsString)
+
+        if (status == REJECTED) {
+            response.status == 422
+            content.status == REJECTED
+        } else {
+            response.status == 200
+            content.uploadFileDetails.fileName == 'file.csv'
+            content.uploadFileDetails.validationStatus == ACCEPTED
+            content.headerDetailsList.size == 1
+        }
+
+        where:
+        status   | headerDetailsList
+        REJECTED | null
+        ACCEPTED | [new BcqHeaderDetails(tradingDate: new Date(), sellingMtn: 'MTN1', billingId: 'BILL1', dataDetailsList: [])]
+    }
+
     @Configuration
     static class Config {
         def factory = new DetachedMockFactory()

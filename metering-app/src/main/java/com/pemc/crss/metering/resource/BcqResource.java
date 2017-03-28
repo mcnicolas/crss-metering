@@ -103,8 +103,8 @@ public class BcqResource {
     @PostMapping("/settlement/upload")
     @PreAuthorize("hasAuthority('BCQ_UPLOAD_BILATERAL_CONTRACT_QUANTITY')")
     public ResponseEntity<?> uploadBySettlement(@RequestParam("file") MultipartFile multipartFile,
-                                                @RequestPart String sellerDetailsString,
-                                                @RequestPart String tradingDateString) throws IOException {
+                                                @RequestParam("sellerDetailsString") String sellerDetailsString,
+                                                @RequestParam("tradingDateString") String tradingDateString) throws IOException {
 
         String fileName = multipartFile.getOriginalFilename();
         log.debug("Request for settlement uploading of: {}", fileName);
