@@ -1,0 +1,48 @@
+{
+  "id": "/crss/metering-service",
+  "cmd": null,
+  "cpus": 1,
+  "mem": 1200,
+  "disk": 0,
+  "instances": 4,
+  "container": {
+    "type": "DOCKER",
+    "volumes": [],
+    "docker": {
+      "image": "${dockerImage}",
+      "network": "BRIDGE",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 0,
+          "servicePort": 0,
+          "protocol": "tcp",
+          "labels": {
+            "VIP_0": "/crss/metering-service:8080"
+          }
+        }
+      ],
+      "privileged": false,
+      "parameters": [],
+      "forcePullImage": true
+    }
+  },
+  "env": {
+    "JAVA_OPTS": "-Xms256m -Xmx1g",
+    "SPRING_PROFILES_ACTIVE": "${project.ext.env}",
+    "DCOS_SERVICE_NAME": "metering-service",
+    "SPRING_CLOUD_CONFIG_URI": "http://crssconfig-server.marathon.l4lb.thisdcos.directory:8080"
+  },
+  "healthChecks": [
+    {
+      "path": "/health",
+      "protocol": "HTTP",
+      "portIndex": 0,
+      "gracePeriodSeconds": 60,
+      "intervalSeconds": 30,
+      "timeoutSeconds": 10,
+      "maxConsecutiveFailures": 6,
+      "ignoreHttp1xx": false
+    }
+  ]
+}
