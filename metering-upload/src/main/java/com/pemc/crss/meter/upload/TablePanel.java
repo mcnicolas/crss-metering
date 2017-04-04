@@ -9,9 +9,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.util.List;
@@ -75,6 +77,16 @@ public class TablePanel extends JPanel {
         SwingUtilities.invokeLater(() -> {
             FileTableModel tableModel = (FileTableModel) fileTable.getModel();
             tableModel.setFileList(selectedFiles);
+
+            int width = 0;
+            for (int i = 0; i < fileTable.getRowCount(); i++) {
+                TableCellRenderer renderer = fileTable.getCellRenderer(i, 4);
+                Component component = fileTable.prepareRenderer(renderer, i, 4);
+                width = Math.max(component.getPreferredSize().width + 10, width);
+            }
+
+            TableColumnModel columnModel = fileTable.getColumnModel();
+            columnModel.getColumn(4).setPreferredWidth(width);
         });
     }
 
