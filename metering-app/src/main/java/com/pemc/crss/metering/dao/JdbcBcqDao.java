@@ -132,7 +132,7 @@ public class JdbcBcqDao implements BcqDao {
 
     @Override
     public Page<BcqHeaderPageDisplay> findAllHeaders(PageableRequest pageableRequest) {
-        int totalRecords = getTotalRecords(pageableRequest);
+        int totalRecords = getHeaderCount(pageableRequest);
         QueryData data = BcqQueryHolder.headerPage(pageableRequest);
         log.debug("Finding page of headers with query: {}, and args: {}", data.getSql(), data.getSource().getValues());
         List<BcqHeaderPageDisplay> headerList = jdbcTemplate.query(data.getSql(), data.getSource(),
@@ -278,6 +278,17 @@ public class JdbcBcqDao implements BcqDao {
                 source, Long.class);
     }
 
+    @Override
+    public Page<BcqProhibitedPairPageDisplay> findAllProhibited(PageableRequest pageableRequest) {
+        int totalRecords = getProhibitedCount(pageableRequest);
+        QueryData data = BcqQueryHolder.prohibitedPage(pageableRequest);
+        log.debug("Finding page of prohibited with query: {}, and args: {}", data.getSql(), data.getSource().getValues());
+        List<BcqProhibitedPairPageDisplay> prohibitedList = jdbcTemplate.query(data.getSql(), data.getSource(),
+                new BeanPropertyRowMapper<>(BcqProhibitedPairPageDisplay.class));
+        log.debug("Found {} prohibited", prohibitedList.size());
+        return new PageImpl<>(prohibitedList, pageableRequest.getPageable(), totalRecords);
+    }
+
     private long saveHeader(BcqHeader header, boolean isSpecialEvent) {
         log.debug("Saving header: {}", header);
         if (header.getUpdatedVia() == MANUAL_OVERRIDE) {
@@ -318,7 +329,7 @@ public class JdbcBcqDao implements BcqDao {
         }
     }
 
-    private int getTotalRecords(PageableRequest pageableRequest) {
+    private int getHeaderCount(PageableRequest pageableRequest) {
         log.debug("Getting total declaration records");
         QueryData queryData = BcqQueryHolder.headerPageCount(pageableRequest);
         int totalRecords = jdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Integer.class);
@@ -333,7 +344,7 @@ public class JdbcBcqDao implements BcqDao {
         String billingId = mapParams.get("billingId") == null ? "" : mapParams.get("billingId");
         String sellingParticipant = mapParams.get("sellingParticipant") == null ? "" : mapParams.get("sellingParticipant");
         String buyingParticipant = mapParams.get("buyingParticipant") == null ? "" : mapParams.get("buyingParticipant");
-        String status = mapParams.get("status") == null ? null : mapParams.get("status");
+        String status = mapParams.get("status");
         boolean expired = mapParams.get("expired") != null;
         boolean isSettlement = mapParams.get("isSettlement") != null;
         if (headerId != null) {
@@ -410,6 +421,14 @@ public class JdbcBcqDao implements BcqDao {
         }
         jdbcTemplate.batchUpdate(insertEventParticipant, sourceArray);
         log.debug("Saved event participant list");
+    }
+
+    private int getProhibitedCount(PageableRequest pageableRequest) {
+        log.debug("Getting count of prohibited");
+        QueryData queryData = BcqQueryHolder.prohibitedPageCount(pageableRequest);
+        int totalRecords = jdbcTemplate.queryForObject(queryData.getSql(), queryData.getSource(), Integer.class);
+        log.debug("Count: {}", totalRecords);
+        return totalRecords;
     }
 
     private class BcqHeaderRowMapper implements RowMapper<BcqHeader> {

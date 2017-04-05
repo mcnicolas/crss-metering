@@ -164,18 +164,35 @@ public final class BcqQueryHolder {
                 .build();
     }
 
-    public static QueryData billingIdShortNamePair(List<String> upperCasedBillingIds, Date tradingDate) {
-        System.out.println("BILLING: " + Arrays.toString(upperCasedBillingIds.toArray()));
-        return new SelectQueryBuilder()
-                .column("UPPER(BILLING_ID)").as("BILLING_ID")
-                .column("TRADING_PARTICIPANT_SHORT_NAME")
-                .from("MAP_BILLING_ID_TAX_DATA")
-                .where().filter(new QueryFilter("UPPER(BILLING_ID)", upperCasedBillingIds, IN))
-                .and().filter(new QueryFilter("EFFECTIVE_START_DATE", tradingDate, LESS_THAN_EQUALS))
-                .and().openParenthesis().filter(new QueryFilter("EFFECTIVE_END_DATE", tradingDate, GREATER_THAN))
-                    .or().filter("EFFECTIVE_END_DATE IS NULL")
-                    .closeParenthesis()
-                .build();
+    public static QueryData prohibitedPage(PageableRequest pageableRequest) {
+        Map<String, String> mapParams = pageableRequest.getMapParams();
+        SelectQueryBuilder queryBuilder = new SelectQueryBuilder()
+                .column("ID")
+                .column("CREATED_BY")
+                .column("CREATED_DATE")
+                .column("SELLING_MTN")
+                .column("BILLING_ID")
+                .from("TXN_BCQ_PROHIBITED")
+                .where().filter("ENABLED = TRUE");
+        queryBuilder = addProhibitedFilters(queryBuilder, mapParams)
+                .orderBy(pageableRequest.getOrderList())
+                .paginate(pageableRequest.getPageNo(), pageableRequest.getPageSize());
+        System.out.println(queryBuilder.build().getSql());
+        return queryBuilder.build();
+    }
+
+    public static QueryData prohibitedPageCount(PageableRequest pageableRequest) {
+        Map<String, String> mapParams = pageableRequest.getMapParams();
+        String createdBy = getValue(mapParams, "createdBy");
+        String sellingMtn = getValue(mapParams, "sellingMtn");
+        String billingId = getValue(mapParams, "billingId");
+        SelectQueryBuilder queryBuilder = new SelectQueryBuilder()
+                .count()
+                .from("TXN_BCQ_PROHIBITED")
+                .where().filter(new QueryFilter("CREATED_BY", createdBy))
+                .and().filter(new QueryFilter("SELLING_MTN", sellingMtn))
+                .and().filter(new QueryFilter("BILLING_ID", billingId));
+        return queryBuilder.build();
     }
 
     private static QueryData uniqueHeaderIds(Map<String, String> mapParams) {
@@ -225,6 +242,13 @@ public final class BcqQueryHolder {
         queryBuilder = addSellingParticipantFilter(queryBuilder, getValue(mapParams, "sellingParticipant"));
         queryBuilder = addBuyingParticipantFilter(queryBuilder, getValue(mapParams, "buyingParticipant"));
         queryBuilder = addExpiredFilter(queryBuilder, getValue(mapParams, "expired") != null);
+        return queryBuilder;
+    }
+
+    private static SelectQueryBuilder addProhibitedFilters(SelectQueryBuilder queryBuilder, Map<String, String> mapParams) {
+        queryBuilder = addSellingMtnFilter(queryBuilder, getValue(mapParams, "sellingMtn"));
+        queryBuilder = addBillingIdFilter(queryBuilder, getValue(mapParams, "billingId"));
+        queryBuilder = addCreatedByFilter(queryBuilder, getValue(mapParams, "createdBy"));
         return queryBuilder;
     }
 
@@ -282,6 +306,15 @@ public final class BcqQueryHolder {
     private static SelectQueryBuilder addExpiredFilter(SelectQueryBuilder queryBuilder, boolean expired) {
         return !expired ? queryBuilder : queryBuilder.and()
                 .filter(new QueryFilter("DEADLINE_DATE", new Date(), LESS_THAN_EQUALS));
+    }
+
+    private static SelectQueryBuilder addEnabledFilter(SelectQueryBuilder queryBuilder) {
+        return queryBuilder.where().filter("ENABLED = 1");
+    }
+
+    private static SelectQueryBuilder addCreatedByFilter(SelectQueryBuilder queryBuilder, String createdBy) {
+        return isBlank(createdBy) ? queryBuilder : queryBuilder.and()
+                .filter(new QueryFilter("UPPER(CREATED_BY)", "%" + createdBy.toUpperCase() + "%", LIKE));
     }
 
     private static String getValue(Map<String, String> map, String key) {

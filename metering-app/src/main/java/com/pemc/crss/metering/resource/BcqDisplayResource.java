@@ -2,10 +2,7 @@ package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.commons.web.dto.datatable.DataTableResponse;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
-import com.pemc.crss.metering.dto.bcq.BcqDataDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderDisplay;
-import com.pemc.crss.metering.dto.bcq.BcqHeaderPageDisplay;
+import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.service.BcqService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,6 +115,15 @@ public class BcqDisplayResource {
                 .map(BcqDataDisplay::new).collect(toList());
         log.debug("Found {} data of header with ID: {}", dataDisplays.size(), headerId);
         return ok(dataDisplays);
+    }
+
+    @PostMapping(value = "/prohibited/list")
+    public ResponseEntity<DataTableResponse<BcqProhibitedPairPageDisplay>> getProhibitedPage(@RequestBody PageableRequest request) {
+        Page<BcqProhibitedPairPageDisplay> prohibitedPage = bcqService.findAllProhibited(request);
+        DataTableResponse<BcqProhibitedPairPageDisplay> response = new DataTableResponse<BcqProhibitedPairPageDisplay>()
+                .withData(prohibitedPage.getContent())
+                .withRecordsTotal(prohibitedPage.getTotalElements());
+        return ok(response);
     }
 
 }

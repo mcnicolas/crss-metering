@@ -51,4 +51,6 @@ public interface BcqService {
 
     Date findEventDeadlineDateByTradingDateAndParticipant(Date tradingDate, String shortName);
 
+    Page<BcqProhibitedPairPageDisplay> findAllProhibited(PageableRequest pageableRequest);
+
 }

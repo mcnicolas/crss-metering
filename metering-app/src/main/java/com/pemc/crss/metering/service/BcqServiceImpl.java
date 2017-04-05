@@ -235,6 +235,11 @@ public class BcqServiceImpl implements BcqService {
         return bcqDao.findEventDeadlineDateByTradingDateAndParticipant(tradingDate, shortName);
     }
 
+    @Override
+    public Page<BcqProhibitedPairPageDisplay> findAllProhibited(PageableRequest pageableRequest) {
+        return bcqDao.findAllProhibited(pageableRequest);
+    }
+
     private long saveUploadFile(BcqUploadFile uploadFile) {
         uploadFile.setSubmittedDate(new Date());
         uploadFile.setTransactionId(randomUUID().toString());
