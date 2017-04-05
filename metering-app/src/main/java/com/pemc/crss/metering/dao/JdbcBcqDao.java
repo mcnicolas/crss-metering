@@ -99,7 +99,7 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.prohibited.insert}")
     private String insertProhibited;
 
-    @Value("${bcq.prohibited.disable")
+    @Value("${bcq.prohibited.disable}")
     private String disableProhibited;
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
