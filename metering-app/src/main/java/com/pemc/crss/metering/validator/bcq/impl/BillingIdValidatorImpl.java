@@ -26,7 +26,7 @@ import static java.util.stream.Collectors.toList;
 public class BillingIdValidatorImpl implements BillingIdValidator {
 
     private static final String BILLING_VALIDATE_URL =
-            "http://app.reg.settlement.pemc.com/billing/%s/tradingParticipants?date=%s";
+            "/settlement/billing/%s/tradingParticipants?date=%s";
 
     private final BillingIdValidationHelper validationHelper;
     private final ResourceTemplate resourceTemplate;
@@ -57,7 +57,7 @@ public class BillingIdValidatorImpl implements BillingIdValidator {
 
     @SuppressWarnings("unchecked")
     private List<String> getShortNameByBillingIdAndTradingDate(String billingId, Date tradingDate) {
-        return resourceTemplate.get(format(BILLING_VALIDATE_URL, billingId, formatDate(tradingDate)), List.class, false);
+        return resourceTemplate.get(format(BILLING_VALIDATE_URL, billingId, formatDate(tradingDate)), List.class);
     }
 
     private String getShortNameByBillingId(String billingId, List<BillingIdShortNamePair> billingIdShortNamePairs) {
