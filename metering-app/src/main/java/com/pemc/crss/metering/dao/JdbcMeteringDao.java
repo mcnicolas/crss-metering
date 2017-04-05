@@ -44,7 +44,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Repository
 public class JdbcMeteringDao implements MeteringDao {
 
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("M/d/yyyy");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
     @Deprecated // TODO: Use java.time
