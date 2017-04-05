@@ -174,25 +174,21 @@ public final class BcqQueryHolder {
                 .column("BILLING_ID")
                 .from("TXN_BCQ_PROHIBITED")
                 .where().filter("ENABLED = TRUE");
-        queryBuilder = addProhibitedFilters(queryBuilder, mapParams)
+
+        return addProhibitedFilters(queryBuilder, mapParams)
                 .orderBy(pageableRequest.getOrderList())
-                .paginate(pageableRequest.getPageNo(), pageableRequest.getPageSize());
-        System.out.println(queryBuilder.build().getSql());
-        return queryBuilder.build();
+                .paginate(pageableRequest.getPageNo(), pageableRequest.getPageSize())
+                .build();
     }
 
     public static QueryData prohibitedPageCount(PageableRequest pageableRequest) {
         Map<String, String> mapParams = pageableRequest.getMapParams();
-        String createdBy = getValue(mapParams, "createdBy");
-        String sellingMtn = getValue(mapParams, "sellingMtn");
-        String billingId = getValue(mapParams, "billingId");
         SelectQueryBuilder queryBuilder = new SelectQueryBuilder()
                 .count()
                 .from("TXN_BCQ_PROHIBITED")
-                .where().filter(new QueryFilter("CREATED_BY", createdBy))
-                .and().filter(new QueryFilter("SELLING_MTN", sellingMtn))
-                .and().filter(new QueryFilter("BILLING_ID", billingId));
-        return queryBuilder.build();
+                .where().filter("ENABLED = TRUE");
+
+       return addProhibitedFilters(queryBuilder, mapParams).build();
     }
 
     private static QueryData uniqueHeaderIds(Map<String, String> mapParams) {
