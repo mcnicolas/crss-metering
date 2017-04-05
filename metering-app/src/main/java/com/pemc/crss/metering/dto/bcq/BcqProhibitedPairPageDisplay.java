@@ -2,8 +2,6 @@ package com.pemc.crss.metering.dto.bcq;
 
 import lombok.Data;
 
-import java.util.Date;
-
 @Data
 public class BcqProhibitedPairPageDisplay {
 
@@ -11,7 +9,7 @@ public class BcqProhibitedPairPageDisplay {
     private String sellingMtn;
     private String billingId;
     private String createdBy;
-    private Date createdDate;
+    private String createdDate;
 
     public String getSellingMtn() {
         return sellingMtn.toUpperCase();

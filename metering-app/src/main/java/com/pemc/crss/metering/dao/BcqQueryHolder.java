@@ -169,7 +169,7 @@ public final class BcqQueryHolder {
         SelectQueryBuilder queryBuilder = new SelectQueryBuilder()
                 .column("ID")
                 .column("CREATED_BY")
-                .column("CREATED_DATE")
+                .column("TO_CHAR(CREATED_DATE, 'YYYY-MM-DD hh:MI AM')").as("CREATED_DATE")
                 .column("SELLING_MTN")
                 .column("BILLING_ID")
                 .from("TXN_BCQ_PROHIBITED")
