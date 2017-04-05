@@ -96,6 +96,12 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.report.flattened}")
     private String bcqReportFlattened;
 
+    @Value("${bcq.prohibited.insert}")
+    private String insertProhibited;
+
+    @Value("${bcq.prohibited.disable")
+    private String disableProhibited;
+
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final CacheConfigService configService;
 
@@ -287,6 +293,26 @@ public class JdbcBcqDao implements BcqDao {
                 new BeanPropertyRowMapper<>(BcqProhibitedPairPageDisplay.class));
         log.debug("Found {} prohibited", prohibitedList.size());
         return new PageImpl<>(prohibitedList, pageableRequest.getPageable(), totalRecords);
+    }
+
+    @Override
+    public long saveProhibitedPair(BcqProhibitedPair prohibitedPair) {
+        log.debug("Saving prohibited pair: {}", prohibitedPair);
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        BeanPropertySqlParameterSource source = new BeanPropertySqlParameterSource(prohibitedPair);
+        jdbcTemplate.update(insertProhibited, source, keyHolder, new String[]{"id"});
+        long id = keyHolder.getKey().longValue();
+        log.debug("Saved prohibited pair with ID: {}", id);
+        return id;
+    }
+
+    @Override
+    public void disableProhibitedPair(long id) {
+        log.debug("Disabling prohibited pair with ID: {}", id);
+        MapSqlParameterSource source = new MapSqlParameterSource()
+                .addValue("id", id);
+        jdbcTemplate.update(disableProhibited, source);
+        log.debug("Disabled prohibited pair with ID: {}", id);
     }
 
     private long saveHeader(BcqHeader header, boolean isSpecialEvent) {

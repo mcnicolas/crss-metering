@@ -210,6 +210,20 @@ public class BcqResource {
         return configService.getIntegerValueForKey("BCQ_ALLOWABLE_TRADING_DATE", 1);
     }
 
+    @PostMapping("/prohibited/save")
+    public void saveProhibitedPair(@RequestBody BcqProhibitedPairForm prohibitedPairForm) {
+        log.debug("Request for saving prohibited pair: {}", prohibitedPairForm);
+        long id = bcqService.saveProhibitedPair(prohibitedPairForm.target());
+        log.debug("Saved prohibited pair with ID: {}", id);
+    }
+
+    @PutMapping("/prohibited/{id}/disable")
+    public void disableProhibitedPair(@PathVariable long id) {
+        log.debug("Request for disabling prohibited pair with ID: {}", id);
+        bcqService.disableProhibitedPair(id);
+        log.debug("Disabled prohibited pair with ID: {}", id);
+    }
+
     private BcqDeclaration validateCsvAndGetDeclaration(MultipartFile multipartFile) throws IOException {
         List<List<String>> csv = bcqReader.readCsv(multipartFile.getInputStream());
         BcqDeclaration declaration = validationHandler.processAndValidate(csv);

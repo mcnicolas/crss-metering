@@ -240,6 +240,16 @@ public class BcqServiceImpl implements BcqService {
         return bcqDao.findAllProhibited(pageableRequest);
     }
 
+    @Override
+    public long saveProhibitedPair(BcqProhibitedPair prohibitedPair) {
+        return bcqDao.saveProhibitedPair(prohibitedPair);
+    }
+
+    @Override
+    public void disableProhibitedPair(long id) {
+        bcqDao.disableProhibitedPair(id);
+    }
+
     private long saveUploadFile(BcqUploadFile uploadFile) {
         uploadFile.setSubmittedDate(new Date());
         uploadFile.setTransactionId(randomUUID().toString());

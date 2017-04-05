@@ -52,4 +52,8 @@ public interface BcqDao {
 
     Page<BcqProhibitedPairPageDisplay> findAllProhibited(PageableRequest pageableRequest);
 
+    long saveProhibitedPair(BcqProhibitedPair prohibitedPair);
+
+    void disableProhibitedPair(long id);
+
 }
