@@ -50,10 +50,12 @@ public interface BcqDao {
 
     List<Long> selectByStatusAndDeadlineDatePlusDays(BcqStatus status, Integer plusDays);
 
-    Page<BcqProhibitedPairPageDisplay> findAllProhibited(PageableRequest pageableRequest);
+    Page<BcqProhibitedPairPageDisplay> findAllProhibitedPairs(PageableRequest pageableRequest);
 
     long saveProhibitedPair(BcqProhibitedPair prohibitedPair);
 
     void disableProhibitedPair(long id);
+
+    List<BcqProhibitedPair> findAllEnabledProhibitedPairs();
 
 }

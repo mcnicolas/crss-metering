@@ -236,18 +236,25 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public Page<BcqProhibitedPairPageDisplay> findAllProhibited(PageableRequest pageableRequest) {
-        return bcqDao.findAllProhibited(pageableRequest);
+    public Page<BcqProhibitedPairPageDisplay> findAllProhibitedPairs(PageableRequest pageableRequest) {
+        return bcqDao.findAllProhibitedPairs(pageableRequest);
     }
 
     @Override
+    @Transactional
     public long saveProhibitedPair(BcqProhibitedPair prohibitedPair) {
         return bcqDao.saveProhibitedPair(prohibitedPair);
     }
 
     @Override
+    @Transactional
     public void disableProhibitedPair(long id) {
         bcqDao.disableProhibitedPair(id);
+    }
+
+    @Override
+    public List<BcqProhibitedPair> findAllEnabledProhibitedPairs() {
+        return bcqDao.findAllEnabledProhibitedPairs();
     }
 
     private long saveUploadFile(BcqUploadFile uploadFile) {

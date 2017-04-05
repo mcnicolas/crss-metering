@@ -285,7 +285,7 @@ public class JdbcBcqDao implements BcqDao {
     }
 
     @Override
-    public Page<BcqProhibitedPairPageDisplay> findAllProhibited(PageableRequest pageableRequest) {
+    public Page<BcqProhibitedPairPageDisplay> findAllProhibitedPairs(PageableRequest pageableRequest) {
         int totalRecords = getProhibitedCount(pageableRequest);
         QueryData data = BcqQueryHolder.prohibitedPage(pageableRequest);
         log.debug("Finding page of prohibited with query: {}, and args: {}", data.getSql(), data.getSource().getValues());
@@ -313,6 +313,16 @@ public class JdbcBcqDao implements BcqDao {
                 .addValue("id", id);
         jdbcTemplate.update(disableProhibited, source);
         log.debug("Disabled prohibited pair with ID: {}", id);
+    }
+
+    @Override
+    public List<BcqProhibitedPair> findAllEnabledProhibitedPairs() {
+        log.debug("Getting all enabled prohibited pairs");
+        QueryData data = BcqQueryHolder.enabledProhibitedList();
+        List<BcqProhibitedPair> prohibitedPairs = jdbcTemplate.query(data.getSql(),
+                new BeanPropertyRowMapper<>(BcqProhibitedPair.class));
+        log.debug("Found {} enabled prohibited", prohibitedPairs.size());
+        return prohibitedPairs;
     }
 
     private long saveHeader(BcqHeader header, boolean isSpecialEvent) {

@@ -191,6 +191,16 @@ public final class BcqQueryHolder {
        return addProhibitedFilters(queryBuilder, mapParams).build();
     }
 
+    public static QueryData enabledProhibitedList() {
+        SelectQueryBuilder queryBuilder = new SelectQueryBuilder()
+                .column("UPPER(SELLING_MTN)").as("SELLING_MTN")
+                .column("UPPER(BILLING_ID)").as("BILLING_ID")
+                .from("TXN_BCQ_PROHIBITED")
+                .where().filter("ENABLED = TRUE");
+
+        return queryBuilder.build();
+    }
+
     private static QueryData uniqueHeaderIds(Map<String, String> mapParams) {
         List<PageOrder> pageOrders = asList(
                 new PageOrder("SELLING_MTN", ASC),

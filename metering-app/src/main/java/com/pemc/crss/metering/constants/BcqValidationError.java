@@ -26,11 +26,11 @@ public enum BcqValidationError {
     MISSING_REFERENCE_MTN("Missing reference MTN."),
     MISSING_DATE("Missing date."),
     MISSING_BCQ("Missing BCQ."),
-    INCOMPLETE_RESUBMISSION_ENTRIES("Incomplete BCQ entries. " +
-            "Resubmission for date <b>%s</b> should also have entries of the ff. "
+    INCOMPLETE_RESUBMISSION_ENTRIES("Incomplete BCQ entries. "
+            + "Resubmission for date <b>%s</b> should also have entries of the ff. "
             + "Selling MTN and Billing ID pair(s):<br />%s"),
-    INCOMPLETE_OVERRIDE_ENTRIES("Incomplete BCQ entries. " +
-            "Override for date <b>%s</b> should also have entries of the ff. "
+    INCOMPLETE_OVERRIDE_ENTRIES("Incomplete BCQ entries. "
+            + "Override for date <b>%s</b> should also have entries of the ff. "
             + "Selling MTN and Billing ID pair(s):<br />%s"),
     SELLING_MTN_UNREGISTERED("Unregistered selling MTN. Selling MTN <b>%s</b> does not exist."),
     SELLING_MTN_NOT_OWNED("Unregistered selling MTN. "
@@ -51,7 +51,9 @@ public enum BcqValidationError {
     OVERRIDDEN_ENTRIES("Following entry(ies) have already been overridden for the trading date of %s.<br />%s"),
     DEADLINE_DATE_PASSED("Deadline date of special event for trading date <b>%s</b> and participants <b>%s</b> has "
             + "passed."),
-    MULTIPLE_PARTICIPANT_BILLING_ID("Multiple participants are associated to billing ID <b>%s</b> for trading date <b>%s</b>.");
+    MULTIPLE_PARTICIPANT_BILLING_ID("Multiple participants are associated to billing ID <b>%s</b> for trading date <b>%s</b>."),
+    CONTAINS_PROHIBITED_PAIRS("Declaration contains prohibited pairs. Declaration must not have entries of the ff. "
+            + "Selling MTN and Billing ID pair(s):<br />%s");
 
     private final String errorMessage;
 
