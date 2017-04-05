@@ -30,7 +30,7 @@ class BillingIdValidatorImplTest extends Specification {
 
         then:
         1 * validationHelper.validBillingIds(headerList.get(0).getTradingDate()) >> validation
-        1 * resourceTemplate.get(_ as String, List.class, false) >> ['SHORTNAME1']
+        1 * resourceTemplate.get(_ as String, List.class) >> ['SHORTNAME1']
         result.status == status
 
         where:
