@@ -12,8 +12,10 @@ import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
 import com.pemc.crss.metering.service.exception.InvalidStateException;
 import com.pemc.crss.metering.service.exception.OldRecordException;
+import com.pemc.crss.metering.service.exception.PairExistsException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -243,6 +245,15 @@ public class BcqServiceImpl implements BcqService {
     @Override
     @Transactional
     public long saveProhibitedPair(BcqProhibitedPair prohibitedPair) {
+        List<Pair<String, String>> currentProhibitedPairs = bcqDao.findAllEnabledProhibitedPairs().stream()
+                .map(enabledProhibitedPair -> Pair.of(enabledProhibitedPair.getSellingMtn(), enabledProhibitedPair.getBillingId()))
+                .collect(Collectors.toList());
+        if (currentProhibitedPairs.contains(Pair.of(prohibitedPair.getSellingMtn().toUpperCase(),
+                prohibitedPair.getBillingId().toUpperCase()))) {
+            String errorMEssage = String.format("Pair <b>%s</b> - <b>%s</b> already exists.",
+                    prohibitedPair.getSellingMtn(), prohibitedPair.getBillingId());
+            throw new PairExistsException(errorMEssage);
+        }
         return bcqDao.saveProhibitedPair(prohibitedPair);
     }
 
