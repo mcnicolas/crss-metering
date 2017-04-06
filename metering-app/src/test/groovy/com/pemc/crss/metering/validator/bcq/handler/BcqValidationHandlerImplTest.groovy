@@ -22,6 +22,7 @@ class BcqValidationHandlerImplTest extends Specification {
     def specialEventValidator = Mock(SpecialEventValidator);
     def billingIdValidator = Mock(BillingIdValidator);
     def crssSideValidator = Mock(CrssSideValidator);
+    def prohibitedValidator = Mock(ProhibitedValidator);
     def resubmissionValidator = Mock(ResubmissionValidator);
     def overrideValidator = Mock(OverrideValidator);
     def resourceTemplate = Mock(ResourceTemplate);
@@ -40,6 +41,7 @@ class BcqValidationHandlerImplTest extends Specification {
                 specialEventValidator,
                 billingIdValidator,
                 crssSideValidator,
+                prohibitedValidator,
                 resubmissionValidator,
                 overrideValidator,
                 resourceTemplate,
@@ -112,6 +114,25 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * headerListValidator.validate(_ as List) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validate(_ as List, sellerDetails) >> validationResult
+        0 * prohibitedValidator.validate(_ as List)
+        declaration.validationResult == validationResult
+    }
+
+    def "process and validate with failed validation in prohibited validator"() {
+        given:
+        def errorMessage = new BcqValidationErrorMessage(CONTAINS_PROHIBITED_PAIRS, [])
+        def validationResult = new BcqValidationResult<>(status: REJECTED, errorMessage: errorMessage)
+
+        when:
+        def declaration = sut.processAndValidate(csv)
+
+        then:
+        1 * resourceTemplate.get(_ as String, ParticipantSellerDetails.class) >> sellerDetails
+        1 * csvValidator.validate(csv) >> acceptedValidationResult
+        1 * headerListValidator.validate(_ as List) >> acceptedValidationResult
+        1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
+        1 * crssSideValidator.validate(_ as List, sellerDetails) >> acceptedValidationResult
+        1 * prohibitedValidator.validate(_ as List) >> validationResult
         0 * resubmissionValidator.validate(_ as List, sellerDetails.shortName)
         declaration.validationResult == validationResult
     }
@@ -130,6 +151,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * headerListValidator.validate(_ as List) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validate(_ as List, sellerDetails) >> acceptedValidationResult
+        1 * prohibitedValidator.validate(_ as List) >> acceptedValidationResult
         1 * resubmissionValidator.validate(_ as List, sellerDetails.shortName) >> validationResult
         declaration.validationResult == validationResult
     }
@@ -144,6 +166,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * headerListValidator.validate(_ as List) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validate(_ as List, sellerDetails) >> acceptedValidationResult
+        1 * prohibitedValidator.validate(_ as List) >> acceptedValidationResult
         1 * resubmissionValidator.validate(_ as List, sellerDetails.shortName) >> acceptedValidationResult
         configService.getIntegerValueForKey('BCQ_INTERVAL', 15) >> 15
         declaration.validationResult.withProcessedObject(headerList) == acceptedValidationResult
@@ -192,6 +215,29 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * headerListValidator.validate(_ as List) >> headerValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validate(_ as List, sellerDetails) >> validationResult
+        0 * prohibitedValidator.validate(_ as List)
+        declaration.validationResult == validationResult
+    }
+
+    def "process and validate for special event with failed validation in prohibited validator"() {
+        given:
+        def headerErrorMessage = new BcqValidationErrorMessage(CLOSED_TRADING_DATE, [])
+        def headerValidationResult = new BcqValidationResult<>(status: REJECTED, errorMessage: headerErrorMessage,
+                processedObject: headerList)
+        def errorMessage = new BcqValidationErrorMessage(CONTAINS_PROHIBITED_PAIRS, [])
+        def validationResult = new BcqValidationResult<>(status: REJECTED, errorMessage: errorMessage)
+                .withProcessedObject(headerList)
+
+        when:
+        def declaration = sut.processAndValidate(csv)
+
+        then:
+        1 * resourceTemplate.get(_ as String, ParticipantSellerDetails.class) >> sellerDetails
+        1 * csvValidator.validate(csv) >> acceptedValidationResult
+        1 * headerListValidator.validate(_ as List) >> headerValidationResult
+        1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
+        1 * crssSideValidator.validate(_ as List, sellerDetails) >> acceptedValidationResult
+        1 * prohibitedValidator.validate(_ as List) >> validationResult
         0 * specialEventValidator.validate(_ as List, sellerDetails.shortName)
         declaration.validationResult == validationResult
     }
@@ -214,8 +260,10 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * csvValidator.validate(csv) >> acceptedValidationResult
         1 * headerListValidator.validate(_ as List) >> headerValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
-        1 * crssSideValidator.validate(_ as List, sellerDetails) >> validationResult
-        0 * specialEventValidator.validate(_ as List, sellerDetails.shortName)
+        1 * crssSideValidator.validate(_ as List, sellerDetails) >> acceptedValidationResult
+        1 * prohibitedValidator.validate(_ as List) >> acceptedValidationResult
+        1 * specialEventValidator.validate(_ as List, sellerDetails.shortName) >> validationResult
+        0 * resubmissionValidator.validate(_ as List, sellerDetails.shortName)
         declaration.validationResult.errorMessage.validationError == declarationError
 
         where:
@@ -242,6 +290,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * headerListValidator.validate(_ as List) >> headerValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validate(_ as List, sellerDetails) >> acceptedValidationResult
+        1 * prohibitedValidator.validate(_ as List) >> acceptedValidationResult
         1 * specialEventValidator.validate(_ as List, sellerDetails.shortName) >> acceptedValidationResult
         1 * resubmissionValidator.validate(_ as List, sellerDetails.shortName) >> validationResult
         declaration.validationResult == validationResult
@@ -262,6 +311,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * headerListValidator.validate(_ as List) >> headerValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validate(_ as List, sellerDetails) >> acceptedValidationResult
+        1 * prohibitedValidator.validate(_ as List) >> acceptedValidationResult
         1 * specialEventValidator.validate(_ as List, sellerDetails.shortName) >> acceptedValidationResult
         1 * resubmissionValidator.validate(_ as List, sellerDetails.shortName) >> acceptedValidationResult
         configService.getIntegerValueForKey('BCQ_INTERVAL', 15) >> 15
@@ -334,6 +384,25 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * headerListValidator.validateForSettlement(_ as List, tradingDate) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validateBySettlement(_ as List, sellerDetails) >> validationResult
+        0 * prohibitedValidator.validate(_ as List)
+        declaration.validationResult == validationResult
+    }
+
+    def "process and validate for settlement with failed validation in prohibited validator"() {
+        given:
+        def errorMessage = new BcqValidationErrorMessage(SELLING_MTN_NOT_OWNED, [])
+        def validationResult = new BcqValidationResult<>(status: REJECTED, errorMessage: errorMessage,
+                processedObject: headerList)
+
+        when:
+        def declaration = sut.processAndValidateForSettlement(csv, sellerDetails, tradingDate)
+
+        then:
+        1 * csvValidator.validate(csv) >> acceptedValidationResult
+        1 * headerListValidator.validateForSettlement(_ as List, tradingDate) >> acceptedValidationResult
+        1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
+        1 * crssSideValidator.validateBySettlement(_ as List, sellerDetails) >> acceptedValidationResult
+        1 * prohibitedValidator.validate(_ as List) >> validationResult
         0 * overrideValidator.validate(_ as List, sellerDetails.shortName)
         declaration.validationResult == validationResult
     }
@@ -352,6 +421,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * headerListValidator.validateForSettlement(_ as List, tradingDate) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validateBySettlement(_ as List, sellerDetails) >> acceptedValidationResult
+        1 * prohibitedValidator.validate(_ as List) >> acceptedValidationResult
         1 * overrideValidator.validate(_ as List, sellerDetails.shortName) >> validationResult
         0 * resubmissionValidator.validate(_ as List, sellerDetails.shortName)
         declaration.validationResult == validationResult
@@ -371,6 +441,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * headerListValidator.validateForSettlement(_ as List, tradingDate) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validateBySettlement(_ as List, sellerDetails) >> acceptedValidationResult
+        1 * prohibitedValidator.validate(_ as List) >> acceptedValidationResult
         1 * overrideValidator.validate(_ as List, sellerDetails.shortName) >> acceptedValidationResult
         1 * resubmissionValidator.validate(_ as List, sellerDetails.shortName) >> validationResult
         declaration.validationResult == validationResult
@@ -385,6 +456,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * headerListValidator.validateForSettlement(_ as List, tradingDate) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validateBySettlement(_ as List, sellerDetails) >> acceptedValidationResult
+        1 * prohibitedValidator.validate(_ as List) >> acceptedValidationResult
         1 * overrideValidator.validate(_ as List, sellerDetails.shortName) >> acceptedValidationResult
         1 * resubmissionValidator.validate(_ as List, sellerDetails.shortName) >> acceptedValidationResult
         configService.getIntegerValueForKey('BCQ_INTERVAL', 15) >> 15
