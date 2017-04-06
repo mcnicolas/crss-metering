@@ -211,6 +211,7 @@ public class BcqResource {
     }
 
     @PostMapping("/prohibited/save")
+    @PreAuthorize("hasAuthority('BCQ_ADD_PROHIBITED')")
     public void saveProhibitedPair(@RequestBody BcqProhibitedPairForm prohibitedPairForm) {
         log.debug("Request for saving prohibited pair: {}", prohibitedPairForm);
         long id = bcqService.saveProhibitedPair(prohibitedPairForm.target());
@@ -218,6 +219,7 @@ public class BcqResource {
     }
 
     @PutMapping("/prohibited/{id}/disable")
+    @PreAuthorize("hasAuthority('BCQ_DELETE_PROHIBITED')")
     public void disableProhibitedPair(@PathVariable long id) {
         log.debug("Request for disabling prohibited pair with ID: {}", id);
         bcqService.disableProhibitedPair(id);

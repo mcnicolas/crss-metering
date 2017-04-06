@@ -118,6 +118,7 @@ public class BcqDisplayResource {
     }
 
     @PostMapping(value = "/prohibited/list")
+    @PreAuthorize("hasAuthority('BCQ_VIEW_PROHIBITED')")
     public ResponseEntity<DataTableResponse<BcqProhibitedPairPageDisplay>> getProhibitedPage(@RequestBody PageableRequest request) {
         Page<BcqProhibitedPairPageDisplay> prohibitedPage = bcqService.findAllProhibitedPairs(request);
         DataTableResponse<BcqProhibitedPairPageDisplay> response = new DataTableResponse<BcqProhibitedPairPageDisplay>()
