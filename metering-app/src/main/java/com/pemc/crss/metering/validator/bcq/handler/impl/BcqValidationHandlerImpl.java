@@ -33,6 +33,7 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
     private final SpecialEventValidator specialEventValidator;
     private final BillingIdValidator billingIdValidator;
     private final CrssSideValidator crssSideValidator;
+    private final ProhibitedValidator prohibitedValidator;
     private final ResubmissionValidator resubmissionValidator;
     private final OverrideValidator overrideValidator;
     private final ResourceTemplate resourceTemplate;
@@ -46,7 +47,8 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
                 .then(csvResult -> headerListValidator.validate(csvResult.getProcessedObject()))
                 .then(headerListResult -> billingIdValidator.validate(headerListResult.getProcessedObject()))
                 .then(billingIdResult -> crssSideValidator.validate(billingIdResult.getProcessedObject(), sellerDetails))
-                .then(crssSideResult -> resubmissionValidator.validate(crssSideResult.getProcessedObject(),
+                .then(crssSideResult -> prohibitedValidator.validate(crssSideResult.getProcessedObject()))
+                .then(prohibitedResult -> resubmissionValidator.validate(prohibitedResult.getProcessedObject(),
                         sellerDetails.getShortName()));
 
         List<BcqHeader> headerList = result.getProcessedObject();
@@ -72,7 +74,8 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
                 .then(headerListResult -> billingIdValidator.validate(headerListResult.getProcessedObject()))
                 .then(billingIdResult -> crssSideValidator.validateBySettlement(billingIdResult.getProcessedObject(),
                         sellerDetails))
-                .then(crssSideResult -> overrideValidator.validate(crssSideResult.getProcessedObject(),
+                .then(crssSideResult -> prohibitedValidator.validate(crssSideResult.getProcessedObject()))
+                .then(prohibitedResult -> overrideValidator.validate(prohibitedResult.getProcessedObject(),
                         sellerDetails.getShortName()))
                 .then(overrideResult -> resubmissionValidator.validate(overrideResult.getProcessedObject(),
                         sellerDetails.getShortName()));
@@ -93,7 +96,8 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
         BcqDeclaration declaration = new BcqDeclaration(sellerDetails);
         BcqValidationResult<List<BcqHeader>> result = billingIdValidator.validate(headerList)
                 .then(billingIdResult -> crssSideValidator.validate(billingIdResult.getProcessedObject(), sellerDetails))
-                .then(crssSideResult -> specialEventValidator.validate(crssSideResult.getProcessedObject(),
+                .then(crssSideResult -> prohibitedValidator.validate(crssSideResult.getProcessedObject()))
+                .then(prohibitedResult -> specialEventValidator.validate(prohibitedResult.getProcessedObject(),
                         sellerDetails.getShortName()))
                 .then(specialEventResult -> resubmissionValidator.validate(specialEventResult.getProcessedObject(),
                         sellerDetails.getShortName()));
