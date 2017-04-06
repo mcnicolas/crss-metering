@@ -12,6 +12,7 @@ import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant
 import com.pemc.crss.metering.service.exception.InvalidStateException
 import com.pemc.crss.metering.service.exception.OldRecordException
+import com.pemc.crss.metering.service.exception.PairExistsException
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult
 import org.springframework.data.domain.PageImpl
 import spock.lang.Specification
@@ -448,6 +449,7 @@ class BcqServiceImplTest extends Specification {
         result.size() == 1
         result[0].shortName == 'PDU1'
     }
+
     def "find event deadline date by trading date and participant"() {
         given:
         def shortName = 'PDU1'
@@ -459,6 +461,51 @@ class BcqServiceImplTest extends Specification {
         then:
         1 * bcqDao.findEventDeadlineDateByTradingDateAndParticipant(tradingDate, shortName) >> parseDate('12/12/2012')
         result == parseDate('12/12/2012')
+    }
+
+    def "find all prohibited pairs by pageable request"() {
+        when:
+        def result = sut.findAllProhibitedPairs(PageableRequest.newInstance())
+
+        then:
+        1 * bcqDao.findAllProhibitedPairs(_ as PageableRequest) >>
+                new PageImpl<>([new BcqProhibitedPairPageDisplay(id: 1L)])
+        result.content.size() == 1
+        result.content[0].id == 1L
+    }
+
+    def "save prohibited pair"() {
+        given:
+        def prohibitedPair = new BcqProhibitedPair(sellingMtn: 'MTN1', billingId: 'BILL1')
+
+        when:
+        def id = sut.saveProhibitedPair(prohibitedPair)
+
+        then:
+        1 * bcqDao.findAllEnabledProhibitedPairs() >> []
+        1 * bcqDao.saveProhibitedPair(_ as BcqProhibitedPair) >> 1L
+        id == 1L
+    }
+
+    def "save prohibited pair with exception"() {
+        given:
+        def prohibitedPair = new BcqProhibitedPair(sellingMtn: 'MTN1', billingId: 'BILL1')
+
+        when:
+        sut.saveProhibitedPair(prohibitedPair)
+
+        then:
+        1 * bcqDao.findAllEnabledProhibitedPairs() >> [prohibitedPair]
+        0 * bcqDao.saveProhibitedPair(_ as BcqProhibitedPair)
+        thrown(PairExistsException)
+    }
+
+    def "disable prohibited pair"() {
+        when:
+        sut.disableProhibitedPair(1L)
+
+        then:
+        1 * bcqDao.disableProhibitedPair(1L)
     }
 
 }

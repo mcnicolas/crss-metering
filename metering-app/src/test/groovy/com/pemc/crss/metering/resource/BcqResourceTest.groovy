@@ -371,6 +371,40 @@ class BcqResourceTest extends Specification {
         response.contentAsString == '1'
     }
 
+    def "add prohibited pair"() {
+        given:
+        def builder = new JsonBuilder()
+        builder {
+            sellingMtn 'MTN1'
+            billingId 'BILL1'
+            createdBy 'BILLING'
+        }
+        and:
+        def requestBody = builder.toPrettyString()
+
+        when:
+        def response = mockMvc.perform(post('/bcq/prohibited/save')
+                .content(requestBody)
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        1 * bcqService.saveProhibitedPair(_ as BcqProhibitedPair)
+        response.status == 200
+    }
+
+    def "disable prohibited pair"() {
+        when:
+        def response = mockMvc.perform(put('/bcq/prohibited/1/disable')
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        1 * bcqService.disableProhibitedPair(1)
+        response.status == 200
+    }
+
     @Configuration
     static class Config {
         def factory = new DetachedMockFactory()

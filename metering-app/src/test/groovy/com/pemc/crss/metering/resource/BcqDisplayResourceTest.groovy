@@ -199,6 +199,40 @@ class BcqDisplayResourceTest extends Specification {
         new BigDecimal(content[1].bcq) == dataDisplayList[1].bcq
     }
 
+
+
+    def "get prohibited pair page"() {
+        given:
+        def prohibitedList = [
+                new BcqProhibitedPairPageDisplay(sellingMtn: 'MTN1', billingId: 'BILL1'),
+                new BcqProhibitedPairPageDisplay(sellingMtn: 'MTN2', billingId: 'BILL2')
+        ]
+        def page = new PageImpl(prohibitedList)
+        def builder = new JsonBuilder()
+        builder {
+            pageNo 0
+            pageSize 10
+        }
+        and:
+        def requestBody = builder.toPrettyString()
+
+        when:
+        def response = mockMvc.perform(post('/bcq/prohibited/list')
+                .content(requestBody)
+                .contentType(APPLICATION_JSON_UTF8_VALUE)
+                .header("Accept", APPLICATION_JSON_UTF8_VALUE))
+                .andReturn().response
+
+        then:
+        1 * bcqService.findAllProhibitedPairs(_ as PageableRequest) >> page
+        response.status == 200
+        def content = new JsonSlurper().parseText(response.contentAsString)
+        content.data[0].sellingMtn == prohibitedList[0].sellingMtn
+        content.data[0].billingId == prohibitedList[0].billingId
+        content.data[1].sellingMtn == prohibitedList[1].sellingMtn
+        content.data[1].billingId == prohibitedList[1].billingId
+    }
+
     @Configuration
     static class Config {
         def factory = new DetachedMockFactory()
