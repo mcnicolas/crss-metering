@@ -28,7 +28,7 @@
   <appender name="GELF" class="de.appelgriepsch.logback.GelfAppender">
     <server>${GRAYLOG_HOST:-localhost}</server>
     <port>${GRAYLOG_PORT:-12201}</port>
-    <protocol>UDP</protocol>
+    <protocol>${GRAYLOG_PROTOCOL:-UDP}</protocol>
     <includeSource>true</includeSource>
     <includeMDC>true</includeMDC>
     <includeStackTrace>true</includeStackTrace>
