@@ -4,6 +4,8 @@
   <!-- property configs -->
   <springProperty name="APP_NAME" source="spring.application.name"/>
   <springProperty name="GRAYLOG_HOST" source="graylog.host"/>
+  <springProperty name="GRAYLOG_PORT" source="graylog.port"/>
+  <springProperty name="GRAYLOG_PROTOCOL" source="graylog.protocol"/>
 
   <!-- appender configs -->
   <include resource="org/springframework/boot/logging/logback/base.xml"/>
