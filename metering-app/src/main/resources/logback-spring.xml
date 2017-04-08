@@ -9,13 +9,21 @@
 
   <!-- appender configs -->
   <include resource="org/springframework/boot/logging/logback/base.xml"/>
-  <include resource="logger/crss-file-appender.xml"/>
-  <include resource="logger/crss-gelf-appender.xml"/>
+
+  <appender name="GELF" class="de.appelgriepsch.logback.GelfAppender">
+    <server>${GRAYLOG_HOST:-localhost}</server>
+    <port>${GRAYLOG_PORT:-12201}</port>
+    <protocol>${GRAYLOG_PROTOCOL:-UDP}</protocol>
+    <includeSource>true</includeSource>
+    <includeMDC>true</includeMDC>
+    <includeStackTrace>true</includeStackTrace>
+    <includeLevelName>true</includeLevelName>
+    <additionalFields>app=${APP_NAME:-crss_app}</additionalFields>
+  </appender>
 
   <root level="INFO">
-    <appender-ref ref="CONSOLE" />
-    <appender-ref ref="GELF" />
-    <appender-ref ref="DAILY_FILE" />
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="GELF"/>
   </root>
 
   <!-- library log levels -->
