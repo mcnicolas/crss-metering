@@ -3,7 +3,7 @@
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
   <jar>../../../target/libs/metering-upload-2.0.0.BUILD-SNAPSHOT-all.jar</jar>
-  <outfile>../../../target/mq-uploader-2.0.0.exe</outfile>
+  <outfile>../../../target/mq-uploader-2.0.0-SNAPSHOT.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
