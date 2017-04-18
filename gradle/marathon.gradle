@@ -34,7 +34,8 @@ task generateMarathonConfig(type: Copy) {
     rename { file -> "${project.name}.json" }
     expand(project: project,
             dockerImage: "registry.marathon.l4lb.thisdcos.directory:5000/$dockerImageTag",
-            domain: project.hasProperty('domain') ? project.ext.domain : 'pemc.exist.com'
+            domain: project.hasProperty('domain') ? project.ext.domain : 'pemc.exist.com',
+            branch: 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
     )
 }
 
