@@ -6,12 +6,21 @@ spring:
   cloud:
     config:
       fail-fast: true
-      uri: http://config-server:8080
+      uri: http://crssconfig-server.marathon.l4lb.thisdcos.directory:8080
       username: crssconfig
       password: crssconfigpassword
+
 ---
 spring:
   profiles: dev
   cloud:
     config:
       uri: http://localhost:8888
+
+# Staging currently deployed on swarm, remove this if it was fully migrated in dc/os
+---
+spring:
+  profiles: staging
+  cloud:
+    config:
+      uri: http://config-server:8080
