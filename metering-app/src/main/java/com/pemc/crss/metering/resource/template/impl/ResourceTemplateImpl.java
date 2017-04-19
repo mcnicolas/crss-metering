@@ -3,6 +3,7 @@ package com.pemc.crss.metering.resource.template.impl;
 import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,9 @@ import static org.springframework.web.context.request.RequestContextHolder.getRe
 public class ResourceTemplateImpl implements ResourceTemplate {
 
     private final RestTemplate restTemplate;
+
+    @Value("${crss.api.gateway}")
+    private String apiGateway;
 
     public <T> T get(String path, Class<T> type) {
         return get(path, type, true);
@@ -57,7 +61,7 @@ public class ResourceTemplateImpl implements ResourceTemplate {
     }
 
     private String getRequestUrl(String path) {
-        return "http://app:8080" + path;
+        return apiGateway + path;
     }
 
 }
