@@ -5,7 +5,6 @@ import com.pemc.crss.meter.upload.http.HeaderStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -18,7 +17,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultClientConnectionReuseStrategy;
 import org.apache.http.impl.client.HttpClients;
@@ -38,6 +37,7 @@ import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -346,6 +346,7 @@ public class HttpHandler {
             MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder
                     .create()
                     .setContentType(MULTIPART_FORM_DATA)
+                    .setLaxMode()
                     .setCharset(UTF_8)
                     .addTextBody("headerID", String.valueOf(headerID));
 
@@ -353,12 +354,9 @@ public class HttpHandler {
             for (FileBean fileBean : fileList) {
                 lastFile = fileBean.getPath().getFileName().toString();
 
-//                InputStreamBody fileContent = new InputStreamBody(Files.newInputStream(fileBean.getPath()),
-//                        fileBean.getPath().getFileName().toString());
-
-//                multipartEntityBuilder.addPart("file", fileContent);
-
-                multipartEntityBuilder.addPart("file", new FileBody(fileBean.getPath().toFile()));
+                InputStreamBody fileContent = new InputStreamBody(Files.newInputStream(fileBean.getPath()),
+                        fileBean.getPath().getFileName().toString());
+                multipartEntityBuilder.addPart("file", fileContent);
 
                 log.debug("Uploading file:{}", fileBean.getPath().getFileName().toString());
             }

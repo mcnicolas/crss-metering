@@ -7,7 +7,7 @@ import java.util.Queue;
 
 public class FileCountBucket implements FileBucket {
 
-    public static final int DEFAULT_FILECOUNT = 2;
+    public static final int DEFAULT_FILECOUNT = 1;
 
     public static final int ONE_MB = 1048576;
     public static final int TWO_MB = 2097152;
