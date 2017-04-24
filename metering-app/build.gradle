@@ -16,6 +16,7 @@ buildscript {
         classpath 'gradle.plugin.org.liquibase:liquibase-gradle-plugin:1.2.1'
         classpath 'org.postgresql:postgresql:9.4.1212'
         classpath files("$rootDir/libs/ojdbc6-11.2.0.4.jar")
+        classpath group: 'org.liquibase', name: 'liquibase-core', version: '3.5.3'
     }
 }
 
@@ -88,6 +89,12 @@ liquibase {
             url project.property("${env}.datasource.url")
             username project.property("${env}.datasource.username")
             password project.property("${env}.datasource.password")
+            outputFile "$project.buildDir/db/$project.name-update-scripts.sql"
         }
     }
+}
+
+// liquibase task does not create folder, as work around we created it firs
+dbUpdateSQL.doFirst {
+    file("$buildDir/db").mkdirs()
 }
