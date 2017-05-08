@@ -64,7 +64,7 @@ dependencies {
 
     runtime 'com.zaxxer:HikariCP'
     runtime 'org.postgresql:postgresql'
-    runtime files("$rootDir/libs/ojdbc6-11.2.0.4.jar")
+    runtime files("$rootDir/libs/edb-jdbc17.jar")
 
     compile 'commons-io:commons-io'
     compile 'commons-beanutils:commons-beanutils'
@@ -88,6 +88,8 @@ liquibase {
             url project.property("${env}.datasource.url")
             username project.property("${env}.datasource.username")
             password project.property("${env}.datasource.password")
+//            driver 'com.edb.Driver'
+            defaultSchemaName 'metering'
             outputFile "$project.buildDir/db/update-scripts.sql"
         }
     }
