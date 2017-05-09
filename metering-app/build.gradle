@@ -88,8 +88,6 @@ liquibase {
             url project.property("${env}.datasource.url")
             username project.property("${env}.datasource.username")
             password project.property("${env}.datasource.password")
-//            driver 'com.edb.Driver'
-            defaultSchemaName 'metering'
             outputFile "$project.buildDir/db/update-scripts.sql"
         }
     }
