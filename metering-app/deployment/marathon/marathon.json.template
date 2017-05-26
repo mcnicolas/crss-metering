@@ -1,5 +1,5 @@
 {
-  "id": "/crss/metering-service",
+  "id": "${appId}",
   "cmd": null,
   "cpus": 0.5,
   "mem": 1200,
@@ -18,7 +18,7 @@
           "servicePort": 0,
           "protocol": "tcp",
           "labels": {
-            "VIP_0": "/crss/metering-service:8080"
+            "VIP_0": "${appId}:8080"
           }
         }
       ],
@@ -30,8 +30,7 @@
   "env": {
     "JAVA_OPTS": "-Xms256m -Xmx1g",
     "SPRING_PROFILES_ACTIVE": "${project.ext.env}",
-    "DCOS_SERVICE_NAME": "metering-service",
-    "SPRING_CLOUD_CONFIG_LABEL": "${branch}"
+    "DCOS_SERVICE_NAME": "${appIdDash}"
   },
   "healthChecks": [
     {

@@ -32,10 +32,14 @@ task generateMarathonConfig(type: Copy) {
     into "$buildDir/deployment/marathon"
     include 'marathon.json.template'
     rename { file -> "${project.name}.json" }
-    expand(project: project,
+
+    def envSet = project.hasProperty('envSet') ? project.ext.envSet : '/crss'
+    def appId = "$envSet/${project.hasProperty('serviceId') ? project.ext.serviceId : project.name}"
+    def appIdDash = appId.replaceAll("/", "-")
+
+    expand(project: project, appId: appId, appIdDash: appIdDash,
             dockerImage: "registry.marathon.l4lb.thisdcos.directory:5000/$dockerImageTag",
-            domain: project.hasProperty('domain') ? project.ext.domain : 'pemc.exist.com',
-            branch: 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
+            domain: project.hasProperty('domain') ? project.ext.domain : 'pemc.exist.com'
     )
 }
 
@@ -51,7 +55,7 @@ task marathonDeploy(dependsOn: generateMarathonConfig) {
 
         def appId = URLEncoder.encode(marathonDefinition.id, "UTF-8")
 
-        def marathonClient = new RESTClient("$marathonUrl/apps/$appId?force=true", JSON)
+        def marathonClient = new RESTClient("$marathonUrl/$appId?force=true", JSON)
 
         def response = marathonClient.put(body: marathonDefinition).getData()
 

@@ -32,6 +32,8 @@ ext {
 
     if (project.hasProperty('teamcity.build.id')) {
         tagVersion = "${version.contains('BUILD-SNAPSHOT') ? version.replace('.BUILD-SNAPSHOT', '') : version}-b${project.ext['build.number']}"
+    } else {
+        tagVersion = project.version + "-b" + 'git rev-parse --short HEAD'.execute().text.trim()
     }
 
     dockerImageTag = "$project.dockerImageName:$tagVersion"
