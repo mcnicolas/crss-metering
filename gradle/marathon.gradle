@@ -57,6 +57,11 @@ task marathonDeploy(dependsOn: generateMarathonConfig) {
 
         def marathonClient = new RESTClient("$marathonUrl/$appId?force=true", JSON)
 
+        if (project.hasProperty('dcosToken')) {
+            marathonClient.setHeaders([Authorization: "token=${project.ext.dcosToken}"])
+            marathonClient.ignoreSSLIssues()
+        }
+
         def response = marathonClient.put(body: marathonDefinition).getData()
 
         def metadata = "marathon-deployment-$project.name"
