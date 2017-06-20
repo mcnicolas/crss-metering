@@ -58,7 +58,7 @@ public class ErrorDialog extends JOptionPane {
         final JToggleButton toggleButton = new JToggleButton();
         toggleButton.setToolTipText("Show the error stack trace");
         toggleButton.setMargin(new Insets(2, 4, 2, 2));
-        messageBox.add(toggleButton);
+//        messageBox.add(toggleButton);
         messageBox.add(Box.createHorizontalGlue());
 
         Object[] message = {messageBox, stackTracePane};

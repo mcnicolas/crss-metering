@@ -358,7 +358,7 @@ public class HeaderPanel extends JPanel {
             fileChooser.addChoosableFileFilter(fileFilterMDEF);
         }
 
-        fileChooser.addChoosableFileFilter(fileFilterXLS);
+//        fileChooser.addChoosableFileFilter(fileFilterXLS);
         fileChooser.addChoosableFileFilter(fileFilterCSV);
         fileChooser.setAcceptAllFileFilterUsed(false);
 
