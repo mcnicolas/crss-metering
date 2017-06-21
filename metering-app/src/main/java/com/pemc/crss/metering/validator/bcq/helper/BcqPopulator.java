@@ -5,9 +5,7 @@ import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static com.pemc.crss.metering.constants.BcqInterval.fromDescription;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDateTime;
@@ -29,19 +27,21 @@ public class BcqPopulator {
     public List<BcqHeader> populate(List<List<String>> csv) {
         BcqInterval interval = fromDescription(csv.get(INTERVAL_ROW_INDEX).get(INTERVAL_COLUMN_INDEX));
         List<BcqHeader> headerList = new ArrayList<>();
+        Set<BcqHeader> headerSet = new HashSet<>();
+        Map<BcqHeader, List<BcqData>> headerDataMap = new HashMap<>();
 
         for (List<String> line : csv.subList(START_LINE_OF_DATA, csv.size())) {
             BcqHeader header = populateHeader(line);
             List<BcqData> dataList;
 
             header.setInterval(interval);
-            if (headerList.contains(header)) {
-                header = headerList.get(headerList.indexOf(header));
-                dataList = header.getDataList();
-            } else {
+            if (headerSet.add(header)) {
                 dataList = new ArrayList<>();
                 headerList.add(header);
                 header.setDataList(dataList);
+                headerDataMap.put(header, dataList);
+            } else {
+                dataList = headerDataMap.get(header);
             }
 
             BcqData data = populateData(line, interval);
@@ -49,7 +49,7 @@ public class BcqPopulator {
         }
 
         for (BcqHeader header : headerList) {
-            header.getDataList().sort((d1, d2) -> d1.getEndTime().compareTo(d2.getEndTime()));
+            header.getDataList().sort(Comparator.comparing(BcqData::getEndTime));
         }
 
         return headerList;
