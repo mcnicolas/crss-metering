@@ -110,6 +110,14 @@ public class MQDisplayQueryBuilder {
         return this;
     }
 
+    public MQDisplayQueryBuilder paginate(int pageNo, int pageSize) {
+        sqlBuilder.append(" LIMIT ");
+        sqlBuilder.append((pageNo + 1) * pageSize);
+        sqlBuilder.append(" OFFSET ");
+        sqlBuilder.append(pageNo * pageSize);
+        return this;
+    }
+
     public BuilderData build() {
         BuilderData retVal = new BuilderData();
         retVal.setSql(sqlBuilder.toString());

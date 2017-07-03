@@ -2,11 +2,11 @@ package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
+import com.pemc.crss.metering.dto.VersionData;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
-import com.pemc.crss.metering.dto.VersionData;
 import com.pemc.crss.metering.validator.ValidationResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -176,17 +176,17 @@ public class JdbcMeteringDao implements MeteringDao {
             transactionID = version.trim();
         }
 
+        int pageNo = pageableRequest.getPageNo();
+        int pageSize = pageableRequest.getPageSize();
+
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
         BuilderData query = queryBuilder.selectMeterData(category, dateFrom, dateTo, version)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
                 .addMSPFilter(mspShortName)
                 .orderBy(pageableRequest.getOrderList())
+                .paginate(pageNo, pageSize)
                 .build();
-
-        int pageNo = pageableRequest.getPageNo();
-        int pageSize = pageableRequest.getPageSize();
-        int startRow = pageNo * pageSize;
 
         log.debug("Select sql: {}", query.getSql());
 
@@ -196,37 +196,30 @@ public class JdbcMeteringDao implements MeteringDao {
                 query.getArguments(),
                 rs -> {
                     List<MeterDataDisplay> meterDataList = new ArrayList<>();
+                    while (rs.next()) {
+                        MeterDataDisplay meterData = new MeterDataDisplay();
 
-                    // TODO: Hackish code. Consider using DB specific resultset filtering
-                    int currentRow = 0;
-                    while (rs.next() && currentRow < startRow + pageSize) {
-                        if (currentRow >= startRow) {
-                            MeterDataDisplay meterData = new MeterDataDisplay();
+                        meterData.setMeterDataID(rs.getLong("meter_data_id"));
+                        meterData.setTransactionID(rs.getString("transaction_id"));
+                        meterData.setSein(rs.getString("sein"));
 
-                            meterData.setMeterDataID(rs.getLong("meter_data_id"));
-                            meterData.setTransactionID(rs.getString("transaction_id"));
-                            meterData.setSein(rs.getString("sein"));
-
-                            try {
-                                meterData.setReadingDateTime(
-                                        readingDateFormat.parse(String.valueOf(rs.getLong("reading_datetime")))
-                                );
-                            } catch (ParseException e) {
-                                log.error(e.getMessage(), e);
-                            }
-
-                            meterData.setKwd(getValue(rs.getBigDecimal("kwd")));
-                            meterData.setKwhd(getValue(rs.getBigDecimal("kwhd")));
-                            meterData.setKvarhd(getValue(rs.getBigDecimal("kvarhd")));
-                            meterData.setKwr(getValue(rs.getBigDecimal("kwr")));
-                            meterData.setKwhr(getValue(rs.getBigDecimal("kwhr")));
-                            meterData.setKvarhr(getValue(rs.getBigDecimal("kvarhr")));
-                            meterData.setEstimationFlag(rs.getString("estimation_flag"));
-
-                            meterDataList.add(meterData);
+                        try {
+                            meterData.setReadingDateTime(
+                                    readingDateFormat.parse(String.valueOf(rs.getLong("reading_datetime")))
+                            );
+                        } catch (ParseException e) {
+                            log.error(e.getMessage(), e);
                         }
 
-                        currentRow++;
+                        meterData.setKwd(getValue(rs.getBigDecimal("kwd")));
+                        meterData.setKwhd(getValue(rs.getBigDecimal("kwhd")));
+                        meterData.setKvarhd(getValue(rs.getBigDecimal("kvarhd")));
+                        meterData.setKwr(getValue(rs.getBigDecimal("kwr")));
+                        meterData.setKwhr(getValue(rs.getBigDecimal("kwhr")));
+                        meterData.setKvarhr(getValue(rs.getBigDecimal("kvarhr")));
+                        meterData.setEstimationFlag(rs.getString("estimation_flag"));
+
+                        meterDataList.add(meterData);
                     }
 
                     return meterDataList;
