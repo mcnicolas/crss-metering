@@ -14,7 +14,14 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.InputStreamBody;
@@ -23,11 +30,13 @@ import org.apache.http.impl.client.DefaultClientConnectionReuseStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.pool.PoolStats;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -38,6 +47,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -59,6 +70,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.http.Consts.UTF_8;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.http.conn.ssl.NoopHostnameVerifier.INSTANCE;
 import static org.apache.http.entity.ContentType.APPLICATION_FORM_URLENCODED;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import static org.apache.http.entity.ContentType.MULTIPART_FORM_DATA;
@@ -84,6 +96,7 @@ public class HttpHandler {
 
     private String oAuthToken;
     private String encodedClient;
+    private String protocol;
     private String hostname;
     private int port;
 
@@ -104,10 +117,21 @@ public class HttpHandler {
             }
 
             URL url = new URL(urlString);
+            protocol = url.getProtocol();
             hostname = url.getHost();
             port = url.getPort() == -1 ? url.getDefaultPort() : url.getPort();
 
-            connectionManager = new PoolingHttpClientConnectionManager();
+            SSLContext sslContext = new SSLContextBuilder()
+                    .loadTrustMaterial(null, new TrustSelfSignedStrategy())
+                    .build();
+            SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, INSTANCE);
+
+            Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+                    .register("http", new PlainConnectionSocketFactory())
+                    .register("https", sslSocketFactory)
+                    .build();
+
+            connectionManager = new PoolingHttpClientConnectionManager(registry);
             connectionManager.setMaxTotal(300);
 
             connectionManager.setDefaultMaxPerRoute(50);
@@ -116,6 +140,7 @@ public class HttpHandler {
 
             httpClient = HttpClients
                     .custom()
+                    .setSSLHostnameVerifier(new NoopHostnameVerifier())
                     .addInterceptorLast(
                             (HttpRequestInterceptor) (request, context) -> {
                                 if (!request.containsHeader("Accept-Encoding")) {
@@ -127,7 +152,7 @@ public class HttpHandler {
                     .setConnectionManager(connectionManager)
                     .build();
             log.debug("HTTP Connection initialized");
-        } catch (IOException e) {
+        } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
             log.error(e.getMessage(), e);
         }
     }
@@ -137,7 +162,7 @@ public class HttpHandler {
 
         try {
             URIBuilder builder = new URIBuilder()
-                    .setScheme("http").setHost(hostname).setPort(port).setPath(OAUTH_TOKEN)
+                    .setScheme(protocol).setHost(hostname).setPort(port).setPath(OAUTH_TOKEN)
                     .addParameter("username", username)
                     .addParameter("password", password)
                     .addParameter("device_id", deviceId)
@@ -185,7 +210,7 @@ public class HttpHandler {
             // 1. Use a stripped down endpoint to avoid data exposure
             // 2. Validate user role. Should have MQ upload privilege
             URIBuilder builder = new URIBuilder()
-                    .setScheme("http").setHost(hostname).setPort(port).setPath(USER_URL);
+                    .setScheme(protocol).setHost(hostname).setPort(port).setPath(USER_URL);
 
             HttpGet httpGet = new HttpGet(builder.build());
             httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
@@ -250,7 +275,7 @@ public class HttpHandler {
 
         try {
             URIBuilder builder = new URIBuilder()
-                    .setScheme("http").setHost(hostname).setPort(port).setPath(PARTICIPANT_CATEGORY_URL);
+                    .setScheme(protocol).setHost(hostname).setPort(port).setPath(PARTICIPANT_CATEGORY_URL);
 
             HttpGet httpGet = new HttpGet(builder.build());
             httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
@@ -289,7 +314,7 @@ public class HttpHandler {
 
         try {
             URIBuilder builder = new URIBuilder()
-                    .setScheme("http").setHost(hostname).setPort(port).setPath(UPLOAD_HEADER);
+                    .setScheme(protocol).setHost(hostname).setPort(port).setPath(UPLOAD_HEADER);
 
             HttpPost httpPost = new HttpPost(builder.build());
             httpPost.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
@@ -337,7 +362,7 @@ public class HttpHandler {
 
         try {
             URIBuilder builder = new URIBuilder()
-                    .setScheme("http").setHost(hostname).setPort(port).setPath(UPLOAD_FILE);
+                    .setScheme(protocol).setHost(hostname).setPort(port).setPath(UPLOAD_FILE);
 
             HttpPost httpPost = new HttpPost(builder.build());
             httpPost.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
@@ -397,7 +422,7 @@ public class HttpHandler {
         // TODO: Retrieve URL from configuration
         try {
             URIBuilder builder = new URIBuilder()
-                    .setScheme("http").setHost(hostname).setPort(port).setPath(UPLOAD_TRAILER);
+                    .setScheme(protocol).setHost(hostname).setPort(port).setPath(UPLOAD_TRAILER);
 
             HttpPost httpPost = new HttpPost(builder.build());
             httpPost.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
@@ -444,7 +469,7 @@ public class HttpHandler {
 
         try {
             URIBuilder builder = new URIBuilder()
-                    .setScheme("http").setHost(hostname).setPort(port).setPath(MSP_LISTING_URL);
+                    .setScheme(protocol).setHost(hostname).setPort(port).setPath(MSP_LISTING_URL);
 
             HttpGet httpGet = new HttpGet(builder.build());
             httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
@@ -487,7 +512,7 @@ public class HttpHandler {
         try {
             String path = CHECK_STATUS + "/" + headerID;
             URIBuilder builder = new URIBuilder()
-                    .setScheme("http").setHost(hostname).setPort(port).setPath(path);
+                    .setScheme(protocol).setHost(hostname).setPort(port).setPath(path);
 
             HttpGet httpGet = new HttpGet(builder.build());
             httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
@@ -529,7 +554,7 @@ public class HttpHandler {
         try {
             String path = GET_HEADER + "/" + headerID;
             URIBuilder builder = new URIBuilder()
-                    .setScheme("http").setHost(hostname).setPort(port).setPath(path);
+                    .setScheme(protocol).setHost(hostname).setPort(port).setPath(path);
 
             HttpGet httpGet = new HttpGet(builder.build());
             httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
