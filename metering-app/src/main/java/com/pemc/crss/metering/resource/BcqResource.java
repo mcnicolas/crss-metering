@@ -108,10 +108,10 @@ public class BcqResource {
 
         String fileName = multipartFile.getOriginalFilename();
         log.debug("Request for settlement uploading of: {}", fileName);
-        String[] sellerDetailsArray = sellerDetailsString.split(", ");
-        String sellerName = sellerDetailsArray[0];
-        String sellerShortName = sellerDetailsArray[1];
-        ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerName, sellerShortName);
+        int lastIndexOf = sellerDetailsString.lastIndexOf(", ");
+        String sellerName = sellerDetailsString.substring(0, lastIndexOf);
+        String sellerShortName = sellerDetailsString.substring(lastIndexOf + 2, sellerDetailsString.length());
+        ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerName, sellerShortName.trim());
         BcqDeclaration declaration = validateCsvAndGetDeclaration(multipartFile, sellerDetails,
                 parseDate(tradingDateString));
         if (declaration.getValidationResult().getStatus() == REJECTED) {
