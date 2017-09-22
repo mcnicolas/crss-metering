@@ -36,10 +36,13 @@ task generateMarathonConfig(type: Copy) {
     def envSet = project.hasProperty('envSet') ? project.ext.envSet : '/crss'
     def appId = "$envSet/${project.hasProperty('serviceId') ? project.ext.serviceId : project.name}"
     def appIdDash = appId.replaceAll("/", "-")
+    def marathonCpus = project.hasProperty('marathonCpus') ? project.getProperty('marathonCpus') : 0.5
+    def marathonMem = project.hasProperty('marathonMem') ? project.getProperty('marathonMem') : 2200
 
     expand(project: project, appId: appId, appIdDash: appIdDash,
             dockerImage: "registry.marathon.l4lb.thisdcos.directory:5000/$dockerImageTag",
-            domain: project.hasProperty('domain') ? project.ext.domain : 'pemc.exist.com'
+            domain: project.hasProperty('domain') ? project.ext.domain : 'pemc.exist.com',
+            marathonCpus: marathonCpus, marathonMem: marathonMem
     )
 }
 

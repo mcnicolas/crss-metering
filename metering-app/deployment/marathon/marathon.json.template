@@ -1,8 +1,8 @@
 {
   "id": "${appId}",
   "cmd": null,
-  "cpus": 0.5,
-  "mem": 1200,
+  "cpus": ${marathonCpus},
+  "mem": ${marathonMem},
   "disk": 0,
   "instances": 2,
   "container": {
