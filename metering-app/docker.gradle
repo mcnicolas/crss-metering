@@ -39,12 +39,9 @@ ext {
     dockerImageTag = "$project.dockerImageName:$tagVersion"
 }
 
-def defaultDockerUrl = {
-    current().isLinux() ? 'unix:///var/run/docker.sock' : 'tcp://127.0.0.1:2375'
-}
 
 docker {
-    url = System.properties['docker.host.url'] ?: defaultDockerUrl()
+    url = System.properties['docker.host.url'] ?: 'unix:///var/run/docker.sock'
     if (System.properties['docker.cert.path'])
         certPath = file(System.properties['docker.cert.path'])
 
