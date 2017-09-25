@@ -7,6 +7,7 @@ import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.QuantityReader;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -15,10 +16,11 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,7 @@ import static java.util.Calendar.MINUTE;
 public class MeterQuantityMDEFReader implements QuantityReader {
 
     private static final int RECORD_BLOCK_SIZE = 216;
+    private static final String DATE_FORMAT = "yyyyMMddHHmm";
 
     private String intervalStartDateForChannel = "";
 
@@ -296,7 +299,7 @@ public class MeterQuantityMDEFReader implements QuantityReader {
         List<Integer> intervalStatusList = new ArrayList<>();
         List<String> readingDates = new ArrayList<>();
 
-        DateFormat format = new SimpleDateFormat("yyyyMMddHHmm");
+        DateFormat format = new SimpleDateFormat(DATE_FORMAT);
 
         String readingDate = "";
 
@@ -327,9 +330,12 @@ public class MeterQuantityMDEFReader implements QuantityReader {
         retVal.setCustomerID(parseText(byteBuffer, 20));
 
         while (byteBuffer.hasRemaining()) {
-            //TODO: should compare by date not String?
             //ignore reading after tastop time. Reading after taStop most probably with trouble
-            if (readingDate.equals(channelHeaderTaStop)) {
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
+            LocalDateTime formattedReadingDate = StringUtils.isBlank(readingDate) ? null
+                    : LocalDateTime.parse(readingDate, dateTimeFormatter);
+            LocalDateTime formattedChannelHeaderTaStop = LocalDateTime.parse(channelHeaderTaStop, dateTimeFormatter);
+            if (formattedChannelHeaderTaStop.equals(formattedReadingDate)) {
                 break;
             }
 
