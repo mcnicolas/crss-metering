@@ -14,6 +14,8 @@ import static java.util.logging.Level.SEVERE;
 public class ApplicationLoader {
 
     public static void main(String[] args) {
+        System.setProperty("jsse.enableSNIExtension", "false");
+
         HttpHandler httpHandler = new HttpHandler();
 
         // TODO:

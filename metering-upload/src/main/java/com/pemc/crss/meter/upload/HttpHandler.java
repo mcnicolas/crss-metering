@@ -119,7 +119,7 @@ public class HttpHandler {
             URL url = new URL(urlString);
             protocol = url.getProtocol();
             hostname = url.getHost();
-            port = url.getPort() == -1 ? url.getDefaultPort() : url.getPort();
+            port = url.getPort() != 80 ? url.getPort() : url.getDefaultPort();
 
             SSLContext sslContext = new SSLContextBuilder()
                     .loadTrustMaterial(null, new TrustSelfSignedStrategy())
