@@ -10,6 +10,8 @@ public class BcqProhibitedPairPageDisplay {
     private String billingId;
     private String createdBy;
     private String createdDate;
+    private String effectiveStartDate;
+    private String effectiveEndDate;
 
     public String getSellingMtn() {
         return sellingMtn.toUpperCase();

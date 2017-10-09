@@ -3,6 +3,7 @@ package com.pemc.crss.metering.dto.bcq;
 import lombok.Data;
 import lombok.ToString;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -14,6 +15,8 @@ public class BcqProhibitedPair {
     private String billingId;
     private String createdBy;
     private Date createdDate;
+    private LocalDateTime effectiveStartDate;
+    private LocalDateTime effectiveEndDate;
     private boolean enabled;
 
 }

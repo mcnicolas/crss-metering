@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.utils;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -8,6 +9,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 import java.util.Date;
@@ -28,6 +30,8 @@ public final class DateTimeUtils {
     public static final DateFormat DATE_PARAM_FORMAT = new SimpleDateFormat("MM/dd/yyyy");
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     public static final DateTimeFormatter READING_DATETIME = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+    private static final DateTimeFormatter DTF_24HR = (new DateTimeFormatterBuilder()).appendPattern("MM/dd/yyyy HH:mm").toFormatter();
+
 
     private DateTimeUtils() {
     }
@@ -141,6 +145,12 @@ public final class DateTimeUtils {
 
     public static Timestamp now() {
         return new Timestamp(Calendar.getInstance().getTime().getTime());
+    }
+    public static boolean isBetweenInclusive(LocalDateTime targetDate, LocalDateTime startDate, LocalDateTime endDate) {
+        return targetDate != null && startDate != null && endDate != null?!targetDate.isBefore(startDate) && !targetDate.isAfter(endDate):false;
+    }
+    public static LocalDateTime parseDateTime24hr(String dateTime) {
+        return StringUtils.isNotEmpty(dateTime)?LocalDateTime.parse(dateTime, DTF_24HR):null;
     }
 
 }

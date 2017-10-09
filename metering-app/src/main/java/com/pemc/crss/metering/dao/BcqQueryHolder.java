@@ -170,6 +170,8 @@ public final class BcqQueryHolder {
                 .column("ID")
                 .column("CREATED_BY")
                 .column("TO_CHAR(CREATED_DATE, 'YYYY-MM-DD hh:MI AM')").as("CREATED_DATE")
+                .column("TO_CHAR(EFFECTIVE_START_DATE, 'YYYY-MM-DD')").as("EFFECTIVE_START_DATE")
+                .column("TO_CHAR(EFFECTIVE_END_DATE, 'YYYY-MM-DD')").as("EFFECTIVE_END_DATE")
                 .column("SELLING_MTN")
                 .column("BILLING_ID")
                 .from("TXN_BCQ_PROHIBITED")
@@ -195,6 +197,8 @@ public final class BcqQueryHolder {
         SelectQueryBuilder queryBuilder = new SelectQueryBuilder()
                 .column("UPPER(SELLING_MTN)").as("SELLING_MTN")
                 .column("UPPER(BILLING_ID)").as("BILLING_ID")
+                .column("EFFECTIVE_START_DATE")
+                .column("EFFECTIVE_END_DATE")
                 .from("TXN_BCQ_PROHIBITED")
                 .where().filter("ENABLED = TRUE");
 

@@ -13,18 +13,18 @@ import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
 import com.pemc.crss.metering.service.exception.InvalidStateException;
 import com.pemc.crss.metering.service.exception.OldRecordException;
 import com.pemc.crss.metering.service.exception.PairExistsException;
+import com.pemc.crss.metering.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -245,15 +245,15 @@ public class BcqServiceImpl implements BcqService {
     @Override
     @Transactional
     public long saveProhibitedPair(BcqProhibitedPair prohibitedPair) {
-        List<Pair<String, String>> currentProhibitedPairs = bcqDao.findAllEnabledProhibitedPairs().stream()
-                .map(enabledProhibitedPair -> Pair.of(enabledProhibitedPair.getSellingMtn(), enabledProhibitedPair.getBillingId()))
-                .collect(Collectors.toList());
-        if (currentProhibitedPairs.contains(Pair.of(prohibitedPair.getSellingMtn().toUpperCase(),
-                prohibitedPair.getBillingId().toUpperCase()))) {
-            String errorMEssage = String.format("Pair <b>%s</b> - <b>%s</b> already exists.",
-                    prohibitedPair.getSellingMtn(), prohibitedPair.getBillingId());
-            throw new PairExistsException(errorMEssage);
-        }
+        List<BcqProhibitedPair> bcqProhibitedConstains =
+                bcqDao.findAllEnabledProhibitedPairs()
+                        .stream().filter(prohibited -> prohibited.getSellingMtn().equals(prohibitedPair.getSellingMtn())
+                       && prohibited.getBillingId().equals(prohibitedPair.getBillingId())).collect(toList());
+        
+           if(CollectionUtils.isNotEmpty(bcqProhibitedConstains)) {
+               validateOverLapping(prohibitedPair, bcqProhibitedConstains);
+
+           }
         return bcqDao.saveProhibitedPair(prohibitedPair);
     }
 
@@ -411,6 +411,28 @@ public class BcqServiceImpl implements BcqService {
         if (!asList(FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE, FOR_APPROVAL_CANCEL).contains(oldStatus)) {
             throw new InvalidStateException(UPDATED_ERROR);
         }
+    }
+
+    private void validateOverLapping(BcqProhibitedPair prohibitedPair,  List<BcqProhibitedPair> bcqProhibitedPairs) {
+        String pair = String.format("<b>%s</b> - <b>%s</b>.",
+                prohibitedPair.getSellingMtn(), prohibitedPair.getBillingId());
+        for (BcqProhibitedPair existingBcqProhibitedPair : bcqProhibitedPairs) {
+                if (DateTimeUtils.isBetweenInclusive(prohibitedPair.getEffectiveStartDate(), existingBcqProhibitedPair.getEffectiveStartDate(),
+                        existingBcqProhibitedPair.getEffectiveEndDate())) {
+                    throw new IllegalArgumentException("Effective start date overlaps effective period of an existing pair "
+                            + pair);
+                } else if (DateTimeUtils.isBetweenInclusive(prohibitedPair.getEffectiveEndDate(), existingBcqProhibitedPair.getEffectiveStartDate(),
+                        existingBcqProhibitedPair.getEffectiveEndDate())) {
+                    throw new IllegalArgumentException("Effective end date overlaps effective period of an existing pair "
+                            + pair);
+                } else if (DateTimeUtils.isBetweenInclusive(existingBcqProhibitedPair.getEffectiveStartDate(), prohibitedPair.getEffectiveStartDate(), prohibitedPair.getEffectiveEndDate())) {
+                    throw new IllegalArgumentException("Effective period overlaps effective start date of an existing pair "
+                            + pair);
+                } else if (DateTimeUtils.isBetweenInclusive(existingBcqProhibitedPair.getEffectiveEndDate(), prohibitedPair.getEffectiveStartDate(), prohibitedPair.getEffectiveEndDate())) {
+                    throw new IllegalArgumentException("Effective period overlaps effective end date of an existing pair "
+                            + pair);
+                }
+            }
     }
 
 }
