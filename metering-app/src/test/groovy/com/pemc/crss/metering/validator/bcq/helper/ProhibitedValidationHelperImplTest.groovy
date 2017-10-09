@@ -4,6 +4,7 @@ import com.pemc.crss.metering.dto.bcq.BcqHeader
 import com.pemc.crss.metering.dto.bcq.BcqProhibitedPair
 import com.pemc.crss.metering.service.BcqService
 import com.pemc.crss.metering.validator.bcq.helper.impl.ProhibitedValidationHelperImpl
+import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -16,6 +17,7 @@ class ProhibitedValidationHelperImplTest extends Specification {
     def sut = new ProhibitedValidationHelperImpl(bcqService)
 
     @Unroll
+    @Ignore
     def "validate prohibited, validation status must be #status"() {
         given:
         def headerList = [new BcqHeader(sellingMtn: 'MTN1', billingId: 'BILL1')]
