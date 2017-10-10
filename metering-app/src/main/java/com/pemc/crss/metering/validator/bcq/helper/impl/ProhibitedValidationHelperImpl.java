@@ -52,7 +52,8 @@ public class ProhibitedValidationHelperImpl implements ProhibitedValidationHelpe
                         .collect(Collectors.toList());
 
                 if (CollectionUtils.isNotEmpty(enabledProhibitedPairs)) {
-                    boolean isValid = validateTradingDate(enabledProhibitedPairs, header.getTradingDate());
+                    boolean isValid =  header.getTradingDate() != null && validateTradingDate(enabledProhibitedPairs,
+                            header.getTradingDate());
                     if (!isValid) {
                         headersWithProhibitedPairs.add(header);
                     }
@@ -81,7 +82,7 @@ public class ProhibitedValidationHelperImpl implements ProhibitedValidationHelpe
                     result = false;
                 }
             } else {
-                if (newTradingDate.isAfter(pair.getEffectiveStartDate())) {
+                if (newTradingDate.isEqual(pair.getEffectiveStartDate()) || newTradingDate.isAfter(pair.getEffectiveStartDate())) {
                     result = false;
                 }
             }

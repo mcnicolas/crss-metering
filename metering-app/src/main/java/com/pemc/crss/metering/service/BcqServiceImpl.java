@@ -251,7 +251,14 @@ public class BcqServiceImpl implements BcqService {
                        && prohibited.getBillingId().equals(prohibitedPair.getBillingId())).collect(toList());
         
            if(CollectionUtils.isNotEmpty(bcqProhibitedConstains)) {
-               validateOverLapping(prohibitedPair, bcqProhibitedConstains);
+               if (prohibitedPair.getEffectiveStartDate() != null) {
+                   validateOverLapping(prohibitedPair, bcqProhibitedConstains);
+               }  else {
+                   String errorMEssage = String.format("Pair <b>%s</b> - <b>%s</b> already exists.",
+                           prohibitedPair.getSellingMtn(), prohibitedPair.getBillingId());
+                   throw new PairExistsException(errorMEssage);
+               }
+
 
            }
         return bcqDao.saveProhibitedPair(prohibitedPair);
