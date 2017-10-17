@@ -38,12 +38,20 @@ public enum BcqValidationError {
     BILLING_ID_NOT_EXIST("Following billing ID(s) do not exist.<br />%s"),
     NO_ACTIVE_CONTRACT("Trading participant <b>%s (%s)</b> does not have active customer enrollment contract with "
             + "selling participant <b>%s (%s)</b> for trading date <b>%s</b>."),
-    INDIRECT_NO_ACTIVE_CONTRACT("Indirect trading participant <b>%s (%s)</b> and its "
+    INDIRECT_NO_ACTIVE_CONTRACT("Indirect trading participant <b>%s (%s)</b> does not have active customer "
+            + "enrollment contract with selling participant <b>%s (%s)</b> for trading date <b>%s</b>."),
+    INDIRECT_AND_DIRECT_NO_ACTIVE_CONTRACT("Indirect trading participant <b>%s (%s)</b> and its "
             + "direct trading participant <b>%s (%s)</b> does not have active customer enrollment contract with "
             + "selling participant <b>%s (%s)</b> for trading date <b>%s</b>."),
+    INDIRECT_NO_ACTIVE_CONTRACT_OR_COUNTERPARTY("Indirect trading participant <b>%s (%s)</b> does not have active "
+            + "customer enrollment contract with or is not an indirect counterparty of selling participant <b>%s (%s)</b> "
+            + "for trading date <b>%s</b>"),
     REFERENCE_MTN_UNREGISTERED("Unregistered reference MTN. Reference MTN <b>%s</b> does not exist."),
     REFERENCE_MTN_NOT_IN_CONTRACT("Unregistered reference MTN. "
             + "Reference MTN <b>%s</b> is not registered under contract of "
+            + "Seller <b>%s (%s)</b> and Buyer <b>%s (%s)</b>."),
+    REFERENCE_MTN_NOT_IN_COUNTERPARTY("Unregistered reference MTN. "
+            + "Reference MTN <b>%s</b> is not registered under counterparty of "
             + "Seller <b>%s (%s)</b> and Buyer <b>%s (%s)</b>."),
     NO_SPECIAL_EVENT_FOUND(""),
     PARTICIPANTS_NOT_PRESENT_IN_SPECIAL_EVENT("Following participant(s) were not included in the special event for "
