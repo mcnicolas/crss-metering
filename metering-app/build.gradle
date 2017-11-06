@@ -79,7 +79,7 @@ dependencies {
     testCompile 'org.springframework.boot:spring-boot-starter-test'
 }
 
-liquibase {
+/*liquibase {
     activities {
         validate {
             def env = project.hasProperty('env') ? env : 'dev'
@@ -91,7 +91,7 @@ liquibase {
             outputFile "$project.buildDir/db/update-scripts.sql"
         }
     }
-}
+}*/
 
 dbUpdateSQL {
     // liquibase task does not create folder, as work around we created it firs
