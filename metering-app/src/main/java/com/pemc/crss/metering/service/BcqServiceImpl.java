@@ -441,6 +441,14 @@ public class BcqServiceImpl implements BcqService {
             } else if (existingBcqProhibitedPair.getEffectiveStartDate().isEqual(prohibitedPair.getEffectiveStartDate())) {
                 throw new IllegalArgumentException("Effective start date overlaps effective period of an existing pair "
                         + pair);
+            } else if (existingBcqProhibitedPair.getEffectiveEndDate() == null
+                    && prohibitedPair.getEffectiveStartDate().isAfter(existingBcqProhibitedPair.getEffectiveStartDate())) {
+                throw new IllegalArgumentException("Effective start date overlaps effective period of an existing pair "
+                        + pair);
+            } else if (existingBcqProhibitedPair.getEffectiveEndDate() == null && prohibitedPair.getEffectiveEndDate() == null
+                    && prohibitedPair.getEffectiveStartDate().isBefore(existingBcqProhibitedPair.getEffectiveStartDate())) {
+                throw new IllegalArgumentException("Effective start date overlaps effective period of an existing pair "
+                        + pair + " Effective end date is Required!");
             }
         }
     }
