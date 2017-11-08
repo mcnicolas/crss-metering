@@ -246,8 +246,8 @@ public class BcqServiceImpl implements BcqService {
     public long saveProhibitedPair(BcqProhibitedPair prohibitedPair) {
         List<BcqProhibitedPair> bcqProhibitedConstains =
                 bcqDao.findAllEnabledProhibitedPairs()
-                        .stream().filter(prohibited -> prohibited.getSellingMtn().equals(prohibitedPair.getSellingMtn())
-                        && prohibited.getBillingId().equals(prohibitedPair.getBillingId())).collect(toList());
+                        .stream().filter(prohibited -> prohibited.getSellingMtn().equalsIgnoreCase(prohibitedPair.getSellingMtn())
+                        && prohibited.getBillingId().equalsIgnoreCase(prohibitedPair.getBillingId())).collect(toList());
         log.debug("Found {} duplicate prohibited", bcqProhibitedConstains.size());
         if (CollectionUtils.isNotEmpty(bcqProhibitedConstains)) {
             if (prohibitedPair.getEffectiveStartDate() != null) {
