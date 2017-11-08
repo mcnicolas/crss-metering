@@ -17,7 +17,6 @@ import com.pemc.crss.metering.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -248,19 +247,19 @@ public class BcqServiceImpl implements BcqService {
         List<BcqProhibitedPair> bcqProhibitedConstains =
                 bcqDao.findAllEnabledProhibitedPairs()
                         .stream().filter(prohibited -> prohibited.getSellingMtn().equals(prohibitedPair.getSellingMtn())
-                       && prohibited.getBillingId().equals(prohibitedPair.getBillingId())).collect(toList());
-        
-           if(CollectionUtils.isNotEmpty(bcqProhibitedConstains)) {
-               if (prohibitedPair.getEffectiveStartDate() != null) {
-                   validateOverLapping(prohibitedPair, bcqProhibitedConstains);
-               }  else {
-                   String errorMEssage = String.format("Pair <b>%s</b> - <b>%s</b> already exists.",
-                           prohibitedPair.getSellingMtn(), prohibitedPair.getBillingId());
-                   throw new PairExistsException(errorMEssage);
-               }
+                        && prohibited.getBillingId().equals(prohibitedPair.getBillingId())).collect(toList());
+        log.debug("Found {} duplicate prohibited", bcqProhibitedConstains.size());
+        if (CollectionUtils.isNotEmpty(bcqProhibitedConstains)) {
+            if (prohibitedPair.getEffectiveStartDate() != null) {
+                validateOverLapping(prohibitedPair, bcqProhibitedConstains);
+            } else {
+                String errorMEssage = String.format("Pair <b>%s</b> - <b>%s</b> already exists.",
+                        prohibitedPair.getSellingMtn(), prohibitedPair.getBillingId());
+                throw new PairExistsException(errorMEssage);
+            }
 
 
-           }
+        }
         return bcqDao.saveProhibitedPair(prohibitedPair);
     }
 
@@ -347,7 +346,7 @@ public class BcqServiceImpl implements BcqService {
     }
 
     private BcqHeader findHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList) {
-        for(BcqHeader header : headerList) {
+        for (BcqHeader header : headerList) {
             if (isSameHeader(header, headerToFind)) {
                 return header;
             }
@@ -420,26 +419,27 @@ public class BcqServiceImpl implements BcqService {
         }
     }
 
-    private void validateOverLapping(BcqProhibitedPair prohibitedPair,  List<BcqProhibitedPair> bcqProhibitedPairs) {
+    private void validateOverLapping(BcqProhibitedPair prohibitedPair, List<BcqProhibitedPair> bcqProhibitedPairs) {
         String pair = String.format("<b>%s</b> - <b>%s</b>.",
                 prohibitedPair.getSellingMtn(), prohibitedPair.getBillingId());
         for (BcqProhibitedPair existingBcqProhibitedPair : bcqProhibitedPairs) {
-                if (DateTimeUtils.isBetweenInclusive(prohibitedPair.getEffectiveStartDate(), existingBcqProhibitedPair.getEffectiveStartDate(),
-                        existingBcqProhibitedPair.getEffectiveEndDate())) {
-                    throw new IllegalArgumentException("Effective start date overlaps effective period of an existing pair "
-                            + pair);
-                } else if (DateTimeUtils.isBetweenInclusive(prohibitedPair.getEffectiveEndDate(), existingBcqProhibitedPair.getEffectiveStartDate(),
-                        existingBcqProhibitedPair.getEffectiveEndDate())) {
-                    throw new IllegalArgumentException("Effective end date overlaps effective period of an existing pair "
-                            + pair);
-                } else if (DateTimeUtils.isBetweenInclusive(existingBcqProhibitedPair.getEffectiveStartDate(), prohibitedPair.getEffectiveStartDate(), prohibitedPair.getEffectiveEndDate())) {
-                    throw new IllegalArgumentException("Effective period overlaps effective start date of an existing pair "
-                            + pair);
-                } else if (DateTimeUtils.isBetweenInclusive(existingBcqProhibitedPair.getEffectiveEndDate(), prohibitedPair.getEffectiveStartDate(), prohibitedPair.getEffectiveEndDate())) {
-                    throw new IllegalArgumentException("Effective period overlaps effective end date of an existing pair "
-                            + pair);
-                }
+            log.info("checking overlap date start date{} {}", existingBcqProhibitedPair.getEffectiveStartDate(), prohibitedPair.getEffectiveStartDate());
+            if (DateTimeUtils.isBetweenInclusive(prohibitedPair.getEffectiveStartDate(), existingBcqProhibitedPair.getEffectiveStartDate(),
+                    existingBcqProhibitedPair.getEffectiveEndDate())) {
+                throw new IllegalArgumentException("Effective start date overlaps effective period of an existing pair "
+                        + pair);
+            } else if (DateTimeUtils.isBetweenInclusive(prohibitedPair.getEffectiveEndDate(), existingBcqProhibitedPair.getEffectiveStartDate(),
+                    existingBcqProhibitedPair.getEffectiveEndDate())) {
+                throw new IllegalArgumentException("Effective end date overlaps effective period of an existing pair "
+                        + pair);
+            } else if (DateTimeUtils.isBetweenInclusive(existingBcqProhibitedPair.getEffectiveStartDate(), prohibitedPair.getEffectiveStartDate(), prohibitedPair.getEffectiveEndDate())) {
+                throw new IllegalArgumentException("Effective period overlaps effective start date of an existing pair "
+                        + pair);
+            } else if (DateTimeUtils.isBetweenInclusive(existingBcqProhibitedPair.getEffectiveEndDate(), prohibitedPair.getEffectiveStartDate(), prohibitedPair.getEffectiveEndDate())) {
+                throw new IllegalArgumentException("Effective period overlaps effective end date of an existing pair "
+                        + pair);
             }
+        }
     }
 
 }
