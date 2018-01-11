@@ -17,10 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -204,6 +207,21 @@ public class BcqResource {
 
         reportService.generateTemplate(response.getOutputStream());
     }
+
+    @PostMapping("/download/template")
+    public void getSampleTemplate(@RequestBody  List<BcqDownloadDto> bcqs,
+                                  final HttpServletResponse response) throws IOException {
+        log.debug("bcqs={}", bcqs);
+
+        String fileName = URLEncoder.encode(bcqs.get(0).getGenName().toUpperCase() + ".zip", "UTF-8");
+        fileName = URLDecoder.decode(fileName, "ISO8859_1");
+        response.setContentType("application/x-msdownload");
+        response.setHeader("Content-disposition", "attachment; filename=" + fileName);
+        response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+        Long interval = Long.valueOf(configService.getValueForKey("BCQ_INTERVAL"));
+        bcqService.generateCsv(bcqs, interval, response);
+    }
+
 
     @GetMapping("/settlement/config")
     public int getAllowableTradingDateConfig() {
