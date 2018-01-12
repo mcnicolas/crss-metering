@@ -10,6 +10,7 @@ package com.pemc.crss.metering.dto.bcq;
     private String date;
     private String bcq;
     private String genName;
+    private String buyerMtn;
 
     public String getRefMtn() {
         return refMtn;
@@ -59,15 +60,24 @@ package com.pemc.crss.metering.dto.bcq;
         this.genName = genName;
     }
 
+    public String getBuyerMtn() {
+        return buyerMtn;
+    }
+
+    public void setBuyerMtn(String buyerMtn) {
+        this.buyerMtn = buyerMtn;
+    }
+
     public BcqDownloadDto() {
     }
 
-    public BcqDownloadDto(String refMtn, String buyerBillingId, String sellingMtn, String date, String bcq) {
+    public BcqDownloadDto(String refMtn, String buyerBillingId, String sellingMtn, String date, String bcq, String buyerMtn) {
         this.refMtn = refMtn;
         this.buyerBillingId = buyerBillingId;
         this.sellingMtn = sellingMtn;
         this.date = date;
         this.bcq = bcq;
+        this.buyerMtn = buyerMtn;
     }
 
     @Override

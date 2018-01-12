@@ -539,23 +539,24 @@ public class BcqServiceImpl implements BcqService {
 
         ICsvBeanWriter beanWriter = null;
 
-        String[] headerDto = new String[]{"Reference MTN", "Buying Billing ID",
-                "Selling MTN", "Date", "BCQ"};
+        String[] headerDto = new String[]{"Selling  MTN", "Buying Billing ID",
+                "Reference MTN", "Buyer MTN", "Date", "BCQ"};
         String[] header = new String[]{
-                "Interval", interval.toString() + "Mins", "", "", ""};
+                "Interval", interval.toString() + "Mins", "", "", "", ""};
         try {
             beanWriter = new CsvBeanWriter(new OutputStreamWriter(zos), CsvPreference.STANDARD_PREFERENCE);
             List<BcqDownloadDto> list = Lists.newArrayList();
             for (String s : time) {
                 list.add(new BcqDownloadDto(bcqDownloadDto.getRefMtn(), bcqDownloadDto.getBuyerBillingId(),
-                        bcqDownloadDto.getSellingMtn(), s, ""));
+                        bcqDownloadDto.getSellingMtn(), s, "", ""));
             }
             beanWriter.writeHeader(header);
             beanWriter.writeHeader(headerDto);
-            String[] mapper = new String[]{"refMtn", "buyerBillingId", "sellingMtn", "date", "bcq"};
+            String[] mapper = new String[]{"sellingMtn", "buyerBillingId", "refMtn", "buyerMtn", "date", "bcq"};
 
             for (final BcqDownloadDto result : list) {
                 beanWriter.write(result, mapper, new CellProcessor[]{new Optional(),
+                        new Optional(),
                         new Optional(),
                         new Optional(),
                         new Optional(),
