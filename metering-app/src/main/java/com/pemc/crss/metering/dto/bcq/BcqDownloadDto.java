@@ -1,9 +1,12 @@
 package com.pemc.crss.metering.dto.bcq;
 
+import java.util.List;
+
 /**
  * Created on 1/9/18.
  */
  public class BcqDownloadDto {
+   private List<String> refMtns;
    private String refMtn;
     private String buyerBillingId;
     private String sellingMtn;
@@ -18,6 +21,14 @@ package com.pemc.crss.metering.dto.bcq;
 
     public void setRefMtn(String refMtn) {
         this.refMtn = refMtn;
+    }
+
+    public List<String> getRefMtns() {
+        return refMtns;
+    }
+
+    public void setRefMtns(List<String> refMtns) {
+        this.refMtns = refMtns;
     }
 
     public String getBuyerBillingId() {
@@ -71,6 +82,16 @@ package com.pemc.crss.metering.dto.bcq;
     public BcqDownloadDto() {
     }
 
+    public BcqDownloadDto(List<String> refMtns, String buyerBillingId, String sellingMtn, String date, String bcq, String genName, String buyerMtn) {
+        this.refMtns = refMtns;
+        this.buyerBillingId = buyerBillingId;
+        this.sellingMtn = sellingMtn;
+        this.date = date;
+        this.bcq = bcq;
+        this.genName = genName;
+        this.buyerMtn = buyerMtn;
+    }
+
     public BcqDownloadDto(String refMtn, String buyerBillingId, String sellingMtn, String date, String bcq, String buyerMtn) {
         this.refMtn = refMtn;
         this.buyerBillingId = buyerBillingId;
@@ -80,13 +101,5 @@ package com.pemc.crss.metering.dto.bcq;
         this.buyerMtn = buyerMtn;
     }
 
-    @Override
-    public String toString() {
-        return "BcqDownloadDto{" +
-                "refMtn='" + refMtn + '\'' +
-                ", buyerBillingId='" + buyerBillingId + '\'' +
-                ", sellingMtn='" + sellingMtn + '\'' +
-                ", date='" + date + '\'' +
-                '}';
-    }
+
 }

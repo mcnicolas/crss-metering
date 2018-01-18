@@ -29,17 +29,14 @@ import org.supercsv.io.ICsvBeanWriter;
 import org.supercsv.prefs.CsvPreference;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -474,46 +471,23 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     public void generateCsv(List<BcqDownloadDto> bcqDownloadDtos, Long interval, HttpServletResponse response) throws IOException {
-        /*String tempDir = System.getProperty("java.io.tmpdir");
-        File csvDir = new File(tempDir + File.separator + bcqDownloadDtos.get(0).getGenName());*/
+
         log.info("Start creating csv files for {}", bcqDownloadDtos.get(0).getGenName());
         ZipOutputStream zos = new ZipOutputStream(response.getOutputStream());
         bcqDownloadDtos.forEach(bcqDownloadDto -> {
-            String[] date = bcqDownloadDto.getDate().split("-");
-            LocalDateTime startDate = DateTimeUtils.parseDateTime24hr(date[0].trim());
-            LocalDateTime endDate = DateTimeUtils.parseDateTime24hr(date[1].trim());
-            LocalDateTime current = startDate;
+            LocalDateTime date = DateTimeUtils.parseDateTime24hr(bcqDownloadDto.getDate());
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-            Duration duration = Duration.between(startDate, endDate);
 
-            int counter = 1;
-            long daysDiff = TimeUnit.SECONDS.toDays(duration.getSeconds());
-            log.info("\tDate Range={}  Duration={} days", bcqDownloadDto.getDate(), daysDiff + 1);
-
-            while (!(current.isAfter(endDate) || Long.valueOf(counter).equals(daysDiff + 2))) {
-                List<String> dateTime = getDateTime(startDate, interval);
-                try {
-                    /*if (!csvDir.exists()) {
-                        csvDir.mkdir();
-                    }
-                    File csvFile = new File(csvDir.getPath(), bcqDownloadDto.getGenName() + "_" + current.format(formatter)
-                            + "_" + bcqDownloadDto.getSellingMtn() + "_" + bcqDownloadDto.getRefMtn() + "_" + System.currentTimeMillis() + ".csv");
-                    if (!csvFile.exists()) {
-                        csvFile.createNewFile();
-                    }*/
-
-                    String fileName = bcqDownloadDto.getGenName() + "_" + current.format(formatter) + "_" + bcqDownloadDto.getSellingMtn()
-                            + "_" + bcqDownloadDto.getRefMtn() + "_" + bcqDownloadDto.getBuyerBillingId() + ".csv";
-                    log.info("\t\tFileName:{}", fileName);
-                    ZipEntry entry = new ZipEntry(fileName); // create a zip entry and add it to ZipOutputStream
-                    zos.putNextEntry(entry);
-                    writeCsv(bcqDownloadDto, dateTime, interval, zos);
-                    current = current.plusDays(1);
-                    counter += 1;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
+            List<String> dateTime = getDateTime(date, interval);
+            try {
+                String fileName = bcqDownloadDto.getGenName() + "_" + date.format(formatter) + "_" + bcqDownloadDto.getSellingMtn()
+                        + "_" + bcqDownloadDto.getBuyerBillingId() + ".csv";
+                log.info("\t\tFileName:{}", fileName);
+                ZipEntry entry = new ZipEntry(fileName); // create a zip entry and add it to ZipOutputStream
+                zos.putNextEntry(entry);
+                writeCsv(bcqDownloadDto, dateTime, interval, zos);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
 
@@ -536,7 +510,6 @@ public class BcqServiceImpl implements BcqService {
 
     private void writeCsv(BcqDownloadDto bcqDownloadDto, List<String> time, Long interval, ZipOutputStream zos) throws IOException {
 
-
         ICsvBeanWriter beanWriter = null;
 
         String[] headerDto = new String[]{"Selling  MTN", "Buying Billing ID",
@@ -546,9 +519,11 @@ public class BcqServiceImpl implements BcqService {
         try {
             beanWriter = new CsvBeanWriter(new OutputStreamWriter(zos), CsvPreference.STANDARD_PREFERENCE);
             List<BcqDownloadDto> list = Lists.newArrayList();
-            for (String s : time) {
-                list.add(new BcqDownloadDto(bcqDownloadDto.getRefMtn(), bcqDownloadDto.getBuyerBillingId(),
-                        bcqDownloadDto.getSellingMtn(), s, "", ""));
+            for (String mtn : bcqDownloadDto.getRefMtns()) {
+                for (String s : time) {
+                    list.add(new BcqDownloadDto(mtn, bcqDownloadDto.getBuyerBillingId(),
+                            bcqDownloadDto.getSellingMtn(), s, "", ""));
+                }
             }
             beanWriter.writeHeader(header);
             beanWriter.writeHeader(headerDto);
@@ -564,9 +539,14 @@ public class BcqServiceImpl implements BcqService {
                 });
             }
 
-        } catch (IOException e) {
+        } catch (
+                IOException e)
+
+        {
             e.printStackTrace();
-        } finally {
+        } finally
+
+        {
             if (beanWriter != null) {
                 beanWriter.flush();
             }
