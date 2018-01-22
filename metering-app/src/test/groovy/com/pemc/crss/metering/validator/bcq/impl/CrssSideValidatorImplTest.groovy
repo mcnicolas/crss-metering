@@ -23,7 +23,7 @@ class CrssSideValidatorImplTest extends Specification {
         given:
         def csv = readCsv('bcq_file_valid')
         def headerList = new BcqPopulator().populate(csv)
-        def sellerDetails = new ParticipantSellerDetails('Gen1', 'GEN1')
+        def sellerDetails = new ParticipantSellerDetails('Gen1', 'GEN1','')
         def buyingParticipantShortName = 'PDU1'
         def crssSideResult = new BcqValidationResult(status: status, errorMessage: null,
                 processedObject: [new ParticipantBuyerDetails(shortName: buyingParticipantShortName)])
@@ -47,7 +47,7 @@ class CrssSideValidatorImplTest extends Specification {
         given:
         def csv = readCsv('bcq_file_valid')
         def headerList = new BcqPopulator().populate(csv)
-        def sellerDetails = new ParticipantSellerDetails('Gen1', 'GEN1')
+        def sellerDetails = new ParticipantSellerDetails('Gen1', 'GEN1', '')
         def buyingParticipantShortName = 'PDU1'
         def crssSideResult = new BcqValidationResult(status: status, errorMessage: null,
                 processedObject: [new ParticipantBuyerDetails(shortName: buyingParticipantShortName)])

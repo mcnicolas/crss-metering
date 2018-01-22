@@ -72,6 +72,7 @@ public class CrssSideValidatorImpl implements CrssSideValidator {
 
     private BcqValidationResult validateInCrssSide(List<BcqHeader> headerList) {
         return resourceTemplate.post(VALIDATE_URL, BcqValidationResult.class, getUniqueItems(headerList));
+
     }
 
     private BcqValidationResult validateInCrssSideBySettlement(
@@ -94,6 +95,7 @@ public class CrssSideValidatorImpl implements CrssSideValidator {
                     item.setTradingParticipantShortName(header.getBuyingParticipantShortName());
                     item.setReferenceMtns(referenceMtns);
                     item.setTradingDate(header.getTradingDate());
+                    item.setBuyerMtn(header.getBuyerMtn());
                     return item;
                 })
                 .distinct()

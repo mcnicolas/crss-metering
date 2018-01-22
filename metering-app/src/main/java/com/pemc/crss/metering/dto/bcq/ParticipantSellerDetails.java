@@ -13,5 +13,6 @@ public class ParticipantSellerDetails {
 
     private String name;
     private String shortName;
+    private String category;
 
 }

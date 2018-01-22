@@ -8,7 +8,6 @@ import java.util.Date;
 
 @ToString
 public class BcqDataDetails extends AbstractWebDto<BcqData> {
-
     public BcqDataDetails() {
         super(new BcqData());
     }
@@ -49,4 +48,12 @@ public class BcqDataDetails extends AbstractWebDto<BcqData> {
         target().setBcq(new BigDecimal(bcq));
     }
 
+
+    public String getBuyerMtn() {
+        return target().getBuyerMtn();
+    }
+
+    public void setBuyerMtn(String buyerMtn) {
+        target().setBuyerMtn(buyerMtn);
+    }
 }

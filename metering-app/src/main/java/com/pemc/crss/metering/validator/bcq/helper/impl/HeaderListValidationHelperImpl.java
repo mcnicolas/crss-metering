@@ -74,7 +74,7 @@ public class HeaderListValidationHelperImpl implements HeaderListValidationHelpe
     private HeaderListValidation validDataSize() {
         HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> headerList.stream().allMatch(header -> {
-            int validBcqSize = header.getInterval().getValidNoOfRecords();
+            int validBcqSize = header.getInterval().getValidNoOfRecords() * (int)(header.getRefMtnSize().longValue());
             if (header.getDataList().size() == validBcqSize) {
                 return true;
             }
@@ -92,9 +92,14 @@ public class HeaderListValidationHelperImpl implements HeaderListValidationHelpe
         Predicate<List<BcqHeader>> predicate = headerList -> headerList.stream().allMatch(header -> {
             BcqInterval interval = header.getInterval();
             Date previousDate = null;
+            String refMtns = header.getDataList().get(0).getReferenceMtn();
             long diff;
 
             for (BcqData data : header.getDataList()) {
+                if(!refMtns.equals(data.getReferenceMtn())) {
+                    previousDate = null;
+                    refMtns = data.getReferenceMtn();
+                }
                 if (previousDate == null) {
                     Date startOfDay = startOfDay(data.getEndTime());
                     diff = data.getEndTime().getTime() - startOfDay.getTime();
@@ -106,6 +111,7 @@ public class HeaderListValidationHelperImpl implements HeaderListValidationHelpe
                     previousDate = data.getEndTime();
                     continue;
                 }
+
                 BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(
                         INCORRECT_TIME_INTERVALS, asList(formatDateTime(data.getEndTime()),
                         interval.getDescription()));

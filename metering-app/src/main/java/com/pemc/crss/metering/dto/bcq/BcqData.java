@@ -16,6 +16,7 @@ public class BcqData {
     private Date startTime;
     private Date endTime;
     private BigDecimal bcq;
+    private String buyerMtn;
 
     @Override
     public String toString() {
@@ -26,6 +27,7 @@ public class BcqData {
                 .add("startTime", getStartTime())
                 .add("endTime", getEndTime())
                 .add("bcq", getBcq())
+                .add("buyerMtn", getBcq())
                 .toString();
     }
 
@@ -45,11 +47,12 @@ public class BcqData {
                 && Objects.equals(referenceMtn, that.referenceMtn)
                 && Objects.equals(startTime, that.startTime)
                 && Objects.equals(endTime, that.endTime)
+                && Objects.equals(buyerMtn, that.buyerMtn)
                 && Objects.equals(bcq, that.bcq);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dataId, headerId, referenceMtn, startTime, endTime, bcq);
+        return Objects.hash(dataId, headerId, referenceMtn, startTime, endTime, bcq, buyerMtn);
     }
 }

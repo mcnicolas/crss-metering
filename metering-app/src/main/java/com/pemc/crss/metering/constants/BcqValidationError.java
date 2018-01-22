@@ -22,6 +22,7 @@ public enum BcqValidationError {
             + "and <b>9 for fractional part</b>."),
     MISSING_INTERVAL("Missing interval."),
     MISSING_SELLING_MTN("Missing selling MTN."),
+    MISSING_BUYER_MTN("Missing buyer MTN."),
     MISSING_BILLING_ID("Missing billing ID."),
     MISSING_REFERENCE_MTN("Missing reference MTN."),
     MISSING_DATE("Missing date."),
@@ -35,6 +36,9 @@ public enum BcqValidationError {
     SELLING_MTN_UNREGISTERED("Unregistered selling MTN. Selling MTN <b>%s</b> does not exist."),
     SELLING_MTN_NOT_OWNED("Unregistered selling MTN. "
             + "Selling MTN <b>%s</b> is not registered under Seller <b>%s (%s)</b>."),
+    BUYER_MTN_UNREGISTERED("Unregistered buyer MTN. Buyer MTN <b>%s</b> does not exist."),
+    BUYER_MTN_NOT_OWNED("Unregistered buyer MTN. "
+            + "buyer MTN <b>%s</b> is not registered under Buyer <b>%s (%s)</b>."),
     BILLING_ID_NOT_EXIST("Following billing ID(s) do not exist.<br />%s"),
     NO_ACTIVE_CONTRACT("Trading participant <b>%s (%s)</b> does not have active customer enrollment contract with "
             + "selling participant <b>%s (%s)</b> for trading date <b>%s</b>."),

@@ -30,6 +30,8 @@ public class BcqHeader {
     private List<BcqData> dataList;
     private boolean exists;
     private BcqInterval interval;
+    private String buyerMtn;
+    private Long refMtnSize;
 
     @Override
     public boolean equals(Object o) {
@@ -52,14 +54,15 @@ public class BcqHeader {
                 && Objects.equals(sellingParticipantShortName, that.sellingParticipantShortName)
                 && Objects.equals(status, that.status)
                 && Objects.equals(tradingDate, that.tradingDate)
-                && Objects.equals(deadlineDate, that.deadlineDate);
+                && Objects.equals(deadlineDate, that.deadlineDate)
+                && Objects.equals(buyerMtn, that.buyerMtn);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
                 headerId, fileId, billingId, sellingMtn, buyingParticipantName, buyingParticipantShortName,
-                sellingParticipantName, sellingParticipantShortName, status, tradingDate, deadlineDate);
+                sellingParticipantName, sellingParticipantShortName, status, tradingDate, deadlineDate, buyerMtn);
     }
 
 }

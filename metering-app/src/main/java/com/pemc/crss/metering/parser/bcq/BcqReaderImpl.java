@@ -24,7 +24,7 @@ public class BcqReaderImpl implements BcqReader {
             int lastLineNumber = 0;
             while ((line = reader.read()) != null) {
                 if (reader.getLineNumber() - lastLineNumber != 1) {
-                    csv.add(asList("", "", "", "", ""));
+                    csv.add(asList("", "", "", "", "",""));
                 }
                 csv.add(line);
                 lastLineNumber = reader.getLineNumber();

@@ -73,7 +73,7 @@ class BcqNotificationManagerImplTest extends Specification {
 
     def "send validation notification"() {
         given:
-        def sellerDetails = new ParticipantSellerDetails('Gen1', 'GEN1')
+        def sellerDetails = new ParticipantSellerDetails('Gen1', 'GEN1', '')
         def errorMessage = new BcqValidationErrorMessage(EMPTY, [])
         def validationResult = new BcqValidationResult<>(status: REJECTED, errorMessage: errorMessage)
         def declaration = new BcqDeclaration(sellerDetails).withValidationResult(validationResult)

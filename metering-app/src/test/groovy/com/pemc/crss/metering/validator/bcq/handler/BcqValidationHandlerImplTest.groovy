@@ -31,7 +31,7 @@ class BcqValidationHandlerImplTest extends Specification {
     def csv
     def headerList
     def acceptedValidationResult
-    def sellerDetails = new ParticipantSellerDetails('Gen1', 'GEN1')
+    def sellerDetails = new ParticipantSellerDetails('Gen1', 'GEN1', '')
     def tradingDate = parseDate('2017-02-25')
 
     def setup() {

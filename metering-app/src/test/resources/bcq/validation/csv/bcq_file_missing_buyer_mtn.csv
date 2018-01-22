@@ -1,0 +1,4 @@
+Interval,Hourly,,,,
+Selling MTN,Billing ID,Reference MTN,Buyer MTN,Date,BCQ 
+MTN1,BILL1,MTN1,,2017-02-25 00:15,10
+MTN1,BILL1,MTN1,MTN1,2017-02-25 01:15,10

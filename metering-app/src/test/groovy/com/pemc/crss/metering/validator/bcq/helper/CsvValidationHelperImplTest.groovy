@@ -43,7 +43,8 @@ class CsvValidationHelperImplTest extends Specification {
         'bcq_file_invalid_bcq_length'            || INVALID_BCQ_LENGTH
         'bcq_file_invalid_bcq_fractional_length' || INVALID_BCQ_LENGTH
         'bcq_file_duplicate'                     || DUPLICATE_DATE
-        'bcq_file_different_date'                || INVALID_TRADING_DATE
+        /*'bcq_file_different_date'                || INVALID_TRADING_DATE*/
+        'bcq_file_missing_buyer_mtn'             || MISSING_BUYER_MTN
     }
 
 }

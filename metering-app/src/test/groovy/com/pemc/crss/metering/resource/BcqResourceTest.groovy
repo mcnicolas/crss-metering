@@ -60,7 +60,7 @@ class BcqResourceTest extends Specification {
         given:
         def file = new MockMultipartFile('file', 'file.csv', 'text/csv', 'some data'.bytes)
         def validationResult = new BcqValidationResult(status, null, null)
-        def declaration = new BcqDeclaration(sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1'),
+        def declaration = new BcqDeclaration(sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1',''),
                 validationResult: validationResult, headerDetailsList: headerDetailsList)
 
         when:
@@ -105,7 +105,7 @@ class BcqResourceTest extends Specification {
         given:
         def file = new MockMultipartFile('file', fileName, 'text/csv', 'some data'.bytes)
         def validationResult = new BcqValidationResult(status, new BcqValidationErrorMessage(EMPTY), null)
-        def declaration = new BcqDeclaration(sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1'),
+        def declaration = new BcqDeclaration(sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1',''),
                 validationResult: validationResult, headerDetailsList: headerDetailsList)
 
         when:
@@ -160,7 +160,7 @@ class BcqResourceTest extends Specification {
         given:
         def file = new MockMultipartFile('file', 'file.csv', 'text/csv', 'some data'.bytes)
         def validationResult = new BcqValidationResult(status, null, null)
-        def declaration = new BcqDeclaration(sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1'),
+        def declaration = new BcqDeclaration(sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1',''),
                 validationResult: validationResult, headerDetailsList: headerDetailsList)
 
         when:

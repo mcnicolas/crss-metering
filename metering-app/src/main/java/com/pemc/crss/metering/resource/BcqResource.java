@@ -114,7 +114,7 @@ public class BcqResource {
         int lastIndexOf = sellerDetailsString.lastIndexOf(", ");
         String sellerName = sellerDetailsString.substring(0, lastIndexOf);
         String sellerShortName = sellerDetailsString.substring(lastIndexOf + 2, sellerDetailsString.length());
-        ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerName, sellerShortName.trim());
+        ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerName, sellerShortName.trim(),"");
         BcqDeclaration declaration = validateCsvAndGetDeclaration(multipartFile, sellerDetails,
                 parseDate(tradingDateString));
         if (declaration.getValidationResult().getStatus() == REJECTED) {

@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.validator.bcq.helper;
 
+import com.google.common.collect.Lists;
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
@@ -20,20 +21,25 @@ public class BcqPopulator {
     private static final int SELLING_MTN_INDEX = 0;
     private static final int BILLING_ID_INDEX = 1;
     private static final int REFERENCE_MTN_INDEX = 2;
-    private static final int DATE_INDEX = 3;
-    private static final int BCQ_INDEX = 4;
+    private static final int BUYER_MTN_INDEX = 3;
+    private static final int DATE_INDEX = 4;
+    private static final int BCQ_INDEX = 5;
     private static final int START_LINE_OF_DATA = 2;
+
 
     public List<BcqHeader> populate(List<List<String>> csv) {
         BcqInterval interval = fromDescription(csv.get(INTERVAL_ROW_INDEX).get(INTERVAL_COLUMN_INDEX));
         List<BcqHeader> headerList = new ArrayList<>();
         Set<BcqHeader> headerSet = new HashSet<>();
         Map<BcqHeader, List<BcqData>> headerDataMap = new HashMap<>();
-
+        List<String> refMtns = Lists.newArrayList();
+        csv.subList(START_LINE_OF_DATA, csv.size()).stream()
+                .forEach(strings -> refMtns.add(strings.get(REFERENCE_MTN_INDEX)));
+        Long refMtnCount = refMtns.stream().distinct().count();
         for (List<String> line : csv.subList(START_LINE_OF_DATA, csv.size())) {
             BcqHeader header = populateHeader(line);
             List<BcqData> dataList;
-
+            header.setRefMtnSize(refMtnCount);
             header.setInterval(interval);
             if (headerSet.add(header)) {
                 dataList = new ArrayList<>();
@@ -49,7 +55,7 @@ public class BcqPopulator {
         }
 
         for (BcqHeader header : headerList) {
-            header.getDataList().sort(Comparator.comparing(BcqData::getEndTime));
+            header.getDataList().sort(Comparator.comparing(BcqData::getReferenceMtn).thenComparing(BcqData::getReferenceMtn));
         }
 
         return headerList;
@@ -59,8 +65,9 @@ public class BcqPopulator {
         BcqHeader header = new BcqHeader();
         String sellingMtn = line.get(SELLING_MTN_INDEX);
         String billingId = line.get(BILLING_ID_INDEX);
+        String buyerMtn = line.get(BUYER_MTN_INDEX);
         Date tradingDate = getTradingDate(line.get(DATE_INDEX));
-
+        header.setBuyerMtn(buyerMtn);
         header.setSellingMtn(sellingMtn);
         header.setBillingId(billingId);
         header.setTradingDate(tradingDate);
@@ -71,12 +78,14 @@ public class BcqPopulator {
     private BcqData populateData(List<String> line, BcqInterval interval) {
         BcqData data = new BcqData();
         String referenceMtn = line.get(REFERENCE_MTN_INDEX);
+        String buyerMtn = "null".equals(line.get(BUYER_MTN_INDEX)) ?  "" : line.get(BUYER_MTN_INDEX);
         Date endTime = parseDateTime(line.get(DATE_INDEX));
 
         data.setReferenceMtn(referenceMtn);
         data.setStartTime(getStartTime(endTime, interval));
         data.setEndTime(endTime);
         data.setBcq(new BigDecimal(line.get(BCQ_INDEX)));
+        data.setBuyerMtn(buyerMtn);
 
         return data;
     }
