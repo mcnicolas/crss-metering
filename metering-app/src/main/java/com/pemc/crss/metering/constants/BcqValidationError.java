@@ -65,7 +65,8 @@ public enum BcqValidationError {
             + "passed."),
     MULTIPLE_PARTICIPANT_BILLING_ID("Multiple participants are associated to billing ID <b>%s</b> for trading date <b>%s</b>."),
     CONTAINS_PROHIBITED_PAIRS("Declaration contains prohibited pairs. Declaration must not have entries of the ff. "
-            + "Selling MTN and Billing ID pair(s):<br />%s");
+            + "Selling MTN and Billing ID pair(s):<br />%s"),
+    BCQ_UPLOAD_SYS_CONFIG_ERROR("<b>%s</b> is not allow in Bcq Upload");
 
     private final String errorMessage;
 
