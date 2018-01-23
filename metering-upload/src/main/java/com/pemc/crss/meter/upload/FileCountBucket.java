@@ -15,7 +15,9 @@ public class FileCountBucket implements FileBucket {
     public static final int FOUR_MB = 4194304;
     public static final int FIVE_MB = 5242880;
     public static final int SIX_MB = 6291456;
-    public static final int MAX_SIZE = FIVE_MB;
+    public static final int MAX_SIZE_BUCKET = FIVE_MB;
+    public static final int MAX_SIZE_SINGLE_FILE = FIVE_MB;
+
 
     private final Queue<FileBean> queue;
 
@@ -34,13 +36,13 @@ public class FileCountBucket implements FileBucket {
         while (hasMoreElements() && counter < fileCount) {
             FileBean fileBean = queue.peek();
 
-            if ((size + fileBean.getSize()) <= MAX_SIZE) {
+            if ((size + fileBean.getSize()) <= MAX_SIZE_BUCKET) {
                 retVal.add(queue.poll());
 
                 size += fileBean.getSize();
                 counter++;
 
-                if (fileBean.getSize() >= ONE_MB) {
+                if (fileBean.getSize() >= MAX_SIZE_SINGLE_FILE) {
                     break;
                 }
             } else {
@@ -49,7 +51,7 @@ public class FileCountBucket implements FileBucket {
         }
 
         if (counter == 0 && size == 0 && queue.size() > 0) {
-            throw new LargeFileException("xxx");
+            throw new LargeFileException(String.format("Total file size should not be more than %d MB", (MAX_SIZE_BUCKET / ONE_MB)));
         }
 
         return retVal;
