@@ -1,3 +1,3 @@
 Interval,15mins,,,,
-Selling MTN,Billing ID,Reference MTN,Buyer MTN,Date,BCQ
-,BILL1,MTN1,,2016-02-20 00:15,1
+Selling MTN,Billing ID,Reference MTN,Date,BCQ,Buyer MTN
+,BILL1,MTN1,2016-02-20 00:15,1,

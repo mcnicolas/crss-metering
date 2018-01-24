@@ -29,9 +29,6 @@ public class CsvValidatorImpl implements CsvValidator {
     public BcqValidationResult<List<BcqHeader>> validate(List<List<String>> csv) {
         log.info("Start validation of CSV file");
         int intervalConfig = configService.getIntegerValueForKey("BCQ_INTERVAL", 15);
-        boolean genToGen = BooleanUtils.toBoolean(configService.getValueForKey("GEN_TO_GEN"));
-        boolean loadToLoad = BooleanUtils.toBoolean(configService.getValueForKey("LOAD_TO_LOAD"));
-        boolean loadToGen = BooleanUtils.toBoolean(configService.getValueForKey("LOAD_TO_GEN"));
         BcqValidationResult<List<BcqHeader>> result = validationHelper.validCsv(intervalConfig).test(csv);
         if (result.getStatus() == ACCEPTED) {
             result.setProcessedObject(new BcqPopulator().populate(csv));

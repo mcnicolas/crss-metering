@@ -512,8 +512,8 @@ public class BcqServiceImpl implements BcqService {
 
         ICsvBeanWriter beanWriter = null;
 
-        String[] headerDto = new String[]{"Selling  MTN", "Buying Billing ID",
-                "Reference MTN", "Buyer MTN", "Date", "BCQ"};
+        String[] headerDto = new String[]{"Selling MTN", "Buying Billing ID",
+                "Reference MTN", "Date", "BCQ", "Buyer MTN"};
         String[] header = new String[]{
                 "Interval", interval.toString() + "Mins", "", "", "", ""};
         try {
@@ -527,7 +527,7 @@ public class BcqServiceImpl implements BcqService {
             }
             beanWriter.writeHeader(header);
             beanWriter.writeHeader(headerDto);
-            String[] mapper = new String[]{"sellingMtn", "buyerBillingId", "refMtn", "buyerMtn", "date", "bcq"};
+            String[] mapper = new String[]{"sellingMtn", "buyerBillingId", "refMtn", "date", "bcq", "buyerMtn"};
 
             for (final BcqDownloadDto result : list) {
                 beanWriter.write(result, mapper, new CellProcessor[]{new Optional(),

@@ -37,9 +37,9 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
     private static final int SELLING_MTN_INDEX = 0;
     private static final int BILLING_ID_INDEX = 1;
     private static final int REFERENCE_MTN_INDEX = 2;
-    private static final int BUYER_MTN_INDEX = 3;
-    private static final int DATE_INDEX = 4;
-    private static final int BCQ_INDEX = 5;
+    private static final int DATE_INDEX = 3;
+    private static final int BCQ_INDEX = 4;
+    private static final int BUYER_MTN_INDEX = 5;
     private static final int VALID_NO_OF_COLUMNS = 6;
     private static final int VALID_NO_OF_LINES = 2;
     private static final int START_LINE_OF_DATA = 2;
