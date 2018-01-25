@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.validator.bcq.helper.impl;
 
+import com.google.common.collect.Lists;
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.helper.CsvValidationHelper;
@@ -62,8 +63,9 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                 .and(positiveBcq())
                 .and(validBcqLength())
                 .and(noDuplicates())
+                .and(validateBuyerMtn());
                 /*.and(sameTradingDate())*/
-                .and(buyerMtnIsSet());
+        // .and(buyerMtnIsSet());
     }
 
     private CsvValidation validCsvFile() {
@@ -113,7 +115,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                 new BcqValidationErrorMessage(MISSING_SELLING_MTN));
     }
 
-    private CsvValidation buyerMtnIsSet(){
+    private CsvValidation buyerMtnIsSet() {
         CsvValidation validation = new CsvValidation();
         Predicate<List<List<String>>> predicate = csv -> {
             List<List<String>> dataCsv = getDataList(csv);
@@ -124,7 +126,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
             return (countEmpty == 0L || countNonEmpty == 0L);
         };
         validation.setPredicate(predicate);
-        return  validation;
+        return validation;
     }
 
     private CsvValidation billingIdIsSet() {
@@ -189,7 +191,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
 
     private CsvValidation noDuplicates() {
         CsvValidation validation = new CsvValidation();
-        Predicate<List<List<String>>> predicate =  csv -> {
+        Predicate<List<List<String>>> predicate = csv -> {
             Set<List<String>> uniqueSet = new HashSet<>();
             return csv.subList(2, csv.size()).stream()
                     .noneMatch(line -> {
@@ -211,26 +213,54 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
         return validation;
     }
 
+    private CsvValidation validateBuyerMtn() {
+        CsvValidation validation = new CsvValidation();
+        Predicate<List<List<String>>> predicate = csv -> {
+            String refMtn = getDataList(csv).get(0).get(REFERENCE_MTN_INDEX);
+            List<String> dateWithBuyerId = Lists.newArrayList();
+            return getDataList(csv).stream()
+                    .noneMatch(line -> {
+                        if (line.get(REFERENCE_MTN_INDEX).equals(refMtn)) {
+                            if (isNoneBlank(line.get(BUYER_MTN_INDEX))) {
+                                dateWithBuyerId.add(line.get(DATE_INDEX));
+                            }
+                        } else {
+                            if (dateWithBuyerId.contains(line.get(DATE_INDEX)) && isBlank(line.get(BUYER_MTN_INDEX))) {
+                                BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+                                validation.setErrorMessage(errorMessage);
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+        };
+        validation.setPredicate(predicate);
+        return validation;
+    }
+
     private CsvValidation sameTradingDate() {
         return new CsvValidation(csv -> {
             Date firstTradingDate = getTradingDate(getDataList(csv).get(0).get(DATE_INDEX));
-            String refMtn =  getDataList(csv).get(0).get(REFERENCE_MTN_INDEX);
+            String refMtn = getDataList(csv).get(0).get(REFERENCE_MTN_INDEX);
             return firstTradingDate != null
                     && getDataList(csv).stream()
                     .allMatch(line -> firstTradingDate.equals(getTradingDate(line.get(DATE_INDEX)))
-                    && refMtn.equals(line.get(REFERENCE_MTN_INDEX)));
+                            && refMtn.equals(line.get(REFERENCE_MTN_INDEX)));
         }, new BcqValidationErrorMessage(INVALID_TRADING_DATE));
     }
 
     private String getInterval(List<List<String>> csv) {
         return csv.get(0).get(1);
     }
+
     private Long getCountEmptyBuyerMtn(List<List<String>> csv) {
         return csv.stream().filter(line -> isBlank(line.get(BUYER_MTN_INDEX))).count();
     }
+
     private Long getCountNonEmptyBuyerMtn(List<List<String>> csv) {
         return csv.stream().filter(line -> isNoneBlank(line.get(BUYER_MTN_INDEX))).count();
     }
+
     private List<List<String>> getDataList(List<List<String>> csv) {
         return csv.subList(START_LINE_OF_DATA, csv.size());
     }

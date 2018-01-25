@@ -22,7 +22,7 @@ public enum BcqValidationError {
             + "and <b>9 for fractional part</b>."),
     MISSING_INTERVAL("Missing interval."),
     MISSING_SELLING_MTN("Missing selling MTN."),
-    MISSING_BUYER_MTN("Missing buyer MTN."),
+    MISSING_BUYER_MTN("Inconsistent buyer MTN."),
     MISSING_BILLING_ID("Missing billing ID."),
     MISSING_REFERENCE_MTN("Missing reference MTN."),
     MISSING_DATE("Missing date."),
@@ -66,8 +66,8 @@ public enum BcqValidationError {
     MULTIPLE_PARTICIPANT_BILLING_ID("Multiple participants are associated to billing ID <b>%s</b> for trading date <b>%s</b>."),
     CONTAINS_PROHIBITED_PAIRS("Declaration contains prohibited pairs. Declaration must not have entries of the ff. "
             + "Selling MTN and Billing ID pair(s):<br />%s"),
-    BCQ_UPLOAD_SYS_CONFIG_ERROR("<b>%s</b> is not allow in Bcq Upload");
-
+    BCQ_UPLOAD_SYS_CONFIG_ERROR("<b>%s</b> is not allow in Bcq Upload"),
+    BUYER_SELLER_MTN_SAME_FACILITY("Buyer Mtn <b>%s</b> is within the same facility with selling Mtn <b>%s</b>.");
     private final String errorMessage;
 
     BcqValidationError(String errorMessage) {
