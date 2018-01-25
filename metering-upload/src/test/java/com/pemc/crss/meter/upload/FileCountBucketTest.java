@@ -5,9 +5,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.pemc.crss.meter.upload.FileCountBucket.DEFAULT_FILECOUNT;
-import static com.pemc.crss.meter.upload.FileCountBucket.SIX_MB;
-import static com.pemc.crss.meter.upload.FileCountBucket.THREE_MB;
+import static com.pemc.crss.meter.upload.FileCountBucket.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -92,7 +90,7 @@ public class FileCountBucketTest {
         List<FileBean> fileList = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
             FileBean fileBean = new FileBean();
-            fileBean.setSize(SIX_MB);
+            fileBean.setSize(ELEVEN_MB);
 
             fileList.add(fileBean);
         }
