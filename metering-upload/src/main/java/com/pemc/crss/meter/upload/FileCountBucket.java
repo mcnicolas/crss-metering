@@ -15,7 +15,8 @@ public class FileCountBucket implements FileBucket {
     public static final int FOUR_MB = 4194304;
     public static final int FIVE_MB = 5242880;
     public static final int SIX_MB = 6291456;
-    public static final int MAX_SIZE_BUCKET = FIVE_MB;
+    public static final int TEN_MB = 10485760;
+    public static final int MAX_SIZE_BUCKET = TEN_MB;
     public static final int MAX_SIZE_SINGLE_FILE = FIVE_MB;
 
 
