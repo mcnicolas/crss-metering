@@ -5,6 +5,7 @@ import com.pemc.crss.meter.upload.http.HeaderStatus;
 import com.pemc.crss.meter.upload.table.UploadData;
 import com.pemc.crss.meter.upload.table.UploadType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -320,7 +321,15 @@ public class MeterDataUploader extends JFrame {
                     headerPanel.updateTransactionID(transactionID);
                 } catch (InterruptedException | ExecutionException e) {
                     log.error(e.getMessage(), e);
-                    showErrorDialog(e, parseErrorMessage(e.getMessage()), WARNING_MESSAGE, MeterDataUploader.this);
+
+                    String errorMessage = parseErrorMessage(e.getMessage());
+
+                    if (errorMessage.startsWith("Total file size should not be more than")) {
+                        errorMessage = "Status: Rejected \n Error Detail: LargeFileException";
+                        showErrorDialog(e, errorMessage, WARNING_MESSAGE, MeterDataUploader.this);
+                    } else {
+                        showErrorDialog(e, errorMessage, WARNING_MESSAGE, MeterDataUploader.this);
+                    }
 
                     uploadProgressBar.setValue(0);
                 }
@@ -359,23 +368,23 @@ public class MeterDataUploader extends JFrame {
                 setProgress(35);
 
                 publish("Loading user credentials");
-                List<String> userData = httpHandler.getUserType();
+//                List<String> userData = httpHandler.getUserType();
                 setProgress(80);
 
-                if (userData.size() > 1 &&
-                        (!equalsIgnoreCase(userData.get(1), "PEMC") && !equalsIgnoreCase(userData.get(1), "MSP"))) {
-
-                    return FALSE;
-                }
+//                if (userData.size() > 1 &&
+//                        (!equalsIgnoreCase(userData.get(1), "PEMC") && !equalsIgnoreCase(userData.get(1), "MSP"))) {
+//
+//                    return FALSE;
+//                }
 
                 MeterDataUploader.this.username = username;
-                fullName = userData.get(0);
-                userType = userData.get(1);
+//                fullName = userData.get(0);
+//                userType = userData.get(1);
 
                 // TODO: Avoid redundant rest call
-                if (equalsIgnoreCase(userType, "MSP")) {
+//                if (equalsIgnoreCase(userType, "MSP")) {
                     participant = httpHandler.getParticipant();
-                }
+//                }
 
                 publish("Loading MSP Listing");
                 mspListing = httpHandler.getMSPListing();
