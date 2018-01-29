@@ -75,6 +75,7 @@ public class HeaderListValidationHelperImpl implements HeaderListValidationHelpe
         HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> headerList.stream().allMatch(header -> {
             int validBcqSize = header.getInterval().getValidNoOfRecords() * (int)(header.getRefMtnSize().longValue());
+
             if (header.getDataList().size() == validBcqSize) {
                 return true;
             }

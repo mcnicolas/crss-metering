@@ -35,6 +35,7 @@ public class BillingIdValidationHelperImpl implements BillingIdValidationHelper 
                             asList(billingIdShortNamePair.getBillingId(), formatLongDate(tradingDate)));
                     validation.setErrorMessage(errorMessage);
                     return false;
+
                 } else if (billingIdShortNamePair.getTradingParticipantShortName().size() < 1) {
                     notExistingBillingIds.add(billingIdShortNamePair.getBillingId());
                 }

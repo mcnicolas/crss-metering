@@ -41,7 +41,9 @@ public class BcqPopulator {
             List<BcqData> dataList;
             header.setRefMtnSize(refMtnCount);
             header.setInterval(interval);
-            if (headerSet.add(header)) {
+            BcqHeader headerUnique =  header;
+            headerUnique.setBuyerMtn(null);
+            if (headerSet.add(headerUnique)) {
                 dataList = new ArrayList<>();
                 headerList.add(header);
                 header.setDataList(dataList);

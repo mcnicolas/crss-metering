@@ -67,7 +67,11 @@ public enum BcqValidationError {
     CONTAINS_PROHIBITED_PAIRS("Declaration contains prohibited pairs. Declaration must not have entries of the ff. "
             + "Selling MTN and Billing ID pair(s):<br />%s"),
     BCQ_UPLOAD_SYS_CONFIG_ERROR("<b>%s</b> is not allow in Bcq Upload"),
-    BUYER_SELLER_MTN_SAME_FACILITY("Buyer Mtn <b>%s</b> is within the same facility with selling Mtn <b>%s</b>.");
+    BUYER_SELLER_MTN_SAME_FACILITY("Buyer Mtn <b>%s</b> is within the same facility with selling Mtn <b>%s</b>."),
+    LOAD_OWN_BILLING_ID("Upload Error, Csv contain its own billing Id"),
+    BUYER_DOEST_EXIST("Buyer participant does not exist!");
+
+
     private final String errorMessage;
 
     BcqValidationError(String errorMessage) {
