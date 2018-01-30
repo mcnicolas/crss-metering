@@ -225,10 +225,18 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                 dateWithBuyerId.add(line.get(DATE_INDEX));
                             }
                         } else {
-                            if (dateWithBuyerId.contains(line.get(DATE_INDEX)) && isBlank(line.get(BUYER_MTN_INDEX))) {
-                                BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
-                                validation.setErrorMessage(errorMessage);
-                                return true;
+                            if (dateWithBuyerId.contains(line.get(DATE_INDEX))) {
+                                if (isBlank(line.get(BUYER_MTN_INDEX))) {
+                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+                                    validation.setErrorMessage(errorMessage);
+                                    return true;
+                                }
+                            } else {
+                                if (isNoneBlank(line.get(BUYER_MTN_INDEX))) {
+                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+                                    validation.setErrorMessage(errorMessage);
+                                    return true;
+                                }
                             }
                         }
                         return false;
