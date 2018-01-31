@@ -36,7 +36,7 @@ public enum BcqValidationError {
     SELLING_MTN_UNREGISTERED("Unregistered selling MTN. Selling MTN <b>%s</b> does not exist."),
     SELLING_MTN_NOT_OWNED("Unregistered selling MTN. "
             + "Selling MTN <b>%s</b> is not registered under Seller <b>%s (%s)</b>."),
-    BUYER_MTN_UNREGISTERED("Unregistered buyer MTN. Buyer MTN <b>%s</b> does not exist."),
+        BUYER_MTN_UNREGISTERED("Unregistered buyer MTN. Buyer MTN <b>%s</b> is not registered under <b>%s</b>."),
     BUYER_MTN_NOT_OWNED("Unregistered buyer MTN. "
             + "buyer MTN <b>%s</b> is not registered under Buyer <b>%s (%s)</b>."),
     BILLING_ID_NOT_EXIST("Following billing ID(s) do not exist.<br />%s"),
@@ -66,9 +66,9 @@ public enum BcqValidationError {
     MULTIPLE_PARTICIPANT_BILLING_ID("Multiple participants are associated to billing ID <b>%s</b> for trading date <b>%s</b>."),
     CONTAINS_PROHIBITED_PAIRS("Declaration contains prohibited pairs. Declaration must not have entries of the ff. "
             + "Selling MTN and Billing ID pair(s):<br />%s"),
-    BCQ_UPLOAD_SYS_CONFIG_ERROR("<b>%s</b> is not allow in Bcq Upload"),
+    BCQ_UPLOAD_SYS_CONFIG_ERROR("<b>%s</b> is not allowed in Bcq Upload"),
     BUYER_SELLER_MTN_SAME_FACILITY("Buyer Mtn <b>%s</b> is within the same facility with selling Mtn <b>%s</b>."),
-    LOAD_OWN_BILLING_ID("Upload Error, Csv contain its own billing Id"),
+    LOAD_OWN_BILLING_ID("Upload Error, CSV contains Trading Participant's own billing Id"),
     BUYER_DOEST_EXIST("Buyer participant does not exist!");
 
 
