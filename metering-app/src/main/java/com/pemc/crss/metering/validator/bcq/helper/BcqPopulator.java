@@ -37,11 +37,11 @@ public class BcqPopulator {
                 .forEach(strings -> refMtns.add(strings.get(REFERENCE_MTN_INDEX)));
         Long refMtnCount = refMtns.stream().distinct().count();
         for (List<String> line : csv.subList(START_LINE_OF_DATA, csv.size())) {
-            BcqHeader header = populateHeader(line);
+            BcqHeader header = populateHeader(line, false);
+            BcqHeader headerUnique =   populateHeader(line, true);
             List<BcqData> dataList;
             header.setRefMtnSize(refMtnCount);
             header.setInterval(interval);
-            BcqHeader headerUnique =  header;
             headerUnique.setBuyerMtn(null);
             if (headerSet.add(headerUnique)) {
                 dataList = new ArrayList<>();
@@ -63,13 +63,15 @@ public class BcqPopulator {
         return headerList;
     }
 
-    private BcqHeader populateHeader(List<String> line) {
+    private BcqHeader populateHeader(List<String> line, boolean includeBuyerMtn) {
         BcqHeader header = new BcqHeader();
         String sellingMtn = line.get(SELLING_MTN_INDEX);
         String billingId = line.get(BILLING_ID_INDEX);
         String buyerMtn = line.get(BUYER_MTN_INDEX);
         Date tradingDate = getTradingDate(line.get(DATE_INDEX));
-        header.setBuyerMtn(buyerMtn);
+        if (includeBuyerMtn) {
+            header.setBuyerMtn(buyerMtn);
+        }
         header.setSellingMtn(sellingMtn);
         header.setBillingId(billingId);
         header.setTradingDate(tradingDate);

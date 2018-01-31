@@ -13,7 +13,7 @@ import java.util.List;
 public class BcqItem {
 
     private String sellingMtn;
-    private String buyerMtn;
+    private  List<String>  buyerMtns;
     private String tradingParticipantShortName;
     private List<String> referenceMtns;
     private Date tradingDate;

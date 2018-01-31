@@ -1,6 +1,6 @@
 package com.pemc.crss.metering.validator.bcq.helper.impl;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.helper.CsvValidationHelper;
@@ -10,25 +10,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
-import static com.pemc.crss.metering.constants.BcqInterval.FIVE_MINUTES_PERIOD;
-import static com.pemc.crss.metering.constants.BcqInterval.QUARTERLY;
-import static com.pemc.crss.metering.constants.BcqInterval.fromDescription;
+import static com.pemc.crss.metering.constants.BcqInterval.*;
 import static com.pemc.crss.metering.constants.BcqValidationError.*;
-import static com.pemc.crss.metering.constants.BcqValidationError.INVALID_TRADING_DATE;
+import static com.pemc.crss.metering.constants.BcqValidationError.EMPTY;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDateTime;
 import static com.pemc.crss.metering.utils.DateTimeUtils.isStartOfDay;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNoneBlank;
-import static org.apache.commons.lang3.StringUtils.split;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.apache.commons.lang3.math.NumberUtils.isParsable;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 
@@ -217,26 +210,19 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
         CsvValidation validation = new CsvValidation();
         Predicate<List<List<String>>> predicate = csv -> {
             String refMtn = getDataList(csv).get(0).get(REFERENCE_MTN_INDEX);
-            List<String> dateWithBuyerId = Lists.newArrayList();
+            Map<String, String> dateBuyerMtn = Maps.newHashMap();
             return getDataList(csv).stream()
                     .noneMatch(line -> {
                         if (line.get(REFERENCE_MTN_INDEX).equals(refMtn)) {
-                            if (isNoneBlank(line.get(BUYER_MTN_INDEX))) {
-                                dateWithBuyerId.add(line.get(DATE_INDEX));
-                            }
+                            String bMtn = line.get(BUYER_MTN_INDEX) == null ? "" : line.get(BUYER_MTN_INDEX);
+                            dateBuyerMtn.put(line.get(DATE_INDEX), bMtn);
                         } else {
-                            if (dateWithBuyerId.contains(line.get(DATE_INDEX))) {
-                                if (isBlank(line.get(BUYER_MTN_INDEX))) {
-                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
-                                    validation.setErrorMessage(errorMessage);
-                                    return true;
-                                }
-                            } else {
-                                if (isNoneBlank(line.get(BUYER_MTN_INDEX))) {
-                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
-                                    validation.setErrorMessage(errorMessage);
-                                    return true;
-                                }
+                            String buyerMtn = dateBuyerMtn.get(line.get(DATE_INDEX));
+                            String bMtn = line.get(BUYER_MTN_INDEX) == null ? "" : line.get(BUYER_MTN_INDEX);
+                            if (!buyerMtn.equals(bMtn)) {
+                                BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+                                validation.setErrorMessage(errorMessage);
+                                return true;
                             }
                         }
                         return false;
