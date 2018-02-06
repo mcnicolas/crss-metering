@@ -522,7 +522,7 @@ public class BcqServiceImpl implements BcqService {
             for (String mtn : bcqDownloadDto.getRefMtns()) {
                 for (String s : time) {
                     list.add(new BcqDownloadDto(mtn, bcqDownloadDto.getBuyerBillingId(),
-                            bcqDownloadDto.getSellingMtn(), s, "", ""));
+                            bcqDownloadDto.getSellingMtn(),"\t" + s, "", ""));
                 }
             }
             beanWriter.writeHeader(header);
