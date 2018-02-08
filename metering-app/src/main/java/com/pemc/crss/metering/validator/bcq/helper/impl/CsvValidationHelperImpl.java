@@ -1,11 +1,16 @@
 package com.pemc.crss.metering.validator.bcq.helper.impl;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.pemc.crss.metering.constants.BcqInterval;
+import com.pemc.crss.metering.dto.bcq.BcqData;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.helper.CsvValidationHelper;
 import com.pemc.crss.metering.validator.bcq.validation.CsvValidation;
 import com.pemc.crss.metering.validator.bcq.validation.Validation;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
@@ -209,11 +214,33 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
     private CsvValidation validateBuyerMtn() {
         CsvValidation validation = new CsvValidation();
         Predicate<List<List<String>>> predicate = csv -> {
-            String refMtn = getDataList(csv).get(0).get(REFERENCE_MTN_INDEX);
             Map<String, String> dateBuyerMtn = Maps.newHashMap();
+            List<String> uniqueList = asList(getDataList(csv).get(0).get(SELLING_MTN_INDEX),
+                    getDataList(csv).get(0).get(BILLING_ID_INDEX),
+                    getDataList(csv).get(0).get(REFERENCE_MTN_INDEX));
+
+            BcqHeader uniqueHeader =  new BcqHeader();
+            uniqueHeader.setSellingMtn(getDataList(csv).get(0).get(SELLING_MTN_INDEX));
+            uniqueHeader.setBillingId(getDataList(csv).get(0).get(BILLING_ID_INDEX));
+
+            BcqData dataRefMtn = new BcqData();
+            dataRefMtn.setReferenceMtn(getDataList(csv).get(0).get(REFERENCE_MTN_INDEX));
+           // List<BcqHeader> uniqueHeader = populateUnique(csv);
             return getDataList(csv).stream()
                     .noneMatch(line -> {
-                        if (line.get(REFERENCE_MTN_INDEX).equals(refMtn)) {
+                        BcqHeader lineHeader =  new BcqHeader();
+                        lineHeader.setSellingMtn(line.get(SELLING_MTN_INDEX));
+                        lineHeader.setBillingId(line.get(BILLING_ID_INDEX));
+                        if (ObjectUtils.notEqual(uniqueHeader.getSellingMtn(), lineHeader.getSellingMtn())
+                                || ObjectUtils.notEqual(uniqueHeader.getBillingId(), lineHeader.getBillingId()))
+                         {
+                            dateBuyerMtn.clear();
+                            uniqueHeader.setSellingMtn(lineHeader.getSellingMtn());
+                            uniqueHeader.setBillingId(lineHeader.getBillingId());
+                            dataRefMtn.setReferenceMtn(line.get(REFERENCE_MTN_INDEX));
+                        }
+
+                        if (line.get(REFERENCE_MTN_INDEX).equals(dataRefMtn.getReferenceMtn())) {
                             String bMtn = line.get(BUYER_MTN_INDEX) == null ? "" : line.get(BUYER_MTN_INDEX);
                             dateBuyerMtn.put(line.get(DATE_INDEX), bMtn);
                         } else {
@@ -231,7 +258,58 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
         validation.setPredicate(predicate);
         return validation;
     }
+    private boolean isValidBuyerMtn(BcqHeader header) {
+        List<BcqData> dataList = header.getDataList();
+        String refMtn = header.getDataList().get(0).getReferenceMtn();
+        Map<String, String> dateBuyerMtn = Maps.newHashMap();
+        for (BcqData data : dataList) {
+            if(data.getReferenceMtn().equals(refMtn)) {
+                String bMtn = data.getBuyerMtn() == null ? "" : data.getBuyerMtn();
+                dateBuyerMtn.put(data.getTradingDate(), bMtn);
+            } else {
+                String buyerMtn = dateBuyerMtn.get(data.getTradingDate());
+                String bMtn = data.getBuyerMtn() == null ? "" : data.getBuyerMtn();
+                if (!buyerMtn.equals(bMtn)) {
 
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+    private List<BcqHeader> populateUnique(List<List<String>> data){
+        List<List<String>> csv = getDataList(data);
+        List<BcqHeader> bcqHeaderList = Lists.newArrayList();
+        Set<BcqHeader> bcqHeader = Sets.newHashSet();
+        Map<BcqHeader, List<BcqData>> headerDataMap = new HashMap<>();
+        for (List<String> line : csv) {
+            BcqHeader header = new BcqHeader();
+            List<BcqData> dataList;
+            String sellingMtn = line.get(SELLING_MTN_INDEX);
+            String billingId = line.get(BILLING_ID_INDEX);
+            header.setSellingMtn(sellingMtn);
+            header.setBillingId(billingId);
+            if(bcqHeader.add(header)) {
+                dataList = Lists.newArrayList();
+                bcqHeaderList.add(header);
+                header.setDataList(dataList);
+                headerDataMap.put(header, dataList);
+            } else  {
+                dataList = headerDataMap.get(header);
+            }
+            BcqData bcqData = populateData(line);
+            dataList.add(bcqData);
+        }
+        return bcqHeaderList;
+    }
+    private BcqData populateData(List<String> line) {
+        BcqData data = new BcqData();
+        data.setTradingDate(line.get(DATE_INDEX));
+        data.setBuyerMtn(line.get(BUYER_MTN_INDEX));
+        data.setReferenceMtn(line.get(REFERENCE_MTN_INDEX));
+        return data;
+    }
     private CsvValidation sameTradingDate() {
         return new CsvValidation(csv -> {
             Date firstTradingDate = getTradingDate(getDataList(csv).get(0).get(DATE_INDEX));

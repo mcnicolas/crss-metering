@@ -32,15 +32,12 @@ public class BcqPopulator {
         List<BcqHeader> headerList = new ArrayList<>();
         Set<BcqHeader> headerSet = new HashSet<>();
         Map<BcqHeader, List<BcqData>> headerDataMap = new HashMap<>();
-        List<String> refMtns = Lists.newArrayList();
-        csv.subList(START_LINE_OF_DATA, csv.size()).stream()
-                .forEach(strings -> refMtns.add(strings.get(REFERENCE_MTN_INDEX)));
-        Long refMtnCount = refMtns.stream().distinct().count();
+
         for (List<String> line : csv.subList(START_LINE_OF_DATA, csv.size())) {
             BcqHeader header = populateHeader(line, false);
             BcqHeader headerUnique =   populateHeader(line, true);
             List<BcqData> dataList;
-            header.setRefMtnSize(refMtnCount);
+
             header.setInterval(interval);
             headerUnique.setBuyerMtn(null);
             if (headerSet.add(headerUnique)) {
@@ -57,6 +54,12 @@ public class BcqPopulator {
         }
 
         for (BcqHeader header : headerList) {
+            List<String> refMtns = Lists.newArrayList();
+            header.getDataList().forEach(data->{
+                refMtns.add(data.getReferenceMtn());
+            });
+            Long refMtnCount = refMtns.stream().distinct().count();
+            header.setRefMtnSize(refMtnCount);
             header.getDataList().sort(Comparator.comparing(BcqData::getReferenceMtn).thenComparing(BcqData::getReferenceMtn));
         }
 

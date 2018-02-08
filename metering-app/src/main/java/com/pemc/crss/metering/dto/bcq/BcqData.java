@@ -17,6 +17,7 @@ public class BcqData {
     private Date endTime;
     private BigDecimal bcq;
     private String buyerMtn;
+    private String tradingDate;
 
     @Override
     public String toString() {
@@ -28,6 +29,7 @@ public class BcqData {
                 .add("endTime", getEndTime())
                 .add("bcq", getBcq())
                 .add("buyerMtn", getBcq())
+                .add("tradingDate", getTradingDate())
                 .toString();
     }
 
