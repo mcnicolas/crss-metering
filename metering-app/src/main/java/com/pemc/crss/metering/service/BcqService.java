@@ -9,8 +9,9 @@ import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
 import org.springframework.data.domain.Page;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,7 @@ public interface BcqService {
 
     List<BcqProhibitedPair> findAllEnabledProhibitedPairs();
 
-    void generateCsv(List<BcqDownloadDto> bcqDownloadDtos, Long interval, HttpServletResponse response) throws IOException;
+    void generateCsv(BcqDownloadDto bcqDownloadDto, Long interval, LocalDateTime date, OutputStream outputStream)
+            throws IOException;
 
 }

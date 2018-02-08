@@ -6,7 +6,16 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dao.BcqDao;
 import com.pemc.crss.metering.dao.query.ComparisonOperator;
-import com.pemc.crss.metering.dto.bcq.*;
+import com.pemc.crss.metering.dto.bcq.BcqData;
+import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
+import com.pemc.crss.metering.dto.bcq.BcqDownloadDto;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqHeaderPageDisplay;
+import com.pemc.crss.metering.dto.bcq.BcqProhibitedPair;
+import com.pemc.crss.metering.dto.bcq.BcqProhibitedPairPageDisplay;
+import com.pemc.crss.metering.dto.bcq.BcqTemplateRow;
+import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
+import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
@@ -28,8 +37,8 @@ import org.supercsv.io.CsvBeanWriter;
 import org.supercsv.io.ICsvBeanWriter;
 import org.supercsv.prefs.CsvPreference;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -38,11 +47,19 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static com.pemc.crss.metering.constants.BcqStatus.*;
+import static com.pemc.crss.metering.constants.BcqStatus.CANCELLED;
+import static com.pemc.crss.metering.constants.BcqStatus.CONFIRMED;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_CANCEL;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_NEW;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_APPROVAL_UPDATE;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_CONFIRMATION;
+import static com.pemc.crss.metering.constants.BcqStatus.FOR_NULLIFICATION;
+import static com.pemc.crss.metering.constants.BcqStatus.NOT_CONFIRMED;
+import static com.pemc.crss.metering.constants.BcqStatus.NULLIFIED;
+import static com.pemc.crss.metering.constants.BcqStatus.SETTLEMENT_READY;
+import static com.pemc.crss.metering.constants.BcqStatus.VOID;
 import static com.pemc.crss.metering.constants.BcqUpdateType.MANUAL_OVERRIDE;
 import static com.pemc.crss.metering.constants.BcqUpdateType.RESUBMISSION;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
@@ -470,29 +487,22 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public void generateCsv(List<BcqDownloadDto> bcqDownloadDtos, Long interval, HttpServletResponse response) throws IOException {
+    public void generateCsv(BcqDownloadDto bcqDownloadDto, Long interval, LocalDateTime date, OutputStream outputStream)
+            throws IOException {
 
-        log.info("Start creating csv files for {}", bcqDownloadDtos.get(0).getGenName());
-        ZipOutputStream zos = new ZipOutputStream(response.getOutputStream());
-        bcqDownloadDtos.forEach(bcqDownloadDto -> {
-            LocalDateTime date = DateTimeUtils.parseDateTime24hr(bcqDownloadDto.getDate());
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        log.info("Start creating csv files for {}", bcqDownloadDto.getGenName());
 
-            List<String> dateTime = getDateTime(date, interval);
-            try {
-                String fileName = bcqDownloadDto.getGenName() + "_" + date.format(formatter) + "_" + bcqDownloadDto.getSellingMtn()
-                        + "_" + bcqDownloadDto.getBuyerBillingId() + ".csv";
-                log.info("\t\tFileName:{}", fileName);
-                ZipEntry entry = new ZipEntry(fileName); // create a zip entry and add it to ZipOutputStream
-                zos.putNextEntry(entry);
-                writeCsv(bcqDownloadDto, dateTime, interval, zos);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        List<String> dateTime = getDateTime(date, interval);
 
+        try {
+            writeCsv(bcqDownloadDto, dateTime, interval, outputStream);
 
-        });
-        zos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        outputStream.close();
+
         log.info("Success creating csv files....");
     }
 
@@ -508,7 +518,8 @@ public class BcqServiceImpl implements BcqService {
         return result;
     }
 
-    private void writeCsv(BcqDownloadDto bcqDownloadDto, List<String> time, Long interval, ZipOutputStream zos) throws IOException {
+    private void writeCsv(BcqDownloadDto bcqDownloadDto, List<String> time, Long interval, OutputStream outputStream)
+            throws IOException {
 
         ICsvBeanWriter beanWriter = null;
 
@@ -517,20 +528,27 @@ public class BcqServiceImpl implements BcqService {
         String[] header = new String[]{
                 "Interval", interval.toString() + "Mins", "", "", "", ""};
         try {
-            beanWriter = new CsvBeanWriter(new OutputStreamWriter(zos), CsvPreference.STANDARD_PREFERENCE);
-            List<BcqDownloadDto> list = Lists.newArrayList();
-            for (String mtn : bcqDownloadDto.getRefMtns()) {
-                for (String s : time) {
-                    list.add(new BcqDownloadDto(mtn, bcqDownloadDto.getBuyerBillingId(),
-                            bcqDownloadDto.getSellingMtn(),"\t" + s, "", ""));
+            beanWriter = new CsvBeanWriter(new OutputStreamWriter(outputStream), CsvPreference.STANDARD_PREFERENCE);
+            List<BcqTemplateRow> list = Lists.newArrayList();
+
+            bcqDownloadDto.getBuyerBillingIds().sort(String::compareTo);
+            bcqDownloadDto.getSellingMtns().sort(String::compareTo);
+
+            for (String buyerBillingId : bcqDownloadDto.getBuyerBillingIds()) {
+               for (String sellingMtn : bcqDownloadDto.getSellingMtns()) {
+                    for (String s : time) {
+                        list.add(new BcqTemplateRow(sellingMtn, buyerBillingId,"\t" + s));
+                    }
                 }
             }
+
             beanWriter.writeHeader(header);
             beanWriter.writeHeader(headerDto);
             String[] mapper = new String[]{"sellingMtn", "buyerBillingId", "refMtn", "date", "bcq", "buyerMtn"};
 
-            for (final BcqDownloadDto result : list) {
-                beanWriter.write(result, mapper, new CellProcessor[]{new Optional(),
+            for (final BcqTemplateRow result : list) {
+                beanWriter.write(result, mapper, new CellProcessor[]{
+                        new Optional(),
                         new Optional(),
                         new Optional(),
                         new Optional(),
@@ -539,14 +557,10 @@ public class BcqServiceImpl implements BcqService {
                 });
             }
 
-        } catch (
-                IOException e)
-
-        {
+        } catch (IOException e) {
             e.printStackTrace();
-        } finally
 
-        {
+        } finally {
             if (beanWriter != null) {
                 beanWriter.flush();
             }

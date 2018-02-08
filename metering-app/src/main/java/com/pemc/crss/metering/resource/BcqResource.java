@@ -2,7 +2,13 @@ package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.commons.cache.service.CacheConfigService;
 import com.pemc.crss.metering.constants.ValidationStatus;
-import com.pemc.crss.metering.dto.bcq.*;
+import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
+import com.pemc.crss.metering.dto.bcq.BcqDownloadDto;
+import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqProhibitedPairForm;
+import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
+import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
+import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventForm;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
@@ -17,16 +23,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +48,9 @@ import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static org.apache.commons.io.FilenameUtils.getExtension;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-import static org.springframework.http.ResponseEntity.*;
+import static org.springframework.http.ResponseEntity.badRequest;
+import static org.springframework.http.ResponseEntity.ok;
+import static org.springframework.http.ResponseEntity.unprocessableEntity;
 
 @Slf4j
 @RestController
@@ -209,17 +223,24 @@ public class BcqResource {
     }
 
     @PostMapping("/download/template")
-    public void getSampleTemplate(@RequestBody  List<BcqDownloadDto> bcqs,
+    public void getSampleTemplate(@RequestBody BcqDownloadDto bcqDownloadDto,
                                   final HttpServletResponse response) throws IOException {
-        log.debug("bcqs={}", bcqs);
 
-        String fileName = URLEncoder.encode(bcqs.get(0).getGenName().toUpperCase() + ".zip", "UTF-8");
+        log.debug("bcqDownloadDto={}", bcqDownloadDto);
+
+
+        LocalDateTime date = DateTimeUtils.parseDateTime24hr(bcqDownloadDto.getDate());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+        String fileName = URLEncoder.encode(bcqDownloadDto.getGenName() + "_" + date.format(formatter) + ".csv", "UTF-8");
         fileName = URLDecoder.decode(fileName, "ISO8859_1");
         response.setContentType("application/x-msdownload");
         response.setHeader("Content-disposition", "attachment; filename=" + fileName);
         response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
-        Long interval = Long.valueOf(configService.getValueForKey("BCQ_INTERVAL"));
-        bcqService.generateCsv(bcqs, interval, response);
+
+        Long interval = configService.getLongValueForKey("BCQ_INTERVAL", 5L);
+
+        bcqService.generateCsv(bcqDownloadDto, interval, date, response.getOutputStream());
     }
 
 
