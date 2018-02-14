@@ -252,6 +252,12 @@ public final class BcqQueryHolder {
         queryBuilder = addSellingParticipantFilter(queryBuilder, getValue(mapParams, "sellingParticipant"));
         queryBuilder = addBuyingParticipantFilter(queryBuilder, getValue(mapParams, "buyingParticipant"));
         queryBuilder = addExpiredFilter(queryBuilder, getValue(mapParams, "expired") != null);
+        queryBuilder = addParticipantFilter(queryBuilder,
+                    getValue(mapParams, "sellingParticipant"),
+                    getValue(mapParams, "buyingParticipant"),
+                    getValue(mapParams, "participant"));
+
+
         return queryBuilder;
     }
 
@@ -311,6 +317,38 @@ public final class BcqQueryHolder {
                 .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
                         "%" + buyingParticipant.toUpperCase() + "%", LIKE))
                 .closeParenthesis();
+    }
+    private static SelectQueryBuilder addParticipantFilter(SelectQueryBuilder queryBuilder,
+                                                           String sellingParticipant,
+                                                           String buyingParticipant,
+                                                           String participant) {
+        if (isBlank(participant) || (!isBlank(sellingParticipant) && !isBlank(buyingParticipant))) {
+            return queryBuilder;
+        } else {
+            if (isBlank(sellingParticipant) && !isBlank(buyingParticipant)) {
+            return   queryBuilder
+                        .and().openParenthesis().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_SHORT_NAME)",
+                        "%" + participant.toUpperCase() + "%", LIKE))
+                        .or().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_SHORT_NAME)",
+                        "%" + participant.toUpperCase() + "%", LIKE))
+                        .closeParenthesis();
+            } else if (!isBlank(sellingParticipant) && isBlank(buyingParticipant)) {
+             return    queryBuilder
+                        .and().openParenthesis().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
+                        "%" + participant.toUpperCase() + "%", LIKE))
+                        .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
+                        "%" + participant.toUpperCase() + "%", LIKE))
+                        .closeParenthesis();
+            } else {
+            return    queryBuilder
+                        .and().openParenthesis().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_SHORT_NAME)",
+                        "%" + participant.toUpperCase() + "%", LIKE))
+                        .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
+                        "%" + participant.toUpperCase() + "%", LIKE))
+                        .closeParenthesis();
+            }
+        }
+
     }
 
     private static SelectQueryBuilder addExpiredFilter(SelectQueryBuilder queryBuilder, boolean expired) {
