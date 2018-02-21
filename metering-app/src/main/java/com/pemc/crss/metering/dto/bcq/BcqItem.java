@@ -18,4 +18,8 @@ public class BcqItem {
     private List<String> referenceMtns;
     private Date tradingDate;
 
+    public BcqItem(String tradingParticipantShortName, Date tradingDate) {
+        this.tradingParticipantShortName = tradingParticipantShortName;
+        this.tradingDate = tradingDate;
+    }
 }

@@ -1,6 +1,9 @@
 package com.pemc.crss.metering.validator.bcq.helper.impl;
 
+import com.google.common.collect.Lists;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import com.pemc.crss.metering.dto.bcq.BcqItem;
+import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.helper.ResubmissionValidationHelper;
@@ -16,6 +19,7 @@ import java.util.function.Predicate;
 import static com.pemc.crss.metering.constants.BcqValidationError.INCOMPLETE_RESUBMISSION_ENTRIES;
 import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
 import static com.pemc.crss.metering.validator.bcq.helper.BcqValidationHelperUtils.getFormattedSellingMtnAndBillingIdPair;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
@@ -24,7 +28,11 @@ import static java.util.stream.Collectors.toList;
 public class ResubmissionValidationHelperImpl implements ResubmissionValidationHelper {
 
     private final BcqService bcqService;
+    private static final String VALIDATE_URL = "/reg/bcq/validate/header";
 
+    private final ResourceTemplate resourceTemplate;
+
+    @SuppressWarnings("unchecked")
     @Override
     public HeaderListValidation validResubmission(String sellingParticipant, Date tradingDate) {
         HeaderListValidation validation = new HeaderListValidation();
@@ -33,17 +41,32 @@ public class ResubmissionValidationHelperImpl implements ResubmissionValidationH
                     tradingDate).stream()
                     .filter(header -> !bcqService.isHeaderInList(header, headerList))
                     .collect(toList());
-
+            List<BcqHeader> notValidHeader = Lists.newArrayList();
             if (missingHeaderList.size() > 0) {
-                BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INCOMPLETE_RESUBMISSION_ENTRIES,
-                        asList(formatDate(tradingDate), getFormattedSellingMtnAndBillingIdPair(missingHeaderList)));
-                validation.setErrorMessage(errorMessage);
-                return false;
+                for (BcqHeader header : missingHeaderList) {
+
+                    Boolean hasActive = processMissingHeader(new BcqItem(header.getBuyingParticipantShortName(), tradingDate));
+                    if (hasActive) {
+                        notValidHeader.add(header);
+                    }
+
+                }
+                if (notValidHeader.size() > 0) {
+                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INCOMPLETE_RESUBMISSION_ENTRIES,
+                            asList(formatDate(tradingDate), getFormattedSellingMtnAndBillingIdPair(notValidHeader)));
+                    validation.setErrorMessage(errorMessage);
+                    return false;
+                }
+
             }
             return true;
         };
         validation.setPredicate(predicate);
         return validation;
+    }
+
+    private boolean processMissingHeader(BcqItem item) {
+        return resourceTemplate.post(VALIDATE_URL, Boolean.class, item);
     }
 
 }
