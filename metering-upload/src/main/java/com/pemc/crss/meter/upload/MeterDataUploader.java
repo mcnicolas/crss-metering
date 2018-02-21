@@ -368,23 +368,23 @@ public class MeterDataUploader extends JFrame {
                 setProgress(35);
 
                 publish("Loading user credentials");
-//                List<String> userData = httpHandler.getUserType();
+                List<String> userData = httpHandler.getUserType();
                 setProgress(80);
 
-//                if (userData.size() > 1 &&
-//                        (!equalsIgnoreCase(userData.get(1), "PEMC") && !equalsIgnoreCase(userData.get(1), "MSP"))) {
-//
-//                    return FALSE;
-//                }
+                if (userData.size() > 1 &&
+                        (!equalsIgnoreCase(userData.get(1), "PEMC") && !equalsIgnoreCase(userData.get(1), "MSP"))) {
+
+                    return FALSE;
+                }
 
                 MeterDataUploader.this.username = username;
-//                fullName = userData.get(0);
-//                userType = userData.get(1);
+                fullName = userData.get(0);
+                userType = userData.get(1);
 
                 // TODO: Avoid redundant rest call
-//                if (equalsIgnoreCase(userType, "MSP")) {
+                if (equalsIgnoreCase(userType, "MSP")) {
                     participant = httpHandler.getParticipant();
-//                }
+                }
 
                 publish("Loading MSP Listing");
                 mspListing = httpHandler.getMSPListing();
