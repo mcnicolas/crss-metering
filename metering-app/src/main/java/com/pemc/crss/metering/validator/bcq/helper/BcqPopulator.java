@@ -12,6 +12,7 @@ import static com.pemc.crss.metering.constants.BcqInterval.fromDescription;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDateTime;
 import static com.pemc.crss.metering.utils.DateTimeUtils.isStartOfDay;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 
 public class BcqPopulator {
@@ -32,10 +33,10 @@ public class BcqPopulator {
         List<BcqHeader> headerList = new ArrayList<>();
         Set<BcqHeader> headerSet = new HashSet<>();
         Map<BcqHeader, List<BcqData>> headerDataMap = new HashMap<>();
-
+        boolean emptyBMtn = checkBuyerMtn(csv);
         for (List<String> line : csv.subList(START_LINE_OF_DATA, csv.size())) {
             BcqHeader header = populateHeader(line, false);
-            BcqHeader headerUnique =   populateHeader(line, true);
+            BcqHeader headerUnique =   populateHeader(line, !emptyBMtn);
             List<BcqData> dataList;
 
             header.setInterval(interval);
@@ -49,7 +50,7 @@ public class BcqPopulator {
                 dataList = headerDataMap.get(header);
             }
 
-            BcqData data = populateData(line, interval);
+            BcqData data = populateData(line, interval, !emptyBMtn);
             dataList.add(data);
         }
 
@@ -70,9 +71,9 @@ public class BcqPopulator {
         BcqHeader header = new BcqHeader();
         String sellingMtn = line.get(SELLING_MTN_INDEX);
         String billingId = line.get(BILLING_ID_INDEX);
-        String buyerMtn = line.get(BUYER_MTN_INDEX);
         Date tradingDate = getTradingDate(line.get(DATE_INDEX));
         if (includeBuyerMtn) {
+            String buyerMtn = line.get(BUYER_MTN_INDEX);
             header.setBuyerMtn(buyerMtn);
         }
         header.setSellingMtn(sellingMtn);
@@ -82,17 +83,20 @@ public class BcqPopulator {
         return header;
     }
 
-    private BcqData populateData(List<String> line, BcqInterval interval) {
+    private BcqData populateData(List<String> line, BcqInterval interval, boolean includeBMtn) {
         BcqData data = new BcqData();
         String referenceMtn = line.get(REFERENCE_MTN_INDEX);
-        String buyerMtn = "null".equals(line.get(BUYER_MTN_INDEX)) ?  "" : line.get(BUYER_MTN_INDEX);
         Date endTime = parseDateTime(line.get(DATE_INDEX));
 
         data.setReferenceMtn(referenceMtn);
         data.setStartTime(getStartTime(endTime, interval));
         data.setEndTime(endTime);
         data.setBcq(new BigDecimal(line.get(BCQ_INDEX)));
-        data.setBuyerMtn(buyerMtn);
+        if(includeBMtn) {
+            String buyerMtn = "null".equals(line.get(BUYER_MTN_INDEX)) ?  "" : line.get(BUYER_MTN_INDEX);
+            data.setBuyerMtn(buyerMtn);
+
+        }
 
         return data;
     }
@@ -115,4 +119,12 @@ public class BcqPopulator {
         return new Date(endTime.getTime() - interval.getTimeInMillis());
     }
 
+    private boolean checkBuyerMtn(List<List<String>> csv){
+        try {
+            return csv.subList(START_LINE_OF_DATA, csv.size()).stream()
+                    .allMatch(line -> isBlank(line.get(BUYER_MTN_INDEX)));
+        }catch (IndexOutOfBoundsException e) {
+            return true;
+        }
+    }
 }

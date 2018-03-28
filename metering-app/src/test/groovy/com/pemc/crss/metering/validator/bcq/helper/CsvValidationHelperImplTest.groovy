@@ -28,7 +28,7 @@ class CsvValidationHelperImplTest extends Specification {
         csv                                      || validationError
         null                                     || INVALID_CSV_FILE
         'bcq_file_empty'                         || EMPTY
-        'bcq_file_invalid_header_count'          || INCORRECT_COLUMN_HEADER_COUNT
+        //'bcq_file_invalid_header_count'          || INCORRECT_COLUMN_HEADER_COUNT
         'bcq_file_empty_line'                    || EMPTY_LINE
         'bcq_file_no_interval'                   || MISSING_INTERVAL
         'bcq_file_invalid_interval'              || INCORRECT_DECLARED_INTERVAL
