@@ -18,7 +18,7 @@ public class BcqDeclaration {
     private BcqValidationResult validationResult;
     private boolean isResubmission;
     private boolean isSpecialEvent;
-
+    private String user;
     public BcqDeclaration(ParticipantSellerDetails sellerDetails) {
         this.sellerDetails = sellerDetails;
     }

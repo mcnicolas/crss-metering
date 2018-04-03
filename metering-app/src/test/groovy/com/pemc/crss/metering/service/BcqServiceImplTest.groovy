@@ -10,6 +10,7 @@ import com.pemc.crss.metering.dto.bcq.*
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant
+import com.pemc.crss.metering.resource.template.ResourceTemplate
 import com.pemc.crss.metering.service.exception.InvalidStateException
 import com.pemc.crss.metering.service.exception.OldRecordException
 import com.pemc.crss.metering.service.exception.PairExistsException
@@ -30,7 +31,8 @@ class BcqServiceImplTest extends Specification {
     def bcqDao = Mock(BcqDao);
     def bcqNotificationManager = Mock(BcqNotificationManager);
     def configService = Mock(CacheConfigService);
-    def sut = new BcqServiceImpl(bcqDao, bcqNotificationManager, configService)
+    def resourceTemplate = Mock(ResourceTemplate);
+    def sut = new BcqServiceImpl(bcqDao, bcqNotificationManager, configService, resourceTemplate)
 
     @Unroll
     def 'save declaration by seller with status: #status'() {

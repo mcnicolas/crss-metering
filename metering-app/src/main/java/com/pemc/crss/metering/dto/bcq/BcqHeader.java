@@ -32,6 +32,7 @@ public class BcqHeader {
     private BcqInterval interval;
     private String buyerMtn;
     private Long refMtnSize;
+    private String uploadedBy;
 
     @Override
     public boolean equals(Object o) {
