@@ -65,4 +65,7 @@ public interface BcqService {
     void generateCsv(BcqDownloadDto bcqDownloadDto, Long interval, LocalDateTime date, OutputStream outputStream)
             throws IOException;
 
+    void generateInternalCsv(String shortName, Long interval, LocalDateTime date, OutputStream outputStream)
+            throws IOException;
+
 }

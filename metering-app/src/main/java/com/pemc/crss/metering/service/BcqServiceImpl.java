@@ -20,6 +20,7 @@ import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
+import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.service.exception.InvalidStateException;
 import com.pemc.crss.metering.service.exception.OldRecordException;
 import com.pemc.crss.metering.service.exception.PairExistsException;
@@ -31,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanWriter;
@@ -41,6 +43,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -83,10 +86,11 @@ public class BcqServiceImpl implements BcqService {
     private static final String NEW_VERSION_ERROR = UNABLE_MESSAGE + "declaration has a new version. " + RELOAD_MESSAGE;
     private static final String VOIDED_ERROR = UNABLE_MESSAGE + "declaration has been voided. " + RELOAD_MESSAGE;
     private static final String UPDATED_ERROR = UNABLE_MESSAGE + "declaration has been updated. " + RELOAD_MESSAGE;
-
+    private static final String ACTIVE_ENROLLMENT_URL = "reg/contract/enroll/active/%s/%s/contract";
     private final BcqDao bcqDao;
     private final BcqNotificationManager bcqNotificationManager;
     private final CacheConfigService configService;
+    private final ResourceTemplate resourceTemplate;
 
     @Override
     @Transactional
@@ -535,9 +539,9 @@ public class BcqServiceImpl implements BcqService {
             bcqDownloadDto.getSellingMtns().sort(String::compareTo);
 
             for (String buyerBillingId : bcqDownloadDto.getBuyerBillingIds()) {
-               for (String sellingMtn : bcqDownloadDto.getSellingMtns()) {
+                for (String sellingMtn : bcqDownloadDto.getSellingMtns()) {
                     for (String s : time) {
-                        list.add(new BcqTemplateRow(sellingMtn, buyerBillingId,"\t" + s));
+                        list.add(new BcqTemplateRow(sellingMtn, buyerBillingId, "\t" + s));
                     }
                 }
             }
@@ -565,5 +569,26 @@ public class BcqServiceImpl implements BcqService {
                 beanWriter.flush();
             }
         }
+    }
+
+    @Override
+    public void generateInternalCsv(String shortName, Long interval, LocalDateTime date, OutputStream outputStream) throws IOException {
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        BcqDownloadDto dto = resourceTemplate.get(String.format(ACTIVE_ENROLLMENT_URL, date.format(formatter), shortName), BcqDownloadDto.class);
+        log.info("Start creating Internal csv files for {}", shortName);
+
+        List<String> dateTime = getDateTime(date.with(LocalTime.MIDNIGHT), interval);
+
+        try {
+            writeCsv(dto, dateTime, interval, outputStream);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        outputStream.close();
+
+        log.info("Success creating Internal csv files....");
     }
 }
