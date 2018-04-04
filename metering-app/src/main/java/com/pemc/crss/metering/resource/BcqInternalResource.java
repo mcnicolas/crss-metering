@@ -31,7 +31,7 @@ public class BcqInternalResource {
         this.bcqService = bcqService;
     }
 
-    @GetMapping("/bcqTemplate/download")
+    @PostMapping("/bcqTemplate/download")
     public void downloadTemplate(@RequestParam String shortName, final HttpServletResponse response) throws IOException {
         LocalDateTime date = LocalDateTime.now().minusDays(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
