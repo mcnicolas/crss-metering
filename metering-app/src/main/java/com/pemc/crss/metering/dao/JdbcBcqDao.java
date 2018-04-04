@@ -155,7 +155,6 @@ public class JdbcBcqDao implements BcqDao {
         log.debug("Found {} headers", headerList.size());
         return headerList;
     }
-
     @Override
     public List<BcqHeader> findSameHeaders(BcqHeader header, List<BcqStatus> statuses, ComparisonOperator operator) {
         QueryData data = BcqQueryHolder.sameHeaders(header, statuses, operator);

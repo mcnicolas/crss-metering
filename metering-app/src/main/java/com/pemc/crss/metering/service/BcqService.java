@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -68,4 +69,7 @@ public interface BcqService {
     void generateInternalCsv(String shortName, Long interval, LocalDateTime date, OutputStream outputStream)
             throws IOException;
 
+
+    void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, OutputStream outputStream)
+            throws IOException;
 }

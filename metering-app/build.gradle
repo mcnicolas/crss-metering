@@ -17,6 +17,7 @@ buildscript {
         classpath 'org.postgresql:postgresql:9.4.1212'
         classpath files("$rootDir/libs/ojdbc6-11.2.0.4.jar")
         classpath group: 'org.liquibase', name: 'liquibase-core', version: '3.5.3'
+
     }
 }
 
@@ -70,6 +71,8 @@ dependencies {
     compile 'commons-beanutils:commons-beanutils'
     compile 'org.apache.commons:commons-lang3'
     compile 'com.google.guava:guava'
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.2.4'
+
 
     runtime 'de.appelgriepsch.logback:logback-gelf-appender'
 

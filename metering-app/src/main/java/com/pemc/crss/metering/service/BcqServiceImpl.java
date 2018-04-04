@@ -1,9 +1,14 @@
 package com.pemc.crss.metering.service;
 
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.pemc.crss.commons.cache.service.CacheConfigService;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
+import com.pemc.crss.metering.constants.BcqUpdateType;
 import com.pemc.crss.metering.dao.BcqDao;
 import com.pemc.crss.metering.dao.query.ComparisonOperator;
 import com.pemc.crss.metering.dto.bcq.*;
@@ -19,6 +24,8 @@ import com.pemc.crss.metering.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -32,6 +39,9 @@ import org.supercsv.prefs.CsvPreference;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -39,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -126,6 +137,14 @@ public class BcqServiceImpl implements BcqService {
                 "sellingParticipant", shortName,
                 "tradingDate", formatDate(tradingDate)));
     }
+
+    private List<BcqHeader> findHeadersOfParticipantByTradingDateAndStatus(String shortName, Date tradingDate, String status) {
+        return findAllHeaders(of(
+                "shortName", shortName,
+                "tradingDate", formatDate(tradingDate),
+                "status", status));
+    }
+
 
     @Override
     public boolean isHeaderInList(BcqHeader headerToFind, List<BcqHeader> headerList) {
@@ -571,5 +590,96 @@ public class BcqServiceImpl implements BcqService {
         outputStream.close();
 
         log.info("Success creating Internal csv files....");
+    }
+
+    @Override
+    public void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, OutputStream outputStream) throws IOException {
+        List<BcqHeader> headerList = findHeadersOfParticipantByTradingDateAndStatus(shortName, tradingDate, status);
+        //ObjectOutputStream oos = new ObjectOutputStream(outputStream);
+        JSONObject jObject = new JSONObject();
+        try {
+            JSONArray jHeaderArray = new JSONArray();
+            for (BcqHeader header : headerList) {
+                List<BcqData> dataList = findDataByHeaderId(header.getHeaderId());
+                JSONArray jDataArray = new JSONArray();
+                for (BcqData bcqData : dataList) {
+                    JSONObject jsonData = new JSONObject();
+                    jsonData.put("Reference_MTN", bcqData.getReferenceMtn());
+                    jsonData.put("Dispatch_Interval", getDispatchInterVal(bcqData.getStartTime(), bcqData.getEndTime()));
+                    jsonData.put("BCQ", bcqData.getBcq());
+                    jDataArray.put(jsonData);
+                }
+
+                JSONObject jsonHeader = new JSONObject();
+                jsonHeader.put("Details", jDataArray);
+                jsonHeader.put("Version", parseVersion(header.getUploadFile().getSubmittedDate(), header.getStatus()));
+                jsonHeader.put("Buying_Participant", header.getBuyingParticipantName());
+                jsonHeader.put("Selling_MTN", header.getSellingMtn());
+                jsonHeader.put("Submitted_Date", header.getUploadFile().getSubmittedDate().toString());
+                jsonHeader.put("Deadline_Date", header.getDeadlineDate().toString());
+                jsonHeader.put("Status", getStatus(header.getStatus()));
+                jsonHeader.put("Transaction_ID", header.getUploadFile().getTransactionId());
+                jsonHeader.put("Billing_ID", header.getBillingId());
+                jsonHeader.put("Trading_Date", header.getTradingDate().toString());
+                jsonHeader.put("Updated_Via", parseValueBcqUpdateType(header.getUpdatedVia()));
+                jHeaderArray.put(jsonHeader);
+            }
+            jObject.put("BCQ_SUBMISSION", jHeaderArray);
+            String jsonString = jHeaderArray.toString();
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            JsonParser jp = new JsonParser();
+            JsonElement je = jp.parse(jsonString);
+            String prettyJsonString = gson.toJson(je);
+            outputStream.write(prettyJsonString.getBytes(Charset.forName("UTF-8")));
+            outputStream.flush();
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            outputStream.flush();
+            outputStream.close();
+        }
+    }
+
+    private long getDispatchInterVal(Date start, Date end) {
+        long diff = end.getTime() - start.getTime();//as given
+        return TimeUnit.MILLISECONDS.toMinutes(diff);
+    }
+
+    private String parseValueBcqUpdateType(BcqUpdateType type) {
+        return type == null ? "" : type.name();
+    }
+
+    private String parseVersion(Date createdDate, BcqStatus status) {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-DD hh:mm a");
+        String date = df.format(createdDate);
+        return date.concat(" - ").concat(getStatus(status));
+    }
+
+    private String getStatus(BcqStatus status) {
+        switch (status.name()) {
+            case "CANCELLED":
+                return "'Cancelled'";
+            case "CONFIRMED":
+                return "Confirmed";
+            case "NULLIFIED":
+                return "Nullified";
+            case "NOT_CONFIRMED":
+                return "Not Confirmed";
+            case "FOR_CONFIRMATION":
+                return "For Confirmation";
+            case "FOR_NULLIFICATION":
+                return "For Nullification";
+            case "SETTLEMENT_READY":
+                return "Settlement Ready";
+            case "FOR_APPROVAL_UPDATE":
+                return "For Approval (Update)";
+            case "FOR_APPROVAL_NEW":
+                return "For Approval (New)";
+            case "FOR_APPROVAL_CANCEL":
+                return "For Approval (Cancel)";
+            default:
+                return status.name();
+        }
+
     }
 }

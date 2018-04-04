@@ -96,6 +96,7 @@ public final class BcqQueryHolder {
                 .column("STATUS")
                 .column("TRANSACTION_ID")
                 .column("SUBMITTED_DATE")
+                .column("UPLOADED_BY")
                 .from(HEADER_JOIN_FILE);
         return addFilters(queryBuilder, mapParams).build();
     }
@@ -137,6 +138,7 @@ public final class BcqQueryHolder {
     public static QueryData dataByHeaderId(long headerId) {
         return new SelectQueryBuilder()
                 .column("REFERENCE_MTN")
+                .column("START_TIME")
                 .column("END_TIME")
                 .column("BCQ")
                 .from("TXN_BCQ_DATA")
@@ -240,10 +242,12 @@ public final class BcqQueryHolder {
 
     private static SelectQueryBuilder addFilters(SelectQueryBuilder queryBuilder, Map<String, String> mapParams) {
         String status = getValue(mapParams, "status");
-        if (status == null) {
-            queryBuilder = addIsSettlementFilter(queryBuilder, getValue(mapParams, "isSettlement") != null);
-        } else {
-            queryBuilder = addStatusFilter(queryBuilder, getValue(mapParams, "status"));
+        if (!"All".equals(status)) {
+            if (status == null) {
+                queryBuilder = addIsSettlementFilter(queryBuilder, getValue(mapParams, "isSettlement") != null);
+            } else {
+                queryBuilder = addStatusFilter(queryBuilder, getValue(mapParams, "status"));
+            }
         }
         queryBuilder = addHeaderIdFilter(queryBuilder, getValue(mapParams, "headerId", Long.class));
         queryBuilder = addTradingDateFilter(queryBuilder, getValue(mapParams, "tradingDate", Date.class));
@@ -256,6 +260,8 @@ public final class BcqQueryHolder {
                     getValue(mapParams, "sellingParticipant"),
                     getValue(mapParams, "buyingParticipant"),
                     getValue(mapParams, "participant"));
+        queryBuilder = addShortNameFilter(queryBuilder, getValue(mapParams, "shortName"));
+
 
 
         return queryBuilder;
@@ -309,7 +315,14 @@ public final class BcqQueryHolder {
                         "%" + sellingParticipant.toUpperCase() + "%", LIKE))
                 .closeParenthesis();
     }
-
+    private static SelectQueryBuilder addShortNameFilter(SelectQueryBuilder queryBuilder, String shortName) {
+        return isBlank(shortName) ? queryBuilder : queryBuilder
+                .and().openParenthesis().filter(new QueryFilter("SELLING_PARTICIPANT_SHORT_NAME",
+                        shortName , EQUALS))
+                .or().filter(new QueryFilter("BUYING_PARTICIPANT_SHORT_NAME",
+                        shortName, EQUALS))
+                .closeParenthesis();
+    }
     private static SelectQueryBuilder addBuyingParticipantFilter(SelectQueryBuilder queryBuilder, String buyingParticipant) {
         return isBlank(buyingParticipant) ? queryBuilder : queryBuilder
                 .and().openParenthesis().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_NAME)",
