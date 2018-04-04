@@ -51,19 +51,19 @@ public final class BcqQueryHolder {
                 .column("BUYING_PARTICIPANT_SHORT_NAME")
                 .column(subHeaderPage("STRING_AGG(D.TRANSACTION_ID, ', ' ORDER BY D.SUBMITTED_DATE)", status,
                         isSettlement))
-                    .as("TRANSACTION_ID")
+                .as("TRANSACTION_ID")
                 .column(subHeaderPage("STRING_AGG(TO_CHAR(D.SUBMITTED_DATE, 'YYYY-MM-DD hh:MI AM'), ', ' "
                         + "ORDER BY D.SUBMITTED_DATE)", status, isSettlement))
-                    .as("SUBMITTED_DATE")
+                .as("SUBMITTED_DATE")
                 .column(subHeaderPage("STRING_AGG(COALESCE(TO_CHAR(C.DEADLINE_DATE, 'YYYY-MM-DD'), ' '), ', ' "
                         + "ORDER BY D.SUBMITTED_DATE)", status, isSettlement))
-                    .as("DEADLINE_DATE")
+                .as("DEADLINE_DATE")
                 .column(subHeaderPage("STRING_AGG(C.STATUS, ', ' ORDER BY D.SUBMITTED_DATE)", status,
                         isSettlement))
-                    .as("STATUS")
+                .as("STATUS")
                 .column(subHeaderPage("STRING_AGG(COALESCE(C.UPDATED_VIA, ' '), ', ' ORDER BY D.SUBMITTED_DATE)",
                         status, isSettlement))
-                    .as("UPDATED_VIA")
+                .as("UPDATED_VIA")
                 .from(HEADER_JOIN_FILE)
                 .where().filter("HEADER_ID IN(" + uniqueHeaderIds.getSql() + ")")
                 .orderBy(pageableRequest.getOrderList())
@@ -192,7 +192,7 @@ public final class BcqQueryHolder {
                 .from("TXN_BCQ_PROHIBITED")
                 .where().filter("ENABLED = TRUE");
 
-       return addProhibitedFilters(queryBuilder, mapParams).build();
+        return addProhibitedFilters(queryBuilder, mapParams).build();
     }
 
     public static QueryData enabledProhibitedList() {
@@ -242,10 +242,11 @@ public final class BcqQueryHolder {
 
     private static SelectQueryBuilder addFilters(SelectQueryBuilder queryBuilder, Map<String, String> mapParams) {
         String status = getValue(mapParams, "status");
-        if (!"All".equals(status)) {
-            if (status == null) {
-                queryBuilder = addIsSettlementFilter(queryBuilder, getValue(mapParams, "isSettlement") != null);
-            } else {
+
+        if (status == null) {
+            queryBuilder = addIsSettlementFilter(queryBuilder, getValue(mapParams, "isSettlement") != null);
+        } else {
+            if (!"ALL".equals(status.toUpperCase())) {
                 queryBuilder = addStatusFilter(queryBuilder, getValue(mapParams, "status"));
             }
         }
@@ -257,11 +258,10 @@ public final class BcqQueryHolder {
         queryBuilder = addBuyingParticipantFilter(queryBuilder, getValue(mapParams, "buyingParticipant"));
         queryBuilder = addExpiredFilter(queryBuilder, getValue(mapParams, "expired") != null);
         queryBuilder = addParticipantFilter(queryBuilder,
-                    getValue(mapParams, "sellingParticipant"),
-                    getValue(mapParams, "buyingParticipant"),
-                    getValue(mapParams, "participant"));
+                getValue(mapParams, "sellingParticipant"),
+                getValue(mapParams, "buyingParticipant"),
+                getValue(mapParams, "participant"));
         queryBuilder = addShortNameFilter(queryBuilder, getValue(mapParams, "shortName"));
-
 
 
         return queryBuilder;
@@ -315,14 +315,16 @@ public final class BcqQueryHolder {
                         "%" + sellingParticipant.toUpperCase() + "%", LIKE))
                 .closeParenthesis();
     }
+
     private static SelectQueryBuilder addShortNameFilter(SelectQueryBuilder queryBuilder, String shortName) {
         return isBlank(shortName) ? queryBuilder : queryBuilder
                 .and().openParenthesis().filter(new QueryFilter("SELLING_PARTICIPANT_SHORT_NAME",
-                        shortName , EQUALS))
+                        shortName, EQUALS))
                 .or().filter(new QueryFilter("BUYING_PARTICIPANT_SHORT_NAME",
                         shortName, EQUALS))
                 .closeParenthesis();
     }
+
     private static SelectQueryBuilder addBuyingParticipantFilter(SelectQueryBuilder queryBuilder, String buyingParticipant) {
         return isBlank(buyingParticipant) ? queryBuilder : queryBuilder
                 .and().openParenthesis().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_NAME)",
@@ -331,6 +333,7 @@ public final class BcqQueryHolder {
                         "%" + buyingParticipant.toUpperCase() + "%", LIKE))
                 .closeParenthesis();
     }
+
     private static SelectQueryBuilder addParticipantFilter(SelectQueryBuilder queryBuilder,
                                                            String sellingParticipant,
                                                            String buyingParticipant,
@@ -339,25 +342,25 @@ public final class BcqQueryHolder {
             return queryBuilder;
         } else {
             if (isBlank(sellingParticipant) && !isBlank(buyingParticipant)) {
-            return   queryBuilder
+                return queryBuilder
                         .and().openParenthesis().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_SHORT_NAME)",
-                        "%" + participant.toUpperCase() + "%", LIKE))
+                                "%" + participant.toUpperCase() + "%", LIKE))
                         .or().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_SHORT_NAME)",
-                        "%" + participant.toUpperCase() + "%", LIKE))
+                                "%" + participant.toUpperCase() + "%", LIKE))
                         .closeParenthesis();
             } else if (!isBlank(sellingParticipant) && isBlank(buyingParticipant)) {
-             return    queryBuilder
+                return queryBuilder
                         .and().openParenthesis().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
-                        "%" + participant.toUpperCase() + "%", LIKE))
+                                "%" + participant.toUpperCase() + "%", LIKE))
                         .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
-                        "%" + participant.toUpperCase() + "%", LIKE))
+                                "%" + participant.toUpperCase() + "%", LIKE))
                         .closeParenthesis();
             } else {
-            return    queryBuilder
+                return queryBuilder
                         .and().openParenthesis().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_SHORT_NAME)",
-                        "%" + participant.toUpperCase() + "%", LIKE))
+                                "%" + participant.toUpperCase() + "%", LIKE))
                         .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
-                        "%" + participant.toUpperCase() + "%", LIKE))
+                                "%" + participant.toUpperCase() + "%", LIKE))
                         .closeParenthesis();
             }
         }

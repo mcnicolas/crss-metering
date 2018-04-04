@@ -1,12 +1,7 @@
 package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.commons.cache.service.CacheConfigService;
-import com.pemc.crss.metering.dto.bcq.BcqData;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.service.BcqService;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +17,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.List;
 
 @RestController
 @RequestMapping("/__internal__")
@@ -37,8 +31,8 @@ public class BcqInternalResource {
         this.bcqService = bcqService;
     }
 
-    @GetMapping("/bcqTemplate/download/{shortName}")
-    public void downloadTemplate(@PathVariable String shortName, final HttpServletResponse response) throws IOException {
+    @GetMapping("/bcqTemplate/download")
+    public void downloadTemplate(@RequestParam String shortName, final HttpServletResponse response) throws IOException {
         LocalDateTime date = LocalDateTime.now().minusDays(1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
         String fileName = URLEncoder.encode(shortName + "_" + date.format(formatter) + ".csv", "UTF-8");
@@ -55,27 +49,26 @@ public class BcqInternalResource {
     public void downloadBcqSubmission(@RequestParam String shortName,
                                       @RequestParam String date,
                                       @RequestParam String status,
-                                        final HttpServletResponse response) throws IOException {
-        if (status.equals("All") || status.equals("Settlement-Ready")) {
-            try {
-                DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-                DateFormat df2 = new SimpleDateFormat("yyyyMMdd_");
-                Date tradingDate = df.parse(date);
-                String fileName = URLEncoder.encode(shortName + "_" + df2.format(tradingDate) + System.currentTimeMillis() + ".json", "UTF-8");
-                fileName = URLDecoder.decode(fileName, "ISO8859_1");
-                response.setContentType("application/x-msdownload");
-                // response.setHeader("Content-disposition", "attachment; filename=" + fileName);
-                response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
-                response.addHeader("Content-disposition", "attachment; filename=" + fileName);
-
+                                      final HttpServletResponse response) throws IOException {
+        try {
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            DateFormat df2 = new SimpleDateFormat("yyyyMMdd_");
+            Date tradingDate = df.parse(date);
+            String fileName = URLEncoder.encode(shortName + "_" + df2.format(tradingDate) + System.currentTimeMillis() + ".json", "UTF-8");
+            fileName = URLDecoder.decode(fileName, "ISO8859_1");
+            response.setContentType("application/x-msdownload");
+            // response.setHeader("Content-disposition", "attachment; filename=" + fileName);
+            response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+            response.addHeader("Content-disposition", "attachment; filename=" + fileName);
+            if (status.toUpperCase().equals("ALL") || status.equals("SETTLEMENT_READY")) {
                 bcqService.generateJsonBcqSubmission(shortName, tradingDate, status, response.getOutputStream());
-
-            } catch (ParseException e) {
-                e.printStackTrace();
+            } else {
+                throw new IllegalArgumentException("Invalid status: " + status);
             }
-
-        } else {
-            throw new IllegalArgumentException("Invalid status");
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
+
+
     }
 }
