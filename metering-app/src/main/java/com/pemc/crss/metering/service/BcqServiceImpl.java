@@ -577,7 +577,9 @@ public class BcqServiceImpl implements BcqService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         BcqDownloadDto dto = resourceTemplate.get(String.format(ACTIVE_ENROLLMENT_URL, date.format(formatter), shortName), BcqDownloadDto.class);
         log.info("Start creating Internal csv files for {}", shortName);
-
+        if (dto == null) {
+            throw new IllegalArgumentException("Short name does't exist: " + shortName);
+        }
         List<String> dateTime = getDateTime(date.with(LocalTime.MIDNIGHT), interval);
 
         try {
