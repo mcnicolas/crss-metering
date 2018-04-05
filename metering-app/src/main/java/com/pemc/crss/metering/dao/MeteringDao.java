@@ -2,6 +2,7 @@ package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
+import com.pemc.crss.metering.dto.ProcessedMqData;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
@@ -49,5 +50,8 @@ public interface MeteringDao {
     void updateNotificationFlag(long headerID);
 
     List<Long> getStaleRecords();
+
+    List<ProcessedMqData> findAllForExtraction(String category, String sein, String tpShortName,
+                                               String dateFrom, String dateTo, boolean isLatest);
 
 }

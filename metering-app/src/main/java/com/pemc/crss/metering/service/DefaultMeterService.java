@@ -4,13 +4,9 @@ import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dao.MeteringDao;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
+import com.pemc.crss.metering.dto.ProcessedMqData;
 import com.pemc.crss.metering.dto.VersionData;
-import com.pemc.crss.metering.dto.mq.FileManifest;
-import com.pemc.crss.metering.dto.mq.HeaderManifest;
-import com.pemc.crss.metering.dto.mq.HeaderParam;
-import com.pemc.crss.metering.dto.mq.MeterData;
-import com.pemc.crss.metering.dto.mq.MeterDataDetail;
-import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
+import com.pemc.crss.metering.dto.mq.*;
 import com.pemc.crss.metering.event.MeterQuantityUploadEvent;
 import com.pemc.crss.metering.parser.meterquantity.MeterQuantityParser;
 import com.pemc.crss.metering.validator.ValidationResult;
@@ -26,11 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
@@ -243,4 +235,9 @@ public class DefaultMeterService implements MeterService {
         return meteringDao.getVersionedData(request);
     }
 
+    @Override
+    public List<ProcessedMqData> getMeterDataForExtraction(String category, String sein, String tpShortName,
+                                                           String dateFrom, String dateTo, boolean isLatest) {
+        return meteringDao.findAllForExtraction(category, sein, tpShortName, dateFrom, dateTo, isLatest);
+    }
 }

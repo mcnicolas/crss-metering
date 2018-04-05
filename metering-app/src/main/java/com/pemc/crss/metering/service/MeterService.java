@@ -2,13 +2,9 @@ package com.pemc.crss.metering.service;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
+import com.pemc.crss.metering.dto.ProcessedMqData;
 import com.pemc.crss.metering.dto.VersionData;
-import com.pemc.crss.metering.dto.mq.FileManifest;
-import com.pemc.crss.metering.dto.mq.HeaderManifest;
-import com.pemc.crss.metering.dto.mq.HeaderParam;
-import com.pemc.crss.metering.dto.mq.MeterDataDetail;
-import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
-import com.pemc.crss.metering.dto.mq.ParticipantUserDetail;
+import com.pemc.crss.metering.dto.mq.*;
 import com.pemc.crss.metering.validator.ValidationResult;
 import org.springframework.data.domain.Page;
 
@@ -50,6 +46,9 @@ public interface MeterService {
     HeaderManifest getHeader(Long headerID);
 
     List<VersionData> getVersionedData(Map<String, String> request);
+
+    List<ProcessedMqData> getMeterDataForExtraction(String category, String sein, String tpShortName,
+                                                    String dateFrom, String dateTo, boolean isLatest);
 
 //    ParticipantUserDetail getParticipantUserDetail(String shortName);
 

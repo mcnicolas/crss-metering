@@ -2,6 +2,7 @@ package com.pemc.crss.metering.dao;
 
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
+import com.pemc.crss.metering.dto.ProcessedMqData;
 import com.pemc.crss.metering.dto.VersionData;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
@@ -46,6 +47,7 @@ public class JdbcMeteringDao implements MeteringDao {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+    private static final DateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     @Deprecated // TODO: Use java.time
     private final DateFormat readingDateFormat = new SimpleDateFormat("yyyyMMddHHmm");
@@ -437,4 +439,77 @@ public class JdbcMeteringDao implements MeteringDao {
                 new SingleColumnRowMapper<>(Long.class));
     }
 
+    @Override
+    public List<ProcessedMqData> findAllForExtraction(String category, String sein, String tpShortName,
+                                                      String dateFromStr, String dateToStr, boolean isLatest) {
+        Long dateFrom = getStartOfDay(dateFromStr);
+        Long dateTo = getEndOfDay(dateFromStr, dateToStr);
+
+        log.debug("dateFrom={}, dateTo={}", dateFrom, dateTo);
+        MQExportQueryBuilder queryBuilder = new MQExportQueryBuilder();
+        BuilderData query = queryBuilder.selectMeterData(category, dateFrom, dateTo, isLatest)
+                .addSEINFilter(sein)
+                .addTpShortnameFilter(tpShortName)
+//                .orderBy(pageableRequest.getOrderList())
+//                .paginate(pageNo, pageSize)
+                .build();
+
+
+        return getMeterDataDisplay(query);
+    }
+
+    private List<ProcessedMqData> getMeterDataDisplay(BuilderData query) {
+
+        log.debug("Select sql: {}", query.getSql());
+
+        return jdbcTemplate.query(
+                query.getSql(),
+                query.getArguments(),
+                rs -> {
+                    List<ProcessedMqData> meterDataList = new ArrayList<>();
+                    while (rs.next()) {
+                        ProcessedMqData meterData = new ProcessedMqData();
+
+                        meterData.setCategory(rs.getString("category"));
+                        meterData.setMspShortname(rs.getString("msp_shortname"));
+                        meterData.setSein(rs.getString("sein"));
+
+                        try {
+                            meterData.setReadingDateTime(
+                                    DATE_FORMATTER.format(
+                                            readingDateFormat.parse(String.valueOf(rs.getLong("reading_datetime"))))
+                            );
+                        } catch (ParseException e) {
+                            log.error(e.getMessage(), e);
+                        }
+
+                        meterData.setKwhd(getBigDecimalValue(rs.getBigDecimal("kwhd")));
+                        meterData.setKvarhd(getBigDecimalValue(rs.getBigDecimal("kvarhd")));
+                        meterData.setKwd(getBigDecimalValue(rs.getBigDecimal("kwd")));
+                        meterData.setKwhr(getBigDecimalValue(rs.getBigDecimal("kwhr")));
+                        meterData.setKvarhr(getBigDecimalValue(rs.getBigDecimal("kvarhr")));
+                        meterData.setKwr(getBigDecimalValue(rs.getBigDecimal("kwr")));
+                        meterData.setEstimationFlag(rs.getString("estimation_flag"));
+
+                        try {
+                            meterData.setUploadDateTime(
+                                    DATE_FORMATTER.format(rs.getDate("upload_datetime"))
+                            );
+                        } catch (Exception e) {
+                            log.error(e.getMessage(), e);
+                        }
+
+                        meterData.setTransactionId(rs.getString("transaction_id"));
+
+                        meterDataList.add(meterData);
+
+                    }
+
+                    return meterDataList;
+                });
+    }
+
+    private Object getBigDecimalValue(BigDecimal big) {
+        return big == null ? "" : big;
+    }
 }
