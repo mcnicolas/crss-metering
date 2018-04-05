@@ -10,8 +10,6 @@ public class ProcessedMqData {
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     private static final DateFormat DATE_FORMATTER = new SimpleDateFormat(DATE_FORMAT);
 
-    private String category;
-
     private String mspShortname;
 
     private String sein;

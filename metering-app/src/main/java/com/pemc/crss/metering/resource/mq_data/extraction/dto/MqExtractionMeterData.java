@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.resource.mq_data.extraction.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -10,13 +11,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@JsonPropertyOrder({"transaction_id", "upload_datetime", "record_count", "meter_readings"})
 public class MqExtractionMeterData {
-
-    @JsonProperty("upload_datetime")
-    private final String uploadDateTime;
 
     @JsonProperty("transaction_id")
     private final String transactionId;
+
+    @JsonProperty("upload_datetime")
+    private final String uploadDateTime;
 
     @JsonProperty("meter_readings")
     private List<MqExtractionMeterReading> meterReadings = new ArrayList<>();
@@ -24,6 +26,11 @@ public class MqExtractionMeterData {
     public MqExtractionMeterData(String uploadDateTime, String transactionId) {
         this.uploadDateTime = uploadDateTime;
         this.transactionId = transactionId;
+    }
+
+    @JsonProperty("record_count")
+    public int getRecordCount() {
+        return CollectionUtils.isNotEmpty(meterReadings) ? meterReadings.size() : 0;
     }
 
     @Override
@@ -54,8 +61,5 @@ public class MqExtractionMeterData {
                 .toHashCode();
     }
 
-    @JsonProperty("record_count")
-    public int getRecordCount() {
-        return CollectionUtils.isNotEmpty(meterReadings) ? meterReadings.size() : 0;
-    }
+
 }

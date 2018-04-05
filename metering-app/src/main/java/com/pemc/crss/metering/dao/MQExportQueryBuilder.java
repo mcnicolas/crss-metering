@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.StringJoiner;
 
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public class MQExportQueryBuilder {
 
@@ -15,20 +16,25 @@ public class MQExportQueryBuilder {
     private List arguments = new ArrayList();
 
     public MQExportQueryBuilder selectMeterData(String category, Long readingDateFrom, Long readingDateTo, boolean isLatest) {
-        sqlBuilder.append("SELECT DISTINCT ON (B.SEIN, B.READING_DATETIME)")
-                .append(" B.CATEGORY, B.MSP_SHORTNAME, B.SEIN, B.TRADE_PARTICIPANT_SHORT_NAME, B.READING_DATETIME, B.KWHD,")
+        sqlBuilder.append("SELECT DISTINCT")
+                .append("  B.MSP_SHORTNAME, B.SEIN, B.TRADE_PARTICIPANT_SHORT_NAME, B.READING_DATETIME, B.KWHD,")
                 .append(" B.KVARHD, B.KWD, B.KWHR, B.KVARHR, B.KWR, B.ESTIMATION_FLAG, B.UPLOAD_DATETIME, B.TRANSACTION_ID");
 
-        if (isLatest) {
-            sqlBuilder.append(", MAX(B.CREATED_DATE_TIME) OVER (PARTITION BY B.SEIN, B.READING_DATETIME ORDER BY B.CREATED_DATE_TIME DESC)");
-        }
 
         sqlBuilder.append(" FROM ")
                 .append(getTableName(category))
                 .append(" B ");
 
+        if (isLatest) {
+            sqlBuilder.append("WHERE b.UPLOAD_DATETIME = (select max(c.UPLOAD_DATETIME) from ")
+                    .append(getTableName(category))
+                    .append(" c ")
+                    .append(" where c.sein = b.sein and c.reading_datetime = b.reading_datetime")
+                    .append(")");
+        }
         if (readingDateFrom != null && readingDateTo != null) {
-            sqlBuilder.append(" WHERE B.READING_DATETIME BETWEEN ? AND ?");
+            sqlBuilder.append(isLatest ? " AND " : " WHERE ")
+                    .append("  B.READING_DATETIME BETWEEN ? AND ?");
 
             arguments.add(readingDateFrom);
             arguments.add(readingDateTo);
@@ -37,29 +43,11 @@ public class MQExportQueryBuilder {
         return this;
     }
 
-
-    public MQExportQueryBuilder countMeterData(String category, Long readingDateFrom, Long readingDateTo) {
-        String countSQL = "SELECT COUNT(DISTINCT(B.SEIN, B.READING_DATETIME))"
-                + " FROM ${MQ_TABLE} ";
-
-        String tableName = getTableName(category);
-        countSQL = countSQL.replace("${MQ_TABLE}", tableName);
-        sqlBuilder.append(countSQL);
-
-        if (readingDateFrom != null && readingDateTo != null) {
-            sqlBuilder.append(" WHERE READING_DATETIME BETWEEN ? AND ?");
-
-            arguments.add(readingDateFrom);
-            arguments.add(readingDateTo);
-        }
-
-        return this;
-    }
 
     public MQExportQueryBuilder addSEINFilter(String sein) {
         if (isNotBlank(sein)) {
-            sqlBuilder.append(" AND UPPER(SEIN) LIKE ?");
-            arguments.add("%" + sein.toUpperCase() + "%");
+            sqlBuilder.append(" AND SEIN = ?");
+            arguments.add(sein);
         }
 
         return this;

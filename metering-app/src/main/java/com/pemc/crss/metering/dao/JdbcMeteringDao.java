@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.dao;
 
+import com.pemc.crss.commons.web.dto.datatable.PageOrder;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.dto.MeterDataDisplay;
 import com.pemc.crss.metering.dto.ProcessedMqData;
@@ -10,8 +11,10 @@ import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.dto.mq.MeterQuantityReport;
 import com.pemc.crss.metering.validator.ValidationResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
@@ -29,10 +32,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.pemc.crss.metering.constants.UploadType.CORRECTED_DAILY;
 import static com.pemc.crss.metering.constants.UploadType.DAILY;
@@ -450,8 +450,9 @@ public class JdbcMeteringDao implements MeteringDao {
         BuilderData query = queryBuilder.selectMeterData(category, dateFrom, dateTo, isLatest)
                 .addSEINFilter(sein)
                 .addTpShortnameFilter(tpShortName)
-//                .orderBy(pageableRequest.getOrderList())
-//                .paginate(pageNo, pageSize)
+                .orderBy(Arrays.asList(new PageOrder("upload_datetime", Sort.Direction.DESC),
+                        new PageOrder("transaction_id", Sort.Direction.ASC),
+                        new PageOrder("reading_datetime", Sort.Direction.ASC)))
                 .build();
 
 
@@ -469,8 +470,6 @@ public class JdbcMeteringDao implements MeteringDao {
                     List<ProcessedMqData> meterDataList = new ArrayList<>();
                     while (rs.next()) {
                         ProcessedMqData meterData = new ProcessedMqData();
-
-                        meterData.setCategory(rs.getString("category"));
                         meterData.setMspShortname(rs.getString("msp_shortname"));
                         meterData.setSein(rs.getString("sein"));
 
@@ -489,11 +488,12 @@ public class JdbcMeteringDao implements MeteringDao {
                         meterData.setKwhr(getBigDecimalValue(rs.getBigDecimal("kwhr")));
                         meterData.setKvarhr(getBigDecimalValue(rs.getBigDecimal("kvarhr")));
                         meterData.setKwr(getBigDecimalValue(rs.getBigDecimal("kwr")));
-                        meterData.setEstimationFlag(rs.getString("estimation_flag"));
+                        String estimationFlag = rs.getString("estimation_flag");
+                        meterData.setEstimationFlag(StringUtils.isBlank(estimationFlag) ? "" : estimationFlag);
 
                         try {
                             meterData.setUploadDateTime(
-                                    DATE_FORMATTER.format(rs.getDate("upload_datetime"))
+                                    DATE_FORMATTER.format(rs.getTimestamp("upload_datetime"))
                             );
                         } catch (Exception e) {
                             log.error(e.getMessage(), e);

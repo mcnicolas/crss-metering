@@ -3,7 +3,7 @@ package com.pemc.crss.metering.resource.mq_data.extraction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.pemc.crss.metering.dto.ProcessedMqData;
-import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionDailyHeader;
+import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionHeader;
 import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionMeterData;
 import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionMeterReading;
 import com.pemc.crss.metering.service.MeterService;
@@ -20,6 +20,8 @@ import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +38,7 @@ usage:
 @RestController
 @RequestMapping("mq-data/extraction/{tpShortName}/{sein}/{isLatest}")
 public class MqDataExtractionResource {
-
+    private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private final ObjectMapper objectMapper;
     private final MeterService meterService;
 
@@ -45,48 +47,34 @@ public class MqDataExtractionResource {
         this.meterService = meterService;
     }
 
-    @GetMapping("/daily/{tradingDate}")
-    public void extractDailyMqData(@PathVariable("tpShortName") String tpShortName,
-                                   @PathVariable("sein") String sein,
-                                   @PathVariable("isLatest") String isLatest,
-                                   @PathVariable("tradingDate") String tradingDate,
-                                   HttpServletResponse response) throws Exception {
-        log.debug("received extract daily mq data request :: tpShortName=[{}], sein=[{}], isLatest=[{}], tradingDate=[{}]",
-                tpShortName, sein, isLatest, tradingDate);
-
-        List<ProcessedMqData> resultList =
-                meterService.getMeterDataForExtraction("daily", sein, tpShortName, tradingDate, null, true);
-
-        if (CollectionUtils.isEmpty(resultList)) {
-            throw new Exception(String.format("No meter data found for parameters :: tpShortName=[%s], sein=[%s], tradingDate=[%s]",
-                    tpShortName, sein, tradingDate));
+    @GetMapping("/{category}/{tradingDate}")
+    public void extractMqData(@PathVariable("category") String category,
+                              @PathVariable("tpShortName") String tpShortName,
+                              @PathVariable("sein") String sein,
+                              @PathVariable("isLatest") String isLatest,
+                              @PathVariable("tradingDate") String tradingDate,
+                              HttpServletResponse response) throws Exception {
+        log.debug("received extract {} mq data request :: tpShortName=[{}], sein=[{}], isLatest=[{}], tradingDate=[{}]",
+                category, tpShortName, sein, isLatest, tradingDate);
+        switch (category.toUpperCase()) {
+            case "DAILY":
+                break;
+            case "MONTHLY":
+                break;
+            default:
+                throw new RuntimeException("Invalid meter data category " + category);
         }
 
-        MqExtractionDailyHeader header = new MqExtractionDailyHeader(resultList.get(0).getMspShortname(), sein, tradingDate);
-        Map<String, MqExtractionMeterData> mqExtractionMeterDataMap = new HashMap<>();
+        MqExtractionHeader header = processMqReport(category, sein, tpShortName, tradingDate, "LATEST".equalsIgnoreCase(isLatest));
 
-        for(ProcessedMqData processedMqData: resultList){
-            String dataKey = processedMqData.getUploadDateTime() + processedMqData.getTransactionId();
-            List<MqExtractionMeterReading> readings;
-            MqExtractionMeterData meterData;
-
-            if(mqExtractionMeterDataMap.containsKey(dataKey)) {
-                meterData = mqExtractionMeterDataMap.get(dataKey);
-            } else {
-                 meterData = new MqExtractionMeterData(processedMqData.getUploadDateTime(),
-                        processedMqData.getTransactionId());
-                mqExtractionMeterDataMap.put(dataKey, meterData);
-            }
-
-            readings = meterData.getMeterReadings();
-            MqExtractionMeterReading reading = new MqExtractionMeterReading();
-            BeanUtils.copyProperties(processedMqData, reading);
-            readings.add(reading);
-        }
-
-        header.setMeterData(new ArrayList<>(mqExtractionMeterDataMap.values()));
         String result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(header);
-        String fileName = URLEncoder.encode(sein + "_" + tradingDate + "_" + System.currentTimeMillis() + ".json", "UTF-8");
+        String fileName = URLEncoder.encode(String.format("MQ_%s_%s_%s_%s_%s.json",
+                tpShortName,
+                category.toUpperCase(),
+                sein,
+                tradingDate.replaceAll("-", ""),
+                DATETIME_FORMAT.format(LocalDateTime.now())
+        ), "UTF-8");
         fileName = URLDecoder.decode(fileName, "ISO8859_1");
         response.setContentType("application/x-msdownload");
         response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
@@ -97,14 +85,49 @@ public class MqDataExtractionResource {
         }
     }
 
+    private MqExtractionHeader processMqReport(String category,
+                                               String sein,
+                                               String tpShortName,
+                                               String tradingDate,
+                                               boolean isLatest) throws Exception {
+        List<ProcessedMqData> resultList =
+                meterService.getMeterDataForExtraction(category, sein, tpShortName, tradingDate, null, isLatest);
 
-    @GetMapping("/monthly/{startDate}-{endDate}")
-    public void extractMontlyMqData(@PathVariable("tpShortName") String tpShortName,
-                                    @PathVariable("sein") String sein,
-                                    @PathVariable("isLatest") String isLatest,
-                                    @PathVariable("startDate") String startDate,
-                                    @PathVariable("endDate") String endDate) {
-        log.debug("received extract daily mq data request :: tpShortName=[{}], sein=[{}], isLatest=[{}], startDate=[{}], endDate=[{}]",
-                tpShortName, sein, isLatest, startDate, endDate);
+        if (CollectionUtils.isEmpty(resultList)) {
+            throw new Exception("No meter data found for given parameters");
+        }
+
+        Map<String, MqExtractionMeterData> mqExtractionMeterDataMap = new HashMap<>();
+
+        for (ProcessedMqData processedMqData : resultList) {
+            String dataKey = processedMqData.getUploadDateTime() + processedMqData.getTransactionId();
+            List<MqExtractionMeterReading> readings;
+            MqExtractionMeterData meterData;
+
+            if (mqExtractionMeterDataMap.containsKey(dataKey)) {
+                meterData = mqExtractionMeterDataMap.get(dataKey);
+            } else {
+                meterData = new MqExtractionMeterData(processedMqData.getUploadDateTime(),
+                        processedMqData.getTransactionId());
+                mqExtractionMeterDataMap.put(dataKey, meterData);
+            }
+
+            readings = meterData.getMeterReadings();
+            MqExtractionMeterReading reading = new MqExtractionMeterReading(
+                    processedMqData.getReadingDateTime(),
+                    processedMqData.getKwhd(),
+                    processedMqData.getKvarhd(),
+                    processedMqData.getKwd(),
+                    processedMqData.getKwhr(),
+                    processedMqData.getKvarhr(),
+                    processedMqData.getKwr(),
+                    processedMqData.getEstimationFlag()
+            );
+            BeanUtils.copyProperties(processedMqData, reading);
+            readings.add(reading);
+        }
+
+        return new MqExtractionHeader(category.toUpperCase(), sein, resultList.get(0).getMspShortname(), tradingDate,
+                new ArrayList<>(mqExtractionMeterDataMap.values()));
     }
 }
