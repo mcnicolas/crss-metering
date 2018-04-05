@@ -28,7 +28,7 @@ public class BcqData {
                 .add("startTime", getStartTime())
                 .add("endTime", getEndTime())
                 .add("bcq", getBcq())
-                .add("buyerMtn", getBcq())
+                .add("buyerMtn", getBuyerMtn())
                 .add("tradingDate", getTradingDate())
                 .toString();
     }

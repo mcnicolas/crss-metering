@@ -141,6 +141,7 @@ public final class BcqQueryHolder {
                 .column("START_TIME")
                 .column("END_TIME")
                 .column("BCQ")
+                .column("BUYER_MTN")
                 .from("TXN_BCQ_DATA")
                 .where().filter(new QueryFilter("HEADER_ID", headerId))
                 .build();

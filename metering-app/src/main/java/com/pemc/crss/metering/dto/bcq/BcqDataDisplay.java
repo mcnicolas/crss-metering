@@ -46,4 +46,12 @@ public class BcqDataDisplay extends AbstractWebDto<BcqData> {
     public void setBcq(String bcq) {
         target().setBcq(new BigDecimal(bcq));
     }
+
+    public String getBuyerMtn() {
+        return target().getBuyerMtn();
+    }
+
+    public void setBuyerMtn(String buyerMtn) {
+        target().setBuyerMtn(buyerMtn);
+    }
 }
