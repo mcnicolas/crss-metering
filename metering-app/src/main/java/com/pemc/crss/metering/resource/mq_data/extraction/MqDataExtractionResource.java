@@ -56,21 +56,30 @@ public class MqDataExtractionResource {
                               HttpServletResponse response) throws Exception {
         log.debug("received extract {} mq data request :: tpShortName=[{}], sein=[{}], isLatest=[{}], tradingDate=[{}]",
                 category, tpShortName, sein, isLatest, tradingDate);
+
+        switch (isLatest.toUpperCase()) {
+            case "ALL":
+            case "LATEST":
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid version " + isLatest);
+        }
+
         switch (category.toUpperCase()) {
             case "DAILY":
-                break;
             case "MONTHLY":
                 break;
             default:
-                throw new RuntimeException("Invalid meter data category " + category);
+                throw new IllegalArgumentException("Invalid meter data category " + category);
         }
 
         MqExtractionHeader header = processMqReport(category, sein, tpShortName, tradingDate, "LATEST".equalsIgnoreCase(isLatest));
 
         String result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(header);
-        String fileName = URLEncoder.encode(String.format("MQ_%s_%s_%s_%s_%s.json",
+        String fileName = URLEncoder.encode(String.format("MQ_%s_%s_%s_%s_%s_%s.json",
                 tpShortName,
                 category.toUpperCase(),
+                isLatest.toUpperCase(),
                 sein,
                 tradingDate.replaceAll("-", ""),
                 DATETIME_FORMAT.format(LocalDateTime.now())
