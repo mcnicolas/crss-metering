@@ -45,10 +45,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -597,8 +594,6 @@ public class BcqServiceImpl implements BcqService {
     @Override
     public void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, OutputStream outputStream) throws IOException {
         List<BcqHeader> headerList = findHeadersOfParticipantByTradingDateAndStatus(shortName, tradingDate, status);
-        //ObjectOutputStream oos = new ObjectOutputStream(outputStream);
-        JSONObject jObject = new JSONObject();
         try {
             JSONArray jHeaderArray = new JSONArray();
             for (BcqHeader header : headerList) {
@@ -606,27 +601,27 @@ public class BcqServiceImpl implements BcqService {
                 JSONArray jDataArray = new JSONArray();
                 for (BcqData bcqData : dataList) {
                     JSONObject jsonData = new JSONObject();
-                    jsonData.put("Reference_MTN", bcqData.getReferenceMtn());
-                    jsonData.put("Dispatch_Interval", getDispatchInterVal(bcqData.getStartTime(), bcqData.getEndTime()));
-                    jsonData.put("BCQ", bcqData.getBcq());
+                    jsonData.put("reference_mtn", bcqData.getReferenceMtn());
+                    jsonData.put("dispatch_interval", getDispatchInterVal(bcqData.getStartTime(), bcqData.getEndTime()));
+                    jsonData.put("bcq", bcqData.getBcq());
                     jDataArray.put(jsonData);
                 }
 
                 JSONObject jsonHeader = new JSONObject();
-                jsonHeader.put("Details", jDataArray);
-                jsonHeader.put("Version", parseVersion(header.getUploadFile().getSubmittedDate(), header.getStatus()));
-                jsonHeader.put("Buying_Participant", header.getBuyingParticipantName());
-                jsonHeader.put("Selling_MTN", header.getSellingMtn());
-                jsonHeader.put("Submitted_Date", header.getUploadFile().getSubmittedDate().toString());
-                jsonHeader.put("Deadline_Date", header.getDeadlineDate().toString());
-                jsonHeader.put("Status", getStatus(header.getStatus()));
-                jsonHeader.put("Transaction_ID", header.getUploadFile().getTransactionId());
-                jsonHeader.put("Billing_ID", header.getBillingId());
-                jsonHeader.put("Trading_Date", header.getTradingDate().toString());
-                jsonHeader.put("Updated_Via", parseValueBcqUpdateType(header.getUpdatedVia()));
+                jsonHeader.put("version", parseVersion(header.getUploadFile().getSubmittedDate(), header.getStatus()));
+                jsonHeader.put("buying_participant", header.getBuyingParticipantName());
+                jsonHeader.put("selling_mtn", header.getSellingMtn());
+                jsonHeader.put("submitted_date", header.getUploadFile().getSubmittedDate().toString());
+                jsonHeader.put("deadline_date", header.getDeadlineDate().toString());
+                jsonHeader.put("status", getStatus(header.getStatus()));
+                jsonHeader.put("transaction_id", header.getUploadFile().getTransactionId());
+                jsonHeader.put("billing_id", header.getBillingId());
+                jsonHeader.put("trading_date", header.getTradingDate().toString());
+                jsonHeader.put("updated_via", parseValueBcqUpdateType(header.getUpdatedVia()));
+                jsonHeader.put("bcq_details", jDataArray);
                 jHeaderArray.put(jsonHeader);
+
             }
-            jObject.put("BCQ_SUBMISSION", jHeaderArray);
             String jsonString = jHeaderArray.toString();
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             JsonParser jp = new JsonParser();
@@ -635,6 +630,7 @@ public class BcqServiceImpl implements BcqService {
             outputStream.write(prettyJsonString.getBytes(Charset.forName("UTF-8")));
             outputStream.flush();
             outputStream.close();
+            log.info("Success creating Internal json files....");
         } catch (Exception e) {
             e.printStackTrace();
             outputStream.flush();
@@ -684,4 +680,5 @@ public class BcqServiceImpl implements BcqService {
         }
 
     }
+
 }

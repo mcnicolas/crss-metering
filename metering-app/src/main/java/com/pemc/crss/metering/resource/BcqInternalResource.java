@@ -53,8 +53,10 @@ public class BcqInternalResource {
         try {
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             DateFormat df2 = new SimpleDateFormat("yyyyMMdd_");
+            DateFormat runtimeFormat = new SimpleDateFormat(" yyyyMMddhhmmss");
             Date tradingDate = df.parse(date);
-            String fileName = URLEncoder.encode(shortName + "_" + df2.format(tradingDate) + System.currentTimeMillis() + ".json", "UTF-8");
+            String fileName = URLEncoder.encode(shortName + "_" + df2.format(tradingDate) + runtimeFormat.format(new Date())
+                    + ".json", "UTF-8");
             fileName = URLDecoder.decode(fileName, "ISO8859_1");
             response.setContentType("application/x-msdownload");
             // response.setHeader("Content-disposition", "attachment; filename=" + fileName);
