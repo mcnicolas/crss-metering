@@ -2,11 +2,13 @@ package com.pemc.crss.metering.resource.mq_data.extraction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.pemc.crss.metering.dao.UserTpDao;
 import com.pemc.crss.metering.dto.ProcessedMqData;
 import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionHeader;
 import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionMeterData;
 import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionMeterReading;
 import com.pemc.crss.metering.service.MeterService;
+import com.pemc.crss.metering.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.BeanUtils;
@@ -36,26 +38,32 @@ usage:
 
 @Slf4j
 @RestController
-@RequestMapping("mq-data/extraction/{tpShortName}/{sein}/{isLatest}")
+@RequestMapping("mq-data/extraction/{sein}/{isLatest}")
 public class MqDataExtractionResource {
     private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private final ObjectMapper objectMapper;
     private final MeterService meterService;
+    private final UserTpDao userTpDao;
 
-    public MqDataExtractionResource(MeterService meterService) {
+    public MqDataExtractionResource(MeterService meterService, UserTpDao userTpDao) {
         this.objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
         this.meterService = meterService;
+        this.userTpDao = userTpDao;
     }
 
     @GetMapping("/{category}/{tradingDate}")
     public void extractMqData(@PathVariable("category") String category,
-                              @PathVariable("tpShortName") String tpShortName,
                               @PathVariable("sein") String sein,
                               @PathVariable("isLatest") String isLatest,
                               @PathVariable("tradingDate") String tradingDate,
                               HttpServletResponse response) throws Exception {
-        log.debug("received extract {} mq data request :: tpShortName=[{}], sein=[{}], isLatest=[{}], tradingDate=[{}]",
-                category, tpShortName, sein, isLatest, tradingDate);
+        log.debug("received extract {} mq data request ::  sein=[{}], isLatest=[{}], tradingDate=[{}]",
+                category, sein, isLatest, tradingDate);
+
+
+        log.info("userId={}", SecurityUtils.getUserId());
+
+        String tpShortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
 
         switch (isLatest.toUpperCase()) {
             case "ALL":
@@ -103,7 +111,8 @@ public class MqDataExtractionResource {
                 meterService.getMeterDataForExtraction(category, sein, tpShortName, tradingDate, null, isLatest);
 
         if (CollectionUtils.isEmpty(resultList)) {
-            throw new Exception("No meter data found for given parameters");
+            log.info("No meter data found for given parameters");
+            return new MqExtractionHeader(category.toUpperCase(), sein, null, tradingDate, null);
         }
 
         Map<String, MqExtractionMeterData> mqExtractionMeterDataMap = new HashMap<>();
