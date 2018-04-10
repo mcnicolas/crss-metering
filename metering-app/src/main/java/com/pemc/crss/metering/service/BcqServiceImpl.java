@@ -1,5 +1,7 @@
 package com.pemc.crss.metering.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -16,6 +18,8 @@ import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
+import com.pemc.crss.metering.resource.Bcqa_data.extraction.dto.BcqDataDetailsExtract;
+import com.pemc.crss.metering.resource.Bcqa_data.extraction.dto.BcqDataHeader;
 import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.service.exception.InvalidStateException;
 import com.pemc.crss.metering.service.exception.OldRecordException;
@@ -24,8 +28,6 @@ import com.pemc.crss.metering.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -45,7 +47,10 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -79,6 +84,7 @@ public class BcqServiceImpl implements BcqService {
     private final BcqNotificationManager bcqNotificationManager;
     private final CacheConfigService configService;
     private final ResourceTemplate resourceTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
 
     @Override
     @Transactional
@@ -595,37 +601,34 @@ public class BcqServiceImpl implements BcqService {
     public void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, OutputStream outputStream) throws IOException {
         List<BcqHeader> headerList = findHeadersOfParticipantByTradingDateAndStatus(shortName, tradingDate, status);
         try {
-            JSONArray jHeaderArray = new JSONArray();
+            List<BcqDataHeader> bcqHeaders = Lists.newArrayList();
             for (BcqHeader header : headerList) {
                 List<BcqData> dataList = findDataByHeaderId(header.getHeaderId());
-                JSONArray jDataArray = new JSONArray();
+                List<BcqDataDetailsExtract> detailsList = Lists.newArrayList();
                 for (BcqData bcqData : dataList) {
-                    JSONObject jsonData = new JSONObject();
-                    jsonData.put("reference_mtn", bcqData.getReferenceMtn());
-                    jsonData.put("dispatch_interval", getDispatchInterVal(bcqData.getStartTime(), bcqData.getEndTime()));
-                    jsonData.put("bcq", bcqData.getBcq());
-                    jDataArray.put(jsonData);
+                    detailsList.add(new BcqDataDetailsExtract(bcqData.getReferenceMtn(),
+                            getDispatchInterVal(bcqData.getStartTime(), bcqData.getEndTime()),
+                            bcqData.getBcq()));
                 }
 
-                JSONObject jsonHeader = new JSONObject();
-                jsonHeader.put("version", parseVersion(header.getUploadFile().getSubmittedDate(), header.getStatus()));
-                jsonHeader.put("buying_participant", header.getBuyingParticipantName());
-                jsonHeader.put("selling_mtn", header.getSellingMtn());
-                jsonHeader.put("submitted_date", header.getUploadFile().getSubmittedDate().toString());
-                jsonHeader.put("deadline_date", header.getDeadlineDate().toString());
-                jsonHeader.put("status", getStatus(header.getStatus()));
-                jsonHeader.put("transaction_id", header.getUploadFile().getTransactionId());
-                jsonHeader.put("billing_id", header.getBillingId());
-                jsonHeader.put("trading_date", header.getTradingDate().toString());
-                jsonHeader.put("updated_via", parseValueBcqUpdateType(header.getUpdatedVia()));
-                jsonHeader.put("bcq_details", jDataArray);
-                jHeaderArray.put(jsonHeader);
+                bcqHeaders.add(new BcqDataHeader(
+                        parseVersion(header.getUploadFile().getSubmittedDate(), header.getStatus()),
+                        header.getBuyingParticipantName(),
+                        header.getSellingMtn(),
+                        header.getUploadFile().getSubmittedDate().toString(),
+                        header.getDeadlineDate().toString(),
+                        getStatus(header.getStatus()),
+                        header.getUploadFile().getTransactionId(),
+                        header.getBillingId(),
+                        header.getTradingDate().toString(),
+                        parseValueBcqUpdateType(header.getUpdatedVia()),
+                        detailsList));
 
             }
-            String jsonString = jHeaderArray.toString();
+            String result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bcqHeaders);
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             JsonParser jp = new JsonParser();
-            JsonElement je = jp.parse(jsonString);
+            JsonElement je = jp.parse(result);
             String prettyJsonString = gson.toJson(je);
             outputStream.write(prettyJsonString.getBytes(Charset.forName("UTF-8")));
             outputStream.flush();

@@ -18,7 +18,7 @@ public class BcqData {
     private BigDecimal bcq;
     private String buyerMtn;
     private String tradingDate;
-
+    private String billingId;
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
