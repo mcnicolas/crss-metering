@@ -641,7 +641,7 @@ public class BcqServiceImpl implements BcqService {
         List<BcqDataDetailsExtract> detailsList = Lists.newArrayList();
         for (BcqData bcqData : dataList) {
             detailsList.add(new BcqDataDetailsExtract(
-                    getDispatchInterVal(bcqData.getEndTime())
+                    formatBcqDate(bcqData.getEndTime(), "HH:mm")
                             .concat(",")
                             .concat(bcqData.getBcq().toString())
                             .concat(",")
@@ -654,8 +654,8 @@ public class BcqServiceImpl implements BcqService {
                 parseVersion(header.getUploadFile().getSubmittedDate(), header.getStatus()),
                 header.getBuyingParticipantName().concat(" (").concat(header.getBuyingParticipantShortName()).concat(")"),
                 header.getSellingMtn(),
-                header.getUploadFile().getSubmittedDate().toString(),
-                header.getDeadlineDate().toString(),
+                formatBcqDate(header.getUploadFile().getSubmittedDate(), "yyyy-MM-dd hh:mm a"),
+                formatBcqDate(header.getDeadlineDate(), "yyyy-MM-dd"),
                 getStatus(header.getStatus()),
                 header.getUploadFile().getTransactionId(),
                 header.getBillingId(),
@@ -674,11 +674,11 @@ public class BcqServiceImpl implements BcqService {
         set.add(item);
         return set;
     }
-
-    private String getDispatchInterVal(Date end) {
-        DateFormat format = new SimpleDateFormat("HHmm");
-        return format.format(end);
+    private String formatBcqDate(Date date, String pattern) {
+        DateFormat format = new SimpleDateFormat(pattern);
+        return format.format(date);
     }
+
 
     private String parseValueBcqUpdateType(BcqUpdateType type) {
         return type == null ? "" : type.name();
