@@ -3,6 +3,8 @@ package com.pemc.crss.metering.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -18,8 +20,10 @@ import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
-import com.pemc.crss.metering.resource.Bcqa_data.extraction.dto.BcqDataDetailsExtract;
-import com.pemc.crss.metering.resource.Bcqa_data.extraction.dto.BcqDataHeader;
+import com.pemc.crss.metering.resource.bcq_data.extraction.dto.BcqDataDetailsExtract;
+import com.pemc.crss.metering.resource.bcq_data.extraction.dto.BcqDataHeader;
+import com.pemc.crss.metering.resource.bcq_data.extraction.dto.BcqHeaderDto;
+import com.pemc.crss.metering.resource.bcq_data.extraction.dto.BcqUniqueHeader;
 import com.pemc.crss.metering.resource.template.ResourceTemplate;
 import com.pemc.crss.metering.service.exception.InvalidStateException;
 import com.pemc.crss.metering.service.exception.OldRecordException;
@@ -47,10 +51,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -601,31 +602,7 @@ public class BcqServiceImpl implements BcqService {
     public void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, OutputStream outputStream) throws IOException {
         List<BcqHeader> headerList = findHeadersOfParticipantByTradingDateAndStatus(shortName, tradingDate, status);
         try {
-            List<BcqDataHeader> bcqHeaders = Lists.newArrayList();
-            for (BcqHeader header : headerList) {
-                List<BcqData> dataList = findDataByHeaderId(header.getHeaderId());
-                List<BcqDataDetailsExtract> detailsList = Lists.newArrayList();
-                for (BcqData bcqData : dataList) {
-                    detailsList.add(new BcqDataDetailsExtract(bcqData.getReferenceMtn(),
-                            getDispatchInterVal(bcqData.getStartTime(), bcqData.getEndTime()),
-                            bcqData.getBcq()));
-                }
-
-                bcqHeaders.add(new BcqDataHeader(
-                        parseVersion(header.getUploadFile().getSubmittedDate(), header.getStatus()),
-                        header.getBuyingParticipantName(),
-                        header.getSellingMtn(),
-                        header.getUploadFile().getSubmittedDate().toString(),
-                        header.getDeadlineDate().toString(),
-                        getStatus(header.getStatus()),
-                        header.getUploadFile().getTransactionId(),
-                        header.getBillingId(),
-                        header.getTradingDate().toString(),
-                        parseValueBcqUpdateType(header.getUpdatedVia()),
-                        detailsList));
-
-            }
-            String result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(bcqHeaders);
+            String result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(getUniqueHeader(headerList));
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             JsonParser jp = new JsonParser();
             JsonElement je = jp.parse(result);
@@ -641,9 +618,66 @@ public class BcqServiceImpl implements BcqService {
         }
     }
 
-    private long getDispatchInterVal(Date start, Date end) {
-        long diff = end.getTime() - start.getTime();//as given
-        return TimeUnit.MILLISECONDS.toMinutes(diff);
+    private List<BcqUniqueHeader> getUniqueHeader(List<BcqHeader> headers) {
+        List<BcqUniqueHeader> uniqueHeaders = Lists.newArrayList();
+        Map<BcqHeaderDto, Set<BcqDataHeader>> headerMap = Maps.newLinkedHashMap();
+        for (BcqHeader header : headers) {
+            BcqHeaderDto dto = new BcqHeaderDto(header.getSellingParticipantShortName(), header.getTradingDate().toString());
+            BcqDataHeader dataHeader = headerBuilder(header);
+            headerMap.compute(dto, (k, v) -> v == null ? initSet(dataHeader) : concatSet(dataHeader, v));
+
+        }
+        for (Map.Entry<BcqHeaderDto, Set<BcqDataHeader>> entryHeader : headerMap.entrySet()) {
+            BcqHeaderDto dataKey = entryHeader.getKey();
+            BcqUniqueHeader uniqueHeader = new BcqUniqueHeader(dataKey.getTradingparticipant(), dataKey.getTradingDate(), entryHeader.getValue());
+            uniqueHeaders.add(uniqueHeader);
+        }
+        return uniqueHeaders;
+    }
+
+    private BcqDataHeader headerBuilder(BcqHeader header) {
+
+        List<BcqData> dataList = findDataByHeaderId(header.getHeaderId());
+        List<BcqDataDetailsExtract> detailsList = Lists.newArrayList();
+        for (BcqData bcqData : dataList) {
+            detailsList.add(new BcqDataDetailsExtract(
+                    getDispatchInterVal(bcqData.getEndTime())
+                            .concat(",")
+                            .concat(bcqData.getBcq().toString())
+                            .concat(",")
+                            .concat(bcqData.getReferenceMtn())
+                            .concat(",")
+                            .concat(bcqData.getBuyerMtn() == null ? "" : bcqData.getBuyerMtn())));
+        }
+
+        return new BcqDataHeader(
+                parseVersion(header.getUploadFile().getSubmittedDate(), header.getStatus()),
+                header.getBuyingParticipantName().concat(" (").concat(header.getBuyingParticipantShortName()).concat(")"),
+                header.getSellingMtn(),
+                header.getUploadFile().getSubmittedDate().toString(),
+                header.getDeadlineDate().toString(),
+                getStatus(header.getStatus()),
+                header.getUploadFile().getTransactionId(),
+                header.getBillingId(),
+                parseValueBcqUpdateType(header.getUpdatedVia()),
+                detailsList.size(),
+                detailsList);
+
+    }
+
+
+    private <T> Set<T> initSet(T item) {
+        return concatSet(item, Sets.newHashSet());
+    }
+
+    private <T> Set<T> concatSet(T item, Set<T> set) {
+        set.add(item);
+        return set;
+    }
+
+    private String getDispatchInterVal(Date end) {
+        DateFormat format = new SimpleDateFormat("HHmm");
+        return format.format(end);
     }
 
     private String parseValueBcqUpdateType(BcqUpdateType type) {
