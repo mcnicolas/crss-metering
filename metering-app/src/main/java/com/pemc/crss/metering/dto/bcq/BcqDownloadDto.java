@@ -10,4 +10,5 @@ public class BcqDownloadDto {
     private List<String> sellingMtns;
     private String date;
     private String genName;
+    private String errorMsg;
 }

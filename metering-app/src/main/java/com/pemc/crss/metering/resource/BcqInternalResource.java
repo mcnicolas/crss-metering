@@ -1,16 +1,16 @@
 package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.commons.cache.service.CacheConfigService;
+import com.pemc.crss.commons.security.SecurityUtil;
 import com.pemc.crss.metering.dao.UserTpDao;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.utils.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -39,19 +39,21 @@ public class BcqInternalResource {
         this.userTpDao = userTpDao;
     }
 
-    @PostMapping("/bcqTemplate/download")
+    @GetMapping("/bcqTemplate/download")
     public void downloadTemplate(final HttpServletResponse response) throws IOException {
-        String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
+        //String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
         LocalDateTime date = LocalDateTime.now().minusDays(1);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String shortName = SecurityUtil.getCurrentUser(auth);
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
         String fileName = URLEncoder.encode(shortName + "_" + date.format(formatter) + ".csv", "UTF-8");
         fileName = URLDecoder.decode(fileName, "ISO8859_1");
         response.setContentType("application/x-msdownload");
-        // response.setHeader("Content-disposition", "attachment; filename=" + fileName);
+        response.setHeader("Content-disposition", "attachment; filename=" + fileName);
         response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
-        response.addHeader("Content-disposition", "attachment; filename=" + fileName);
         Long interval = configService.getLongValueForKey("BCQ_INTERVAL", 5L);
-        bcqService.generateInternalCsv(shortName, interval, date, response.getOutputStream());
+        bcqService.generateInternalCsv(shortName, interval, date, response);
     }
 
     @PostMapping("/bcqSubmission")
@@ -59,7 +61,9 @@ public class BcqInternalResource {
                                       @RequestParam String status,
                                       final HttpServletResponse response) throws IOException {
         try {
-            String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
+            //String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String shortName = SecurityUtil.getCurrentUser(auth);
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             DateFormat df2 = new SimpleDateFormat("yyyyMMdd_");
             DateFormat runtimeFormat = new SimpleDateFormat(" yyyyMMddhhmmss");
@@ -68,9 +72,8 @@ public class BcqInternalResource {
                     + ".json", "UTF-8");
             fileName = URLDecoder.decode(fileName, "ISO8859_1");
             response.setContentType("application/x-msdownload");
-            // response.setHeader("Content-disposition", "attachment; filename=" + fileName);
+            response.setHeader("Content-disposition", "attachment; filename=" + fileName);
             response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
-            response.addHeader("Content-disposition", "attachment; filename=" + fileName);
             if (status.toUpperCase().equals("ALL") || status.equals("SETTLEMENT_READY")) {
                 bcqService.generateJsonBcqSubmission(shortName, tradingDate, status, response.getOutputStream());
             } else {

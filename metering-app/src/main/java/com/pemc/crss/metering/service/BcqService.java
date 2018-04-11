@@ -9,6 +9,7 @@ import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
 import org.springframework.data.domain.Page;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -66,7 +67,7 @@ public interface BcqService {
     void generateCsv(BcqDownloadDto bcqDownloadDto, Long interval, LocalDateTime date, OutputStream outputStream)
             throws IOException;
 
-    void generateInternalCsv(String shortName, Long interval, LocalDateTime date, OutputStream outputStream)
+    void generateInternalCsv(String shortName, Long interval, LocalDateTime date, HttpServletResponse response)
             throws IOException;
 
 

@@ -42,9 +42,12 @@ import org.supercsv.io.CsvBeanWriter;
 import org.supercsv.io.ICsvBeanWriter;
 import org.supercsv.prefs.CsvPreference;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -576,13 +579,17 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public void generateInternalCsv(String shortName, Long interval, LocalDateTime date, OutputStream outputStream) throws IOException {
-
+    public void generateInternalCsv(String shortName, Long interval, LocalDateTime date, HttpServletResponse response) throws IOException {
+        OutputStream outputStream = response.getOutputStream();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         BcqDownloadDto dto = resourceTemplate.get(String.format(ACTIVE_ENROLLMENT_URL, date.format(formatter), shortName), BcqDownloadDto.class);
         log.info("Start creating Internal csv files for {}", shortName);
-        if (dto == null) {
-            throw new IllegalArgumentException("Short name does't exist: " + shortName);
+        if (dto.getErrorMsg() != null) {
+            DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+            String fileName = URLEncoder.encode(shortName + "_error_" + date.format(formatter2) + ".txt", "UTF-8");
+            fileName = URLDecoder.decode(fileName, "ISO8859_1");
+            response.setHeader("Content-disposition", "attachment; filename=" + fileName);
+            throw new IllegalArgumentException(dto.getErrorMsg());
         }
         List<String> dateTime = getDateTime(date.with(LocalTime.MIDNIGHT), interval);
 
