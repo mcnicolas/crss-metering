@@ -41,10 +41,10 @@ public class BcqInternalResource {
 
     @GetMapping("/bcqTemplate/download")
     public void downloadTemplate(final HttpServletResponse response) throws IOException {
-        //String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
+        String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
         LocalDateTime date = LocalDateTime.now().minusDays(1);
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String shortName = SecurityUtil.getCurrentUser(auth);
+       /* Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String shortName = SecurityUtil.getCurrentUser(auth);*/
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
         String fileName = URLEncoder.encode(shortName + "_" + date.format(formatter) + ".csv", "UTF-8");
@@ -61,9 +61,9 @@ public class BcqInternalResource {
                                       @RequestParam String status,
                                       final HttpServletResponse response) throws IOException {
         try {
-            //String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String shortName = SecurityUtil.getCurrentUser(auth);
+            String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
+            /*Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String shortName = SecurityUtil.getCurrentUser(auth);*/
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             DateFormat df2 = new SimpleDateFormat("yyyyMMdd_");
             DateFormat runtimeFormat = new SimpleDateFormat(" yyyyMMddhhmmss");
