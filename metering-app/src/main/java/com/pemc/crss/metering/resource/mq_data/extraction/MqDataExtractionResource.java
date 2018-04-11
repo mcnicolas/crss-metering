@@ -11,6 +11,7 @@ import com.pemc.crss.metering.service.MeterService;
 import com.pemc.crss.metering.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,10 +25,7 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /*
@@ -108,7 +106,9 @@ public class MqDataExtractionResource {
                                                String tradingDate,
                                                boolean isLatest) throws Exception {
         List<ProcessedMqData> resultList =
-                meterService.getMeterDataForExtraction(category, sein, tpShortName, tradingDate, null, isLatest);
+                StringUtils.isNotBlank(tpShortName)
+                        ? meterService.getMeterDataForExtraction(category, sein, tpShortName, tradingDate, null, isLatest)
+                        : Collections.emptyList();
 
         if (CollectionUtils.isEmpty(resultList)) {
             log.info("No meter data found for given parameters");
