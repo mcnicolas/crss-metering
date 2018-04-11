@@ -70,7 +70,7 @@ create or replace view metering.vw_mq_extraction_monthly as
 
 
 create or replace view metering.VW_TP_LDAP_USER_MAP as
-select distinct tp.short_name, ual.linked_users from registration.txn_participant tp
+select distinct tp.short_name as tp_short_name, ual.linked_users as user_id from registration.txn_participant tp
   join registration.txn_applicant ap on tp.applicant_id = ap.id
   join registration.user_applicant_link ual on ap.id = ual.applicant_id;
 
