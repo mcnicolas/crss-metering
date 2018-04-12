@@ -693,7 +693,7 @@ public class BcqServiceImpl implements BcqService {
     }
 
     private String parseVersion(Date createdDate, BcqStatus status) {
-        DateFormat df = new SimpleDateFormat("yyyy-MM-DD hh:mm a");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd hh:mm a");
         String date = df.format(createdDate);
         return date.concat(" - ").concat(getStatus(status));
     }
