@@ -1,14 +1,12 @@
 package com.pemc.crss.metering.service;
 
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.pemc.crss.commons.cache.service.CacheConfigService;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.BcqStatus;
@@ -88,7 +86,7 @@ public class BcqServiceImpl implements BcqService {
     private final BcqNotificationManager bcqNotificationManager;
     private final CacheConfigService configService;
     private final ResourceTemplate resourceTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+    private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
 
     @Override
     @Transactional
@@ -608,13 +606,14 @@ public class BcqServiceImpl implements BcqService {
     @Override
     public void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, OutputStream outputStream) throws IOException {
         List<BcqHeader> headerList = findHeadersOfParticipantByTradingDateAndStatus(shortName, tradingDate, status);
+        DefaultPrettyPrinter.Indenter indenter =
+                new DefaultIndenter("\t", DefaultIndenter.SYS_LF);
+        DefaultPrettyPrinter printer = new DefaultPrettyPrinter();
+        printer.indentArraysWith(indenter);
+        printer.indentObjectsWith(indenter);
         try {
-            String result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(getUniqueHeader(headerList));
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            JsonParser jp = new JsonParser();
-            JsonElement je = jp.parse(result);
-            String prettyJsonString = gson.toJson(je);
-            outputStream.write(prettyJsonString.getBytes(Charset.forName("UTF-8")));
+            String result = objectMapper.writer(printer).writeValueAsString(getUniqueHeader(headerList));
+            outputStream.write(result.getBytes(Charset.forName("UTF-8")));
             outputStream.flush();
             outputStream.close();
             log.info("Success creating Internal json files....");
@@ -625,7 +624,7 @@ public class BcqServiceImpl implements BcqService {
         }
     }
 
-    private List<BcqUniqueHeader> getUniqueHeader(List<BcqHeader> headers) {
+    private BcqUniqueHeader getUniqueHeader(List<BcqHeader> headers) {
         List<BcqUniqueHeader> uniqueHeaders = Lists.newArrayList();
         Map<BcqHeaderDto, Set<BcqDataHeader>> headerMap = Maps.newLinkedHashMap();
         for (BcqHeader header : headers) {
@@ -639,7 +638,7 @@ public class BcqServiceImpl implements BcqService {
             BcqUniqueHeader uniqueHeader = new BcqUniqueHeader(dataKey.getTradingparticipant(), dataKey.getTradingDate(), entryHeader.getValue());
             uniqueHeaders.add(uniqueHeader);
         }
-        return uniqueHeaders;
+        return uniqueHeaders.get(0);
     }
 
     private BcqDataHeader headerBuilder(BcqHeader header) {
