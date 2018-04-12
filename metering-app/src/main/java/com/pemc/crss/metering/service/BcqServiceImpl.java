@@ -32,6 +32,7 @@ import com.pemc.crss.metering.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -55,7 +56,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -584,7 +584,7 @@ public class BcqServiceImpl implements BcqService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         BcqDownloadDto dto = resourceTemplate.get(String.format(ACTIVE_ENROLLMENT_URL, date.format(formatter), shortName), BcqDownloadDto.class);
         log.info("Start creating Internal csv files for {}", shortName);
-        if (dto.getErrorMsg() != null) {
+        if (StringUtils.isNotEmpty(dto.getErrorMsg())) {
             DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
             String fileName = URLEncoder.encode(shortName + "_error_" + date.format(formatter2) + ".txt", "UTF-8");
             fileName = URLDecoder.decode(fileName, "ISO8859_1");
@@ -681,6 +681,7 @@ public class BcqServiceImpl implements BcqService {
         set.add(item);
         return set;
     }
+
     private String formatBcqDate(Date date, String pattern) {
         DateFormat format = new SimpleDateFormat(pattern);
         return format.format(date);
