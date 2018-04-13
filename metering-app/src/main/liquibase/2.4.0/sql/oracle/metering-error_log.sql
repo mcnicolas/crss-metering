@@ -1,0 +1,2 @@
+CREATE SEQUENCE extract_error_log_seq;
+CREATE TABLE CRSS_METERING.extract_error_log (id NUMBER(38, 0) NOT NULL, created_datetime TIMESTAMP, query VARCHAR2(4000), error VARCHAR2(4000), source_table VARCHAR2(255), CONSTRAINT extract_error_logPK PRIMARY KEY (id));
