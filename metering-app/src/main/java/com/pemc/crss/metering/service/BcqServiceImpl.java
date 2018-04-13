@@ -604,8 +604,19 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, OutputStream outputStream) throws IOException {
+    public void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, HttpServletResponse response ) throws IOException {
+        OutputStream outputStream = response.getOutputStream();
+        DateFormat df2 = new SimpleDateFormat("yyyyMMdd_");
+        DateFormat runtimeFormat = new SimpleDateFormat(" yyyyMMddhhmmss");
         List<BcqHeader> headerList = findHeadersOfParticipantByTradingDateAndStatus(shortName, tradingDate, status);
+        if (CollectionUtils.isEmpty(headerList)) {
+            String fileName = URLEncoder.encode(shortName + "_error_" + df2.format(tradingDate) + runtimeFormat.format(new Date())
+                    + ".txt", "UTF-8");
+            fileName = URLDecoder.decode(fileName, "ISO8859_1");
+            response.setHeader("Content-disposition", "attachment; filename=" + fileName);
+            throw new IllegalArgumentException(String.format("No result found in trading date: %s with status : %s",
+                    formatBcqDate(tradingDate, "yyyy-MM-dd"), status));
+        }
         DefaultPrettyPrinter.Indenter indenter =
                 new DefaultIndenter("\t", DefaultIndenter.SYS_LF);
         DefaultPrettyPrinter printer = new DefaultPrettyPrinter();

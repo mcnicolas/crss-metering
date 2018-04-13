@@ -71,6 +71,6 @@ public interface BcqService {
             throws IOException;
 
 
-    void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, OutputStream outputStream)
+    void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, HttpServletResponse response)
             throws IOException;
 }

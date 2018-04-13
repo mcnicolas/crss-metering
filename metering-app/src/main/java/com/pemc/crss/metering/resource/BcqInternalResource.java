@@ -1,12 +1,15 @@
 package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.commons.cache.service.CacheConfigService;
+import com.pemc.crss.commons.security.SecurityUtil;
 import com.pemc.crss.metering.dao.UserTpDao;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.utils.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -72,7 +75,7 @@ public class BcqInternalResource {
             response.setHeader("Content-disposition", "attachment; filename=" + fileName);
             response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
             if (status.toUpperCase().equals("ALL") || status.equals("SETTLEMENT_READY")) {
-                bcqService.generateJsonBcqSubmission(shortName, tradingDate, status, response.getOutputStream());
+                bcqService.generateJsonBcqSubmission(shortName, tradingDate, status, response);
             } else {
                 fileName = URLEncoder.encode(shortName + "_error_" + df2.format(tradingDate) + runtimeFormat.format(new Date())
                         + ".txt", "UTF-8");
