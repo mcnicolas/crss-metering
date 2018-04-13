@@ -1,0 +1,1 @@
+ALTER TABLE CRSS_METERING.txn_bcq_data ADD buyer_mtn VARCHAR2(255);
