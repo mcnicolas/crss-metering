@@ -75,7 +75,7 @@ public class BcqInternalResource {
             response.setContentType("application/x-msdownload");
             response.setHeader("Content-disposition", "attachment; filename=" + fileName);
             response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
-            if (status.toUpperCase().equals("ALL") || status.equals("SETTLEMENT_READY")) {
+            if (status.toUpperCase().equals("ALL") || status.toUpperCase().equals("SETTLEMENT_READY")) {
                 bcqService.generateJsonBcqSubmission(shortName, tradingDate, status, response);
             } else {
 
