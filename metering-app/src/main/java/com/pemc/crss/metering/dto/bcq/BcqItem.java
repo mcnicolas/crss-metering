@@ -17,6 +17,7 @@ public class BcqItem {
     private String tradingParticipantShortName;
     private List<String> referenceMtns;
     private Date tradingDate;
+    private String  billingId;
 
     public BcqItem(String tradingParticipantShortName, Date tradingDate) {
         this.tradingParticipantShortName = tradingParticipantShortName;

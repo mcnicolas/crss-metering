@@ -101,6 +101,7 @@ public class CrssSideValidatorImpl implements CrssSideValidator {
                     item.setReferenceMtns(referenceMtns);
                     item.setTradingDate(header.getTradingDate());
                     item.setBuyerMtns(buyerMtns);
+                    item.setBillingId(header.getBillingId());
                     return item;
                 })
                 .distinct()
