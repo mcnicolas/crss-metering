@@ -285,7 +285,7 @@ public final class BcqQueryHolder {
             return queryBuilder;
         }
 
-        return queryBuilder.where().filter(new QueryFilter("STATUS", status));
+        return queryBuilder.where().filter(new QueryFilter("UPPER(STATUS)", status.toUpperCase()));
     }
 
     private static SelectQueryBuilder addHeaderIdFilter(SelectQueryBuilder queryBuilder, Long headerId) {
