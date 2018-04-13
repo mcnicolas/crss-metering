@@ -61,14 +61,15 @@ public class BcqInternalResource {
                                       @RequestParam String status,
                                       final HttpServletResponse response) throws IOException {
         try {
-             String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
+            String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
             /*Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String shortName = SecurityUtil.getCurrentUser(auth);*/
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             DateFormat df2 = new SimpleDateFormat("yyyyMMdd_");
             DateFormat runtimeFormat = new SimpleDateFormat(" yyyyMMddhhmmss");
             Date tradingDate = df.parse(date);
-            String fileName = URLEncoder.encode(shortName + "_" + df2.format(tradingDate) + runtimeFormat.format(new Date())
+            String fileName = URLEncoder.encode("BCQ_" + shortName + "_" + df2.format(tradingDate)
+                    + "_" + status + "_" + runtimeFormat.format(new Date())
                     + ".json", "UTF-8");
             fileName = URLDecoder.decode(fileName, "ISO8859_1");
             response.setContentType("application/x-msdownload");
@@ -77,8 +78,9 @@ public class BcqInternalResource {
             if (status.toUpperCase().equals("ALL") || status.equals("SETTLEMENT_READY")) {
                 bcqService.generateJsonBcqSubmission(shortName, tradingDate, status, response);
             } else {
-                fileName = URLEncoder.encode(shortName + "_error_" + df2.format(tradingDate) + runtimeFormat.format(new Date())
-                        + ".txt", "UTF-8");
+
+                fileName = URLEncoder.encode("BCQ_" + shortName + "_error_" + df2.format(tradingDate)
+                        + "_" + status + "_" + runtimeFormat.format(new Date()) + ".txt", "UTF-8");
                 fileName = URLDecoder.decode(fileName, "ISO8859_1");
                 response.setHeader("Content-disposition", "attachment; filename=" + fileName);
 

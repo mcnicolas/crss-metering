@@ -604,21 +604,21 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, HttpServletResponse response ) throws IOException {
+    public void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, HttpServletResponse response) throws IOException {
         OutputStream outputStream = response.getOutputStream();
         DateFormat df2 = new SimpleDateFormat("yyyyMMdd_");
         DateFormat runtimeFormat = new SimpleDateFormat(" yyyyMMddhhmmss");
 
         List<BcqHeader> headerList = findHeadersOfParticipantByTradingDateAndStatus(shortName, tradingDate, status);
         if (CollectionUtils.isEmpty(headerList)) {
-            String fileName = URLEncoder.encode(shortName + "_error_" + df2.format(tradingDate) + runtimeFormat.format(new Date())
+            String fileName = URLEncoder.encode("BCQ_" + shortName + "_error_" + df2.format(tradingDate)
+                    + "_" + status + "_" + runtimeFormat.format(new Date())
                     + ".txt", "UTF-8");
             fileName = URLDecoder.decode(fileName, "ISO8859_1");
             response.setHeader("Content-disposition", "attachment; filename=" + fileName);
             throw new IllegalArgumentException(String.format("No result found in trading date: %s with status : %s",
                     formatBcqDate(tradingDate, "yyyy-MM-dd"), status));
         }
-
 
 
         BcqHeaderDto dto = new BcqHeaderDto(shortName, formatBcqDate(tradingDate, "yyyy-MM-dd"));
@@ -670,7 +670,7 @@ public class BcqServiceImpl implements BcqService {
                             .concat(bcqData.getBuyerMtn() == null ? "" : bcqData.getBuyerMtn())));
         }
         String sellerBillingId = String.join(",", billingIds);
-        return new BcqDataHeader(sellerBillingId ,
+        return new BcqDataHeader(sellerBillingId,
                 formatBcqDate(header.getUploadFile().getSubmittedDate(), "yyyy-MM-dd hh:mm:ss"),
                 formatBcqDate(header.getDeadlineDate(), "yyyy-MM-dd"),
                 getStatus(header.getStatus()),
