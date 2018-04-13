@@ -82,6 +82,7 @@ public class BcqServiceImpl implements BcqService {
     private static final String VOIDED_ERROR = UNABLE_MESSAGE + "declaration has been voided. " + RELOAD_MESSAGE;
     private static final String UPDATED_ERROR = UNABLE_MESSAGE + "declaration has been updated. " + RELOAD_MESSAGE;
     private static final String ACTIVE_ENROLLMENT_URL = "reg/contract/enroll/active/%s/%s/contract";
+    private static final String ACTIVE_BILLING_ID_URL = "reg/bcq/billing-id/active/%s/%s";
     private final BcqDao bcqDao;
     private final BcqNotificationManager bcqNotificationManager;
     private final CacheConfigService configService;
@@ -608,6 +609,7 @@ public class BcqServiceImpl implements BcqService {
         OutputStream outputStream = response.getOutputStream();
         DateFormat df2 = new SimpleDateFormat("yyyyMMdd_");
         DateFormat runtimeFormat = new SimpleDateFormat(" yyyyMMddhhmmss");
+
         List<BcqHeader> headerList = findHeadersOfParticipantByTradingDateAndStatus(shortName, tradingDate, status);
         if (CollectionUtils.isEmpty(headerList)) {
             String fileName = URLEncoder.encode(shortName + "_error_" + df2.format(tradingDate) + runtimeFormat.format(new Date())
@@ -617,13 +619,18 @@ public class BcqServiceImpl implements BcqService {
             throw new IllegalArgumentException(String.format("No result found in trading date: %s with status : %s",
                     formatBcqDate(tradingDate, "yyyy-MM-dd"), status));
         }
+
+
+
+        BcqHeaderDto dto = new BcqHeaderDto(shortName, formatBcqDate(tradingDate, "yyyy-MM-dd"));
+
         DefaultPrettyPrinter.Indenter indenter =
                 new DefaultIndenter("\t", DefaultIndenter.SYS_LF);
         DefaultPrettyPrinter printer = new DefaultPrettyPrinter();
         printer.indentArraysWith(indenter);
         printer.indentObjectsWith(indenter);
         try {
-            String result = objectMapper.writer(printer).writeValueAsString(getUniqueHeader(headerList));
+            String result = objectMapper.writer(printer).writeValueAsString(getUniqueHeader(headerList, dto));
             outputStream.write(result.getBytes(Charset.forName("UTF-8")));
             outputStream.flush();
             outputStream.close();
@@ -635,30 +642,27 @@ public class BcqServiceImpl implements BcqService {
         }
     }
 
-    private BcqUniqueHeader getUniqueHeader(List<BcqHeader> headers) {
-        List<BcqUniqueHeader> uniqueHeaders = Lists.newArrayList();
-        Map<BcqHeaderDto, Set<BcqDataHeader>> headerMap = Maps.newLinkedHashMap();
-        for (BcqHeader header : headers) {
-            BcqHeaderDto dto = new BcqHeaderDto(header.getSellingParticipantShortName(), header.getTradingDate().toString());
-            BcqDataHeader dataHeader = headerBuilder(header);
-            headerMap.compute(dto, (k, v) -> v == null ? initSet(dataHeader) : concatSet(dataHeader, v));
+    private BcqUniqueHeader getUniqueHeader(List<BcqHeader> headers, BcqHeaderDto dto) {
+        Set<BcqDataHeader> headerSet = new HashSet<>();
 
+        for (BcqHeader header : headers) {
+            List<String> billingIds = resourceTemplate.get(String.format(ACTIVE_BILLING_ID_URL,
+                    formatBcqDate(header.getTradingDate(), "yyyy-MM-dd"),
+                    header.getSellingParticipantShortName()), List.class);
+
+            BcqDataHeader dataHeader = headerBuilder(header, billingIds);
+            headerSet.add(dataHeader);
         }
-        for (Map.Entry<BcqHeaderDto, Set<BcqDataHeader>> entryHeader : headerMap.entrySet()) {
-            BcqHeaderDto dataKey = entryHeader.getKey();
-            BcqUniqueHeader uniqueHeader = new BcqUniqueHeader(dataKey.getTradingparticipant(), dataKey.getTradingDate(), entryHeader.getValue());
-            uniqueHeaders.add(uniqueHeader);
-        }
-        return uniqueHeaders.get(0);
+        return new BcqUniqueHeader(dto.getTradingparticipant(), dto.getTradingDate(), headerSet);
     }
 
-    private BcqDataHeader headerBuilder(BcqHeader header) {
+    private BcqDataHeader headerBuilder(BcqHeader header, List<String> billingIds) {
 
         List<BcqData> dataList = findDataByHeaderId(header.getHeaderId());
         List<BcqDataDetailsExtract> detailsList = Lists.newArrayList();
         for (BcqData bcqData : dataList) {
             detailsList.add(new BcqDataDetailsExtract(
-                    formatBcqDate(bcqData.getEndTime(), "HH:mm")
+                    formatBcqDate(bcqData.getEndTime(), "yyyy-MM-dd HH:mm")
                             .concat(",")
                             .concat(bcqData.getBcq().toString())
                             .concat(",")
@@ -666,17 +670,13 @@ public class BcqServiceImpl implements BcqService {
                             .concat(",")
                             .concat(bcqData.getBuyerMtn() == null ? "" : bcqData.getBuyerMtn())));
         }
-
-        return new BcqDataHeader(
-                parseVersion(header.getUploadFile().getSubmittedDate(), header.getStatus()),
-                header.getBuyingParticipantName().concat(" (").concat(header.getBuyingParticipantShortName()).concat(")"),
-                header.getSellingMtn(),
-                formatBcqDate(header.getUploadFile().getSubmittedDate(), "yyyy-MM-dd hh:mm a"),
+        String sellerBillingId = String.join(",", billingIds);
+        return new BcqDataHeader(sellerBillingId ,
+                formatBcqDate(header.getUploadFile().getSubmittedDate(), "yyyy-MM-dd hh:mm:ss"),
                 formatBcqDate(header.getDeadlineDate(), "yyyy-MM-dd"),
                 getStatus(header.getStatus()),
                 header.getUploadFile().getTransactionId(),
-                header.getBillingId(),
-                parseValueBcqUpdateType(header.getUpdatedVia()),
+                header.getBillingId(), parseValueBcqUpdateType(header.getUpdatedVia()),
                 detailsList.size(),
                 detailsList);
 

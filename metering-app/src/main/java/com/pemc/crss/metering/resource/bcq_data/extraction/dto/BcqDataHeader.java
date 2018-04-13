@@ -7,17 +7,13 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-@JsonPropertyOrder({"transaction_id", "version", "selling_mtn", "billing_id", "buying_participant",
+@JsonPropertyOrder({"transaction_id", "seller_billing_id", "buyer_billing_id",
         "submitted_date", "deadline_date", "status", "updated_via", "record_count", "bcq_detail"})
 public class BcqDataHeader {
-    @JsonProperty("version")
-    private final String version;
 
-    @JsonProperty("buying_participant")
-    private final String buyingParticipant;
 
-    @JsonProperty("selling_mtn")
-    private final String sellingMtn;
+    @JsonProperty("seller_billing_id")
+    private final String sellerBillingId;
 
     @JsonProperty("submitted_date")
     private final String submittedDate;
@@ -32,8 +28,8 @@ public class BcqDataHeader {
     @JsonProperty("transaction_id")
     private final String transactionId;
 
-    @JsonProperty("billing_id")
-    private final String billingId;
+    @JsonProperty("buyer_billing_id")
+    private final String buyer_BillingId;
 
     @JsonProperty("updated_via")
     private final String updatedVia;
@@ -45,21 +41,17 @@ public class BcqDataHeader {
     @JsonProperty("bcq_detail")
     private final List<BcqDataDetailsExtract> bcq_details;
 
-    public BcqDataHeader(String version, String buyingParticipant, String sellingMtn,
-                         String submittedDate, String deadlineDate, String status,
-                         String transactionId, String billingId,
-                         String updatedVia, int recordCount,
+    public BcqDataHeader(String sellerBillingId, String submittedDate, String deadlineDate, String status,
+                         String transactionId, String buyer_BillingId, String updatedVia, int recordCount,
                          List<BcqDataDetailsExtract> bcq_details) {
-        this.version = version;
-        this.buyingParticipant = buyingParticipant;
-        this.sellingMtn = sellingMtn;
+        this.sellerBillingId = sellerBillingId;
         this.submittedDate = submittedDate;
         this.deadlineDate = deadlineDate;
         this.status = status;
         this.transactionId = transactionId;
-        this.billingId = billingId;
+        this.buyer_BillingId = buyer_BillingId;
         this.updatedVia = updatedVia;
-        this.bcq_details = bcq_details;
         this.recordCount = recordCount;
+        this.bcq_details = bcq_details;
     }
 }
