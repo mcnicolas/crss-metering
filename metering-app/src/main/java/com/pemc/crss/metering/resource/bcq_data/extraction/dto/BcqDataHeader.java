@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 @JsonPropertyOrder({"transaction_id", "seller_billing_id", "buyer_billing_id",
-        "submitted_date", "deadline_date", "status", "updated_via", "record_count", "bcq_detail"})
+        "submitted_date", "status", "uploaded_via", "record_count", "bcq_details"})
 public class BcqDataHeader {
 
 
@@ -17,10 +17,6 @@ public class BcqDataHeader {
 
     @JsonProperty("submitted_date")
     private final String submittedDate;
-
-
-    @JsonProperty("deadline_date")
-    private final String deadlineDate;
 
     @JsonProperty("status")
     private final String status;
@@ -31,22 +27,21 @@ public class BcqDataHeader {
     @JsonProperty("buyer_billing_id")
     private final String buyer_BillingId;
 
-    @JsonProperty("updated_via")
+    @JsonProperty("uploaded_via")
     private final String updatedVia;
 
     @JsonProperty("record_count")
     private final int recordCount;
 
 
-    @JsonProperty("bcq_detail")
+    @JsonProperty("bcq_details")
     private final List<BcqDataDetailsExtract> bcq_details;
 
-    public BcqDataHeader(String sellerBillingId, String submittedDate, String deadlineDate, String status,
+    public BcqDataHeader(String sellerBillingId, String submittedDate,  String status,
                          String transactionId, String buyer_BillingId, String updatedVia, int recordCount,
                          List<BcqDataDetailsExtract> bcq_details) {
         this.sellerBillingId = sellerBillingId;
         this.submittedDate = submittedDate;
-        this.deadlineDate = deadlineDate;
         this.status = status;
         this.transactionId = transactionId;
         this.buyer_BillingId = buyer_BillingId;

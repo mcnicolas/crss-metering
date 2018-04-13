@@ -672,7 +672,6 @@ public class BcqServiceImpl implements BcqService {
         String sellerBillingId = String.join(",", billingIds);
         return new BcqDataHeader(sellerBillingId,
                 formatBcqDate(header.getUploadFile().getSubmittedDate(), "yyyy-MM-dd hh:mm:ss"),
-                formatBcqDate(header.getDeadlineDate(), "yyyy-MM-dd"),
                 getStatus(header.getStatus()),
                 header.getUploadFile().getTransactionId(),
                 header.getBillingId(), parseValueBcqUpdateType(header.getUpdatedVia()),
