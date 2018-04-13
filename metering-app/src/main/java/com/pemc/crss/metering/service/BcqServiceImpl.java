@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.pemc.crss.commons.cache.service.CacheConfigService;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
@@ -653,7 +652,7 @@ public class BcqServiceImpl implements BcqService {
             BcqDataHeader dataHeader = headerBuilder(header, billingIds);
             headerSet.add(dataHeader);
         }
-        return new BcqUniqueHeader(dto.getTradingparticipant(), dto.getTradingDate(), headerSet);
+        return new BcqUniqueHeader(dto.getTradingParticipant(), dto.getTradingDate(), headerSet);
     }
 
     private BcqDataHeader headerBuilder(BcqHeader header, List<String> billingIds) {
