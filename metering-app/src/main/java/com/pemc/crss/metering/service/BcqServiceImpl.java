@@ -606,7 +606,7 @@ public class BcqServiceImpl implements BcqService {
     @Override
     public void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, HttpServletResponse response) throws IOException {
         OutputStream outputStream = response.getOutputStream();
-        DateFormat df2 = new SimpleDateFormat("yyyyMMdd_");
+        DateFormat df2 = new SimpleDateFormat("yyyyMMdd");
         DateFormat runtimeFormat = new SimpleDateFormat(" yyyyMMddhhmmss");
 
         List<BcqHeader> headerList = findHeadersOfParticipantByTradingDateAndStatus(shortName, tradingDate, status);
