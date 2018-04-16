@@ -66,7 +66,7 @@ public class BcqInternalResource {
             String shortName = SecurityUtil.getCurrentUser(auth);*/
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             DateFormat df2 = new SimpleDateFormat("yyyyMMdd");
-            DateFormat runtimeFormat = new SimpleDateFormat(" yyyyMMddhhmmss");
+            DateFormat runtimeFormat = new SimpleDateFormat("yyyyMMddhhmmss");
             Date tradingDate = df.parse(date);
             String fileName = URLEncoder.encode("BCQ_" + shortName + "_" + df2.format(tradingDate)
                     + "_" + status + "_" + runtimeFormat.format(new Date())
