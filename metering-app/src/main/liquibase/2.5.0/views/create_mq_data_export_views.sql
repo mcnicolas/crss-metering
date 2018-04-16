@@ -1,16 +1,16 @@
 -- execute using postgres user
 grant usage on schema meterprocess to crss_metering;
-grant select on meterprocess.txn_meter_validated_daily to crss_metering;
-grant select on meterprocess.txn_meter_validated_monthly to crss_metering;
 
 grant usage on schema registration to crss_metering;
 grant select on registration.txn_participant to crss_metering;
 grant select on registration.txn_applicant to crss_metering;
 grant select on registration.user_applicant_link to crss_metering;
+grant select on registration.txn_sein_participant_mapping to crss_metering;
 
 DROP VIEW IF EXISTS metering.vw_mq_extraction_daily;
 DROP VIEW IF EXISTS metering.vw_mq_extraction_monthly;
 drop view if exists metering.VW_TP_LDAP_USER_MAP;
+
 
 create or replace view metering.vw_mq_extraction_daily as
 
@@ -18,27 +18,31 @@ create or replace view metering.vw_mq_extraction_daily as
     distinct
     mq.msp_shortname,
     mq.sein,
-    vald.trade_participant_short_name,
+    (select tspm.participant_short_name
+     from registration.txn_sein_participant_mapping tspm
+     where tspm.sein = mq.sein and tspm.effective_start_date <= to_timestamp(cast(mq.reading_datetime AS VARCHAR),
+                                                                             'yyyymmddHH24mi')
+           and (tspm.effective_end_date is null or tspm.effective_end_date >= to_timestamp(cast(mq.reading_datetime AS VARCHAR),
+                                                                                           'yyyymmddHH24mi') )
+     order by effective_start_date desc
+     limit 1) as trade_participant_short_name,
     mq.reading_datetime,
-    vald.kwhd,
-    vald.kvarhd,
-    vald.kwd,
-    vald.kwhr,
-    vald.kvarhr,
-    vald.kwr,
-    vald.estimation_flag,
+    mq.kwhd,
+    mq.kvarhd,
+    mq.kwd,
+    mq.kwhr,
+    mq.kvarhr,
+    mq.kwr,
+    mq.estimation_flag,
     mqf.upload_datetime,
-    vald.created_date_time,
+    mq.created_date_time,
     mqh.transaction_id
   FROM metering.txn_meter_data_daily mq
     JOIN metering.txn_mq_manifest_file mqf
       ON mq.file_id = mqf.file_id
     JOIN metering.txn_mq_manifest_header mqh
       ON mqf.header_id = mqh.header_id and mqh.category in ('CORRECTED_DAILY', 'DAILY')
-    INNER JOIN meterprocess.txn_meter_validated_daily vald
-      ON vald.sein = mq.sein AND mq.msp_shortname = vald.msp_shortname AND to_timestamp(cast(mq.reading_datetime AS VARCHAR),
-                                                                                        'yyyymmddHH24mi') = vald.reading_datetime;
-
+;
 
 
 create or replace view metering.vw_mq_extraction_monthly as
@@ -46,28 +50,30 @@ create or replace view metering.vw_mq_extraction_monthly as
     distinct
     mq.msp_shortname,
     mq.sein,
-    vald.trade_participant_short_name,
+    (select tspm.participant_short_name
+     from registration.txn_sein_participant_mapping tspm
+     where tspm.sein = mq.sein and tspm.effective_start_date <= to_timestamp(cast(mq.reading_datetime AS VARCHAR),
+                                                                             'yyyymmddHH24mi')
+           and (tspm.effective_end_date is null or tspm.effective_end_date >= to_timestamp(cast(mq.reading_datetime AS VARCHAR),
+                                                                                           'yyyymmddHH24mi') )
+     order by effective_start_date desc
+     limit 1) as trade_participant_short_name,
     mq.reading_datetime,
-    vald.kwhd,
-    vald.kvarhd,
-    vald.kwd,
-    vald.kwhr,
-    vald.kvarhr,
-    vald.kwr,
-    vald.estimation_flag,
+    mq.kwhd,
+    mq.kvarhd,
+    mq.kwd,
+    mq.kwhr,
+    mq.kvarhr,
+    mq.kwr,
+    mq.estimation_flag,
     mqf.upload_datetime,
-    vald.created_date_time,
+    mq.created_date_time,
     mqh.transaction_id
   FROM metering.txn_meter_data_monthly mq
     JOIN metering.txn_mq_manifest_file mqf
       ON mq.file_id = mqf.file_id
     JOIN metering.txn_mq_manifest_header mqh
-      ON mqf.header_id = mqh.header_id and mqh.category in ('CORRECTED_MONTHLY', 'MONTHLY')
-    INNER JOIN meterprocess.txn_meter_validated_monthly vald
-      ON vald.sein = mq.sein AND mq.msp_shortname = vald.msp_shortname AND to_timestamp(cast(mq.reading_datetime AS VARCHAR),
-                                                                                        'yyyymmddHH24mi') = vald.reading_datetime;
-
-
+      ON mqf.header_id = mqh.header_id and mqh.category in ('CORRECTED_MONTHLY', 'MONTHLY');
 
 create or replace view metering.VW_TP_LDAP_USER_MAP as
 select distinct tp.short_name as tp_short_name, ual.linked_users as user_id from registration.txn_participant tp
