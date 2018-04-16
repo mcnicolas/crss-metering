@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.pemc.crss.metering.dao.UserTpDao;
 import com.pemc.crss.metering.dto.ProcessedMqData;
+import com.pemc.crss.metering.resource.mq_data.extraction.dto.MissingParametersDto;
 import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionHeader;
 import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionMeterData;
 import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionMeterReading;
@@ -13,9 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
@@ -30,13 +32,14 @@ import java.util.*;
 
 /*
 usage:
-       curl -X GET http://localhost:8080/metering/mq-data/extraction/daily/NGCP/TESTSEIN1/ALL/2017-08-11 -H 'Authorization: Bearer 3f7f4e1e-3321-48ee-a16d-e9cd39726e2a' -O -J
+       curl -X GET http://localhost:8080/metering/mq-data/extraction?category=daily&sein=MF3MPNTNGCP01&isLatest=ALL&tradingDate=2017-08-11
+       -H 'Authorization: Bearer 3f7f4e1e-3321-48ee-a16d-e9cd39726e2a' -O -J
 
  */
 
 @Slf4j
 @RestController
-@RequestMapping("mq-data/extraction/{sein}/{isLatest}")
+@RequestMapping("/mq-data/extraction")
 public class MqDataExtractionResource {
     private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private final ObjectMapper objectMapper;
@@ -49,48 +52,67 @@ public class MqDataExtractionResource {
         this.userTpDao = userTpDao;
     }
 
-    @GetMapping("/{category}/{tradingDate}")
-    public void extractMqData(@PathVariable("category") String category,
-                              @PathVariable("sein") String sein,
-                              @PathVariable("isLatest") String isLatest,
-                              @PathVariable("tradingDate") String tradingDate,
+    @GetMapping
+    public void extractMqData(@RequestParam(value = "category", required = false) String category,
+                              @RequestParam(value = "sein", required = false) String sein,
+                              @RequestParam(value = "isLatest", required = false) String isLatest,
+                              @RequestParam(value = "tradingDate", required = false) String tradingDate,
                               HttpServletResponse response) throws Exception {
         log.debug("received extract {} mq data request ::  sein=[{}], isLatest=[{}], tradingDate=[{}]",
                 category, sein, isLatest, tradingDate);
 
+        String result;
+        String fileName;
+        if (StringUtils.isBlank(category)
+                || StringUtils.isBlank(sein)
+                || StringUtils.isBlank(isLatest)
+                || StringUtils.isBlank(tradingDate)) {
+            result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
+                    new MissingParametersDto(HttpStatus.BAD_REQUEST, "/mq-data/extraction")
+                            .addToMissingParams("category", category)
+                            .addToMissingParams("sein", sein)
+                            .addToMissingParams("isLatest", isLatest)
+                            .addToMissingParams("tradingDate", tradingDate));
+            response.setStatus(400);
+            fileName = URLDecoder.decode(URLEncoder.encode(String.format("missing_fields_%d", System.currentTimeMillis())
+                    , "UTF-8"), "ISO8859_1");
+        } else {
 
-        log.info("userId={}", SecurityUtils.getUserId());
 
-        String tpShortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
+            log.info("userId={}", SecurityUtils.getUserId());
 
-        switch (isLatest.toUpperCase()) {
-            case "ALL":
-            case "LATEST":
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid version " + isLatest);
+            String tpShortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
+
+            switch (isLatest.toUpperCase()) {
+                case "ALL":
+                case "LATEST":
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid version " + isLatest);
+            }
+
+            switch (category.toUpperCase()) {
+                case "DAILY":
+                case "MONTHLY":
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid meter data category " + category);
+            }
+
+            MqExtractionHeader header = processMqReport(category, sein, tpShortName, tradingDate, "LATEST".equalsIgnoreCase(isLatest));
+
+            result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(header);
+            fileName = URLEncoder.encode(String.format("MQ_%s_%s_%s_%s_%s_%s.json",
+                    tpShortName,
+                    category.toUpperCase(),
+                    isLatest.toUpperCase(),
+                    sein,
+                    tradingDate.replaceAll("-", ""),
+                    DATETIME_FORMAT.format(LocalDateTime.now())
+            ), "UTF-8");
+            fileName = URLDecoder.decode(fileName, "ISO8859_1");
         }
 
-        switch (category.toUpperCase()) {
-            case "DAILY":
-            case "MONTHLY":
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid meter data category " + category);
-        }
-
-        MqExtractionHeader header = processMqReport(category, sein, tpShortName, tradingDate, "LATEST".equalsIgnoreCase(isLatest));
-
-        String result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(header);
-        String fileName = URLEncoder.encode(String.format("MQ_%s_%s_%s_%s_%s_%s.json",
-                tpShortName,
-                category.toUpperCase(),
-                isLatest.toUpperCase(),
-                sein,
-                tradingDate.replaceAll("-", ""),
-                DATETIME_FORMAT.format(LocalDateTime.now())
-        ), "UTF-8");
-        fileName = URLDecoder.decode(fileName, "ISO8859_1");
         response.setContentType("application/x-msdownload");
         response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
         response.addHeader("Content-disposition", "attachment; filename=" + fileName);
