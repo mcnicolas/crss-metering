@@ -21,13 +21,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 
 /*
@@ -41,6 +47,8 @@ usage:
 @RestController
 @RequestMapping("/mq-data/extraction")
 public class MqDataExtractionResource {
+
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private final ObjectMapper objectMapper;
     private final MeterService meterService;
@@ -53,31 +61,54 @@ public class MqDataExtractionResource {
     }
 
     @GetMapping
-    public void extractMqData(@RequestParam(value = "category", required = false) String category,
-                              @RequestParam(value = "sein", required = false) String sein,
-                              @RequestParam(value = "isLatest", required = false) String isLatest,
-                              @RequestParam(value = "tradingDate", required = false) String tradingDate,
-                              HttpServletResponse response) throws Exception {
-        log.debug("received extract {} mq data request ::  sein=[{}], isLatest=[{}], tradingDate=[{}]",
-                category, sein, isLatest, tradingDate);
+    public void extractDailyMqData(
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "sein", required = false) String sein,
+            @RequestParam(value = "isLatest", required = false) String isLatest,
+            @RequestParam(value = "tradingDate", required = false) String tradingDate,
+            @RequestParam(value = "billingPeriodStart", required = false) String billingPeriodStart,
+            @RequestParam(value = "billingPeriodEnd", required = false) String billingPeriodEnd,
+            HttpServletResponse response) throws Exception {
+        log.debug("received extract {} daily mq data request ::  sein=[{}], isLatest=[{}], tradingDate=[{}]",
+                sein, isLatest, tradingDate);
 
-        String result;
+        byte[] result;
         String fileName;
-        if (StringUtils.isBlank(category)
-                || StringUtils.isBlank(sein)
+        boolean isDaily;
+        switch (category.toUpperCase()) {
+            case "DAILY":
+                isDaily = true;
+                break;
+            case "MONTHLY":
+                isDaily = false;
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid meter data category " + category);
+        }
+
+        if (StringUtils.isBlank(sein)
                 || StringUtils.isBlank(isLatest)
-                || StringUtils.isBlank(tradingDate)) {
-            result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
-                    new MissingParametersDto(HttpStatus.BAD_REQUEST, "/mq-data/extraction")
-                            .addToMissingParams("category", category)
-                            .addToMissingParams("sein", sein)
-                            .addToMissingParams("isLatest", isLatest)
-                            .addToMissingParams("tradingDate", tradingDate));
+                || (isDaily && StringUtils.isBlank(tradingDate))
+                || (!isDaily && StringUtils.isBlank(billingPeriodStart))
+                || (!isDaily && StringUtils.isBlank(billingPeriodEnd))) {
+            MissingParametersDto missingParametersDto = new MissingParametersDto(HttpStatus.BAD_REQUEST, "/mq-data/extraction")
+                    .addToMissingParams("category", category)
+                    .addToMissingParams("sein", sein)
+                    .addToMissingParams("isLatest", isLatest);
+
+            if (isDaily) {
+                missingParametersDto = missingParametersDto.addToMissingParams("tradingDate", tradingDate);
+            } else {
+                missingParametersDto = missingParametersDto.addToMissingParams("billingPeriodStart", billingPeriodStart)
+                        .addToMissingParams("billingPeriodEnd", billingPeriodEnd);
+            }
+
+            result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(missingParametersDto)
+                    .getBytes(Charset.forName("UTF-8"));
             response.setStatus(400);
             fileName = URLDecoder.decode(URLEncoder.encode(String.format("missing_fields_%d", System.currentTimeMillis())
                     , "UTF-8"), "ISO8859_1");
         } else {
-
 
             log.info("userId={}", SecurityUtils.getUserId());
 
@@ -91,25 +122,64 @@ public class MqDataExtractionResource {
                     throw new IllegalArgumentException("Invalid version " + isLatest);
             }
 
-            switch (category.toUpperCase()) {
-                case "DAILY":
-                case "MONTHLY":
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid meter data category " + category);
+            if (isDaily) {
+                fileName = URLEncoder.encode(String.format("MQ_%s_%s_%s_%s_%s_%s.json",
+                        tpShortName,
+                        category.toUpperCase(),
+                        isLatest.toUpperCase(),
+                        sein,
+                        tradingDate.replaceAll("-", ""),
+                        DATETIME_FORMAT.format(LocalDateTime.now())
+                ), "UTF-8");
+
+                MqExtractionHeader header = processMqReport(category.toUpperCase(), sein, tpShortName, tradingDate, "LATEST".equalsIgnoreCase(isLatest));
+                result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(header).getBytes(Charset.forName("UTF-8"));
+
+            } else {
+                final ByteArrayOutputStream bao = new ByteArrayOutputStream();
+                final ZipOutputStream zOut = new ZipOutputStream(bao);
+                String strDate;
+
+                for (LocalDateTime startDate = toLocalDateTime(billingPeriodStart), endDate = toLocalDateTime(billingPeriodEnd);
+                     startDate.isBefore(endDate) || startDate.isEqual(endDate); startDate = startDate.plusDays(1L)) {
+                    strDate = DATE_FORMAT.format(startDate);
+
+                    String headerStr = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
+                            processMqReport(category.toUpperCase(), sein, tpShortName, strDate, "LATEST".equalsIgnoreCase(isLatest)));
+
+                    fileName = URLEncoder.encode(String.format("MQ_%s_%s_%s_%s_%s_%s.json",
+                            tpShortName,
+                            category.toUpperCase(),
+                            isLatest.toUpperCase(),
+                            sein,
+                            strDate.replaceAll("-", ""),
+                            DATETIME_FORMAT.format(LocalDateTime.now())
+                    ), "UTF-8");
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    ZipEntry zipEntry = new ZipEntry(fileName);
+                    zOut.putNextEntry(zipEntry);
+                    byte[] bytes = headerStr.getBytes();
+                    baos.write(bytes, 0, bytes.length);
+                    baos.close();
+                    zOut.write(baos.toByteArray());
+                    zOut.closeEntry();
+                }
+
+                zOut.close();
+                bao.close();
+
+                result = bao.toByteArray();
+
+                fileName = URLEncoder.encode(String.format("MQ_%s_%s_%s_%s_%s.zip",
+                        tpShortName,
+                        category.toUpperCase(),
+                        isLatest.toUpperCase(),
+                        sein,
+                        DATETIME_FORMAT.format(LocalDateTime.now())
+                ), "UTF-8");
             }
 
-            MqExtractionHeader header = processMqReport(category, sein, tpShortName, tradingDate, "LATEST".equalsIgnoreCase(isLatest));
-
-            result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(header);
-            fileName = URLEncoder.encode(String.format("MQ_%s_%s_%s_%s_%s_%s.json",
-                    tpShortName,
-                    category.toUpperCase(),
-                    isLatest.toUpperCase(),
-                    sein,
-                    tradingDate.replaceAll("-", ""),
-                    DATETIME_FORMAT.format(LocalDateTime.now())
-            ), "UTF-8");
             fileName = URLDecoder.decode(fileName, "ISO8859_1");
         }
 
@@ -118,7 +188,7 @@ public class MqDataExtractionResource {
         response.addHeader("Content-disposition", "attachment; filename=" + fileName);
 
         try (OutputStream os = response.getOutputStream()) {
-            os.write(result.getBytes(Charset.forName("UTF-8")));
+            os.write(result);
         }
     }
 
@@ -169,5 +239,16 @@ public class MqDataExtractionResource {
 
         return new MqExtractionHeader(category.toUpperCase(), sein, resultList.get(0).getMspShortname(), tradingDate,
                 new ArrayList<>(mqExtractionMeterDataMap.values()));
+    }
+
+
+    private LocalDateTime toLocalDateTime(String readingDate) {
+        LocalDateTime retVal = null;
+
+        if (isNotBlank(readingDate)) {
+            retVal = LocalDate.parse(readingDate, DATE_FORMAT).atStartOfDay();
+        }
+
+        return retVal;
     }
 }
