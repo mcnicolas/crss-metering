@@ -643,7 +643,7 @@ public class BcqServiceImpl implements BcqService {
     }
 
     private BcqUniqueHeader getUniqueHeader(List<BcqHeader> headers, BcqHeaderDto dto) {
-        Set<BcqDataHeader> headerSet = new HashSet<>();
+        List<BcqDataHeader> headerSet = Lists.newArrayList();
 
         for (BcqHeader header : headers) {
             List<String> billingIds = resourceTemplate.get(String.format(ACTIVE_BILLING_ID_URL,

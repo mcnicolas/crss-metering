@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
-import java.util.Set;
+import java.util.List;
 
 @Data
 @JsonPropertyOrder({"trading_participant", "trading_date", "columns", "bcq_data"})
@@ -20,6 +20,6 @@ public class BcqUniqueHeader {
     private final String columns = "dispatch_interval, bcq, reference_mtn, buyer_mtn";
 
     @JsonProperty("bcq_data")
-    private final Set<BcqDataHeader> bcq_data;
+    private final List<BcqDataHeader> bcq_data;
 }
 
