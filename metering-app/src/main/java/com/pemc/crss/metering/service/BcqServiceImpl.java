@@ -610,6 +610,7 @@ public class BcqServiceImpl implements BcqService {
         DateFormat runtimeFormat = new SimpleDateFormat(" yyyyMMddhhmmss");
 
         List<BcqHeader> headerList = findHeadersOfParticipantByTradingDateAndStatus(shortName, tradingDate, status);
+        log.debug("Bcq Header size:{} List:{}", headerList.size(), headerList);
         if (CollectionUtils.isEmpty(headerList)) {
             String fileName = URLEncoder.encode("BCQ_" + shortName + "_error_" + df2.format(tradingDate)
                     + "_" + status + "_" + runtimeFormat.format(new Date())
@@ -652,6 +653,7 @@ public class BcqServiceImpl implements BcqService {
             BcqDataHeader dataHeader = headerBuilder(header, billingIds);
             headerSet.add(dataHeader);
         }
+        log.debug("Bcq Header size: {} Set:{}", headerSet.size(), headerSet);
         return new BcqUniqueHeader(dto.getTradingParticipant(), dto.getTradingDate(), headerSet);
     }
 
