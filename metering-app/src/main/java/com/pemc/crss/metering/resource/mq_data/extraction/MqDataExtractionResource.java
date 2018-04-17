@@ -112,7 +112,7 @@ public class MqDataExtractionResource {
 
             log.info("userId={}", SecurityUtils.getUserId());
 
-            String tpShortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
+            String tpShortName = getLoggedInUserParticipant();
 
             switch (isLatest.toUpperCase()) {
                 case "ALL":
@@ -132,7 +132,8 @@ public class MqDataExtractionResource {
                         DATETIME_FORMAT.format(LocalDateTime.now())
                 ), "UTF-8");
 
-                MqExtractionHeader header = processMqReport(category.toUpperCase(), sein, tpShortName, tradingDate, "LATEST".equalsIgnoreCase(isLatest));
+                MqExtractionHeader header = processMqReport(category.toUpperCase(), sein, tpShortName, tradingDate,
+                        "LATEST".equalsIgnoreCase(isLatest));
                 result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(header).getBytes(Charset.forName("UTF-8"));
 
             } else {
@@ -250,5 +251,10 @@ public class MqDataExtractionResource {
         }
 
         return retVal;
+    }
+
+    private String getLoggedInUserParticipant() {
+//        return "NGCP";
+        return userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
     }
 }

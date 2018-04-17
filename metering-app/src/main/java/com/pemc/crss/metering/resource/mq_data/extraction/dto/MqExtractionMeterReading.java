@@ -5,6 +5,8 @@ import lombok.Data;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.math.BigDecimal;
+
 @Data
 //@JsonPropertyOrder({"reading_datetime", "kwh_del", "kvarh_del", "kw_del", "kwh_rec", "kvarh_rec", "kwr", "estimation_flag"})
 public class MqExtractionMeterReading {
@@ -37,14 +39,19 @@ public class MqExtractionMeterReading {
 
 
     public MqExtractionMeterReading(String readingDateTime,
-                                    Object kwhd,
-                                    Object kvarhd,
-                                    Object kwd,
-                                    Object kwhr,
-                                    Object kvarhr,
-                                    Object kwr,
+                                    Object okwhd,
+                                    Object okvarhd,
+                                    Object okwd,
+                                    Object okwhr,
+                                    Object okvarhr,
+                                    Object okwr,
                                     String estimationFlag) {
-
+        String kwhd = okwhd != null ? formatNumber(okwhd) : null;
+        String kvarhd = okvarhd != null ? formatNumber(okvarhd) : null;
+        String kwd = okwd != null ? formatNumber(okwd) : null;
+        String kwhr = okwhr != null ? formatNumber(okwhr) : null;
+        String kvarhr = okvarhr != null ? formatNumber(okvarhr) : null;
+        String kwr = okwr != null ? formatNumber(okwr) : null;
         this.value = String.format("%s,%s,%s,%s,%s,%s,%s,%s",
                 readingDateTime,
                 kwhd,
@@ -54,6 +61,12 @@ public class MqExtractionMeterReading {
                 kvarhr,
                 kwr,
                 estimationFlag);
+    }
+
+    private String formatNumber(Object o) {
+        BigDecimal bigD = (BigDecimal) o;
+
+        return bigD.toPlainString();
     }
 
     @Override
