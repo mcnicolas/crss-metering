@@ -70,7 +70,8 @@ public enum BcqValidationError {
     BUYER_SELLER_MTN_SAME_FACILITY("Buyer Mtn <b>%s</b> is within the same facility with selling Mtn <b>%s</b>."),
     LOAD_OWN_BILLING_ID("Upload Error, CSV contains Trading Participant's own billing Id"),
     BUYER_DOEST_EXIST("Buyer participant does not exist!"),
-    ERROR_OWN_FACILITY_VALIDATION("Error in validation of own facility");
+    ERROR_OWN_FACILITY_VALIDATION("Error in validation of own facility"),
+    REFERENCE_MTN_NOT_OWN("Reference MTN is not own by Seller(%s (%s))/Buyer(%s (%s))");
 
 
     private final String errorMessage;
