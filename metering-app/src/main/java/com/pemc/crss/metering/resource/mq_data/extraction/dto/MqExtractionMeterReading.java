@@ -64,9 +64,13 @@ public class MqExtractionMeterReading {
     }
 
     private String formatNumber(Object o) {
-        BigDecimal bigD = (BigDecimal) o;
 
-        return bigD.toPlainString();
+        if (o instanceof BigDecimal) {
+            BigDecimal bigD = (BigDecimal) o;
+            return bigD.toPlainString();
+        }
+
+        return "";
     }
 
     @Override
