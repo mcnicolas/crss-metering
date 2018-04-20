@@ -91,7 +91,7 @@ public class MqDataExtractionResource {
 
             if (DAILY.equalsIgnoreCase(category)) {
                 missingParametersDto = missingParametersDto.addToMissingParams("tradingDate", tradingDate);
-            } else {
+            } else if (MONTHLY.equalsIgnoreCase(category)) {
                 missingParametersDto = missingParametersDto.addToMissingParams("billingPeriodStart", billingPeriodStart)
                         .addToMissingParams("billingPeriodEnd", billingPeriodEnd);
             }
