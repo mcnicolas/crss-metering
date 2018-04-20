@@ -48,6 +48,9 @@ usage:
 @RequestMapping("/mq-data/extraction")
 public class MqDataExtractionResource {
 
+    private static final String DAILY = "DAILY";
+    private static final String MONTHLY = "MONTHLY";
+
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private final ObjectMapper objectMapper;
@@ -74,29 +77,19 @@ public class MqDataExtractionResource {
 
         byte[] result;
         String fileName;
-        boolean isDaily;
-        switch (category.toUpperCase()) {
-            case "DAILY":
-                isDaily = true;
-                break;
-            case "MONTHLY":
-                isDaily = false;
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid meter data category " + category);
-        }
 
-        if (StringUtils.isBlank(sein)
+        if (StringUtils.isBlank(category)
+                || StringUtils.isBlank(sein)
                 || StringUtils.isBlank(isLatest)
-                || (isDaily && StringUtils.isBlank(tradingDate))
-                || (!isDaily && StringUtils.isBlank(billingPeriodStart))
-                || (!isDaily && StringUtils.isBlank(billingPeriodEnd))) {
+                || (DAILY.equalsIgnoreCase(category) && StringUtils.isBlank(tradingDate))
+                || (MONTHLY.equalsIgnoreCase(category) && StringUtils.isBlank(billingPeriodStart))
+                || (MONTHLY.equalsIgnoreCase(category) && StringUtils.isBlank(billingPeriodEnd))) {
             MissingParametersDto missingParametersDto = new MissingParametersDto(HttpStatus.BAD_REQUEST, "/mq-data/extraction")
                     .addToMissingParams("category", category)
                     .addToMissingParams("sein", sein)
                     .addToMissingParams("isLatest", isLatest);
 
-            if (isDaily) {
+            if (DAILY.equalsIgnoreCase(category)) {
                 missingParametersDto = missingParametersDto.addToMissingParams("tradingDate", tradingDate);
             } else {
                 missingParametersDto = missingParametersDto.addToMissingParams("billingPeriodStart", billingPeriodStart)
@@ -109,6 +102,17 @@ public class MqDataExtractionResource {
             fileName = URLDecoder.decode(URLEncoder.encode(String.format("missing_fields_%d", System.currentTimeMillis())
                     , "UTF-8"), "ISO8859_1");
         } else {
+            boolean isDaily;
+            switch (category.toUpperCase()) {
+                case DAILY:
+                    isDaily = true;
+                    break;
+                case MONTHLY:
+                    isDaily = false;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid meter data category " + category);
+            }
 
             log.info("userId={}", SecurityUtils.getUserId());
 
