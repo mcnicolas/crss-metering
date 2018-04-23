@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -55,12 +56,14 @@ public class BcqPopulator {
         }
 
         for (BcqHeader header : headerList) {
-            List<String> refMtns = Lists.newArrayList();
+            List<String> buyerMtns = Lists.newArrayList();
             header.getDataList().forEach(data->{
-                refMtns.add(data.getReferenceMtn());
+                if (StringUtils.isNotEmpty(data.getBuyerMtn())){
+                    buyerMtns.add(data.getBuyerMtn());
+                }
             });
-            Long refMtnCount = refMtns.stream().distinct().count();
-            header.setRefMtnSize(refMtnCount);
+            Long buyerMtnCount = buyerMtns.stream().distinct().count();
+            header.setBuyerMtnSize(buyerMtnCount);
             header.getDataList().sort(Comparator.comparing(BcqData::getReferenceMtn).thenComparing(BcqData::getReferenceMtn));
         }
 

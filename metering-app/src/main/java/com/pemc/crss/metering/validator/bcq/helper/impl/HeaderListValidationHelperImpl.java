@@ -7,8 +7,10 @@ import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.helper.HeaderListValidationHelper;
 import com.pemc.crss.metering.validator.bcq.validation.HeaderListValidation;
 import com.pemc.crss.metering.validator.bcq.validation.Validation;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Component;
 
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
@@ -74,8 +76,9 @@ public class HeaderListValidationHelperImpl implements HeaderListValidationHelpe
     private HeaderListValidation validDataSize() {
         HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> headerList.stream().allMatch(header -> {
-            int validBcqSize = header.getInterval().getValidNoOfRecords() * (int)(header.getRefMtnSize().longValue());
+            long multiplier = (header.getBuyerMtnSize() == 0 ? 1 : header.getBuyerMtnSize());
 
+            int validBcqSize = header.getInterval().getValidNoOfRecords() * (int) multiplier;
             if (header.getDataList().size() == validBcqSize) {
                 return true;
             }
@@ -93,14 +96,9 @@ public class HeaderListValidationHelperImpl implements HeaderListValidationHelpe
         Predicate<List<BcqHeader>> predicate = headerList -> headerList.stream().allMatch(header -> {
             BcqInterval interval = header.getInterval();
             Date previousDate = null;
-            String refMtns = header.getDataList().get(0).getReferenceMtn();
             long diff;
 
             for (BcqData data : header.getDataList()) {
-                if(!refMtns.equals(data.getReferenceMtn())) {
-                    previousDate = null;
-                    refMtns = data.getReferenceMtn();
-                }
                 if (previousDate == null) {
                     Date startOfDay = startOfDay(data.getEndTime());
                     diff = data.getEndTime().getTime() - startOfDay.getTime();
@@ -111,6 +109,13 @@ public class HeaderListValidationHelperImpl implements HeaderListValidationHelpe
                 if (diff == interval.getTimeInMillis()) {
                     previousDate = data.getEndTime();
                     continue;
+                } else {
+                    Date endDate = data.getEndTime() != null ? DateUtils.addDays(data.getEndTime(), 1) : null;
+                    Date previous = previousDate != null ? DateUtils.addMilliseconds(previousDate, (int) interval.getTimeInMillis()) : null;
+                    if ((endDate != null && previous != null) && (endDate.getTime() == previous.getTime())) {
+                        previousDate = data.getEndTime();
+                        continue;
+                    }
                 }
 
                 BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(

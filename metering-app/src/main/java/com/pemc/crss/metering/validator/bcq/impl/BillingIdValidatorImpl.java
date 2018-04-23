@@ -25,8 +25,8 @@ import static java.util.stream.Collectors.toList;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class BillingIdValidatorImpl implements BillingIdValidator {
 
-    private static final String BILLING_VALIDATE_URL =
-            "/settlement/billing/%s/tradingParticipants?date=%s";
+    private static final String BILLING_VALIDATE_URL =   "/reg/bcq/billing-id/%s/tradingParticipants?date=%s";
+           // "/settlement/billing/%s/tradingParticipants?date=%s";
 
     private final BillingIdValidationHelper validationHelper;
     private final ResourceTemplate resourceTemplate;

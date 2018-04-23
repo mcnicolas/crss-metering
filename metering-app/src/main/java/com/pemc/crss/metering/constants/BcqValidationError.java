@@ -71,7 +71,9 @@ public enum BcqValidationError {
     LOAD_OWN_BILLING_ID("Upload Error, CSV contains Trading Participant's own billing Id"),
     BUYER_DOEST_EXIST("Buyer participant does not exist!"),
     ERROR_OWN_FACILITY_VALIDATION("Error in validation of own facility"),
-    REFERENCE_MTN_NOT_OWN("Reference MTN is not own by Seller(%s (%s)) and its Indirect/s ");
+    REFERENCE_MTN_NOT_OWN("Reference MTN is not own by Seller(%s (%s)) and its Indirect/s "),
+    DUPLICATE_RECORD("Duplicate record on Seller MTN:(%s), Buyer Billing ID:(%s), Buyer MTN:(%s) for dispatch interval (%s)"),
+    INCOMPLETE_MTN_COUNT("Must Declare All Mtn/s of the Buyer.");
 
 
     private final String errorMessage;
