@@ -10,9 +10,6 @@
 -- Lock Database
 UPDATE metering.databasechangeloglock SET LOCKED = TRUE, LOCKEDBY = '172.23.0.1 (172.23.0.1)', LOCKGRANTED = '2018-04-03 13:40:54.606' WHERE ID = 1 AND LOCKED = FALSE;
 
--- Adding missing databasechangelog.deployment_id column
-ALTER TABLE metering.databasechangelog ADD DEPLOYMENT_ID VARCHAR(10);
-
 -- Changeset /liquibase/2.5.0/::2.5.0_20180403_01::rlevida
 ALTER TABLE metering.txn_bcq_header ADD uploaded_by VARCHAR(255);
 
