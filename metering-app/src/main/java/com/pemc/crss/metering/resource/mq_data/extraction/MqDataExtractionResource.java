@@ -72,8 +72,8 @@ public class MqDataExtractionResource {
             @RequestParam(value = "billingPeriodStart", required = false) String billingPeriodStart,
             @RequestParam(value = "billingPeriodEnd", required = false) String billingPeriodEnd,
             HttpServletResponse response) throws Exception {
-        log.debug("received extract {} daily mq data request ::  sein=[{}], isLatest=[{}], tradingDate=[{}]",
-                sein, isLatest, tradingDate);
+
+        log.info("/mq-data/extraction accessed by user=[{}]", SecurityUtils.getUsername());
 
         byte[] result;
         String fileName;

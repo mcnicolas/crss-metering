@@ -16,6 +16,7 @@ import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.service.reports.BcqReportService;
 import com.pemc.crss.metering.utils.BcqDateUtils;
 import com.pemc.crss.metering.utils.DateTimeUtils;
+import com.pemc.crss.metering.utils.SecurityUtils;
 import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult;
 import com.pemc.crss.metering.validator.bcq.handler.BcqValidationHandler;
@@ -98,6 +99,7 @@ public class BcqResource {
     public ResponseEntity<String> uploadByWebService(@RequestParam("file") MultipartFile multipartFile) throws IOException {
         String fileName = multipartFile.getOriginalFilename();
         log.debug("Request for uploading by web service of: {}", fileName);
+        log.info("/bcq//webservice/upload accessed by user=[{}]", SecurityUtils.getUsername());
 
         if (!equalsIgnoreCase(getExtension(fileName), "CSV")) {
             log.debug("Uploading failed, {} is not a CSV file", fileName);
@@ -219,6 +221,7 @@ public class BcqResource {
 
     @GetMapping("/template")
     public void getTemplate(final HttpServletResponse response) throws IOException {
+        log.info("/bcq/template accessed by user=[{}]", SecurityUtils.getUsername());
         response.setContentType("application/x-msdownload");
         response.setHeader("Content-disposition", "attachment; filename=bcq_template.csv");
 
@@ -229,6 +232,7 @@ public class BcqResource {
     public void getSampleTemplate(@RequestBody BcqDownloadDto bcqDownloadDto,
                                   final HttpServletResponse response) throws IOException {
 
+        log.info("/bcq/download/template accessed by user=[{}]", SecurityUtils.getUsername());
         log.debug("bcqDownloadDto={}", bcqDownloadDto);
 
 

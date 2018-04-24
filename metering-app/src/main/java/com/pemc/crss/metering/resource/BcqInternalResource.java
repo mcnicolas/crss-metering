@@ -5,6 +5,7 @@ import com.pemc.crss.commons.security.SecurityUtil;
 import com.pemc.crss.metering.dao.UserTpDao;
 import com.pemc.crss.metering.service.BcqService;
 import com.pemc.crss.metering.utils.SecurityUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
+@Slf4j
 @RestController
 @RequestMapping("/__internal__")
 public class BcqInternalResource {
@@ -41,6 +43,7 @@ public class BcqInternalResource {
 
     @GetMapping("/bcqTemplate/download")
     public void downloadTemplate(final HttpServletResponse response) throws IOException {
+        log.info("/__internal__/bcqTemplate/download accessed by user=[{}]", SecurityUtils.getUsername());
         String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
         LocalDateTime date = LocalDateTime.now().minusDays(1);
        /* Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -60,6 +63,7 @@ public class BcqInternalResource {
     public void downloadBcqSubmission(@RequestParam String date,
                                       @RequestParam String status,
                                       final HttpServletResponse response) throws IOException {
+        log.info("/__internal__/bcqSubmission accessed by user=[{}]", SecurityUtils.getUsername());
         try {
             String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
             /*Authentication auth = SecurityContextHolder.getContext().getAuthentication();
