@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.validator.bcq.helper.impl;
 
+import com.google.common.collect.Lists;
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
@@ -12,7 +13,9 @@ import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import static com.pemc.crss.metering.constants.BcqValidationError.*;
@@ -76,10 +79,9 @@ public class HeaderListValidationHelperImpl implements HeaderListValidationHelpe
     private HeaderListValidation validDataSize() {
         HeaderListValidation validation = new HeaderListValidation();
         Predicate<List<BcqHeader>> predicate = headerList -> headerList.stream().allMatch(header -> {
-            long multiplier = (header.getBuyerMtnSize() == 0 ? 1 : header.getBuyerMtnSize());
-
-            int validBcqSize = header.getInterval().getValidNoOfRecords() * (int) multiplier;
-            if (header.getDataList().size() == validBcqSize) {
+            int dataCount =  getDistinctData(header.getDataList(), header.getSellingMtn());
+            int validBcqSize = header.getInterval().getValidNoOfRecords();
+            if (dataCount == validBcqSize) {
                 return true;
             }
             BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INCOMPLETE_ENTRIES,
@@ -90,10 +92,17 @@ public class HeaderListValidationHelperImpl implements HeaderListValidationHelpe
         validation.setPredicate(predicate);
         return validation;
     }
-
+   private int getDistinctData(List<BcqData> data, String selleMtn){
+       Set<List<String>> dataSet =  new HashSet<>();
+       data.stream().forEach(d->{
+           List unique = asList(selleMtn, d.getBillingId(), d.getStartTime());
+           dataSet.add(unique);
+       });
+        return dataSet.size();
+   }
     private HeaderListValidation validTimeIntervals() {
         HeaderListValidation validation = new HeaderListValidation();
-        Predicate<List<BcqHeader>> predicate = headerList -> headerList.stream().allMatch(header -> {
+        Predicate<List<BcqHeader>> predicate = headerList -> headerList.stream().distinct().allMatch(header -> {
             BcqInterval interval = header.getInterval();
             Date previousDate = null;
             long diff;
@@ -102,6 +111,8 @@ public class HeaderListValidationHelperImpl implements HeaderListValidationHelpe
                 if (previousDate == null) {
                     Date startOfDay = startOfDay(data.getEndTime());
                     diff = data.getEndTime().getTime() - startOfDay.getTime();
+                } else if (previousDate.getTime() == data.getEndTime().getTime()){
+                    continue;
                 } else {
                     diff = data.getEndTime().getTime() - previousDate.getTime();
                 }
