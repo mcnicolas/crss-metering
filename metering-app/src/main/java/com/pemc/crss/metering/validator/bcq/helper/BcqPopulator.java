@@ -64,7 +64,7 @@ public class BcqPopulator {
             });
             Long buyerMtnCount = buyerMtns.stream().distinct().count();
             header.setBuyerMtnSize(buyerMtnCount);
-            header.getDataList().sort(Comparator.comparing(BcqData::getReferenceMtn).thenComparing(BcqData::getReferenceMtn));
+            header.getDataList().sort(Comparator.comparing(BcqData::getStartTime).thenComparing(BcqData::getStartTime));
         }
 
         return headerList;

@@ -102,7 +102,7 @@ public class HeaderListValidationHelperImpl implements HeaderListValidationHelpe
    }
     private HeaderListValidation validTimeIntervals() {
         HeaderListValidation validation = new HeaderListValidation();
-        Predicate<List<BcqHeader>> predicate = headerList -> headerList.stream().distinct().allMatch(header -> {
+        Predicate<List<BcqHeader>> predicate = headerList -> headerList.stream().allMatch(header -> {
             BcqInterval interval = header.getInterval();
             Date previousDate = null;
             long diff;
