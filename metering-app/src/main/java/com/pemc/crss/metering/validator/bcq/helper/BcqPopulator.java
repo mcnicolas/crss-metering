@@ -97,7 +97,8 @@ public class BcqPopulator {
         data.setEndTime(endTime);
         data.setBcq(new BigDecimal(line.get(BCQ_INDEX)));
         if(includeBMtn) {
-            String buyerMtn = "null".equals(line.get(BUYER_MTN_INDEX).trim()) ?  "" : line.get(BUYER_MTN_INDEX).trim();
+            String buyerMtn = StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))
+                    ?  "" : line.get(BUYER_MTN_INDEX).trim();
             data.setBuyerMtn(buyerMtn);
 
         }
