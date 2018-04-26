@@ -76,7 +76,8 @@ public class BcqPopulator {
         String billingId = line.get(BILLING_ID_INDEX).trim();
         Date tradingDate = getTradingDate(line.get(DATE_INDEX));
         if (includeBuyerMtn) {
-            String buyerMtn = line.get(BUYER_MTN_INDEX).trim();
+            String buyerMtn = StringUtils.isNotEmpty(line.get(BUYER_MTN_INDEX))
+                    ? line.get(BUYER_MTN_INDEX) : "";
             header.setBuyerMtn(buyerMtn);
         }
         header.setSellingMtn(sellingMtn);
