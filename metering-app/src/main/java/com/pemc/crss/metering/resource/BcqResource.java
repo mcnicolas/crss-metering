@@ -2,13 +2,8 @@ package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.commons.cache.service.CacheConfigService;
 import com.pemc.crss.metering.constants.ValidationStatus;
-import com.pemc.crss.metering.dto.bcq.BcqDeclaration;
-import com.pemc.crss.metering.dto.bcq.BcqDownloadDto;
-import com.pemc.crss.metering.dto.bcq.BcqHeader;
-import com.pemc.crss.metering.dto.bcq.BcqProhibitedPairForm;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFile;
-import com.pemc.crss.metering.dto.bcq.BcqUploadFileDetails;
-import com.pemc.crss.metering.dto.bcq.ParticipantSellerDetails;
+import com.pemc.crss.metering.dao.UserTpDao;
+import com.pemc.crss.metering.dto.bcq.*;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventForm;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.parser.bcq.BcqReader;
@@ -24,16 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextImpl;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -51,9 +37,7 @@ import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.utils.BcqDateUtils.parseDate;
 import static org.apache.commons.io.FilenameUtils.getExtension;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-import static org.springframework.http.ResponseEntity.badRequest;
-import static org.springframework.http.ResponseEntity.ok;
-import static org.springframework.http.ResponseEntity.unprocessableEntity;
+import static org.springframework.http.ResponseEntity.*;
 
 @Slf4j
 @RestController
@@ -65,17 +49,21 @@ public class BcqResource {
     private final BcqService bcqService;
     private final BcqReportService reportService;
     private final CacheConfigService configService;
+    private final UserTpDao userTpDao;
+
 
     @Autowired
     public BcqResource(final BcqReader bcqReader, final BcqValidationHandler validationHandler,
                        final BcqService bcqService, final BcqReportService reportService,
-                       final CacheConfigService configService) {
+                       final CacheConfigService configService,
+                       UserTpDao userTpDao) {
 
         this.bcqReader = bcqReader;
         this.validationHandler = validationHandler;
         this.bcqService = bcqService;
         this.reportService = reportService;
         this.configService = configService;
+        this.userTpDao = userTpDao;
     }
 
     @PostMapping("/upload")
@@ -105,8 +93,11 @@ public class BcqResource {
             log.debug("Uploading failed, {} is not a CSV file", fileName);
             return badRequest().body("Only CSV files are allowed.");
         }
-
+        String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
+        /*Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String shortName = SecurityUtil.getCurrentUser(auth);*/
         BcqDeclaration declaration = validateCsvAndGetDeclaration(multipartFile);
+       declaration.setUser(shortName);
         bcqService.saveDeclaration(declaration, false);
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("Finished uploading and rejecting by web service of: {}", fileName);

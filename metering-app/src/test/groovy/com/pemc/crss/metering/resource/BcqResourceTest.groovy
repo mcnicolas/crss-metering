@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.pemc.crss.commons.cache.service.CacheConfigService
 import com.pemc.crss.metering.constants.BcqStatus
+import com.pemc.crss.metering.dao.UserTpDao
 import com.pemc.crss.metering.dto.bcq.*
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList
@@ -55,12 +56,16 @@ class BcqResourceTest extends Specification {
     @Autowired
     MockMvc mockMvc
 
+    @Autowired
+    UserTpDao userTpDao
+
+
     @Unroll
     def "upload bcq with validation status: #status"() {
         given:
         def file = new MockMultipartFile('file', 'file.csv', 'text/csv', 'some data'.bytes)
         def validationResult = new BcqValidationResult(status, null, null)
-        def declaration = new BcqDeclaration(sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1',''),
+        def declaration = new BcqDeclaration(user:'GEN',sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1',''),
                 validationResult: validationResult, headerDetailsList: headerDetailsList)
 
         when:
@@ -105,7 +110,7 @@ class BcqResourceTest extends Specification {
         given:
         def file = new MockMultipartFile('file', fileName, 'text/csv', 'some data'.bytes)
         def validationResult = new BcqValidationResult(status, new BcqValidationErrorMessage(EMPTY), null)
-        def declaration = new BcqDeclaration(sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1',''),
+        def declaration = new BcqDeclaration( sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1',''),
                 validationResult: validationResult, headerDetailsList: headerDetailsList)
 
         when:
@@ -123,6 +128,7 @@ class BcqResourceTest extends Specification {
         }
         if (declaration.getHeaderDetailsList() != null) {
             1 * bcqService.findHeadersOfParticipantByTradingDate(_ as String, _ as Date) >> currentHeaders
+
         }
 
         response.contentType == APPLICATION_JSON_UTF8_VALUE
@@ -411,7 +417,7 @@ class BcqResourceTest extends Specification {
 
         @Bean
         def bcqResource() {
-            new BcqResource(bcqReader(), validationHandler(), bcqService(), bcqReportService(), configService())
+            new BcqResource(bcqReader(), validationHandler(), bcqService(), bcqReportService(), configService(), userTpDao())
         }
 
         @Bean
@@ -422,6 +428,11 @@ class BcqResourceTest extends Specification {
         @Bean
         def validationHandler() {
             factory.Mock(BcqValidationHandler)
+        }
+
+        @Bean
+        def userTpDao() {
+            factory.Mock(UserTpDao)
         }
 
         @Bean
