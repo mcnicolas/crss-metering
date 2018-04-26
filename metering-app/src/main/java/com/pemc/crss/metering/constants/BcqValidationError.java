@@ -76,7 +76,7 @@ public enum BcqValidationError {
     INCOMPLETE_MTN_COUNT("Must Declare All Mtn/s of the Buyer."),
     INVALID_BUYER_MTN_INTERVAL("Invalid/ Inconsistent Buyer Mtn. Found under "
                            + " <b>%s</b>, <b>%s</b>, <b>%s</b>"),
-    BUYER_MTN_BILLING_ID_ERROR("One or more Buyer Mtn/s doesn't have a Billing id of <b>%s</b>"),
+    BUYER_MTN_BILLING_ID_ERROR("Buyer Mtn <b>%s<b> doesn't have a Billing id of <b>%s</b>"),
     HOURLY_INTERVAL_ERROR("HOURLY interval must doesn't have Buyer Mtn");
 
 
