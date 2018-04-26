@@ -74,8 +74,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
     private CsvValidation validColumnHeaders() {
         return new CsvValidation(csv -> csv.get(1).stream()
                 .noneMatch(StringUtils::isBlank)
-                && (checkBuyerMtn(csv)
-                ? (csv.get(1).size() == VALID_NO_OF_COLUMNS - 1
+                && (checkBuyerMtn(csv) ? (csv.get(1).size() == VALID_NO_OF_COLUMNS - 1
                 || csv.get(1).size() == VALID_NO_OF_COLUMNS)
                 : csv.get(1).size() == VALID_NO_OF_COLUMNS),
                 new BcqValidationErrorMessage(INCORRECT_COLUMN_HEADER_COUNT));
@@ -189,17 +188,23 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
 
     private CsvValidation noDuplicates() {
         CsvValidation validation = new CsvValidation();
+
         Predicate<List<List<String>>> predicate = csv -> {
             Set<List<String>> uniqueSet = new HashSet<>();
             Set<List<String>> uniqueWithBuyerMtn = new HashSet<>();
-
+            boolean emptyBMtn = checkBuyerMtn(csv);
             List<List<String>> data = getDataList(csv);
             String[] sellerMtn = new String[1];
             sellerMtn[0] = data.get(0).get(SELLING_MTN_INDEX);
             String[] billingId = new String[1];
             billingId[0] = data.get(0).get(BILLING_ID_INDEX);
             String[] buyerMtn = new String[1];
-            buyerMtn[0] = StringUtils.isEmpty(data.get(0).get(BUYER_MTN_INDEX)) ? "" : data.get(0).get(BUYER_MTN_INDEX);
+            if (emptyBMtn) {
+                buyerMtn[0] = "";
+            } else {
+                buyerMtn[0] = StringUtils.isEmpty(data.get(0).get(BUYER_MTN_INDEX)) ? "" : data.get(0).get(BUYER_MTN_INDEX);
+
+            }
 
             return data.stream()
                     .noneMatch(line -> {
@@ -233,7 +238,8 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                     validation.setErrorMessage(errorMessage);
                                     return true;
                                 }
-                                if (!StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))) {
+                                if (line.size() == BUYER_MTN_INDEX + 1
+                                        && !StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))) {
                                     BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
                                     validation.setErrorMessage(errorMessage);
                                     return true;
@@ -242,7 +248,12 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                         } else {
                             sellerMtn[0] = line.get(SELLING_MTN_INDEX);
                             billingId[0] = line.get(BILLING_ID_INDEX);
-                            buyerMtn[0] =  StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))? "" : line.get(BUYER_MTN_INDEX);
+                            if (emptyBMtn) {
+                                buyerMtn[0] = "";
+                            } else {
+                                buyerMtn[0] = StringUtils.isEmpty(line.get(BUYER_MTN_INDEX)) ? "" : line.get(BUYER_MTN_INDEX);
+                            }
+
                         }
 
                         return false;
