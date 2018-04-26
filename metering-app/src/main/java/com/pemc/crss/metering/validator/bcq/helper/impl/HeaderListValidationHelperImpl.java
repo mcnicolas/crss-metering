@@ -1,6 +1,5 @@
 package com.pemc.crss.metering.validator.bcq.helper.impl;
 
-import com.google.common.collect.Lists;
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.dto.bcq.BcqData;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
@@ -11,7 +10,6 @@ import com.pemc.crss.metering.validator.bcq.validation.Validation;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Component;
 
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -19,9 +17,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import static com.pemc.crss.metering.constants.BcqValidationError.*;
-import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
-import static com.pemc.crss.metering.utils.BcqDateUtils.formatDateTime;
-import static com.pemc.crss.metering.utils.BcqDateUtils.formatLongDate;
+import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 import static com.pemc.crss.metering.utils.DateTimeUtils.startOfDay;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;

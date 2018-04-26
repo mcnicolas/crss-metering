@@ -88,20 +88,22 @@ public class CrssSideValidatorImpl implements CrssSideValidator {
                 map(header -> {
                     List<String> referenceMtns = header.getDataList().stream()
                             .map(BcqData::getReferenceMtn)
+                            .map(String::trim)
                             .distinct()
                             .collect(toList());
                     List<String> buyerMtns = header.getDataList().stream()
                             .map(BcqData::getBuyerMtn)
                             .distinct()
                             .filter(value -> value != null)
+                            .map(String::trim)
                             .collect(toList());
                     BcqItem item = new BcqItem();
-                    item.setSellingMtn(header.getSellingMtn());
-                    item.setTradingParticipantShortName(header.getBuyingParticipantShortName());
+                    item.setSellingMtn(header.getSellingMtn().trim());
+                    item.setTradingParticipantShortName(header.getBuyingParticipantShortName().trim());
                     item.setReferenceMtns(referenceMtns);
                     item.setTradingDate(header.getTradingDate());
                     item.setBuyerMtns(buyerMtns);
-                    item.setBillingId(header.getBillingId());
+                    item.setBillingId(header.getBillingId().trim());
                     return item;
                 })
                 .distinct()

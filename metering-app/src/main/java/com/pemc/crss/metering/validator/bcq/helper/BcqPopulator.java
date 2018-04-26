@@ -72,11 +72,11 @@ public class BcqPopulator {
 
     private BcqHeader populateHeader(List<String> line, boolean includeBuyerMtn) {
         BcqHeader header = new BcqHeader();
-        String sellingMtn = line.get(SELLING_MTN_INDEX);
-        String billingId = line.get(BILLING_ID_INDEX);
+        String sellingMtn = line.get(SELLING_MTN_INDEX).trim();
+        String billingId = line.get(BILLING_ID_INDEX).trim();
         Date tradingDate = getTradingDate(line.get(DATE_INDEX));
         if (includeBuyerMtn) {
-            String buyerMtn = line.get(BUYER_MTN_INDEX);
+            String buyerMtn = line.get(BUYER_MTN_INDEX).trim();
             header.setBuyerMtn(buyerMtn);
         }
         header.setSellingMtn(sellingMtn);
@@ -88,7 +88,7 @@ public class BcqPopulator {
 
     private BcqData populateData(List<String> line, BcqInterval interval, boolean includeBMtn) {
         BcqData data = new BcqData();
-        String referenceMtn = line.get(REFERENCE_MTN_INDEX);
+        String referenceMtn = line.get(REFERENCE_MTN_INDEX).trim();
         Date endTime = parseDateTime(line.get(DATE_INDEX));
 
         data.setReferenceMtn(referenceMtn);
@@ -96,7 +96,7 @@ public class BcqPopulator {
         data.setEndTime(endTime);
         data.setBcq(new BigDecimal(line.get(BCQ_INDEX)));
         if(includeBMtn) {
-            String buyerMtn = "null".equals(line.get(BUYER_MTN_INDEX)) ?  "" : line.get(BUYER_MTN_INDEX);
+            String buyerMtn = "null".equals(line.get(BUYER_MTN_INDEX).trim()) ?  "" : line.get(BUYER_MTN_INDEX).trim();
             data.setBuyerMtn(buyerMtn);
 
         }

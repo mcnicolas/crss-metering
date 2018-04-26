@@ -74,8 +74,8 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
     private CsvValidation validColumnHeaders() {
         return new CsvValidation(csv -> csv.get(1).stream()
                 .noneMatch(StringUtils::isBlank)
-                && (checkBuyerMtn(csv) ? (csv.get(1).size() == VALID_NO_OF_COLUMNS - 1
-                || csv.get(1).size() == VALID_NO_OF_COLUMNS)
+                && (checkBuyerMtn(csv) ?
+                (csv.get(1).size() == VALID_NO_OF_COLUMNS - 1 || csv.get(1).size() == VALID_NO_OF_COLUMNS)
                 : csv.get(1).size() == VALID_NO_OF_COLUMNS),
                 new BcqValidationErrorMessage(INCORRECT_COLUMN_HEADER_COUNT));
     }
@@ -171,7 +171,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
     private CsvValidation validBcqLength() {
         return new CsvValidation(csv -> getDataList(csv).stream()
                 .noneMatch(line -> {
-                    BigDecimal bcq = new BigDecimal(line.get(BCQ_INDEX));
+                    BigDecimal bcq = new BigDecimal(line.get(BCQ_INDEX).trim());
                     bcq = bcq.stripTrailingZeros();
                     String integerPart = bcq.toPlainString();
                     if (integerPart.contains(".")) {
@@ -195,27 +195,34 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
             boolean emptyBMtn = checkBuyerMtn(csv);
             List<List<String>> data = getDataList(csv);
             String[] sellerMtn = new String[1];
-            sellerMtn[0] = data.get(0).get(SELLING_MTN_INDEX);
+            sellerMtn[0] = data.get(0).get(SELLING_MTN_INDEX).trim();
             String[] billingId = new String[1];
-            billingId[0] = data.get(0).get(BILLING_ID_INDEX);
+            billingId[0] = data.get(0).get(BILLING_ID_INDEX).trim();
             String[] buyerMtn = new String[1];
             if (emptyBMtn) {
                 buyerMtn[0] = "";
             } else {
-                buyerMtn[0] = StringUtils.isEmpty(data.get(0).get(BUYER_MTN_INDEX)) ? "" : data.get(0).get(BUYER_MTN_INDEX);
+                buyerMtn[0] = StringUtils.isEmpty(data.get(0).get(BUYER_MTN_INDEX)) ? ""
+                        : data.get(0).get(BUYER_MTN_INDEX).trim();
 
             }
 
             return data.stream()
                     .noneMatch(line -> {
-                        if (billingId[0].equals(line.get(BILLING_ID_INDEX))
-                                && sellerMtn[0].equals(line.get(SELLING_MTN_INDEX))) {
+                        if(getInterval(csv).equals(HOURLY.name()) && !checkBuyerMtn(csv)) {
+                            BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(HOURLY_INTERVAL_ERROR);
+                            validation.setErrorMessage(errorMessage);
+                            return true;
+                        }
+                        if (billingId[0].equals(line.get(BILLING_ID_INDEX).trim())
+                                && sellerMtn[0].equals(line.get(SELLING_MTN_INDEX).trim())) {
                             if (!buyerMtn[0].isEmpty()) {
                                 List<String> uniqueRow = asList(
-                                        line.get(SELLING_MTN_INDEX),
-                                        line.get(BILLING_ID_INDEX),
-                                        line.get(DATE_INDEX),
-                                        line.get(BUYER_MTN_INDEX));
+                                        line.get(SELLING_MTN_INDEX).trim(),
+                                        line.get(BILLING_ID_INDEX).trim(),
+                                        line.get(DATE_INDEX).trim(),
+                                        StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))
+                                                ? "":line.get(BUYER_MTN_INDEX).trim());
                                 if (!uniqueWithBuyerMtn.add(uniqueRow)) {
                                     BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INVALID_BUYER_MTN_INTERVAL,
                                             uniqueRow.subList(0, 3));
@@ -229,9 +236,9 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                 }
                             } else {
                                 List<String> uniqueRow = asList(
-                                        line.get(SELLING_MTN_INDEX).toUpperCase(),
-                                        line.get(BILLING_ID_INDEX).toUpperCase(),
-                                        line.get(DATE_INDEX));
+                                        line.get(SELLING_MTN_INDEX).trim(),
+                                        line.get(BILLING_ID_INDEX).trim(),
+                                        line.get(DATE_INDEX).trim());
                                 if (!uniqueSet.add(uniqueRow)) {
                                     BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(DUPLICATE_DATE,
                                             uniqueRow);
@@ -246,12 +253,13 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                 }
                             }
                         } else {
-                            sellerMtn[0] = line.get(SELLING_MTN_INDEX);
-                            billingId[0] = line.get(BILLING_ID_INDEX);
+                            sellerMtn[0] = line.get(SELLING_MTN_INDEX).trim();
+                            billingId[0] = line.get(BILLING_ID_INDEX).trim();
                             if (emptyBMtn) {
                                 buyerMtn[0] = "";
                             } else {
-                                buyerMtn[0] = StringUtils.isEmpty(line.get(BUYER_MTN_INDEX)) ? "" : line.get(BUYER_MTN_INDEX);
+                                buyerMtn[0] = StringUtils.isEmpty(line.get(BUYER_MTN_INDEX)) ? ""
+                                        : line.get(BUYER_MTN_INDEX).trim();
                             }
 
                         }
