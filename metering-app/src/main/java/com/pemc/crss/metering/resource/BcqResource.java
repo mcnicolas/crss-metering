@@ -93,11 +93,13 @@ public class BcqResource {
             log.debug("Uploading failed, {} is not a CSV file", fileName);
             return badRequest().body("Only CSV files are allowed.");
         }
-        String shortName = userTpDao.findBShortNameByTpId(SecurityUtils.getUserId().longValue());
+
+        Long userId = SecurityUtils.getUserId() != null ? SecurityUtils.getUserId().longValue() : null;
+        String shortName = userTpDao.findBShortNameByTpId(userId);
         /*Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String shortName = SecurityUtil.getCurrentUser(auth);*/
         BcqDeclaration declaration = validateCsvAndGetDeclaration(multipartFile);
-       declaration.setUser(shortName);
+        declaration.setUser(shortName);
         bcqService.saveDeclaration(declaration, false);
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("Finished uploading and rejecting by web service of: {}", fileName);
@@ -123,7 +125,7 @@ public class BcqResource {
         int lastIndexOf = sellerDetailsString.lastIndexOf(", ");
         String sellerName = sellerDetailsString.substring(0, lastIndexOf);
         String sellerShortName = sellerDetailsString.substring(lastIndexOf + 2, sellerDetailsString.length());
-        ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerName, sellerShortName.trim(),"");
+        ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerName, sellerShortName.trim(), "");
         BcqDeclaration declaration = validateCsvAndGetDeclaration(multipartFile, sellerDetails,
                 parseDate(tradingDateString));
         if (declaration.getValidationResult().getStatus() == REJECTED) {

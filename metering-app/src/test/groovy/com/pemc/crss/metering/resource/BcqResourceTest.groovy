@@ -108,6 +108,7 @@ class BcqResourceTest extends Specification {
     @Unroll
     def "upload bcq by web service with validation status: #status"() {
         given:
+
         def file = new MockMultipartFile('file', fileName, 'text/csv', 'some data'.bytes)
         def validationResult = new BcqValidationResult(status, new BcqValidationErrorMessage(EMPTY), null)
         def declaration = new BcqDeclaration( sellerDetails: new ParticipantSellerDetails('Gen 1', 'GEN1',''),
