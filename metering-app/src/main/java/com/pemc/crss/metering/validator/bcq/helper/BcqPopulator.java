@@ -37,7 +37,7 @@ public class BcqPopulator {
         boolean emptyBMtn = checkBuyerMtn(csv);
         for (List<String> line : csv.subList(START_LINE_OF_DATA, csv.size())) {
             BcqHeader header = populateHeader(line, false);
-            BcqHeader headerUnique =   populateHeader(line, !emptyBMtn);
+            BcqHeader headerUnique = populateHeader(line, !emptyBMtn);
             List<BcqData> dataList;
 
             header.setInterval(interval);
@@ -57,8 +57,8 @@ public class BcqPopulator {
 
         for (BcqHeader header : headerList) {
             List<String> buyerMtns = Lists.newArrayList();
-            header.getDataList().forEach(data->{
-                if (StringUtils.isNotEmpty(data.getBuyerMtn())){
+            header.getDataList().forEach(data -> {
+                if (StringUtils.isNotEmpty(data.getBuyerMtn())) {
                     buyerMtns.add(data.getBuyerMtn());
                 }
             });
@@ -76,9 +76,9 @@ public class BcqPopulator {
         String billingId = line.get(BILLING_ID_INDEX).trim();
         Date tradingDate = getTradingDate(line.get(DATE_INDEX));
         if (includeBuyerMtn) {
-            String buyerMtn = StringUtils.isNotEmpty(line.get(BUYER_MTN_INDEX))
-                    ? line.get(BUYER_MTN_INDEX) : "";
-            header.setBuyerMtn(buyerMtn);
+            if (StringUtils.isNotEmpty(line.get(BUYER_MTN_INDEX))) {
+                header.setBuyerMtn(line.get(BUYER_MTN_INDEX).trim());
+            }
         }
         header.setSellingMtn(sellingMtn);
         header.setBillingId(billingId);
@@ -96,10 +96,10 @@ public class BcqPopulator {
         data.setStartTime(getStartTime(endTime, interval));
         data.setEndTime(endTime);
         data.setBcq(new BigDecimal(line.get(BCQ_INDEX)));
-        if(includeBMtn) {
-            String buyerMtn = StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))
-                    ?  "" : line.get(BUYER_MTN_INDEX).trim();
-            data.setBuyerMtn(buyerMtn);
+        if (includeBMtn) {
+            if (StringUtils.isNotEmpty(line.get(BUYER_MTN_INDEX))) {
+                data.setBuyerMtn(line.get(BUYER_MTN_INDEX).trim());
+            }
 
         }
 
@@ -124,11 +124,11 @@ public class BcqPopulator {
         return new Date(endTime.getTime() - interval.getTimeInMillis());
     }
 
-    private boolean checkBuyerMtn(List<List<String>> csv){
+    private boolean checkBuyerMtn(List<List<String>> csv) {
         try {
             return csv.subList(START_LINE_OF_DATA, csv.size()).stream()
                     .allMatch(line -> isBlank(line.get(BUYER_MTN_INDEX)));
-        }catch (IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException e) {
             return true;
         }
     }
