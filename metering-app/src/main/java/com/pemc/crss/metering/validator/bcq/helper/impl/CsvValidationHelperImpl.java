@@ -54,7 +54,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                 .and(dateIsSet())
                 .and(bcqIsSet())
                 .and(validDate())
-                .and(validateTradingDate())
+                .and(sameTradingDate())
                 .and(validBcq())
                 .and(positiveBcq())
                 .and(validBcqLength())
@@ -364,11 +364,9 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
     private CsvValidation sameTradingDate() {
         return new CsvValidation(csv -> {
             Date firstTradingDate = getTradingDate(getDataList(csv).get(0).get(DATE_INDEX));
-            String refMtn = getDataList(csv).get(0).get(REFERENCE_MTN_INDEX);
             return firstTradingDate != null
                     && getDataList(csv).stream()
-                    .allMatch(line -> firstTradingDate.equals(getTradingDate(line.get(DATE_INDEX)))
-                            && refMtn.equals(line.get(REFERENCE_MTN_INDEX)));
+                    .allMatch(line -> firstTradingDate.equals(getTradingDate(line.get(DATE_INDEX))));
         }, new BcqValidationErrorMessage(INVALID_TRADING_DATE));
     }
 
