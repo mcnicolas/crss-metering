@@ -54,6 +54,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                 .and(dateIsSet())
                 .and(bcqIsSet())
                 .and(validDate())
+                .and(validateTradingDate())
                 .and(validBcq())
                 .and(positiveBcq())
                 .and(validBcqLength())
@@ -270,7 +271,28 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
         validation.setPredicate(predicate);
         return validation;
     }
+    private CsvValidation validateTradingDate() {
+        CsvValidation validation = new CsvValidation();
 
+        Predicate<List<List<String>>> predicate = csv -> {
+            List<List<String>> data = getDataList(csv);
+            Date firstTradingDate = getTradingDate(getDataList(csv).get(0).get(DATE_INDEX));
+            return data.stream()
+                    .noneMatch(line -> {
+                        Date dateLine = getTradingDate(line.get(DATE_INDEX));
+                         if(firstTradingDate.getTime() != dateLine.getTime()) {
+                             BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MULTIPLE_TRADING_DATE);
+                             validation.setErrorMessage(errorMessage);
+                             return true;
+                         }
+
+                        return false;
+                    });
+
+        };
+        validation.setPredicate(predicate);
+        return validation;
+    }
     private CsvValidation validateBuyerMtn() {
         CsvValidation validation = new CsvValidation();
         Predicate<List<List<String>>> predicate = csv -> {
