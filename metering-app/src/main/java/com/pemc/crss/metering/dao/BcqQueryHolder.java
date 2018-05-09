@@ -116,6 +116,7 @@ public final class BcqQueryHolder {
                 .column("STATUS")
                 .column("TRANSACTION_ID")
                 .column("SUBMITTED_DATE")
+                .column("UPLOADED_BY")
                 .from(HEADER_JOIN_FILE)
                 .where().filter(new QueryFilter("HEADER_ID", headerId))
                 .build();

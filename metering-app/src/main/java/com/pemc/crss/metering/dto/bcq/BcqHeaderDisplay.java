@@ -62,4 +62,8 @@ public class BcqHeaderDisplay extends AbstractWebDto<BcqHeader> {
     public BcqStatus getStatus() {
         return target().getStatus();
     }
+
+    public String getUploadedBy() {
+        return target().getUploadedBy();
+    }
 }

@@ -512,6 +512,9 @@ public class JdbcBcqDao implements BcqDao {
             if (doesColumnExist("submitted_date", rs)) {
                 uploadFile.setSubmittedDate(rs.getTimestamp("submitted_date"));
             }
+            if (doesColumnExist("uploaded_by", rs)) {
+                header.setUploadedBy(rs.getString("uploaded_by"));
+            }
             header.setUploadFile(uploadFile);
             return header;
         }
