@@ -18,6 +18,7 @@ public class BcqHeaderPageDisplay {
     private String deadlineDate;
     private String status;
     private String updatedVia;
+    private String uploadedBy;
 
     public String getBillingId() {
         return billingId.toUpperCase();

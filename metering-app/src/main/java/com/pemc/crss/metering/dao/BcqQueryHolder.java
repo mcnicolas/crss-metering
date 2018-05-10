@@ -64,6 +64,7 @@ public final class BcqQueryHolder {
                 .column(subHeaderPage("STRING_AGG(COALESCE(C.UPDATED_VIA, ' '), ', ' ORDER BY D.SUBMITTED_DATE)",
                         status, isSettlement))
                 .as("UPDATED_VIA")
+                .column("UPLOADED_BY")
                 .from(HEADER_JOIN_FILE)
                 .where().filter("HEADER_ID IN(" + uniqueHeaderIds.getSql() + ")")
                 .orderBy(pageableRequest.getOrderList())
