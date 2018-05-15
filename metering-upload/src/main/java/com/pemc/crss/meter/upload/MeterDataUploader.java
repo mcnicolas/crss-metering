@@ -542,7 +542,7 @@ public class MeterDataUploader extends JFrame {
         initializeProgressBar = new JProgressBar();
 
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        setTitle("Meter Quantity Uploader - Version 2.3.0.RELEASE");
+        setTitle("Meter Quantity Uploader - Version 2.4.0.SNAPSHOT");
         setResizable(false);
         setSize(new Dimension(800, 505));
         addWindowListener(new WindowAdapter() {
