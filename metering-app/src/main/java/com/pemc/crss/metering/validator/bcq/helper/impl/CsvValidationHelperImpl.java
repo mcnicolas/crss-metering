@@ -210,7 +210,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
 
             return data.stream()
                     .noneMatch(line -> {
-                        if(getInterval(csv).equals(HOURLY.name()) && !checkBuyerMtn(csv)) {
+                        if (getInterval(csv).equals(HOURLY.name()) && !checkBuyerMtn(csv)) {
                             BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(HOURLY_INTERVAL_ERROR);
                             validation.setErrorMessage(errorMessage);
                             return true;
@@ -223,7 +223,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                         line.get(BILLING_ID_INDEX).trim(),
                                         line.get(DATE_INDEX).trim(),
                                         StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))
-                                                ? "":line.get(BUYER_MTN_INDEX).trim());
+                                                ? "" : line.get(BUYER_MTN_INDEX).trim());
                                 if (!uniqueWithBuyerMtn.add(uniqueRow)) {
                                     BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INVALID_BUYER_MTN_INTERVAL,
                                             uniqueRow.subList(0, 3));
@@ -242,7 +242,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                         line.get(DATE_INDEX).trim());
                                 if (!uniqueSet.add(uniqueRow)) {
                                     BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(DUPLICATE_DATE,
-                                            uniqueRow);
+                                            asList(uniqueRow.get(2), uniqueRow.get(0), uniqueRow.get(1)));
                                     validation.setErrorMessage(errorMessage);
                                     return true;
                                 }
@@ -271,6 +271,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
         validation.setPredicate(predicate);
         return validation;
     }
+
     private CsvValidation validateTradingDate() {
         CsvValidation validation = new CsvValidation();
 
@@ -280,11 +281,11 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
             return data.stream()
                     .noneMatch(line -> {
                         Date dateLine = getTradingDate(line.get(DATE_INDEX));
-                         if(firstTradingDate.getTime() != dateLine.getTime()) {
-                             BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MULTIPLE_TRADING_DATE);
-                             validation.setErrorMessage(errorMessage);
-                             return true;
-                         }
+                        if (firstTradingDate.getTime() != dateLine.getTime()) {
+                            BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MULTIPLE_TRADING_DATE);
+                            validation.setErrorMessage(errorMessage);
+                            return true;
+                        }
 
                         return false;
                     });
@@ -293,6 +294,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
         validation.setPredicate(predicate);
         return validation;
     }
+
     private CsvValidation validateBuyerMtn() {
         CsvValidation validation = new CsvValidation();
         Predicate<List<List<String>>> predicate = csv -> {
