@@ -203,6 +203,7 @@ public class BcqServiceImpl implements BcqService {
 
         header.setStatus(FOR_APPROVAL_CANCEL);
         bcqDao.updateHeaderStatusBySettlement(headerId, FOR_APPROVAL_CANCEL);
+        buildActionAuditLog(header, "BCQ ".concat(FOR_APPROVAL_CANCEL.getLabel()), false);
         bcqNotificationManager.sendSettlementUpdateStatusNotification(header);
     }
 
@@ -225,6 +226,7 @@ public class BcqServiceImpl implements BcqService {
         }
 
         bcqDao.updateHeaderStatus(headerId, newStatus);
+        buildActionAuditLog(header, "BCQ ".concat(newStatus.getLabel()), true);
         bcqNotificationManager.sendApprovalNotification(header);
     }
 
