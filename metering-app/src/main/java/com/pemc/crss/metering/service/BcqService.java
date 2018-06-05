@@ -75,9 +75,9 @@ public interface BcqService {
     void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, HttpServletResponse response)
             throws IOException;
 
-    void generateSuccessAuditLog(BcqDeclaration bcqDeclaration);
+    void generateSuccessAuditLog(BcqDeclaration bcqDeclaration, String pemcUser);
 
-    void generateErrorAuditLog(BcqDeclaration bcqDeclaration, String tradingDate);
+    void generateErrorAuditLog(BcqDeclaration bcqDeclaration, String tradingDate, String pemcUser);
 
     String findTradingDate(MultipartFile file);
 }

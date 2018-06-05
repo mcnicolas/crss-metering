@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.resource;
 
 import com.pemc.crss.commons.cache.service.CacheConfigService;
+import com.pemc.crss.commons.security.SecurityUtil;
 import com.pemc.crss.metering.constants.ValidationStatus;
 import com.pemc.crss.metering.dao.UserTpDao;
 import com.pemc.crss.metering.dto.bcq.*;
@@ -19,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -82,13 +85,13 @@ public class BcqResource {
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             declaration.getUploadFileDetails().setFileName(fileName);
             String tradingDate = bcqService.findTradingDate(multipartFile);
-            bcqService.generateErrorAuditLog(declaration, tradingDate);
+            bcqService.generateErrorAuditLog(declaration, tradingDate, null);
             log.debug("Finished uploading and rejecting of: {}", fileName);
             bcqService.saveDeclaration(declaration, false);
             return unprocessableEntity().body(declaration.getValidationResult());
         }
         log.debug("Finished uploading of: {}", fileName);
-        bcqService.generateSuccessAuditLog(declaration);
+        bcqService.generateSuccessAuditLog(declaration, null);
         return ok(declaration);
     }
 
@@ -138,12 +141,20 @@ public class BcqResource {
         ParticipantSellerDetails sellerDetails = new ParticipantSellerDetails(sellerName, sellerShortName.trim(), "");
         BcqDeclaration declaration = validateCsvAndGetDeclaration(multipartFile, sellerDetails,
                 parseDate(tradingDateString));
+        declaration.setUser(sellerShortName);
+        String pemcUser = SecurityUtils.getUsername();
+        log.info("/settlement/upload by {}", pemcUser);
         if (declaration.getValidationResult().getStatus() == REJECTED) {
             log.debug("Finished uploading and rejecting of: {}", fileName);
+            declaration.getUploadFileDetails().setFileName(fileName);
+            String tradingDate = bcqService.findTradingDate(multipartFile);
+            bcqService.generateErrorAuditLog(declaration, tradingDate, pemcUser);
             bcqService.saveDeclaration(declaration, true);
             return unprocessableEntity().body(declaration.getValidationResult());
         }
         log.debug("Finished settlement uploading of: {}", fileName);
+        bcqService.generateSuccessAuditLog(declaration, pemcUser);
+
         return ok(declaration);
     }
 

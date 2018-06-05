@@ -125,7 +125,7 @@ public class BcqServiceImpl implements BcqService {
         }
         if (CollectionUtils.isNotEmpty(savedHeaderList)) {
             savedHeaderList.forEach(header -> {
-                buildActionAuditLog(header, "Submit");
+                buildActionAuditLog(header, "Submit", isSettlement);
             });
 
         }
@@ -190,7 +190,7 @@ public class BcqServiceImpl implements BcqService {
 
         bcqDao.updateHeaderStatus(headerId, newStatus);
 
-        buildActionAuditLog(header, "Confirm");
+        buildActionAuditLog(header, "Confirm", false);
         bcqNotificationManager.sendUpdateStatusNotification(findHeader(headerId));
     }
 
@@ -203,7 +203,7 @@ public class BcqServiceImpl implements BcqService {
 
         header.setStatus(FOR_APPROVAL_CANCEL);
         bcqDao.updateHeaderStatusBySettlement(headerId, FOR_APPROVAL_CANCEL);
-        buildActionAuditLog(header, "Cancel");
+        buildActionAuditLog(header, "Cancel", false);
 
         bcqNotificationManager.sendSettlementUpdateStatusNotification(header);
     }
@@ -663,7 +663,7 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public void generateSuccessAuditLog(BcqDeclaration declaration) {
+    public void generateSuccessAuditLog(BcqDeclaration declaration, String pemcUser) {
         boolean isResubmission = declaration.isResubmission();
         String action = isResubmission ? "Re-Submission" : "Upload";
         List<BcqHeader> headerList = extractHeaderList(declaration);
@@ -674,13 +674,13 @@ public class BcqServiceImpl implements BcqService {
                     createKeyValue("Trading Date", DateUtil.convertToString(header.getTradingDate(),
                             "yyyy-MM-dd")),
                     createKeyValue("Record Count", String.valueOf(header.getDataList().size())));
-            buildBcqUploadAuditLog(header.getUploadedBy(), params, action,
+            buildBcqUploadAuditLog(pemcUser != null? pemcUser : header.getUploadedBy(), params, action,
                     "Success", "");
         }
     }
 
     @Override
-    public void generateErrorAuditLog(BcqDeclaration declaration, String tradingDate) {
+    public void generateErrorAuditLog(BcqDeclaration declaration, String tradingDate, String pemcUser) {
         String errorMsg = declaration.getValidationResult().getErrorMessage().getFormattedMessage();
         log.info("error: {}", errorMsg);
         boolean isResubmission = errorMsg.contains("Resubmission");
@@ -690,14 +690,22 @@ public class BcqServiceImpl implements BcqService {
                 createKeyValue("Filename", declaration.getUploadFileDetails().getFileName()),
                 createKeyValue("Trading Date", tradingDate),
                 createKeyValue("Validation Error ", errorMsg));
-        buildBcqUploadAuditLog(declaration.getUser(), params, action,
+        buildBcqUploadAuditLog(pemcUser != null? pemcUser : declaration.getUser(), params, action,
                 "Failed", errorMsg);
     }
 
-    private void buildActionAuditLog(BcqHeader header, String action) {
+    private void buildActionAuditLog(BcqHeader header, String action, boolean isSettlement) {
         List<String> billingIds = getBillingIdsByTradingDate(formatBcqDate(header.getTradingDate(), "yyyy-MM-dd"),
                 header.getSellingParticipantShortName());
-        String params = buildAuditDetails(
+        String params = !isSettlement
+                ?  buildAuditDetails(
+                createKeyValue("Transaction ID", header.getUploadFile().getTransactionId()),
+                createKeyValue("Seller Billing ID",  String.join(", ", billingIds)),
+                createKeyValue("Buyer Billing ID", header.getBillingId()),
+                createKeyValue("Trading Date", DateUtil.convertToString(header.getTradingDate(),
+                        "yyyy-MM-dd")))
+                : buildAuditDetails(
+                createKeyValue("Seller", header.getSellingParticipantShortName()),
                 createKeyValue("Transaction ID", header.getUploadFile().getTransactionId()),
                 createKeyValue("Seller Billing ID",  String.join(", ", billingIds)),
                 createKeyValue("Buyer Billing ID", header.getBillingId()),
