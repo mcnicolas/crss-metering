@@ -76,7 +76,7 @@ public class BcqResource {
 
         // set user/seller
         Long userId = SecurityUtils.getUserId() != null ? SecurityUtils.getUserId().longValue() : null;
-        String shortName = "genuser01";//userTpDao.findBShortNameByTpId(userId);
+        String shortName = userTpDao.findBShortNameByTpId(userId);
         declaration.setUser(shortName);
 
         if (declaration.getValidationResult().getStatus() == REJECTED) {
