@@ -125,7 +125,7 @@ public class BcqServiceImpl implements BcqService {
         }
         if (CollectionUtils.isNotEmpty(savedHeaderList)) {
             savedHeaderList.forEach(header -> {
-                buildActionAuditLog(header, "Submit", isSettlement);
+                buildActionAuditLog(header, "BCQ Submit", isSettlement);
             });
 
         }
@@ -190,7 +190,7 @@ public class BcqServiceImpl implements BcqService {
 
         bcqDao.updateHeaderStatus(headerId, newStatus);
 
-        buildActionAuditLog(header, "Confirm", false);
+        buildActionAuditLog(header, "BCQ ".concat(newStatus.name()), false);
         bcqNotificationManager.sendUpdateStatusNotification(findHeader(headerId));
     }
 
@@ -203,8 +203,6 @@ public class BcqServiceImpl implements BcqService {
 
         header.setStatus(FOR_APPROVAL_CANCEL);
         bcqDao.updateHeaderStatusBySettlement(headerId, FOR_APPROVAL_CANCEL);
-        buildActionAuditLog(header, "Cancel", false);
-
         bcqNotificationManager.sendSettlementUpdateStatusNotification(header);
     }
 
@@ -665,7 +663,7 @@ public class BcqServiceImpl implements BcqService {
     @Override
     public void generateSuccessAuditLog(BcqDeclaration declaration) {
         boolean isResubmission = declaration.isResubmission();
-        String action = isResubmission ? "Re-Submission" : "Upload";
+        String action = isResubmission ? "BCQ Re-Submission" : "BCQ Upload";
         List<BcqHeader> headerList = extractHeaderList(declaration);
         for (BcqHeader header : headerList) {
             String params = buildAuditDetails(
@@ -684,7 +682,7 @@ public class BcqServiceImpl implements BcqService {
         String errorMsg = declaration.getValidationResult().getErrorMessage().getFormattedMessage();
         log.info("error: {}", errorMsg);
         boolean isResubmission = errorMsg.contains("Resubmission");
-        String action = isResubmission ? "Re-Submission" : "Upload";
+        String action = isResubmission ? "BCQ Re-Submission" : "BCQ Upload";
         String params = buildAuditDetails(
                 createKeyValue("Seller", shortName),
                 createKeyValue("Filename", declaration.getUploadFileDetails().getFileName()),
