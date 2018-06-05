@@ -190,7 +190,7 @@ public class BcqServiceImpl implements BcqService {
 
         bcqDao.updateHeaderStatus(headerId, newStatus);
 
-        buildActionAuditLog(header, "BCQ ".concat(newStatus.name()), false);
+        buildActionAuditLog(header, "BCQ ".concat(newStatus.getLabel()), false);
         bcqNotificationManager.sendUpdateStatusNotification(findHeader(headerId));
     }
 
