@@ -8,6 +8,7 @@ import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
 import org.springframework.data.domain.Page;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -73,4 +74,10 @@ public interface BcqService {
 
     void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, HttpServletResponse response)
             throws IOException;
+
+    void generateSuccessAuditLog(BcqDeclaration bcqDeclaration);
+
+    void generateErrorAuditLog(BcqDeclaration bcqDeclaration, String tradingDate);
+
+    String findTradingDate(MultipartFile file);
 }

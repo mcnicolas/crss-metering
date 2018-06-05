@@ -17,6 +17,7 @@ import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventList;
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant;
+import com.pemc.crss.metering.parser.bcq.BcqReader;
 import com.pemc.crss.metering.resource.bcq_data.extraction.dto.BcqDataDetailsExtract;
 import com.pemc.crss.metering.resource.bcq_data.extraction.dto.BcqDataHeader;
 import com.pemc.crss.metering.resource.bcq_data.extraction.dto.BcqHeaderDto;
@@ -26,14 +27,17 @@ import com.pemc.crss.metering.service.exception.InvalidStateException;
 import com.pemc.crss.metering.service.exception.OldRecordException;
 import com.pemc.crss.metering.service.exception.PairExistsException;
 import com.pemc.crss.metering.utils.DateTimeUtils;
+import com.pemc.crss.shared.commons.util.DateUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanWriter;
@@ -62,13 +66,16 @@ import static com.pemc.crss.metering.constants.BcqUpdateType.RESUBMISSION;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 import static com.pemc.crss.metering.dao.query.ComparisonOperator.IN;
 import static com.pemc.crss.metering.dao.query.ComparisonOperator.NOT_IN;
-import static com.pemc.crss.metering.utils.BcqDateUtils.DATE_TIME_FORMAT;
-import static com.pemc.crss.metering.utils.BcqDateUtils.formatDate;
+import static com.pemc.crss.metering.utils.BcqDateUtils.*;
+import static com.pemc.crss.shared.commons.util.AuditUtil.*;
+import static com.pemc.crss.shared.commons.util.reference.Function.BCQ_UPLOAD;
+import static com.pemc.crss.shared.commons.util.reference.Module.REGISTRATION;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Slf4j
 @Service
@@ -87,6 +94,8 @@ public class BcqServiceImpl implements BcqService {
     private final CacheConfigService configService;
     private final ResourceTemplate resourceTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
+    private final RedisTemplate genericRedisTemplate;
+    private final BcqReader bcqReader;
 
     @Override
     @Transactional
@@ -114,6 +123,13 @@ public class BcqServiceImpl implements BcqService {
         } else {
             bcqNotificationManager.sendUploadNotification(savedHeaderList);
         }
+        if (CollectionUtils.isNotEmpty(savedHeaderList)) {
+            savedHeaderList.forEach(header -> {
+                buildActionAuditLog(header, "Submit");
+            });
+
+        }
+
     }
 
     @Override
@@ -173,6 +189,8 @@ public class BcqServiceImpl implements BcqService {
         }
 
         bcqDao.updateHeaderStatus(headerId, newStatus);
+
+        buildActionAuditLog(header, "Confirm");
         bcqNotificationManager.sendUpdateStatusNotification(findHeader(headerId));
     }
 
@@ -185,6 +203,8 @@ public class BcqServiceImpl implements BcqService {
 
         header.setStatus(FOR_APPROVAL_CANCEL);
         bcqDao.updateHeaderStatusBySettlement(headerId, FOR_APPROVAL_CANCEL);
+        buildActionAuditLog(header, "Cancel");
+
         bcqNotificationManager.sendSettlementUpdateStatusNotification(header);
     }
 
@@ -642,14 +662,86 @@ public class BcqServiceImpl implements BcqService {
         }
     }
 
+    @Override
+    public void generateSuccessAuditLog(BcqDeclaration declaration) {
+        boolean isResubmission = declaration.isResubmission();
+        String action = isResubmission ? "Re-Submission" : "Upload";
+        List<BcqHeader> headerList = extractHeaderList(declaration);
+        for (BcqHeader header : headerList) {
+            String params = buildAuditDetails(
+                    createKeyValue("Seller", header.getUploadedBy()),
+                    createKeyValue("Buyer Billing ID", header.getBillingId()),
+                    createKeyValue("Trading Date", DateUtil.convertToString(header.getTradingDate(),
+                            "yyyy-MM-dd")),
+                    createKeyValue("Record Count", String.valueOf(header.getDataList().size())));
+            buildBcqUploadAuditLog(header.getUploadedBy(), params, action,
+                    "Success", "");
+        }
+    }
+
+    @Override
+    public void generateErrorAuditLog(BcqDeclaration declaration, String tradingDate) {
+        String errorMsg = declaration.getValidationResult().getErrorMessage().getFormattedMessage();
+        log.info("error: {}", errorMsg);
+        boolean isResubmission = errorMsg.contains("Resubmission");
+        String action = isResubmission ? "Re-Submission" : "Upload";
+        String params = buildAuditDetails(
+                createKeyValue("Seller", declaration.getUser()),
+                createKeyValue("Filename", declaration.getUploadFileDetails().getFileName()),
+                createKeyValue("Trading Date", tradingDate),
+                createKeyValue("Validation Error ", errorMsg));
+        buildBcqUploadAuditLog(declaration.getUser(), params, action,
+                "Failed", errorMsg);
+    }
+
+    private void buildActionAuditLog(BcqHeader header, String action) {
+        List<String> billingIds = getBillingIdsByTradingDate(formatBcqDate(header.getTradingDate(), "yyyy-MM-dd"),
+                header.getSellingParticipantShortName());
+        String params = buildAuditDetails(
+                createKeyValue("Transaction ID", header.getUploadFile().getTransactionId()),
+                createKeyValue("Seller Billing ID",  String.join(", ", billingIds)),
+                createKeyValue("Buyer Billing ID", header.getBillingId()),
+                createKeyValue("Trading Date", DateUtil.convertToString(header.getTradingDate(),
+                        "yyyy-MM-dd")));
+        buildBcqUploadAuditLog(header.getUploadedBy(), params, action, "", "");
+    }
+
+    private void buildBcqUploadAuditLog(String currentUser, String params, String action,
+                                        String status, String errorMessage) {
+
+        genericRedisTemplate.convertAndSend(AUDIT_TOPIC_NAME,
+                buildAudit(REGISTRATION.name(),
+                        BCQ_UPLOAD.getDescription(),
+                        action,
+                        currentUser,
+                        params,
+                        createDetails(status, errorMessage)));
+    }
+
+    @Override
+    public String findTradingDate(MultipartFile file) {
+        try {
+            List<List<String>> csv = bcqReader.readCsv(file.getInputStream());
+            List<List<String>> csvDataList = csv.subList(2, csv.size());
+            boolean hasDate = csvDataList.stream()
+                    .anyMatch(line -> !isBlank(line.get(3)));
+            if (hasDate) {
+                String date = csvDataList.get(0).get(3);
+                String covertedDate = DateUtil.convertToString(parseDateTime(date), "yyyy-MM-dd");
+                return covertedDate == null ? "" : covertedDate;
+            }
+            return "";
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
     private BcqUniqueHeader getUniqueHeader(List<BcqHeader> headers, BcqHeaderDto dto) {
         List<BcqDataHeader> headerSet = Lists.newArrayList();
 
         for (BcqHeader header : headers) {
-            List<String> billingIds = resourceTemplate.get(String.format(ACTIVE_BILLING_ID_URL,
-                    formatBcqDate(header.getTradingDate(), "yyyy-MM-dd"),
-                    header.getSellingParticipantShortName()), List.class);
-
+            List<String> billingIds = getBillingIdsByTradingDate(formatBcqDate(header.getTradingDate(), "yyyy-MM-dd"),
+                    header.getSellingParticipantShortName());
             BcqDataHeader dataHeader = headerBuilder(header, billingIds);
             headerSet.add(dataHeader);
         }
@@ -734,6 +826,12 @@ public class BcqServiceImpl implements BcqService {
                 return status.name();
         }
 
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> getBillingIdsByTradingDate(String tradingDate, String shortName) {
+        return resourceTemplate.get(String.format(ACTIVE_BILLING_ID_URL,
+                tradingDate, shortName), List.class);
     }
 
 }

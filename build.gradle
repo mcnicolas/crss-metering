@@ -24,6 +24,7 @@ buildscript {
 ext {
     springBootVersion = '1.5.2.RELEASE'
     applicationDefaultJvmArgs = ['-Xms128m', '-Xmx256m']
+    projectVersion = project.version
 }
 
 subprojects {
@@ -42,6 +43,7 @@ subprojects {
         // this two repository must not be here since it was already
         jcenter()
         mavenCentral()
+        mavenLocal()
     }
 
     idea {
@@ -78,7 +80,6 @@ subprojects {
             }
 
             dependency 'net.sf.supercsv:super-csv-java8:2.4.0'
-
             dependency 'commons-io:commons-io:2.5'
             dependency 'commons-beanutils:commons-beanutils:1.9.3'
             dependency 'org.apache.commons:commons-lang3:3.5'
@@ -120,6 +121,8 @@ subprojects {
                 entry 'spock-core'
                 entry 'spock-spring'
             }
+
+            dependency "com.pemc.crss:crss-shared-commons-util:$projectVersion"
 
         }
     }

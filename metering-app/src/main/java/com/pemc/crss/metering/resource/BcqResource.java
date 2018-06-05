@@ -73,12 +73,22 @@ public class BcqResource {
         log.debug("Request for uploading of: {}", fileName);
 
         BcqDeclaration declaration = validateCsvAndGetDeclaration(multipartFile);
+
+        // set user/seller
+        Long userId = SecurityUtils.getUserId() != null ? SecurityUtils.getUserId().longValue() : null;
+        String shortName = "genuser01";//userTpDao.findBShortNameByTpId(userId);
+        declaration.setUser(shortName);
+
         if (declaration.getValidationResult().getStatus() == REJECTED) {
+            declaration.getUploadFileDetails().setFileName(fileName);
+            String tradingDate = bcqService.findTradingDate(multipartFile);
+            bcqService.generateErrorAuditLog(declaration, tradingDate);
             log.debug("Finished uploading and rejecting of: {}", fileName);
             bcqService.saveDeclaration(declaration, false);
             return unprocessableEntity().body(declaration.getValidationResult());
         }
         log.debug("Finished uploading of: {}", fileName);
+        bcqService.generateSuccessAuditLog(declaration);
         return ok(declaration);
     }
 
