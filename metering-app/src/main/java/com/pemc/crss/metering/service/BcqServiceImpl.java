@@ -663,34 +663,34 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public void generateSuccessAuditLog(BcqDeclaration declaration, String pemcUser) {
+    public void generateSuccessAuditLog(BcqDeclaration declaration) {
         boolean isResubmission = declaration.isResubmission();
         String action = isResubmission ? "Re-Submission" : "Upload";
         List<BcqHeader> headerList = extractHeaderList(declaration);
         for (BcqHeader header : headerList) {
             String params = buildAuditDetails(
-                    createKeyValue("Seller", header.getUploadedBy()),
+                    createKeyValue("Seller", header.getSellingParticipantShortName()),
                     createKeyValue("Buyer Billing ID", header.getBillingId()),
                     createKeyValue("Trading Date", DateUtil.convertToString(header.getTradingDate(),
                             "yyyy-MM-dd")),
                     createKeyValue("Record Count", String.valueOf(header.getDataList().size())));
-            buildBcqUploadAuditLog(pemcUser != null? pemcUser : header.getUploadedBy(), params, action,
+            buildBcqUploadAuditLog(header.getUploadedBy(), params, action,
                     "Success", "");
         }
     }
 
     @Override
-    public void generateErrorAuditLog(BcqDeclaration declaration, String tradingDate, String pemcUser) {
+    public void generateErrorAuditLog(BcqDeclaration declaration, String tradingDate, String shortName) {
         String errorMsg = declaration.getValidationResult().getErrorMessage().getFormattedMessage();
         log.info("error: {}", errorMsg);
         boolean isResubmission = errorMsg.contains("Resubmission");
         String action = isResubmission ? "Re-Submission" : "Upload";
         String params = buildAuditDetails(
-                createKeyValue("Seller", declaration.getUser()),
+                createKeyValue("Seller", shortName),
                 createKeyValue("Filename", declaration.getUploadFileDetails().getFileName()),
                 createKeyValue("Trading Date", tradingDate),
                 createKeyValue("Validation Error ", errorMsg));
-        buildBcqUploadAuditLog(pemcUser != null? pemcUser : declaration.getUser(), params, action,
+        buildBcqUploadAuditLog(declaration.getUser(), params, action,
                 "Failed", "");
     }
 

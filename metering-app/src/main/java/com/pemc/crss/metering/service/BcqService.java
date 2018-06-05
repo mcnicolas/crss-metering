@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -75,9 +74,9 @@ public interface BcqService {
     void generateJsonBcqSubmission(String shortName, Date tradingDate, String status, HttpServletResponse response)
             throws IOException;
 
-    void generateSuccessAuditLog(BcqDeclaration bcqDeclaration, String pemcUser);
+    void generateSuccessAuditLog(BcqDeclaration bcqDeclaration);
 
-    void generateErrorAuditLog(BcqDeclaration bcqDeclaration, String tradingDate, String pemcUser);
+    void generateErrorAuditLog(BcqDeclaration bcqDeclaration, String tradingDate, String shortName );
 
     String findTradingDate(MultipartFile file);
 }
