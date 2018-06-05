@@ -691,7 +691,7 @@ public class BcqServiceImpl implements BcqService {
                 createKeyValue("Trading Date", tradingDate),
                 createKeyValue("Validation Error ", errorMsg));
         buildBcqUploadAuditLog(pemcUser != null? pemcUser : declaration.getUser(), params, action,
-                "Failed", errorMsg);
+                "Failed", "");
     }
 
     private void buildActionAuditLog(BcqHeader header, String action, boolean isSettlement) {
