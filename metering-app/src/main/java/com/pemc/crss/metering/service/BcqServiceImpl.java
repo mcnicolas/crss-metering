@@ -675,18 +675,19 @@ public class BcqServiceImpl implements BcqService {
         String seller = bcqHeader.getSellingParticipantShortName();
         String tradingDate = DateUtil.convertToString(bcqHeader.getTradingDate(),
                 "yyyy-MM-dd");
-        String recordCount = String.valueOf(bcqHeader.getDataList().size());
+        Long recordCount = 0L;
         Set<String> buyerBillingIds = new HashSet<>();
 
         for (BcqHeader header : headerList) {
             buyerBillingIds.add(header.getBillingId());
+            recordCount =  recordCount + header.getDataList().size();
         }
 
         String params = buildAuditDetails(
                 createKeyValue("Seller", seller),
                 createKeyValue("Buyer Billing ID/s", String.join(", ", buyerBillingIds)),
                 createKeyValue("Trading Date", tradingDate),
-                createKeyValue("Record Count", recordCount));
+                createKeyValue("Record Count", String.valueOf(recordCount)));
         buildBcqUploadAuditLog(bcqHeader.getUploadedBy(), params, action,
                 "Success", "");
     }
