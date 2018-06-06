@@ -89,6 +89,7 @@ public class BcqServiceImpl implements BcqService {
     private static final String UPDATED_ERROR = UNABLE_MESSAGE + "declaration has been updated. " + RELOAD_MESSAGE;
     private static final String ACTIVE_ENROLLMENT_URL = "reg/contract/enroll/active/%s/%s/contract";
     private static final String ACTIVE_BILLING_ID_URL = "reg/bcq/billing-id/active/%s/%s";
+    private static final String BCQ_SUBMIT = "BCQ Submit";
     private final BcqDao bcqDao;
     private final BcqNotificationManager bcqNotificationManager;
     private final CacheConfigService configService;
@@ -124,10 +125,13 @@ public class BcqServiceImpl implements BcqService {
             bcqNotificationManager.sendUploadNotification(savedHeaderList);
         }
         if (CollectionUtils.isNotEmpty(savedHeaderList)) {
+            BcqHeader bcqHeader = savedHeaderList.get(0);
+            Set<String> billingIds = new HashSet<>();
             savedHeaderList.forEach(header -> {
-                buildActionAuditLog(header, "BCQ Submit", isSettlement);
+                billingIds.add(header.getBillingId());
             });
 
+            buildActionAuditLog(bcqHeader, BCQ_SUBMIT, String.join(", ", billingIds), isSettlement);
         }
 
     }
@@ -190,7 +194,7 @@ public class BcqServiceImpl implements BcqService {
 
         bcqDao.updateHeaderStatus(headerId, newStatus);
 
-        buildActionAuditLog(header, "BCQ ".concat(newStatus.getLabel()), false);
+        buildActionAuditLog(header, "BCQ ".concat(newStatus.getLabel()), "", false);
         bcqNotificationManager.sendUpdateStatusNotification(findHeader(headerId));
     }
 
@@ -203,7 +207,7 @@ public class BcqServiceImpl implements BcqService {
 
         header.setStatus(FOR_APPROVAL_CANCEL);
         bcqDao.updateHeaderStatusBySettlement(headerId, FOR_APPROVAL_CANCEL);
-        buildActionAuditLog(header, "BCQ ".concat(FOR_APPROVAL_CANCEL.getLabel()), false);
+        buildActionAuditLog(header, "BCQ ".concat(FOR_APPROVAL_CANCEL.getLabel()), "", false);
         bcqNotificationManager.sendSettlementUpdateStatusNotification(header);
     }
 
@@ -226,7 +230,7 @@ public class BcqServiceImpl implements BcqService {
         }
 
         bcqDao.updateHeaderStatus(headerId, newStatus);
-        buildActionAuditLog(header, "BCQ ".concat(newStatus.getLabel()), true);
+        buildActionAuditLog(header, "BCQ ".concat(newStatus.getLabel()), "", true);
         bcqNotificationManager.sendApprovalNotification(header);
     }
 
@@ -667,16 +671,24 @@ public class BcqServiceImpl implements BcqService {
         boolean isResubmission = declaration.isResubmission();
         String action = isResubmission ? "BCQ Re-Submission" : "BCQ Upload";
         List<BcqHeader> headerList = extractHeaderList(declaration);
+        BcqHeader bcqHeader = headerList.get(0);
+        String seller = bcqHeader.getSellingParticipantShortName();
+        String tradingDate = DateUtil.convertToString(bcqHeader.getTradingDate(),
+                "yyyy-MM-dd");
+        String recordCount = String.valueOf(bcqHeader.getDataList().size());
+        Set<String> buyerBillingIds = new HashSet<>();
+
         for (BcqHeader header : headerList) {
-            String params = buildAuditDetails(
-                    createKeyValue("Seller", header.getSellingParticipantShortName()),
-                    createKeyValue("Buyer Billing ID", header.getBillingId()),
-                    createKeyValue("Trading Date", DateUtil.convertToString(header.getTradingDate(),
-                            "yyyy-MM-dd")),
-                    createKeyValue("Record Count", String.valueOf(header.getDataList().size())));
-            buildBcqUploadAuditLog(header.getUploadedBy(), params, action,
-                    "Success", "");
+            buyerBillingIds.add(header.getBillingId());
         }
+
+        String params = buildAuditDetails(
+                createKeyValue("Seller", seller),
+                createKeyValue("Buyer Billing ID/s", String.join(", ", buyerBillingIds)),
+                createKeyValue("Trading Date", tradingDate),
+                createKeyValue("Record Count", recordCount));
+        buildBcqUploadAuditLog(bcqHeader.getUploadedBy(), params, action,
+                "Success", "");
     }
 
     @Override
@@ -694,21 +706,24 @@ public class BcqServiceImpl implements BcqService {
                 "Failed", "");
     }
 
-    private void buildActionAuditLog(BcqHeader header, String action, boolean isSettlement) {
+    private void buildActionAuditLog(BcqHeader header, String action, String buyerBillingIds, boolean isSettlement) {
         List<String> billingIds = getBillingIdsByTradingDate(formatBcqDate(header.getTradingDate(), "yyyy-MM-dd"),
                 header.getSellingParticipantShortName());
+        boolean isSubmit = BCQ_SUBMIT.equals(action);
         String params = !isSettlement
-                ?  buildAuditDetails(
+                ? buildAuditDetails(
                 createKeyValue("Transaction ID", header.getUploadFile().getTransactionId()),
-                createKeyValue("Seller Billing ID",  String.join(", ", billingIds)),
-                createKeyValue("Buyer Billing ID", header.getBillingId()),
+                createKeyValue("Seller Billing ID/s", String.join(", ", billingIds)),
+                createKeyValue(isSubmit ? "Buyer Billing ID/s" : "Buyer Billing ID",
+                        isSubmit ? buyerBillingIds : header.getBillingId()),
                 createKeyValue("Trading Date", DateUtil.convertToString(header.getTradingDate(),
                         "yyyy-MM-dd")))
                 : buildAuditDetails(
                 createKeyValue("Seller", header.getSellingParticipantShortName()),
                 createKeyValue("Transaction ID", header.getUploadFile().getTransactionId()),
-                createKeyValue("Seller Billing ID",  String.join(", ", billingIds)),
-                createKeyValue("Buyer Billing ID", header.getBillingId()),
+                createKeyValue("Seller Billing ID/s", String.join(", ", billingIds)),
+                createKeyValue(isSubmit ? "Buyer Billing ID/s" : "Buyer Billing ID",
+                        isSubmit ? buyerBillingIds : header.getBillingId()),
                 createKeyValue("Trading Date", DateUtil.convertToString(header.getTradingDate(),
                         "yyyy-MM-dd")));
         buildBcqUploadAuditLog(header.getUploadedBy(), params, action, "", "");
