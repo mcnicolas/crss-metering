@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -259,7 +260,8 @@ public class BcqResource {
 
         Long interval = configService.getLongValueForKey("BCQ_INTERVAL", 5L);
 
-        bcqService.generateCsv(bcqDownloadDto, interval, date, response.getOutputStream());
+        String currentUser = SecurityUtils.getUsername();
+        bcqService.generateCsv(bcqDownloadDto, interval, date, response.getOutputStream(), currentUser);
     }
 
 

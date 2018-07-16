@@ -64,7 +64,7 @@ public interface BcqService {
 
     List<BcqProhibitedPair> findAllEnabledProhibitedPairs();
 
-    void generateCsv(BcqDownloadDto bcqDownloadDto, Long interval, LocalDateTime date, OutputStream outputStream)
+    void generateCsv(BcqDownloadDto bcqDownloadDto, Long interval, LocalDateTime date, OutputStream outputStream, String currentUser)
             throws IOException;
 
     void generateInternalCsv(String shortName, Long interval, LocalDateTime date, HttpServletResponse response)

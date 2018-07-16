@@ -28,6 +28,7 @@ import com.pemc.crss.metering.service.exception.OldRecordException;
 import com.pemc.crss.metering.service.exception.PairExistsException;
 import com.pemc.crss.metering.utils.DateTimeUtils;
 import com.pemc.crss.shared.commons.util.DateUtil;
+import com.pemc.crss.shared.commons.util.reference.Status;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -53,6 +54,7 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.temporal.ChronoUnit;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -76,6 +78,7 @@ import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static com.pemc.crss.shared.commons.util.reference.Module.METERING;
 
 @Slf4j
 @Service
@@ -90,6 +93,8 @@ public class BcqServiceImpl implements BcqService {
     private static final String ACTIVE_ENROLLMENT_URL = "reg/contract/enroll/active/%s/%s/contract";
     private static final String ACTIVE_BILLING_ID_URL = "reg/bcq/billing-id/active/%s/%s";
     private static final String BCQ_SUBMIT = "BCQ Submit";
+    public static final String DOWNLOAD_BCQ_ACTION = "Download BCQ Template";
+    public static final String BCQ_FUNCTION = "Submit BCQs (as Seller)";
     private final BcqDao bcqDao;
     private final BcqNotificationManager bcqNotificationManager;
     private final CacheConfigService configService;
@@ -520,7 +525,7 @@ public class BcqServiceImpl implements BcqService {
     }
 
     @Override
-    public void generateCsv(BcqDownloadDto bcqDownloadDto, Long interval, LocalDateTime date, OutputStream outputStream)
+    public void generateCsv(BcqDownloadDto bcqDownloadDto, Long interval, LocalDateTime date, OutputStream outputStream, String currentUser)
             throws IOException {
 
         log.info("Start creating csv files for {}", bcqDownloadDto.getGenName());
@@ -529,8 +534,10 @@ public class BcqServiceImpl implements BcqService {
 
         try {
             writeCsv(bcqDownloadDto, dateTime, interval, outputStream);
+            buildDownloadTemplateAudit(currentUser, Status.COMPLETED, DOWNLOAD_BCQ_ACTION, null);
 
         } catch (IOException e) {
+            buildDownloadTemplateAudit(currentUser, Status.FAILED, DOWNLOAD_BCQ_ACTION, e.getMessage());
             e.printStackTrace();
         }
 
@@ -856,6 +863,19 @@ public class BcqServiceImpl implements BcqService {
     private List<String> getBillingIdsByTradingDate(String tradingDate, String shortName) {
         return resourceTemplate.get(String.format(ACTIVE_BILLING_ID_URL,
                 tradingDate, shortName), List.class);
+    }
+
+    private void buildDownloadTemplateAudit(String currentUser, Status status, String activity, String errorMessage) {
+        String details = buildAuditDetails(createKeyValue("Status", (status == Status.COMPLETED ? "SUCCESS" : "FAILED")),
+                createKeyValue("Error Message", errorMessage));
+        String params = buildAuditDetails(createKeyValue("Trading Date", DateUtil.convertToString(LocalDateTime.now().minus(1, ChronoUnit.DAYS), "MM/dd/yyyy")));
+        genericRedisTemplate.convertAndSend(AUDIT_TOPIC_NAME,
+                buildAudit(METERING.getDescription(),
+                        BCQ_FUNCTION,
+                        activity,
+                        currentUser,
+                        params,
+                        details));
     }
 
 }
