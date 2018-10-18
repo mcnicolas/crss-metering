@@ -31,7 +31,7 @@ public class BcqReportServiceImpl implements BcqReportService {
     public void generateTemplate(final OutputStream outputStream) {
         List<String[]> headerList = new LinkedList<>();
         String[] firstLine = {"Interval","<Hourly/5mins/15mins>"};
-        String[] secondLine = {"Selling MTN (Resource ID)","Buying Participant (Load Participant Name)",
+        String[] secondLine = {"Seller MTN (Resource ID)","Buying Participant (Load Participant Name)",
                 "Reference MTN (Resource ID)","Date","BCQ",};
         String[] thirdLine = {"<text>","<text>","<text>","<date with format yyyy-mm-dd hh:mm>","<numeric>"};
         String[] fourthLine = {"MTN_TRADE_1","ares","MTN_TRADE_1","2017-02-15 01:00","10"};

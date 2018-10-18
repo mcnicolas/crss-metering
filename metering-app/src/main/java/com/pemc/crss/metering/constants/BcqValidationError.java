@@ -9,9 +9,9 @@ public enum BcqValidationError {
     INCORRECT_COLUMN_HEADER_COUNT("Incorrect column header count. Number of columns should be <b>5</b>."),
     INCORRECT_TIME_INTERVALS("Incorrect time interval. Value <b>%s</b> is not valid for interval <b>%s</b>"),
     DUPLICATE_DATE("Duplicate date. Duplicate entry for <b>%s</b> found under "
-            + "Selling MTN <b>%s</b> and Billing ID <b>%s</b>."),
+            + "Seller MTN <b>%s</b> and Billing ID <b>%s</b>."),
     INCOMPLETE_ENTRIES("Incomplete BCQ entries for date of <b>%s</b>. "
-            + "Selling MTN <b>%s</b> and Billing ID <b>%s</b> should have <b>%s</b> entries."),
+            + "Seller MTN <b>%s</b> and Billing ID <b>%s</b> should have <b>%s</b> entries."),
     INCORRECT_DATA_TYPE("Incorrect data type. BCQ should be in <b>number</b> format."),
     INCORRECT_DATE_FORMAT("Incorrect date format. Date should follow the format <b>yyyy-MM-dd HH:mm</b>."),
     CLOSED_TRADING_DATE("Trading date is closed. Submission of BCQ is closed for <b>%s</b>."),
@@ -29,13 +29,13 @@ public enum BcqValidationError {
     MISSING_BCQ("Missing BCQ."),
     INCOMPLETE_RESUBMISSION_ENTRIES("Incomplete BCQ entries. "
             + "Resubmission for date <b>%s</b> should also have entries of the ff. "
-            + "Selling MTN and Billing ID pair(s):<br />%s"),
+            + "Seller MTN and Billing ID pair(s):<br />%s"),
     INCOMPLETE_OVERRIDE_ENTRIES("Incomplete BCQ entries. "
             + "Override for date <b>%s</b> should also have entries of the ff. "
-            + "Selling MTN and Billing ID pair(s):<br />%s"),
-    SELLING_MTN_UNREGISTERED("Unregistered selling MTN. Selling MTN <b>%s</b> does not exist."),
+            + "Seller MTN and Billing ID pair(s):<br />%s"),
+    SELLING_MTN_UNREGISTERED("Unregistered selling MTN. Seller MTN <b>%s</b> does not exist."),
     SELLING_MTN_NOT_OWNED("Unregistered selling MTN. "
-            + "Selling MTN <b>%s</b> is not registered under Seller <b>%s (%s)</b>."),
+            + "Seller MTN <b>%s</b> is not registered under Seller <b>%s (%s)</b>."),
         BUYER_MTN_UNREGISTERED("Unregistered buyer MTN. Buyer MTN <b>%s</b> is not registered under <b>%s</b>."),
     BUYER_MTN_NOT_OWNED("Unregistered buyer MTN. "
             + "buyer MTN <b>%s</b> is not registered under Buyer <b>%s (%s)</b>."),
@@ -65,7 +65,7 @@ public enum BcqValidationError {
             + "passed."),
     MULTIPLE_PARTICIPANT_BILLING_ID("Multiple participants are associated to billing ID <b>%s</b> for trading date <b>%s</b>."),
     CONTAINS_PROHIBITED_PAIRS("Declaration contains prohibited pairs. Declaration must not have entries of the ff. "
-            + "Selling MTN and Billing ID pair(s):<br />%s"),
+            + "Seller MTN and Billing ID pair(s):<br />%s"),
     BCQ_UPLOAD_SYS_CONFIG_ERROR("<b>%s</b> is not allowed in Bcq Upload"),
     BUYER_SELLER_MTN_SAME_FACILITY("Buyer Mtn <b>%s</b> is within the same facility with selling Mtn <b>%s</b>."),
     LOAD_OWN_BILLING_ID("Upload Error, CSV contains Trading Participant's own billing Id"),

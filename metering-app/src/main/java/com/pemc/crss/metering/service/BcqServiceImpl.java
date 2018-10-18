@@ -563,7 +563,7 @@ public class BcqServiceImpl implements BcqService {
 
         ICsvBeanWriter beanWriter = null;
 
-        String[] headerDto = new String[]{"Selling MTN", "Buying Billing ID",
+        String[] headerDto = new String[]{"Seller MTN", "Buyer Billing ID",
                 "Reference MTN", "Date", "BCQ", "Buyer MTN"};
         String[] header = new String[]{
                 "Interval", interval.toString() + "Mins", "", "", "", ""};
