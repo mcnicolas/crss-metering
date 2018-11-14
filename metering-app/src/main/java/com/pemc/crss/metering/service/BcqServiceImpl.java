@@ -54,10 +54,10 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.temporal.ChronoUnit;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -71,7 +71,6 @@ import static com.pemc.crss.metering.dao.query.ComparisonOperator.NOT_IN;
 import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 import static com.pemc.crss.shared.commons.util.AuditUtil.*;
 import static com.pemc.crss.shared.commons.util.reference.Function.BCQ_UPLOAD;
-import static com.pemc.crss.shared.commons.util.reference.Module.REGISTRATION;
 import static com.pemc.crss.shared.commons.util.reference.Module.SETTLEMENT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -687,7 +686,7 @@ public class BcqServiceImpl implements BcqService {
 
         for (BcqHeader header : headerList) {
             buyerBillingIds.add(header.getBillingId());
-            recordCount =  recordCount + header.getDataList().size();
+            recordCount = recordCount + header.getDataList().size();
         }
 
         String params = buildAuditDetails(
@@ -741,7 +740,7 @@ public class BcqServiceImpl implements BcqService {
                                         String status, String errorMessage) {
 
         genericRedisTemplate.convertAndSend(AUDIT_TOPIC_NAME,
-                buildAudit(REGISTRATION.name(),
+                buildAudit(SETTLEMENT.name(),
                         BCQ_UPLOAD.getDescription(),
                         action,
                         currentUser,
