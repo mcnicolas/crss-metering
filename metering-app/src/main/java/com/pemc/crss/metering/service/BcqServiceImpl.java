@@ -72,13 +72,13 @@ import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 import static com.pemc.crss.shared.commons.util.AuditUtil.*;
 import static com.pemc.crss.shared.commons.util.reference.Function.BCQ_UPLOAD;
 import static com.pemc.crss.shared.commons.util.reference.Module.REGISTRATION;
+import static com.pemc.crss.shared.commons.util.reference.Module.SETTLEMENT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static com.pemc.crss.shared.commons.util.reference.Module.METERING;
 
 @Slf4j
 @Service
@@ -870,7 +870,7 @@ public class BcqServiceImpl implements BcqService {
                 createKeyValue("Error Message", errorMessage));
         String params = buildAuditDetails(createKeyValue("Trading Date", DateUtil.convertToString(LocalDateTime.now().minus(1, ChronoUnit.DAYS), "MM/dd/yyyy")));
         genericRedisTemplate.convertAndSend(AUDIT_TOPIC_NAME,
-                buildAudit(METERING.getDescription(),
+                buildAudit(SETTLEMENT.name(),
                         BCQ_FUNCTION,
                         activity,
                         currentUser,
