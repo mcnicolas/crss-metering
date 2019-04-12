@@ -32,7 +32,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Order(value = 5)
 public class CorrectIntervalValidator implements Validator {
 
-    private static final int DEFAULT_INTERVAL = 15;
+    private static final int DEFAULT_INTERVAL = 5;
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
 
     private final CacheService cacheService;
