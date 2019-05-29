@@ -71,6 +71,8 @@ import static com.pemc.crss.metering.dao.query.ComparisonOperator.NOT_IN;
 import static com.pemc.crss.metering.utils.BcqDateUtils.*;
 import static com.pemc.crss.shared.commons.util.AuditUtil.*;
 import static com.pemc.crss.shared.commons.util.reference.Function.BCQ_UPLOAD;
+import static com.pemc.crss.shared.commons.util.reference.Function.SCHEDULED_JOB;
+import static com.pemc.crss.shared.commons.util.reference.Module.METERING;
 import static com.pemc.crss.shared.commons.util.reference.Module.SETTLEMENT;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -94,6 +96,7 @@ public class BcqServiceImpl implements BcqService {
     private static final String BCQ_SUBMIT = "BCQ Submit";
     public static final String DOWNLOAD_BCQ_ACTION = "Download BCQ Template";
     public static final String BCQ_FUNCTION = "Submit BCQs (as Seller)";
+    public static final String BCQ_SCHED_JOB_ACTION = "Update BCQ Declarations to Settlement Ready";
     private final BcqDao bcqDao;
     private final BcqNotificationManager bcqNotificationManager;
     private final CacheConfigService configService;
@@ -264,10 +267,33 @@ public class BcqServiceImpl implements BcqService {
     @Override
     @Transactional
     public void processHeadersToSettlementReady() {
-        int plusDays = configService.getIntegerValueForKey("BCQ_SETTLEMENT_READY_DEADLINE_PLUS_DAYS", 2);
-        List<Long> headerIdsToUpdate = bcqDao.selectByStatusAndDeadlineDatePlusDays(CONFIRMED, plusDays);
-        log.info("[BCQ Service] Found the following header ids to be updated to {}: {}", SETTLEMENT_READY, headerIdsToUpdate);
-        headerIdsToUpdate.forEach(id -> bcqDao.updateHeaderStatus(id, SETTLEMENT_READY));
+        try {
+            int plusDays = configService.getIntegerValueForKey("BCQ_SETTLEMENT_READY_DEADLINE_PLUS_DAYS", 2);
+            List<Long> headerIdsToUpdate = bcqDao.selectByStatusAndDeadlineDatePlusDays(CONFIRMED, plusDays);
+            log.info("[BCQ Service] Found the following header ids to be updated to {}: {}", SETTLEMENT_READY, headerIdsToUpdate);
+            headerIdsToUpdate.forEach(id -> bcqDao.updateHeaderStatus(id, SETTLEMENT_READY));
+
+            String details = buildAuditDetails(
+                    createKeyValue("Status", "Success"),
+                    createKeyValue("Record Count", String.valueOf(headerIdsToUpdate.size())));
+            genericRedisTemplate.convertAndSend(AUDIT_TOPIC_NAME,
+                    buildAudit(METERING.name(),
+                            SCHEDULED_JOB.getDescription(),
+                            BCQ_SCHED_JOB_ACTION,
+                            "",
+                            "",
+                            details));
+        } catch (Exception e) {
+            log.error("failed processHeadersToSettlementReady: {}", e.getMessage());
+            genericRedisTemplate.convertAndSend(AUDIT_TOPIC_NAME,
+                    buildAudit(METERING.name(),
+                            SCHEDULED_JOB.getDescription(),
+                            BCQ_SCHED_JOB_ACTION,
+                            "",
+                            "",
+                            createDetails("Failed", "")));
+            throw e;
+        }
     }
 
     @Override
