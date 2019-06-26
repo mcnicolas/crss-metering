@@ -59,27 +59,30 @@ public class MQDisplayQueryBuilder {
         return this;
     }
 
-    public MQDisplayQueryBuilder addSEINFilter(String sein) {
+    public MQDisplayQueryBuilder addSEINFilter(String sein, Boolean isFirstCondition) {
         if (isNotBlank(sein)) {
-            sqlBuilder.append(" AND UPPER(SEIN) LIKE ?");
+            sqlBuilder.append(isFirstCondition ? " WHERE " : " AND ");
+            sqlBuilder.append("UPPER(SEIN) LIKE ?");
             arguments.add("%" + sein.toUpperCase() + "%");
         }
 
         return this;
     }
 
-    public MQDisplayQueryBuilder addTransactionIDFilter(String transactionID) {
+    public MQDisplayQueryBuilder addTransactionIDFilter(String transactionID, Boolean isFirstCondition) {
         if (isNotBlank(transactionID)) {
-            sqlBuilder.append(" AND UPPER(A.TRANSACTION_ID) LIKE ?");
+            sqlBuilder.append(isFirstCondition ? " WHERE " : " AND ");
+            sqlBuilder.append("UPPER(A.TRANSACTION_ID) LIKE ?");
             arguments.add("%" + transactionID.toUpperCase() + "%");
         }
 
         return this;
     }
 
-    public MQDisplayQueryBuilder addMSPFilter(String mspShortName) {
+    public MQDisplayQueryBuilder addMSPFilter(String mspShortName, Boolean isFirstCondition) {
         if (isNotBlank(mspShortName)) {
-            sqlBuilder.append(" AND UPPER(B.MSP_SHORTNAME) LIKE ?");
+            sqlBuilder.append(isFirstCondition ? " WHERE " : " AND ");
+            sqlBuilder.append("UPPER(B.MSP_SHORTNAME) LIKE ?");
             arguments.add("%" + mspShortName.toUpperCase() + "%");
         }
 
