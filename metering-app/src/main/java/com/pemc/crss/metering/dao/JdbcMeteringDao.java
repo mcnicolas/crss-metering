@@ -169,6 +169,8 @@ public class JdbcMeteringDao implements MeteringDao {
         Long dateFrom = getStartOfDay(readingDateFrom);
         Long dateTo = getEndOfDay(readingDateFrom, readingDateTo);
 
+        log.info("date params dateFrom={}, dateTo={}", dateFrom, dateTo);
+
         String sein = params.get("sein");
         String transactionID = params.get("transactionID");
         String mspShortName = params.get("shortName");
