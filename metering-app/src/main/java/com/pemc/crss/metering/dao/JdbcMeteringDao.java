@@ -184,10 +184,9 @@ public class JdbcMeteringDao implements MeteringDao {
         int pageSize = pageableRequest.getPageSize();
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
-        BuilderData query = queryBuilder.selectMeterData(category, dateFrom, dateTo, version)
+        BuilderData query = queryBuilder.selectMeterData(category, mspShortName, dateFrom, dateTo, version)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
-                .addMSPFilter(mspShortName)
                 .orderBy(pageableRequest.getOrderList())
                 .paginate(pageNo, pageSize)
                 .build();
@@ -294,10 +293,9 @@ public class JdbcMeteringDao implements MeteringDao {
         }
 
         MQDisplayQueryBuilder queryBuilder = new MQDisplayQueryBuilder();
-        BuilderData query = queryBuilder.countMeterData(category, dateFrom, dateTo, version)
+        BuilderData query = queryBuilder.countMeterData(category, mspShortName, dateFrom, dateTo, version)
                 .addSEINFilter(sein)
                 .addTransactionIDFilter(transactionID)
-                .addMSPFilter(mspShortName)
                 .build();
 
         log.debug("Total records sql: {}", query.getSql());
