@@ -174,14 +174,14 @@ public class DefaultMeterService implements MeterService {
     @Override
     @Transactional(readOnly = true)
     public Page<MeterDataDisplay> getMeterData(PageableRequest pageableRequest) {
-//        int totalRecords = meteringDao.getTotalRecords(pageableRequest);
+        int totalRecords = meteringDao.getTotalRecords(pageableRequest);
 
         List<MeterDataDisplay> meterDataList = meteringDao.findAll(pageableRequest);
 
         return new PageImpl<>(
                 meterDataList,
                 pageableRequest.getPageable(),
-                100);
+                totalRecords);
     }
 
     @Override
