@@ -16,7 +16,7 @@ public class MQDisplayQueryBuilder {
     private StringBuilder sqlBuilder = new StringBuilder();
     private List arguments = new ArrayList();
 
-    public MQDisplayQueryBuilder selectMeterData(String category, String mspShortName, Long readingDateFrom, Long readingDateTo, String version) {
+    public MQDisplayQueryBuilder selectMeterData(String category, Long readingDateFrom, Long readingDateTo, String version) {
         sqlBuilder.append("SELECT DISTINCT ON (B.SEIN, B.READING_DATETIME)")
                 .append(" B.METER_DATA_ID, B.SEIN, A.TRANSACTION_ID, B.READING_DATETIME,")
                 .append(" B.KWD, B.KWHD, B.KVARHD, B.KWR, B.KWHR, B.KVARHR, B.ESTIMATION_FLAG");
@@ -29,13 +29,8 @@ public class MQDisplayQueryBuilder {
                 .append(getTableName(category))
                 .append(" B ON A.FILE_ID = B.FILE_ID");
 
-        if (isNotBlank(mspShortName)) {
-            sqlBuilder.append(" WHERE UPPER(B.MSP_SHORTNAME) LIKE ?");
-            arguments.add("%" + mspShortName.toUpperCase() + "%");
-        }
-
         if (readingDateFrom != null && readingDateTo != null) {
-            sqlBuilder.append(" AND B.READING_DATETIME BETWEEN ? AND ?");
+            sqlBuilder.append(" WHERE B.READING_DATETIME BETWEEN ? AND ?");
 
             arguments.add(readingDateFrom);
             arguments.add(readingDateTo);
@@ -45,7 +40,7 @@ public class MQDisplayQueryBuilder {
     }
 
 
-    public MQDisplayQueryBuilder countMeterData(String category, String mspShortName, Long readingDateFrom, Long readingDateTo, String version) {
+    public MQDisplayQueryBuilder countMeterData(String category, Long readingDateFrom, Long readingDateTo, String version) {
         String countSQL = "SELECT COUNT(DISTINCT(B.SEIN, B.READING_DATETIME))"
                 + " FROM TXN_MQ_MANIFEST_FILE A"
                 + " INNER JOIN ${MQ_TABLE} B ON A.FILE_ID = B.FILE_ID";
@@ -54,13 +49,8 @@ public class MQDisplayQueryBuilder {
         countSQL = countSQL.replace("${MQ_TABLE}", tableName);
         sqlBuilder.append(countSQL);
 
-        if (isNotBlank(mspShortName)) {
-            sqlBuilder.append(" WHERE UPPER(B.MSP_SHORTNAME) LIKE ?");
-            arguments.add("%" + mspShortName.toUpperCase() + "%");
-        }
-
         if (readingDateFrom != null && readingDateTo != null) {
-            sqlBuilder.append(" AND READING_DATETIME BETWEEN ? AND ?");
+            sqlBuilder.append(" WHERE READING_DATETIME BETWEEN ? AND ?");
 
             arguments.add(readingDateFrom);
             arguments.add(readingDateTo);
@@ -82,6 +72,15 @@ public class MQDisplayQueryBuilder {
         if (isNotBlank(transactionID)) {
             sqlBuilder.append(" AND UPPER(A.TRANSACTION_ID) LIKE ?");
             arguments.add("%" + transactionID.toUpperCase() + "%");
+        }
+
+        return this;
+    }
+
+    public MQDisplayQueryBuilder addMSPFilter(String mspShortName) {
+        if (isNotBlank(mspShortName)) {
+            sqlBuilder.append(" AND UPPER(B.MSP_SHORTNAME) LIKE ?");
+            arguments.add("%" + mspShortName.toUpperCase() + "%");
         }
 
         return this;
