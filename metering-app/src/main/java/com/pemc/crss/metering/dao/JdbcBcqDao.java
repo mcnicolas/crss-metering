@@ -379,7 +379,7 @@ public class JdbcBcqDao implements BcqDao {
         String billingId = mapParams.get("billingId") == null ? "" : mapParams.get("billingId");
         String sellingParticipant = mapParams.get("sellingParticipant") == null ? "" : mapParams.get("sellingParticipant");
         String buyingParticipant = mapParams.get("buyingParticipant") == null ? "" : mapParams.get("buyingParticipant");
-        String participant = mapParams.get("participant") == null ? "" : mapParams.get("buyingParticipant");
+        String participant = mapParams.get("participant") == null ? "" : mapParams.get("participant");
         String status = mapParams.get("status");
         boolean expired = mapParams.get("expired") != null;
         boolean isSettlement = mapParams.get("isSettlement") != null;
