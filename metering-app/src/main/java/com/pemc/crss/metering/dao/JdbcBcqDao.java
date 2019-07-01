@@ -379,6 +379,7 @@ public class JdbcBcqDao implements BcqDao {
         String billingId = mapParams.get("billingId") == null ? "" : mapParams.get("billingId");
         String sellingParticipant = mapParams.get("sellingParticipant") == null ? "" : mapParams.get("sellingParticipant");
         String buyingParticipant = mapParams.get("buyingParticipant") == null ? "" : mapParams.get("buyingParticipant");
+        String participant = mapParams.get("participant") == null ? "" : mapParams.get("buyingParticipant");
         String status = mapParams.get("status");
         boolean expired = mapParams.get("expired") != null;
         boolean isSettlement = mapParams.get("isSettlement") != null;
@@ -413,6 +414,15 @@ public class JdbcBcqDao implements BcqDao {
                             "%" + buyingParticipant.toUpperCase() + "%", LIKE))
                     .closeParenthesis();
         }
+        if (isNotBlank(participant)) {
+            queryBuilder = queryBuilder
+                    .and().openParenthesis().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_NAME)",
+                            participant.toUpperCase()))
+                    .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
+                            participant.toUpperCase()))
+                    .closeParenthesis();
+        }
+
         if (expired) {
             queryBuilder = queryBuilder.and().filter(new QueryFilter("DEADLINE_DATE", new Date(), LESS_THAN_EQUALS));
         }
