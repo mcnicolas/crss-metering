@@ -44,8 +44,7 @@ import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.WARNING_MESSAGE;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.io.FilenameUtils.getExtension;
-import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 
 public class HeaderPanel extends JPanel {
 
@@ -354,7 +353,7 @@ public class HeaderPanel extends JPanel {
         JFileChooser fileChooser = new JFileChooser(path);
 
         String selectedCategory = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
-        if (equalsIgnoreCase(selectedCategory, "DAILY")) {
+        if (equalsAnyIgnoreCase(selectedCategory, "DAILY", "MONTHLY")) {
             fileChooser.addChoosableFileFilter(fileFilterMDEF);
         }
 
@@ -398,7 +397,7 @@ public class HeaderPanel extends JPanel {
     private void uploadActionPerformed(ActionEvent evt) {//GEN-FIRST:event_uploadActionPerformed
         String category = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
 
-        if (!equalsIgnoreCase(category, "daily") && equalsIgnoreCase(selectedFileExtension, "mde")) {
+        if (!equalsAnyIgnoreCase(category, "daily", "monthly") && equalsIgnoreCase(selectedFileExtension, "mde")) {
             showMessageDialog(parent, "MDEF files can only be uploaded for Daily category.", "File Validation Error",
                     ERROR_MESSAGE);
             cboCategory.requestFocus();

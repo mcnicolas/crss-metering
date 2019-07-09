@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import static com.pemc.crss.metering.utils.FileTypeUtils.getFileType;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.equalsAnyIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 
 @Slf4j
@@ -54,9 +55,9 @@ public class FileUploadValidator implements Validator {
 
             String category = header.getCategory();
 
-            if (!equalsIgnoreCase(category, "DAILY") && equalsIgnoreCase(fileType, "MDEF")) {
+            if (!equalsAnyIgnoreCase(category, "DAILY", "MONTHLY") && equalsIgnoreCase(fileType, "MDEF")) {
                 errors.rejectValue("fileType", "",
-                        "Invalid file type. MDEF files are only valid for DAILY category");
+                        "Invalid file type. MDEF files are only valid for DAILY and MONTHLY category");
             }
         }
     }
