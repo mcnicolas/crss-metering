@@ -5,36 +5,16 @@ import com.pemc.crss.meter.upload.http.HeaderStatus;
 import com.pemc.crss.meter.upload.table.UploadData;
 import com.pemc.crss.meter.upload.table.UploadType;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
-import javax.swing.BorderFactory;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.SwingWorker;
-import javax.swing.Timer;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Dimension;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -45,22 +25,14 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 import static com.pemc.crss.meter.upload.ErrorDialog.showErrorDialog;
-import static com.pemc.crss.meter.upload.http.UploadStatus.INPROGRESS;
-import static com.pemc.crss.meter.upload.http.UploadStatus.STALE;
-import static com.pemc.crss.meter.upload.http.UploadStatus.SUCCESS;
+import static com.pemc.crss.meter.upload.http.UploadStatus.*;
 import static com.pemc.crss.meter.upload.table.UploadType.FILE;
 import static com.pemc.crss.meter.upload.table.UploadType.HEADER;
 import static com.pemc.crss.meter.upload.util.ErrorParserUtil.parseErrorMessage;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.time.LocalDateTime.now;
-import static javax.swing.JOptionPane.ERROR_MESSAGE;
-import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
-import static javax.swing.JOptionPane.OK_CANCEL_OPTION;
-import static javax.swing.JOptionPane.OK_OPTION;
-import static javax.swing.JOptionPane.WARNING_MESSAGE;
-import static javax.swing.JOptionPane.showConfirmDialog;
-import static javax.swing.JOptionPane.showMessageDialog;
+import static javax.swing.JOptionPane.*;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.apache.commons.io.FileUtils.byteCountToDisplaySize;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
@@ -80,6 +52,7 @@ public class MeterDataUploader extends JFrame {
     private Properties properties;
     private Timer processTimer;
     private LocalDateTime uploadStartTime;
+    private int interval;
 
     public MeterDataUploader(HttpHandler httpHandler) {
         this.httpHandler = httpHandler;
@@ -129,7 +102,7 @@ public class MeterDataUploader extends JFrame {
     }
 
     public void configureServices() {
-        headerPanel.configureServices(mspListing);
+        headerPanel.configureServices(mspListing, interval);
     }
 
     public void updateTableDisplay(List<FileBean> selectedFiles) {
@@ -247,7 +220,7 @@ public class MeterDataUploader extends JFrame {
         statusWorker.execute();
     }
 
-    public void uploadData(String category, String mspShortName) {
+    public void uploadData(String category, String mspShortName, boolean convertToFiveMin) {
         resetUploadStatus();
 
         List<FileBean> selectedFiles = tablePanel.getSelectedFiles();
@@ -269,7 +242,7 @@ public class MeterDataUploader extends JFrame {
 
                 int counter = 0;
 
-                long headerID = httpHandler.sendHeader(selectedFiles.size(), category, mspShortName);
+                long headerID = httpHandler.sendHeader(selectedFiles.size(), category, mspShortName, convertToFiveMin);
                 UploadData uploadData = new UploadData();
                 uploadData.setUploadType(HEADER);
                 uploadData.setHeaderID(headerID);
@@ -388,6 +361,8 @@ public class MeterDataUploader extends JFrame {
 
                 publish("Loading MSP Listing");
                 mspListing = httpHandler.getMSPListing();
+
+                interval = httpHandler.getInterval();
 
                 configureServices();
                 setProgress(100);

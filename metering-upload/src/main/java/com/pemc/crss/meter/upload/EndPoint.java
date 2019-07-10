@@ -11,5 +11,6 @@ public interface EndPoint {
     String UPLOAD_TRAILER = "/metering/uploadTrailer";
     String CHECK_STATUS = "/metering/checkStatus";
     String GET_HEADER = "/metering/getHeader";
+    String GET_INTERVAL = "/admin/admin/config";
 
 }

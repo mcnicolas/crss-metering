@@ -56,15 +56,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
-import static com.pemc.crss.meter.upload.EndPoint.CHECK_STATUS;
-import static com.pemc.crss.meter.upload.EndPoint.GET_HEADER;
-import static com.pemc.crss.meter.upload.EndPoint.MSP_LISTING_URL;
-import static com.pemc.crss.meter.upload.EndPoint.OAUTH_TOKEN;
-import static com.pemc.crss.meter.upload.EndPoint.PARTICIPANT_CATEGORY_URL;
-import static com.pemc.crss.meter.upload.EndPoint.UPLOAD_FILE;
-import static com.pemc.crss.meter.upload.EndPoint.UPLOAD_HEADER;
-import static com.pemc.crss.meter.upload.EndPoint.UPLOAD_TRAILER;
-import static com.pemc.crss.meter.upload.EndPoint.USER_URL;
+import static com.pemc.crss.meter.upload.EndPoint.*;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.http.Consts.UTF_8;
@@ -77,6 +69,7 @@ import static org.apache.http.entity.ContentType.MULTIPART_FORM_DATA;
 import static org.apache.http.util.EntityUtils.consume;
 
 @Slf4j
+@SuppressWarnings("Duplicates")
 public class HttpHandler {
 
     private static final String CHAR_ENCODING = "UTF-8";
@@ -307,7 +300,9 @@ public class HttpHandler {
         return retVal;
     }
 
-    public long sendHeader(int fileCount, String category, String mspShortName) throws HttpConnectionException, HttpResponseException {
+    public long sendHeader(int fileCount, String category, String mspShortName, boolean convertToFiveMin)
+            throws HttpConnectionException, HttpResponseException {
+
         log.debug("Sending Header Record. fileCount:{} category:{}", fileCount, category);
 
         long retVal = -1;
@@ -325,6 +320,7 @@ public class HttpHandler {
                     .key("fileCount").value(fileCount)
                     .key("category").value(category)
                     .key("mspShortName").value(mspShortName)
+                    .key("convertToFiveMin").value(convertToFiveMin)
                     .endObject()
                     .toString();
 
@@ -580,6 +576,37 @@ public class HttpHandler {
         }
 
         return retVal;
+    }
+
+    public int getInterval() {
+        log.debug("Get interval");
+
+        int interval = 5;
+
+        try {
+            String path = GET_INTERVAL + "/MQ_INTERVAL/value";
+            URIBuilder builder = new URIBuilder()
+                    .setScheme(protocol).setHost(hostname).setPort(port).setPath(path);
+
+            HttpGet httpGet = new HttpGet(builder.build());
+            httpGet.setHeader(AUTHORIZATION, String.format("Bearer %s", oAuthToken));
+
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+
+            StatusLine statusLine = httpResponse.getStatusLine();
+
+            String content = EntityUtils.toString(httpResponse.getEntity(), CHAR_ENCODING);
+
+            consume(httpResponse.getEntity());
+
+            if (statusLine.getStatusCode() == SC_OK) {
+                interval = Integer.parseInt(content.replaceAll("^\"|\"$", ""));
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+
+        return interval;
     }
 
     public void shutdown() throws IOException {

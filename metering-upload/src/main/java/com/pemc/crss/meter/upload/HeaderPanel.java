@@ -5,6 +5,7 @@ import com.pemc.crss.meter.upload.http.UploadStatus;
 import com.pemc.crss.meter.upload.util.FileNameFilter;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -12,6 +13,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileFilter;
@@ -44,7 +46,9 @@ import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.WARNING_MESSAGE;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static org.apache.commons.io.FilenameUtils.getExtension;
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.equalsAnyIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class HeaderPanel extends JPanel {
 
@@ -55,6 +59,8 @@ public class HeaderPanel extends JPanel {
     private MeterDataUploader parent;
     private String selectedFileExtension = "";
     private ParticipantName participant;
+
+    int interval;
 
     public HeaderPanel() {
         initComponents();
@@ -72,8 +78,9 @@ public class HeaderPanel extends JPanel {
         cboCategory.addItem(new ComboBoxItem("CORRECTED_MONTHLY", "Corrected Meter Data (Monthly)"));
     }
 
-    public void configureServices(List<ComboBoxItem> mspListing) {
+    public void configureServices(List<ComboBoxItem> mspListing, int interval) {
         populateMSPComboBox(mspListing);
+        initRadioButtons(interval);
     }
 
     private void populateMSPComboBox(List<ComboBoxItem> mspListing) {
@@ -90,6 +97,18 @@ public class HeaderPanel extends JPanel {
         if (participant != null) {
             updateSelectedMSP(parent.getParticipant().getShortName());
             cboMSP.setEnabled(false);
+        }
+    }
+
+    private void initRadioButtons(int interval) {
+        this.interval = interval;
+        if (interval == 5) {
+            radioUploadDataAsIs.setSelected(true);
+            radioUploadDataAsIs.setEnabled(true);
+            radioConvert.setEnabled(true);
+        } else {
+            radioUploadDataAsIs.setEnabled(false);
+            radioConvert.setEnabled(false);
         }
     }
 
@@ -154,6 +173,7 @@ public class HeaderPanel extends JPanel {
     private void initComponents() {//GEN-BEGIN:initComponents
         GridBagConstraints gridBagConstraints;
 
+        convertGroup = new ButtonGroup();
         toolbarPanel = new JPanel();
         btnSelectFiles = new JButton();
         btnClearTable = new JButton();
@@ -173,6 +193,9 @@ public class HeaderPanel extends JPanel {
         lblProcessDuration = new JLabel();
         processDuration = new JLabel();
         uploadProcessStatus = new JLabel();
+        convertPanel = new JPanel();
+        radioUploadDataAsIs = new JRadioButton();
+        radioConvert = new JRadioButton();
 
         setLayout(new BorderLayout());
 
@@ -345,6 +368,16 @@ public class HeaderPanel extends JPanel {
 
         uploadStatusPanel.add(transactionPanel);
 
+        convertGroup.add(radioUploadDataAsIs);
+        radioUploadDataAsIs.setText("Upload Data As Is");
+        convertPanel.add(radioUploadDataAsIs);
+
+        convertGroup.add(radioConvert);
+        radioConvert.setText("Convert To 5-Min");
+        convertPanel.add(radioConvert);
+
+        uploadStatusPanel.add(convertPanel);
+
         add(uploadStatusPanel, BorderLayout.SOUTH);
     }//GEN-END:initComponents
 
@@ -386,6 +419,12 @@ public class HeaderPanel extends JPanel {
                 btnSelectFiles.setEnabled(false);
                 btnClearTable.setEnabled(true);
                 btnUpload.setEnabled(true);
+
+                if (fileFilter != fileFilterCSV) {
+                    radioUploadDataAsIs.setEnabled(false);
+                    radioConvert.setEnabled(false);
+                    convertGroup.clearSelection();
+                }
             }
         }
     }//GEN-LAST:event_selectFilesActionPerformed
@@ -396,6 +435,7 @@ public class HeaderPanel extends JPanel {
 
     private void uploadActionPerformed(ActionEvent evt) {//GEN-FIRST:event_uploadActionPerformed
         String category = ((ComboBoxItem) cboCategory.getSelectedItem()).getValue();
+        boolean convertToFiveMin = radioConvert.isSelected();
 
         if (!equalsAnyIgnoreCase(category, "daily", "monthly") && equalsIgnoreCase(selectedFileExtension, "mde")) {
             showMessageDialog(parent, "MDEF files can only be uploaded for Daily category.", "File Validation Error",
@@ -416,7 +456,7 @@ public class HeaderPanel extends JPanel {
         }
 
         uploadingToolbar();
-        parent.uploadData(category, mspShortName);
+        parent.uploadData(category, mspShortName, convertToFiveMin);
     }//GEN-LAST:event_uploadActionPerformed
 
     private void settingsActionPerformed(ActionEvent evt) {//GEN-FIRST:event_settingsActionPerformed
@@ -441,6 +481,8 @@ public class HeaderPanel extends JPanel {
         updateProcessDuration("");
 
         selectedFileExtension = "";
+
+        initRadioButtons(interval);
     }//GEN-LAST:event_clearSelectionActionPerformed
 
     private void logoutActionPerformed(ActionEvent evt) {//GEN-FIRST:event_logoutActionPerformed
@@ -479,6 +521,9 @@ public class HeaderPanel extends JPanel {
 
         cboCategory.setEnabled(false);
         cboMSP.setEnabled(false);
+
+        radioUploadDataAsIs.setEnabled(false);
+        radioConvert.setEnabled(false);
     }
 
     public void readyToUploadToolbar() {
@@ -501,6 +546,8 @@ public class HeaderPanel extends JPanel {
         } else {
             cboMSP.setEnabled(true);
         }
+
+        initRadioButtons(interval);
     }
 
     public void disableAllToolbar() {
@@ -518,6 +565,9 @@ public class HeaderPanel extends JPanel {
 
         cboCategory.setEnabled(false);
         cboMSP.setEnabled(false);
+
+        radioUploadDataAsIs.setEnabled(false);
+        radioConvert.setEnabled(false);
     }
 
     public void loggedInToolbar() {
@@ -558,6 +608,9 @@ public class HeaderPanel extends JPanel {
         cboCategory.setEnabled(false);
         cboMSP.setEnabled(false);
 
+        radioUploadDataAsIs.setEnabled(false);
+        radioConvert.setEnabled(false);
+
         updateTransactionID("");
         updateProcessDuration("");
         toggleProcessComplete(null);
@@ -572,12 +625,16 @@ public class HeaderPanel extends JPanel {
     private JButton btnUpload;
     private JComboBox<ComboBoxItem> cboCategory;
     private JComboBox<ComboBoxItem> cboMSP;
+    private ButtonGroup convertGroup;
+    private JPanel convertPanel;
     private JPanel fieldPanel;
     private JLabel lblCategory;
     private JLabel lblMSP;
     private JLabel lblProcessDuration;
     private JLabel lblTransactionID;
     private JLabel processDuration;
+    private JRadioButton radioConvert;
+    private JRadioButton radioUploadDataAsIs;
     private JPanel toolbarPanel;
     private JPanel transactionPanel;
     private JTextField txtTransactionID;
