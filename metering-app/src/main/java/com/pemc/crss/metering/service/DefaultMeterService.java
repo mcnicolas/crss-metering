@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.service;
 
+import com.google.common.collect.Lists;
 import com.pemc.crss.commons.web.dto.datatable.PageableRequest;
 import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dao.MeteringDao;
@@ -22,10 +23,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
+import static java.util.Calendar.MINUTE;
 
 @Slf4j
 @Service
@@ -35,6 +42,8 @@ public class DefaultMeterService implements MeterService {
     private final MeterQuantityParser meterQuantityParser;
     private final MQValidationHandler validationHandler;
     private final ApplicationEventPublisher eventPublisher;
+
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
 
     @Autowired
     public DefaultMeterService(MeteringDao meteringDao, MeterQuantityParser meterQuantityParser, MQValidationHandler validationHandler,
@@ -58,6 +67,8 @@ public class DefaultMeterService implements MeterService {
         manifest.setMspShortName(headerParam.getMspShortName());
         manifest.setUploadedBy(userName);
         manifest.setUploadDateTime(new Date());
+        manifest.setConvertedToFiveMin(headerParam.getConvertToFiveMin() == null
+                ? "N" : headerParam.getConvertToFiveMin() ? "Y" : "N");
 
         return meteringDao.saveHeader(manifest);
     }
@@ -116,6 +127,7 @@ public class DefaultMeterService implements MeterService {
         MeterData meterData = new MeterData();
         try {
             meterData = meterQuantityParser.parse(fileManifest, fileContent);
+            meterData.setConvertToFiveMin(headerManifest.getConvertedToFiveMin().equals("Y"));
             log.debug("Finished parsing MQ file {} for {} records", fileManifest.getFileName(), meterData.getDetails().size());
 
             validationResult.setStatus(ACCEPTED);
@@ -134,7 +146,11 @@ public class DefaultMeterService implements MeterService {
         }
 
         if (validationResult.getStatus() == ACCEPTED) {
-            validationResult = saveMeterData(fileManifest, meterData.getDetails());
+            List<MeterDataDetail> meterDataDetails = meterData.getDetails();
+            if (headerManifest.getConvertedToFiveMin().equals("Y")) {
+                meterDataDetails = convertToFiveMin(meterDataDetails);
+            }
+            validationResult = saveMeterData(fileManifest, meterDataDetails);
         }
 
         validationResult.setFileID(fileManifest.getFileID());
@@ -239,5 +255,52 @@ public class DefaultMeterService implements MeterService {
     public List<ProcessedMqData> getMeterDataForExtraction(String category, String sein, String tpShortName,
                                                            String dateFrom, String dateTo, boolean isLatest) {
         return meteringDao.findAllForExtraction(category, sein, tpShortName, dateFrom, dateTo, isLatest);
+    }
+
+    private List<MeterDataDetail> convertToFiveMin(List<MeterDataDetail> meterDataDetails) {
+        MeterDataDetail firstRecord = meterDataDetails.get(0);
+        MeterDataDetail secondRecord = meterDataDetails.get(1);
+        Calendar expectedDateTime = Calendar.getInstance();
+        try {
+            expectedDateTime.setTime(DATE_FORMAT.parse(String.valueOf(firstRecord.getReadingDateTime())));
+        } catch (ParseException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        expectedDateTime.add(MINUTE, 5);
+        long expected = Long.parseLong(DATE_FORMAT.format(expectedDateTime.getTime()));
+        if (secondRecord.getReadingDateTime() == expected) {
+            return meterDataDetails;
+        }
+
+        List<MeterDataDetail> retVal = new ArrayList<>();
+        meterDataDetails.forEach(meterDataDetail -> {
+            BigDecimal kwd = meterDataDetail.getKwd().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
+            BigDecimal kwhd = meterDataDetail.getKwhd().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
+            BigDecimal kvarhd = meterDataDetail.getKvarhd().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
+            BigDecimal kwr = meterDataDetail.getKwr().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
+            BigDecimal kwhr = meterDataDetail.getKwhr().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
+            BigDecimal kvarhr = meterDataDetail.getKvarhr().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
+            Calendar newTime = Calendar.getInstance();
+            try {
+                newTime.setTime(DATE_FORMAT.parse(String.valueOf(meterDataDetail.getReadingDateTime())));
+            } catch (ParseException e) {
+                log.error(e.getMessage(), e);
+            }
+            List<Integer> intervalDifferences = Lists.newArrayList(0, -5, -5);
+            intervalDifferences.forEach(diff -> {
+                newTime.add(MINUTE, diff);
+                MeterDataDetail newMeterDataDetail = new MeterDataDetail(meterDataDetail);
+                newMeterDataDetail.setKwd(kwd);
+                newMeterDataDetail.setKwhd(kwhd);
+                newMeterDataDetail.setKvarhd(kvarhd);
+                newMeterDataDetail.setKwr(kwr);
+                newMeterDataDetail.setKwhr(kwhr);
+                newMeterDataDetail.setKvarhr(kvarhr);
+                newMeterDataDetail.setReadingDateTime(Long.parseLong(DATE_FORMAT.format(newTime.getTime())));
+                retVal.add(newMeterDataDetail);
+            });
+        });
+        return retVal;
     }
 }

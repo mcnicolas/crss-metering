@@ -9,5 +9,6 @@ public class MeterData {
 
     private MeterDataHeader header;
     private List<MeterDataDetail> details;
+    private boolean convertToFiveMin;
 
 }

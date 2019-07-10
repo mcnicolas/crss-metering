@@ -17,5 +17,6 @@ public class HeaderManifest {
     private String tailReceived;
     private String uploadedBy;
     private Date uploadDateTime;
+    private String convertedToFiveMin;
 
 }

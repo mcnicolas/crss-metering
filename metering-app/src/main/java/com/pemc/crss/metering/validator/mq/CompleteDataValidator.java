@@ -21,7 +21,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @Order(value = 2)
 public class CompleteDataValidator implements Validator {
 
-    private static final int DEFAULT_INTERVAL = 15;
+    private static final int DEFAULT_INTERVAL = 5;
 
     private final CacheService cacheService;
 
@@ -48,9 +48,18 @@ public class CompleteDataValidator implements Validator {
             if (interval == 15 && dataSize != 96) {
                 retVal.setStatus(REJECTED);
                 retVal.setErrorDetail("Incorrect No. of Entries for Category Daily. MQ should have 96 entries.");
-            } else if (interval == 5 && dataSize != 288) {
-                retVal.setStatus(REJECTED);
-                retVal.setErrorDetail("Incorrect No. of Entries for Category Daily. MQ should have 288 entries.");
+            } else if (interval == 5) {
+                if (dataSize != 288) {
+                    if (meterData.isConvertToFiveMin()) {
+                        if (dataSize != 96) {
+                            retVal.setStatus(REJECTED);
+                            retVal.setErrorDetail("Incorrect No. of Entries for Category Daily. MQ should have 96/288 entries.");
+                        }
+                    } else {
+                        retVal.setStatus(REJECTED);
+                        retVal.setErrorDetail("Incorrect No. of Entries for Category Daily. MQ should have 288 entries.");
+                    }
+                }
             } else {
                 retVal.setStatus(ACCEPTED);
                 retVal.setErrorDetail("");

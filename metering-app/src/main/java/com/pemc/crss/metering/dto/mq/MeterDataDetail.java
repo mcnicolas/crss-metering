@@ -2,11 +2,15 @@ package com.pemc.crss.metering.dto.mq;
 
 import com.pemc.crss.metering.constants.UploadType;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
+@ToString
+@NoArgsConstructor
 public class MeterDataDetail {
 
     private long meterDataID;
@@ -58,5 +62,17 @@ public class MeterDataDetail {
     private Integer pfIntervalStatus;
     private String estimationFlag;
     private Date createdDateTime;
+
+    public MeterDataDetail(MeterDataDetail meterDataDetail) {
+        this.meterDataID = meterDataDetail.meterDataID;
+        this.fileID = meterDataDetail.fileID;
+        this.sein = meterDataDetail.sein;
+        this.readingDateTime = meterDataDetail.readingDateTime;
+        this.uploadType = meterDataDetail.uploadType;
+        this.interval = meterDataDetail.interval;
+        this.mspShortName = meterDataDetail.mspShortName;
+        this.estimationFlag = meterDataDetail.estimationFlag;
+        this.createdDateTime = meterDataDetail.createdDateTime;
+    }
 
 }

@@ -8,6 +8,7 @@ import com.pemc.crss.metering.service.CacheService;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -61,19 +62,56 @@ public class CorrectIntervalValidator implements Validator {
 
             int interval = getInterval();
 
-            while (queue.peek() != null) {
-                expectedDateTime.add(MINUTE, interval);
+            Pair<ValidationResult, Long> validationResultLongPair = validateInterval(queue, interval);
 
-                long expected = Long.parseLong(DATE_FORMAT.format(expectedDateTime.getTime()));
-                long actual = queue.poll().getReadingDateTime();
-
-                if (expected != actual) {
-                    retVal.setStatus(REJECTED);
-                    retVal.setErrorDetail("Reading date time:" + actual
-                            + " does not conform to the defined interval:" + interval + " minutes");
-
-                    break;
+            if (validationResultLongPair.getLeft().getStatus() == REJECTED) {
+                if (interval == 5 && meterData.isConvertToFiveMin()) {
+                    validationResultLongPair = validateInterval(new LinkedList<>(meterData.getDetails()), 15);
                 }
+            }
+
+            if (validationResultLongPair.getLeft().getStatus() == REJECTED) {
+                retVal.setStatus(REJECTED);
+                if (meterData.isConvertToFiveMin()) {
+                    if (interval == 15) {
+                        retVal.setErrorDetail("Reading date time:" + validationResultLongPair.getRight()
+                                + " does not conform to the available interval: " + interval + " minutes");
+                    } else {
+                        retVal.setErrorDetail("Reading date time:" + validationResultLongPair.getRight()
+                                + " does not conform to the available intervals: 5 or 15 minutes");
+                    }
+                } else {
+                    retVal.setErrorDetail("Reading date time:" + validationResultLongPair.getRight()
+                            + " does not conform to the available interval: " + interval + " minutes");
+                }
+            }
+        }
+
+        return retVal;
+    }
+
+    private Pair<ValidationResult, Long> validateInterval(Queue<MeterDataDetail> queue, int interval) {
+        ValidationResult validationResult = new ValidationResult();
+        validationResult.setStatus(ACCEPTED);
+        Pair<ValidationResult, Long> retVal = Pair.of(validationResult, null);
+
+        long firstRecord = queue.poll().getReadingDateTime();
+
+        Calendar expectedDateTime = Calendar.getInstance();
+        try {
+            expectedDateTime.setTime(DATE_FORMAT.parse(String.valueOf(firstRecord)));
+        } catch (ParseException e) {
+            log.error(e.getMessage(), e);
+        }
+        while (queue.peek() != null) {
+            expectedDateTime.add(MINUTE, interval);
+
+            long expected = Long.parseLong(DATE_FORMAT.format(expectedDateTime.getTime()));
+            long actual = queue.poll().getReadingDateTime();
+
+            if (expected != actual) {
+                validationResult.setStatus(REJECTED);
+                retVal = Pair.of(validationResult, actual);
             }
         }
 

@@ -26,4 +26,6 @@ public class HeaderParam {
     @ValidMSP
     private String mspShortName;
 
+    private Boolean convertToFiveMin;
+
 }
