@@ -5,15 +5,13 @@ import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.parser.ParseException;
 import com.pemc.crss.metering.parser.QuantityReader;
 import com.pemc.crss.metering.parser.meterquantity.MeterQuantityExcelReader;
-import com.pemc.crss.metering.resource.template.impl.ResourceTemplateImpl;
 import com.pemc.crss.metering.service.CacheService;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
-import org.springframework.web.client.RestTemplate;
+import org.mockito.Mockito;
 
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import static com.pemc.crss.metering.constants.FileType.XLS;
@@ -28,8 +26,10 @@ import static org.junit.Assert.assertThat;
 @Slf4j
 public class CorrectIntervalValidatorTest {
 
+    private CacheService cacheService = Mockito.mock(CacheService.class);
+
     @Test
-    public void correctInterval15Minutes() throws FileNotFoundException, ParseException {
+    public void correctInterval15Minutes() throws ParseException {
         // given
         String excelFile = "meterdata/validation/interval/correct_interval_15mins.xls";
         FileManifest fileManifest = new FileManifest();
@@ -42,9 +42,10 @@ public class CorrectIntervalValidatorTest {
         QuantityReader reader = new MeterQuantityExcelReader();
         MeterData meterData = reader.readData(fileManifest, inputStream);
 
-        Validator validator = new CorrectIntervalValidator(initializeCache());
+        Validator validator = new CorrectIntervalValidator(cacheService);
 
         // when
+        Mockito.when(cacheService.getConfig("MQ_INTERVAL")).thenReturn("15");
         ValidationResult result = validator.validate(fileManifest, meterData);
 
         // then
@@ -53,7 +54,7 @@ public class CorrectIntervalValidatorTest {
     }
 
     @Test
-    public void incorrectInterval15Minutes() throws FileNotFoundException, ParseException {
+    public void incorrectInterval15Minutes() throws ParseException {
         // given
         String excelFile = "meterdata/validation/interval/incorrect_interval_15mins.xls";
         FileManifest fileManifest = new FileManifest();
@@ -66,18 +67,15 @@ public class CorrectIntervalValidatorTest {
         QuantityReader reader = new MeterQuantityExcelReader();
         MeterData meterData = reader.readData(fileManifest, inputStream);
 
-        Validator validator = new CorrectIntervalValidator(initializeCache());
+        Validator validator = new CorrectIntervalValidator(cacheService);
 
         // when
+        Mockito.when(cacheService.getConfig("MQ_INTERVAL")).thenReturn("15");
         ValidationResult result = validator.validate(fileManifest, meterData);
 
         // then
         log.debug("Error Detail:{}", result.getErrorDetail());
         assertThat(result.getStatus(), is(equalTo(REJECTED)));
-    }
-
-    private CacheService initializeCache() {
-        return new CacheService(new ResourceTemplateImpl(new RestTemplate()));
     }
 
 }
