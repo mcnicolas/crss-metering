@@ -7,7 +7,9 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
@@ -121,11 +123,20 @@ public final class DateTimeUtils {
         Calendar calendar2 = Calendar.getInstance();
         calendar2.setTime(date2);
 
-        calendar1.add(DATE,-1);
+        calendar1.add(DATE, -1);
 
         return calendar1.get(YEAR) == calendar2.get(YEAR)
                 && calendar1.get(MONTH) == calendar2.get(MONTH)
                 && calendar1.get(DATE) == calendar2.get(DATE);
+    }
+
+    public static boolean isWithinDays(Date now, Date date2, int day) {
+        if (date2 == null) {
+            throw new IllegalArgumentException("The date must not be null");
+        }
+        LocalDate beforeDate = now.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().minusDays(day);
+        LocalDate localDate = date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return !localDate.isBefore(beforeDate);
     }
 
     public static Long parseDateAsLong(String strDate, String time) throws com.pemc.crss.metering.parser.ParseException {

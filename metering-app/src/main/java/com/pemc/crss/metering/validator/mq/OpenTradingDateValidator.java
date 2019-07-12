@@ -5,9 +5,11 @@ import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
 import com.pemc.crss.metering.dto.mq.MeterDataDetail;
+import com.pemc.crss.metering.service.CacheService;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -23,20 +25,26 @@ import static com.pemc.crss.metering.constants.FileType.XLS;
 import static com.pemc.crss.metering.constants.UploadType.DAILY;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
-import static com.pemc.crss.metering.utils.DateTimeUtils.isYesterday;
-import static java.util.Calendar.DAY_OF_YEAR;
-import static java.util.Calendar.ERA;
-import static java.util.Calendar.HOUR_OF_DAY;
-import static java.util.Calendar.MINUTE;
-import static java.util.Calendar.YEAR;
+import static com.pemc.crss.metering.utils.DateTimeUtils.isWithinDays;
+import static java.lang.Integer.parseInt;
+import static java.util.Calendar.*;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Slf4j
 @Component
 @Order(value = 3)
 public class OpenTradingDateValidator implements Validator {
 
+    private static final int DEFAULT_GATE_CLOSURE = 1;
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     private static final DateFormat READING_DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
+
+    private final CacheService cacheService;
+
+    @Autowired
+    public OpenTradingDateValidator(CacheService cacheService) {
+        this.cacheService = cacheService;
+    }
 
     @Override
     public ValidationResult validate(FileManifest fileManifest, MeterData meterData) {
@@ -103,7 +111,8 @@ public class OpenTradingDateValidator implements Validator {
                     log.error(e.getMessage(), e);
                 }
 
-                if (!isSameDay(now, readingDateTime) && !isYesterday(now, readingDateTime)) {
+                int gateClosure = getGateClosure();
+                if (!isSameDay(now, readingDateTime) && !isWithinDays(now, readingDateTime, gateClosure)) {
                     retVal.setStatus(REJECTED);
 
                     String errorMessage = "Trading Date is Not Allowed. Submission of Daily MQ is closed for "
@@ -148,6 +157,12 @@ public class OpenTradingDateValidator implements Validator {
         }
 
         return false;
+    }
+
+    private int getGateClosure() {
+        String interval = cacheService.getConfig("MQ_ALLOWABLE_TRADING_DATE");
+
+        return isNotBlank(interval) ? parseInt(interval) : DEFAULT_GATE_CLOSURE;
     }
 
 }
