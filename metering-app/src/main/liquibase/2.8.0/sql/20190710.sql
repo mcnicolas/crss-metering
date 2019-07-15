@@ -1,0 +1,1 @@
+ALTER TABLE metering.txn_mq_manifest_header ADD converted_to_five_min CHAR(1) DEFAULT 'N' NOT NULL;
