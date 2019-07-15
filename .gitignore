@@ -2,6 +2,11 @@
 *.tar.gz
 sonar*.zip
 
+# output
+out/
+build/
+logs/
+
 # ui
 node_modules/
 bower_components/
