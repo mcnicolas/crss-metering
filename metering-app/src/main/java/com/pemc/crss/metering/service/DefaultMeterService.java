@@ -44,6 +44,7 @@ public class DefaultMeterService implements MeterService {
     private final ApplicationEventPublisher eventPublisher;
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmm");
+    private static final int DECIMAL_PLACE_SIZE = 17;
 
     @Autowired
     public DefaultMeterService(MeteringDao meteringDao, MeterQuantityParser meterQuantityParser, MQValidationHandler validationHandler,
@@ -275,12 +276,12 @@ public class DefaultMeterService implements MeterService {
 
         List<MeterDataDetail> retVal = new ArrayList<>();
         meterDataDetails.forEach(meterDataDetail -> {
-            BigDecimal kwd = meterDataDetail.getKwd().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
-            BigDecimal kwhd = meterDataDetail.getKwhd().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
-            BigDecimal kvarhd = meterDataDetail.getKvarhd().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
-            BigDecimal kwr = meterDataDetail.getKwr().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
-            BigDecimal kwhr = meterDataDetail.getKwhr().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
-            BigDecimal kvarhr = meterDataDetail.getKvarhr().divide(new BigDecimal(3), 17, RoundingMode.HALF_UP);
+            BigDecimal kwd = divide(meterDataDetail.getKwd(), 3);
+            BigDecimal kwhd = divide(meterDataDetail.getKwhd(), 3);
+            BigDecimal kvarhd = divide(meterDataDetail.getKvarhd(), 3);
+            BigDecimal kwr = divide(meterDataDetail.getKwr(), 3);
+            BigDecimal kwhr = divide(meterDataDetail.getKwhr(), 3);
+            BigDecimal kvarhr = divide(meterDataDetail.getKvarhr(), 3);
             Calendar newTime = Calendar.getInstance();
             try {
                 newTime.setTime(DATE_FORMAT.parse(String.valueOf(meterDataDetail.getReadingDateTime())));
@@ -302,5 +303,13 @@ public class DefaultMeterService implements MeterService {
             });
         });
         return retVal;
+    }
+
+    private BigDecimal divide(BigDecimal dividend, int divisor) {
+        if (dividend == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return dividend.divide(new BigDecimal(divisor), DECIMAL_PLACE_SIZE, RoundingMode.HALF_UP);
     }
 }
