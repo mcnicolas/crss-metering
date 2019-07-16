@@ -5,6 +5,7 @@ import com.pemc.crss.metering.dto.mq.FileParam;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
 import com.pemc.crss.metering.dto.mq.HeaderParam;
 import com.pemc.crss.metering.dto.mq.TrailerParam;
+import com.pemc.crss.metering.exception.ConversionException;
 import com.pemc.crss.metering.resource.validator.FileUploadValidator;
 import com.pemc.crss.metering.service.CacheService;
 import com.pemc.crss.metering.service.MeterService;
@@ -42,6 +43,7 @@ import static org.springframework.http.ResponseEntity.ok;
 public class MeteringResource {
 
     public static final String ROUTING_KEY = "crss.mq.data";
+    private static final String MQ_INTERVAL_KEY = "MQ_INTERVAL";
 
     private final MeterService meterService;
     private final RabbitTemplate rabbitTemplate;
@@ -63,6 +65,10 @@ public class MeteringResource {
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<Long> uploadHeader(@Valid @RequestBody HeaderParam headerParam) {
         log.debug("Received header record: {}", headerParam);
+
+        if (headerParam.getConvertToFiveMin() && cacheService.getConfig(MQ_INTERVAL_KEY).equals("15")) {
+            throw new ConversionException("Conversion is only available when the configured interval is 5 minutes");
+        }
 
         cacheService.getParticipantUserDetail(headerParam.getMspShortName());
         cacheService.getUserDetail(meterService.getUserName());
