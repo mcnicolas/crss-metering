@@ -9,5 +9,6 @@ public class FileParam {
     private Long headerID;
     private String fileType;
     private MultipartFile[] file;
+    private boolean convertToFiveMin;
 
 }

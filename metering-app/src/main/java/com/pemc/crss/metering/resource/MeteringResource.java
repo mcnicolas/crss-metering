@@ -66,7 +66,10 @@ public class MeteringResource {
     public ResponseEntity<Long> uploadHeader(@Valid @RequestBody HeaderParam headerParam) {
         log.debug("Received header record: {}", headerParam);
 
-        if (headerParam.getConvertToFiveMin() && cacheService.getConfig(MQ_INTERVAL_KEY).equals("15")) {
+        if (headerParam.getConvertToFiveMin() != null
+                && headerParam.getConvertToFiveMin()
+                && cacheService.getConfig(MQ_INTERVAL_KEY).equals("15")) {
+
             throw new ConversionException("Conversion is only available when the configured interval is 5 minutes");
         }
 
@@ -85,6 +88,9 @@ public class MeteringResource {
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> uploadFile(@ModelAttribute FileParam fileParam, BindingResult result) throws IOException {
         Long headerID = fileParam.getHeaderID();
+        HeaderManifest headerManifest = meterService.getHeader(headerID);
+        boolean convertToFiveMin = headerManifest.getConvertedToFiveMin().equals("Y");
+        fileParam.setConvertToFiveMin(convertToFiveMin);
         MultipartFile[] multipartFiles = fileParam.getFile();
 
         log.debug("Received file/s headerID:{} fileCount:{}", headerID, multipartFiles.length);

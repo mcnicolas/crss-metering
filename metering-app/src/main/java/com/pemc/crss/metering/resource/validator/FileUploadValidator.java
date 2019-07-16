@@ -34,6 +34,7 @@ public class FileUploadValidator implements Validator {
         checkHeaderID(fileParam.getHeaderID(), errors);
         checkCategory(fileParam.getHeaderID(), fileParam.getFileType(), errors);
         checkFileType(fileParam.getFileType(), fileParam.getFile(), errors);
+        checkConversion(fileParam.getFileType(), fileParam.isConvertToFiveMin(), errors);
         checkEmptyFileList(fileParam.getFile(), errors);
         checkEmptyFileContent(fileParam.getFile(), errors);
         checkFilenameLength(fileParam.getFile(), errors);
@@ -75,7 +76,7 @@ public class FileUploadValidator implements Validator {
         if (!equalsIgnoreCase(selectedFileType, "XLS") &&
                 !equalsIgnoreCase(selectedFileType, "MDEF") &&
                 !equalsIgnoreCase(selectedFileType, "CSV")) {
-            errors.rejectValue("selectedFileType", "", "Invalid file type. Accepted values are: MDEF, XLS, CSV");
+            errors.rejectValue("fileType", "", "Invalid file type. Accepted values are: MDEF, XLS, CSV");
         }
 
         for (MultipartFile file : files) {
@@ -88,6 +89,12 @@ public class FileUploadValidator implements Validator {
 
                 break;
             }
+        }
+    }
+
+    private void checkConversion(String selectedFileType, boolean convertToFiveMin, Errors errors) {
+        if (!equalsIgnoreCase(selectedFileType, "CSV") && convertToFiveMin) {
+            errors.rejectValue("fileType", "", "Invalid file type. Conversion is only available for CSV files");
         }
     }
 
