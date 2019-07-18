@@ -56,11 +56,21 @@ import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
-import static com.pemc.crss.meter.upload.EndPoint.*;
+import static com.pemc.crss.meter.upload.EndPoint.CHECK_STATUS;
+import static com.pemc.crss.meter.upload.EndPoint.GET_HEADER;
+import static com.pemc.crss.meter.upload.EndPoint.GET_INTERVAL;
+import static com.pemc.crss.meter.upload.EndPoint.MSP_LISTING_URL;
+import static com.pemc.crss.meter.upload.EndPoint.OAUTH_TOKEN;
+import static com.pemc.crss.meter.upload.EndPoint.PARTICIPANT_CATEGORY_URL;
+import static com.pemc.crss.meter.upload.EndPoint.UPLOAD_FILE;
+import static com.pemc.crss.meter.upload.EndPoint.UPLOAD_HEADER;
+import static com.pemc.crss.meter.upload.EndPoint.UPLOAD_TRAILER;
+import static com.pemc.crss.meter.upload.EndPoint.USER_URL;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.http.Consts.UTF_8;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
+import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.conn.ssl.NoopHostnameVerifier.INSTANCE;
 import static org.apache.http.entity.ContentType.APPLICATION_FORM_URLENCODED;
@@ -339,6 +349,8 @@ public class HttpHandler {
                 }
 
                 log.debug("Response:{}", content);
+            } else if (statusLine.getStatusCode() == SC_BAD_REQUEST) {
+                throw new HttpResponseException(content);
             } else {
                 throw new HttpResponseException("Send Header Error"
                         + " statusCode:" + statusLine.getStatusCode()

@@ -15,6 +15,7 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
@@ -28,6 +29,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +50,9 @@ public class MeteringResource {
 
     public static final String ROUTING_KEY = "crss.mq.data";
     private static final String MQ_INTERVAL_KEY = "MQ_INTERVAL";
+    private static final String MQ_GATE_CLOSURE_TIME_KEY = "MQ_GATE_CLOSURE_TIME";
+    private static final String DEFAULT_CLOSURE_TIME = "08:00";
+    private static final DateTimeFormatter TIME_FORMATTER_12 = DateTimeFormatter.ofPattern("hh:mm a");
 
     private final MeterService meterService;
     private final RabbitTemplate rabbitTemplate;
@@ -63,8 +72,20 @@ public class MeteringResource {
     @PostMapping(value = "/uploadHeader",
             consumes = APPLICATION_JSON_VALUE,
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<Long> uploadHeader(@Valid @RequestBody HeaderParam headerParam) {
+    public ResponseEntity<?> uploadHeader(@Valid @RequestBody HeaderParam headerParam) throws ParseException {
         log.debug("Received header record: {}", headerParam);
+
+        String closureTime = cacheService.getConfig(MQ_GATE_CLOSURE_TIME_KEY);
+        if (StringUtils.isBlank(closureTime)) {
+            closureTime = DEFAULT_CLOSURE_TIME;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime closureDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(closureTime));
+        if (now.isAfter(closureDateTime)) {
+            return ResponseEntity.badRequest()
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body("Unable to upload after gate closure time: " + TIME_FORMATTER_12.format(closureDateTime));
+        }
 
         if (headerParam.getConvertToFiveMin() != null
                 && headerParam.getConvertToFiveMin()
