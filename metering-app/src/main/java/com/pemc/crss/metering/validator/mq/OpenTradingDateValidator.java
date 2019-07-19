@@ -1,6 +1,5 @@
 package com.pemc.crss.metering.validator.mq;
 
-import com.pemc.crss.metering.constants.FileType;
 import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
@@ -20,8 +19,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import static com.pemc.crss.metering.constants.FileType.CSV;
-import static com.pemc.crss.metering.constants.FileType.XLS;
 import static com.pemc.crss.metering.constants.UploadType.DAILY;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
 import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
@@ -50,21 +47,15 @@ public class OpenTradingDateValidator implements Validator {
     public ValidationResult validate(FileManifest fileManifest, MeterData meterData) {
         ValidationResult retVal = new ValidationResult();
         retVal.setStatus(ACCEPTED);
-
-        FileType fileType = fileManifest.getFileType();
-
-        if (fileType == XLS || fileType == CSV) {
-            retVal = validateNullDate(fileManifest, meterData);
-
-            if (retVal.getStatus() == ACCEPTED) {
-                retVal = validateOpenTradingDate(fileManifest, meterData);
-            }
+        retVal = validateNullDate(meterData);
+        if (retVal.getStatus() == ACCEPTED) {
+            retVal = validateOpenTradingDate(fileManifest, meterData);
         }
 
         return retVal;
     }
 
-    private ValidationResult validateNullDate(FileManifest fileManifest, MeterData meterData) {
+    private ValidationResult validateNullDate(MeterData meterData) {
         ValidationResult retVal = new ValidationResult();
         retVal.setStatus(ACCEPTED);
 
