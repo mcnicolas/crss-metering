@@ -7,5 +7,6 @@ databaseChangeLog {
     include(file: '2.6.0/schema/20180625.groovy', relativeToChangelogFile: 'true')
     include(file: '2.6.0/schema/20190701.groovy', relativeToChangelogFile: 'true')
     include(file: '2.8.0/schema/20190710.groovy', relativeToChangelogFile: 'true')
+    include(file: '2.8.0/schema/20190722.groovy', relativeToChangelogFile: 'true')
 
 }

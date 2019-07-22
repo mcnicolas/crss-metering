@@ -182,7 +182,12 @@ public class DefaultMeterService implements MeterService {
             log.error(e.getMessage(), e);
 
             retVal.setStatus(REJECTED);
-            retVal.setErrorDetail(e.getMessage());
+
+            String message = e.getMessage();
+            if (message.contains("duplicate key")) {
+                message =  message.substring(message.indexOf("Key"));
+            }
+            retVal.setErrorDetail(message);
         }
 
         return retVal;
