@@ -21,7 +21,7 @@ import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 
 @Slf4j
 @Component
-@Order(value = 4)
+@Order(value = 5)
 public class DuplicateDataValidator implements Validator {
 
     @Override

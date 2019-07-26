@@ -2,6 +2,7 @@ package com.pemc.crss.metering.validator.mq;
 
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.MeterData;
+import com.pemc.crss.metering.dto.mq.MeterDataDetail;
 import com.pemc.crss.metering.validator.ValidationResult;
 import com.pemc.crss.metering.validator.Validator;
 import lombok.extern.slf4j.Slf4j;
@@ -13,23 +14,20 @@ import static com.pemc.crss.metering.constants.ValidationStatus.REJECTED;
 
 @Slf4j
 @Component
-@Order(value = 7)
-public class ConvertValidator implements Validator {
+@Order(value = 2)
+public class CorrectValueValidator implements Validator {
 
     @Override
     public ValidationResult validate(FileManifest fileManifest, MeterData meterData) {
         ValidationResult retVal = new ValidationResult();
         retVal.setStatus(ACCEPTED);
 
-        long firstRecord = meterData.getDetails().get(0).getReadingDateTime();
-        long secondRecord = meterData.getDetails().get(1).getReadingDateTime();
-        long diff = secondRecord - firstRecord;
-
-        if (meterData.isConvertToFiveMin() && diff == 5) {
-            retVal.setStatus(REJECTED);
-            retVal.setErrorDetail("Conversion can only be applied for files with 15 minute interval");
+        for (MeterDataDetail meterDataDetail : meterData.getDetails()) {
+            if (meterDataDetail.getEstimationFlag() != null && !meterDataDetail.getEstimationFlag().equals("E")) {
+                retVal.setStatus(REJECTED);
+                retVal.setErrorDetail("Incorrect estimation flag value. Estimation flag value can be blank or 'E' only");
+            }
         }
-
         return retVal;
     }
 }

@@ -29,7 +29,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Slf4j
 @Component
-@Order(value = 3)
+@Order(value = 4)
 public class OpenTradingDateValidator implements Validator {
 
     private static final int DEFAULT_GATE_CLOSURE = 1;

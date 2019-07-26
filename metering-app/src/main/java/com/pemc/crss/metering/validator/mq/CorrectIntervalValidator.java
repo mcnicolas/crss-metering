@@ -30,7 +30,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Slf4j
 @Component
-@Order(value = 5)
+@Order(value = 6)
 public class CorrectIntervalValidator implements Validator {
 
     private static final int DEFAULT_INTERVAL = 5;
