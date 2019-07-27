@@ -102,7 +102,7 @@ public class OpenTradingDateValidator implements Validator {
                     log.error(e.getMessage(), e);
                 }
 
-                int gateClosure = getGateClosure();
+                int gateClosure = DEFAULT_GATE_CLOSURE;
                 if (!isSameDay(now, readingDateTime) && !isWithinDays(now, readingDateTime, gateClosure)) {
                     retVal.setStatus(REJECTED);
 

@@ -15,7 +15,6 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
@@ -30,9 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.text.ParseException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -75,7 +71,7 @@ public class MeteringResource {
     public ResponseEntity<?> uploadHeader(@Valid @RequestBody HeaderParam headerParam) throws ParseException {
         log.debug("Received header record: {}", headerParam);
 
-        String closureTime = cacheService.getConfig(MQ_GATE_CLOSURE_TIME_KEY);
+        /*String closureTime = cacheService.getConfig(MQ_GATE_CLOSURE_TIME_KEY);
         if (StringUtils.isBlank(closureTime)) {
             closureTime = DEFAULT_CLOSURE_TIME;
         }
@@ -85,7 +81,7 @@ public class MeteringResource {
             return ResponseEntity.badRequest()
                     .contentType(MediaType.TEXT_PLAIN)
                     .body("Unable to upload after gate closure time: " + TIME_FORMATTER_12.format(closureDateTime));
-        }
+        }*/
 
         if (headerParam.getConvertToFiveMin() != null
                 && headerParam.getConvertToFiveMin()
