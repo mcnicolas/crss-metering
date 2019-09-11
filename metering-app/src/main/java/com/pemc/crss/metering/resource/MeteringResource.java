@@ -1,5 +1,6 @@
 package com.pemc.crss.metering.resource;
 
+import com.pemc.crss.metering.constants.UploadType;
 import com.pemc.crss.metering.dto.mq.FileManifest;
 import com.pemc.crss.metering.dto.mq.FileParam;
 import com.pemc.crss.metering.dto.mq.HeaderManifest;
@@ -81,10 +82,15 @@ public class MeteringResource {
         }
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime closureDateTime = LocalDateTime.of(LocalDate.now(), LocalTime.parse(closureTime));
-        if (now.isAfter(closureDateTime)) {
-            return ResponseEntity.badRequest()
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body("Unable to upload after gate closure time: " + TIME_FORMATTER_12.format(closureDateTime));
+
+        UploadType uploadType = UploadType.valueOf(headerParam.getCategory().toUpperCase());
+
+        if (UploadType.DAILY.equals(uploadType) || UploadType.CORRECTED_DAILY.equals(uploadType)) {
+            if (now.isAfter(closureDateTime)) {
+                return ResponseEntity.badRequest()
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .body("Unable to upload after gate closure time: " + TIME_FORMATTER_12.format(closureDateTime));
+            }
         }
 
         if (headerParam.getConvertToFiveMin() != null
