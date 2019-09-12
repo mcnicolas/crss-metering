@@ -13,7 +13,7 @@ import java.util.Map;
 
 public interface MeterService {
 
-    Long saveHeader(HeaderParam headerParam);
+    Long saveHeader(HeaderParam headerParam, String closureTime, String allowableDate);
 
     boolean isHeaderValid(long headerID);
 

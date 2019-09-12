@@ -52,6 +52,7 @@ public class MeteringResource {
     public static final String ROUTING_KEY = "crss.mq.data";
     private static final String MQ_INTERVAL_KEY = "MQ_INTERVAL";
     private static final String MQ_GATE_CLOSURE_TIME_KEY = "MQ_GATE_CLOSURE_TIME";
+    private static final String MQ_ALLOWABLE_TRADING_DATE = "MQ_ALLOWABLE_TRADING_DATE";
     private static final String DEFAULT_CLOSURE_TIME = "08:00";
     private static final DateTimeFormatter TIME_FORMATTER_12 = DateTimeFormatter.ofPattern("hh:mm a");
 
@@ -77,6 +78,7 @@ public class MeteringResource {
         log.debug("Received header record: {}", headerParam);
 
         String closureTime = cacheService.getConfig(MQ_GATE_CLOSURE_TIME_KEY);
+        String allowableDate = cacheService.getConfig(MQ_ALLOWABLE_TRADING_DATE);
         if (StringUtils.isBlank(closureTime)) {
             closureTime = DEFAULT_CLOSURE_TIME;
         }
@@ -103,7 +105,7 @@ public class MeteringResource {
         cacheService.getParticipantUserDetail(headerParam.getMspShortName());
         cacheService.getUserDetail(meterService.getUserName());
 
-        Long headerID = meterService.saveHeader(headerParam);
+        Long headerID = meterService.saveHeader(headerParam, closureTime, allowableDate);
         log.debug("Saved manifest header: {}", headerID);
 
         return ok(headerID);

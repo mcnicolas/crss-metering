@@ -58,7 +58,7 @@ public class DefaultMeterService implements MeterService {
 
     @Override
     @Transactional
-    public Long saveHeader(HeaderParam headerParam) {
+    public Long saveHeader(HeaderParam headerParam, String closureTime, String allowableDate) {
         String userName = getUserName();
 
         HeaderManifest manifest = new HeaderManifest();
@@ -70,6 +70,8 @@ public class DefaultMeterService implements MeterService {
         manifest.setUploadDateTime(new Date());
         manifest.setConvertedToFiveMin(headerParam.getConvertToFiveMin() == null
                 ? "N" : headerParam.getConvertToFiveMin() ? "Y" : "N");
+        manifest.setAllowableDate(allowableDate);
+        manifest.setClosureTime(closureTime);
 
         return meteringDao.saveHeader(manifest);
     }
