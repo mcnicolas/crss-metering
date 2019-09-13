@@ -18,7 +18,7 @@ public class HeaderManifest {
     private String uploadedBy;
     private Date uploadDateTime;
     private String convertedToFiveMin;
-    private String closureTime;
-    private String allowableDate;
+    private String closureTimeSetting;
+    private String allowableDateSetting;
 
 }

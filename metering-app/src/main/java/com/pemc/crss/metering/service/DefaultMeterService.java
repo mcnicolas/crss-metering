@@ -70,8 +70,8 @@ public class DefaultMeterService implements MeterService {
         manifest.setUploadDateTime(new Date());
         manifest.setConvertedToFiveMin(headerParam.getConvertToFiveMin() == null
                 ? "N" : headerParam.getConvertToFiveMin() ? "Y" : "N");
-        manifest.setAllowableDate(allowableDate);
-        manifest.setClosureTime(closureTime);
+        manifest.setAllowableDateSetting(allowableDate);
+        manifest.setClosureTimeSetting(closureTime);
 
         return meteringDao.saveHeader(manifest);
     }
