@@ -75,6 +75,9 @@ public class JdbcBcqDao implements BcqDao {
     @Value("${bcq.header.status.select-by-status-and-deadlinedate-plus-days}")
     private String selectByStatusAndDeadlineDatePlusDays;
 
+    @Value("${bcq.header.status.select-by-status-and-modifieddate-plus-days}")
+    private String selectByStatusAndModifiedDatePlusDays;
+
     @Value("${bcq.data.insert}")
     private String insertData;
 
@@ -281,6 +284,15 @@ public class JdbcBcqDao implements BcqDao {
 
         return jdbcTemplate.queryForList(selectByStatusAndDeadlineDatePlusDays,
                 source, Long.class);
+    }
+
+    @Override
+    public List<BcqHeader> selectByStatusAndModifiedDatePlusDays(BcqStatus status, Integer plusDays) {
+        MapSqlParameterSource source = new MapSqlParameterSource()
+                .addValue("plusDays", plusDays)
+                .addValue("status", status.toString());
+
+        return jdbcTemplate.query(selectByStatusAndModifiedDatePlusDays, source, new BcqHeaderRowMapper());
     }
 
     @Override
@@ -521,6 +533,9 @@ public class JdbcBcqDao implements BcqDao {
             }
             if (doesColumnExist("submitted_date", rs)) {
                 uploadFile.setSubmittedDate(rs.getTimestamp("submitted_date"));
+            }
+            if (doesColumnExist("modified_date", rs)) {
+                header.setModifiedDate(rs.getTimestamp("modified_date").toLocalDateTime());
             }
             if (doesColumnExist("uploaded_by", rs)) {
                 header.setUploadedBy(rs.getString("uploaded_by"));

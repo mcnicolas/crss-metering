@@ -27,6 +27,7 @@ import com.pemc.crss.metering.service.exception.InvalidStateException;
 import com.pemc.crss.metering.service.exception.OldRecordException;
 import com.pemc.crss.metering.service.exception.PairExistsException;
 import com.pemc.crss.metering.utils.DateTimeUtils;
+import com.pemc.crss.shared.commons.util.DateTimeUtil;
 import com.pemc.crss.shared.commons.util.DateUtil;
 import com.pemc.crss.shared.commons.util.reference.Status;
 import lombok.RequiredArgsConstructor;
@@ -272,6 +273,24 @@ public class BcqServiceImpl implements BcqService {
             List<Long> headerIdsToUpdate = bcqDao.selectByStatusAndDeadlineDatePlusDays(CONFIRMED, plusDays);
             log.info("[BCQ Service] Found the following header ids to be updated to {}: {}", SETTLEMENT_READY, headerIdsToUpdate);
             headerIdsToUpdate.forEach(id -> bcqDao.updateHeaderStatus(id, SETTLEMENT_READY));
+
+            Map<String, BcqHeader> bcqHeaderMap = new HashMap<>();
+            int modifiedDatePlusDays = configService.getIntegerValueForKey("BCQ_SETTLEMENT_READY_MODIFIED_DAYS", 120);
+            List<BcqHeader> stlReadyBcqs = bcqDao.selectByStatusAndModifiedDatePlusDays(SETTLEMENT_READY, modifiedDatePlusDays);
+
+            for (BcqHeader bcqHeader : stlReadyBcqs) {
+                String key = bcqHeader.getTradingDate() + "-" + bcqHeader.getBillingId() + "-" + bcqHeader.getSellingMtn();
+                if (bcqHeaderMap.containsKey(key)) {
+                    if (bcqHeaderMap.get(key).getModifiedDate().isAfter(bcqHeader.getModifiedDate())) {
+                        bcqDao.updateHeaderStatus(bcqHeader.getHeaderId(), VOID);
+                    } else {
+                        bcqDao.updateHeaderStatus(bcqHeaderMap.get(key).getHeaderId(), VOID);
+                        bcqHeaderMap.put(key, bcqHeader);
+                    }
+                } else {
+                    bcqHeaderMap.put(key, bcqHeader);
+                }
+            }
 
             String details = buildAuditDetails(
                     createKeyValue("Status", "Success"),

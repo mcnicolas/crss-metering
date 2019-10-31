@@ -6,6 +6,7 @@ import com.pemc.crss.metering.constants.BcqUpdateType;
 import lombok.Data;
 import lombok.ToString;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +35,7 @@ public class BcqHeader {
     private Long refMtnSize;
     private Long buyerMtnSize;
     private String uploadedBy;
+    private LocalDateTime modifiedDate;
 
     @Override
     public boolean equals(Object o) {
