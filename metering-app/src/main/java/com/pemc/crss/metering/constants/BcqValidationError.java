@@ -15,6 +15,7 @@ public enum BcqValidationError {
     INCORRECT_DATA_TYPE("Incorrect data type. BCQ should be in <b>number</b> format."),
     INCORRECT_DATE_FORMAT("Incorrect date format. Date should follow the format <b>yyyy-MM-dd HH:mm</b>."),
     CLOSED_TRADING_DATE("Trading date is closed. Submission of BCQ is closed for <b>%s</b>."),
+    INVALID_BCQ_VALUE("Invalid BCQ. BCQ value exceeds the configured maximum."),
     INVALID_TRADING_DATE("Trading date is invalid. Only one trading date can be accepted per file."),
     DIFFERENT_TRADING_DATE("Trading date is invalid. Trading date must be the same when overriding."),
     NEGATIVE_BCQ("BCQ is Negative. Declared BCQs should not be negative."),

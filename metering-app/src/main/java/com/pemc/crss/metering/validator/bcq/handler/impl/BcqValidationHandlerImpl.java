@@ -38,6 +38,7 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
     private final OverrideValidator overrideValidator;
     private final ResourceTemplate resourceTemplate;
     private final CacheConfigService configService;
+    private final MaxBcqValidator maxBcqValidator;
 
     @Override
     public BcqDeclaration processAndValidate(List<List<String>> csv) {
@@ -45,7 +46,8 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
         BcqDeclaration declaration = new BcqDeclaration(sellerDetails);
         BcqValidationResult<List<BcqHeader>> result = csvValidator.validate(csv)
                 .then(csvResult -> headerListValidator.validate(csvResult.getProcessedObject()))
-                .then(headerListResult -> billingIdValidator.validate(headerListResult.getProcessedObject()))
+                .then(headerListResult -> maxBcqValidator.validate(headerListResult.getProcessedObject()))
+                .then(maxBcqResult -> billingIdValidator.validate(maxBcqResult.getProcessedObject()))
                 .then(billingIdResult -> crssSideValidator.validate(billingIdResult.getProcessedObject(), sellerDetails))
                 .then(crssSideResult -> prohibitedValidator.validate(crssSideResult.getProcessedObject()))
                 .then(prohibitedResult -> resubmissionValidator.validate(prohibitedResult.getProcessedObject(),
