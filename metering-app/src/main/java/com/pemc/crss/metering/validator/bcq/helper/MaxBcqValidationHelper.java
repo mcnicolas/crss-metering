@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface MaxBcqValidationHelper {
 
-    Validation<List<BcqHeader>> validMaxBcq(Integer maxBcqConfig, Integer divisor);
+    Validation<List<BcqHeader>> validMaxBcq(int maxBcqConfig, int intervalConfig);
 
 }
