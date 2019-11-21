@@ -10,12 +10,17 @@ import com.pemc.crss.metering.dto.bcq.*
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqEventValidationData
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEvent
 import com.pemc.crss.metering.dto.bcq.specialevent.BcqSpecialEventParticipant
+import com.pemc.crss.metering.parser.bcq.BcqReader
 import com.pemc.crss.metering.resource.template.ResourceTemplate
 import com.pemc.crss.metering.service.exception.InvalidStateException
 import com.pemc.crss.metering.service.exception.OldRecordException
 import com.pemc.crss.metering.service.exception.PairExistsException
+import com.pemc.crss.metering.utils.DateTimeUtils
 import com.pemc.crss.metering.validator.bcq.BcqValidationResult
+import org.mockito.Mockito
+import org.springframework.context.annotation.Bean
 import org.springframework.data.domain.PageImpl
+import org.springframework.data.redis.core.RedisTemplate
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -32,7 +37,13 @@ class BcqServiceImplTest extends Specification {
     def bcqNotificationManager = Mock(BcqNotificationManager);
     def configService = Mock(CacheConfigService);
     def resourceTemplate = Mock(ResourceTemplate);
-    def sut = new BcqServiceImpl(bcqDao, bcqNotificationManager, configService, resourceTemplate)
+    def bcqReader = Mock(BcqReader);
+    def sut = new BcqServiceImpl(bcqDao, bcqNotificationManager, configService, resourceTemplate, redisTemplate(), bcqReader)
+
+    @Bean
+    RedisTemplate redisTemplate() {
+        return Mockito.mock(RedisTemplate)
+    }
 
     @Unroll
     def 'save declaration by seller with status: #status'() {
@@ -170,10 +181,10 @@ class BcqServiceImplTest extends Specification {
 
     def "find headers of participant by tradingDate"() {
         when:
-        def result = sut.findHeadersOfParticipantByTradingDate('GEN1', now())
+        def result = sut.findHeadersOfParticipantByTradingDate('GEN1', DateTimeUtils.startOfDay(new Date()))
 
         then:
-        1 * bcqDao.findAllHeaders(_ as Map) >> [new BcqHeader(headerId: 1L)]
+        1 * bcqDao.findHeadersOfSellingParticipantByTradingDate('GEN1', DateTimeUtils.startOfDay(new Date())) >> [new BcqHeader(headerId: 1L)]
         result[0].headerId == 1L
     }
 
@@ -201,12 +212,13 @@ class BcqServiceImplTest extends Specification {
             1 * bcqDao.findSameHeaders(_ as BcqHeader, _ as List, _ as ComparisonOperator) >> sameHeaders
         }
         1 * bcqNotificationManager.sendUpdateStatusNotification(_ as BcqHeader)
+        1 * resourceTemplate.get(_ as String, List.class) >> ['BILLINGID1']
 
         where:
         header << [
-                new BcqHeader(headerId: 1L),
-                new BcqHeader(headerId: 1L),
-                new BcqHeader(headerId: 1L, status: CONFIRMED)
+                new BcqHeader(headerId: 1L, tradingDate: now(), uploadFile: new BcqUploadFile(transactionId: 1)),
+                new BcqHeader(headerId: 1L, tradingDate: now(), uploadFile: new BcqUploadFile(transactionId: 1)),
+                new BcqHeader(headerId: 1L, status: CONFIRMED, tradingDate: now(), uploadFile: new BcqUploadFile(transactionId: 1))
         ]
         status << [CONFIRMED, NULLIFIED, CANCELLED]
         sameHeaders << [
@@ -251,10 +263,11 @@ class BcqServiceImplTest extends Specification {
         sut.requestForCancellation(1L)
 
         then:
-        1 * bcqDao.findHeader(_ as Long) >> new BcqHeader(headerId: 1L, status: status)
+        1 * bcqDao.findHeader(_ as Long) >> new BcqHeader(headerId: 1L, status: status, tradingDate: now(), uploadFile: new BcqUploadFile(transactionId: 1))
         1 * bcqDao.findSameHeaders(_ as BcqHeader, _ as List, _ as ComparisonOperator) >> sameHeaders
         1 * bcqDao.updateHeaderStatusBySettlement(_ as Long, FOR_APPROVAL_CANCEL)
         1 * bcqNotificationManager.sendSettlementUpdateStatusNotification(_ as BcqHeader)
+        1 * resourceTemplate.get(_ as String, List.class) >> ['BILLINGID1']
 
         where:
         status << [CONFIRMED, SETTLEMENT_READY]
@@ -289,7 +302,8 @@ class BcqServiceImplTest extends Specification {
         sut.approve(1L)
 
         then:
-        1 * bcqDao.findHeader(_ as Long) >> new BcqHeader(headerId: 1L, status: status)
+        1 * bcqDao.findHeader(_ as Long) >> new BcqHeader(headerId: 1L, status: status, tradingDate: now(),
+                uploadFile: new BcqUploadFile(transactionId: 1))
         if (status == FOR_APPROVAL_CANCEL) {
             1 * bcqDao.updateHeaderStatus(_ as Long, _ as BcqStatus)
             1 * bcqDao.findSameHeaders(_ as BcqHeader, _ as List, _ as ComparisonOperator) >> sameHeaders
@@ -299,6 +313,7 @@ class BcqServiceImplTest extends Specification {
         }
 
         1 * bcqNotificationManager.sendApprovalNotification(_ as BcqHeader)
+        1 * resourceTemplate.get(_ as String, List.class) >> ['BILLINGID1']
 
         where:
         status << [FOR_APPROVAL_CANCEL, FOR_APPROVAL_NEW, FOR_APPROVAL_UPDATE]
@@ -377,7 +392,8 @@ class BcqServiceImplTest extends Specification {
         sut.processHeadersToSettlementReady()
 
         then:
-        1 * configService.getIntegerValueForKey(_ as String, _ as Integer) >> 2
+        2 * configService.getIntegerValueForKey(_ as String, _ as Integer) >> 2
+        1 * bcqDao.selectByStatusAndModifiedDatePlusDays(_ as BcqStatus, _ as Integer) >> []
         1 * bcqDao.selectByStatusAndDeadlineDatePlusDays(_ as BcqStatus, _ as Integer) >> headerIdsToUpdate
         headerIdsToUpdate.size() * bcqDao.updateHeaderStatus(_ as Long, SETTLEMENT_READY)
     }

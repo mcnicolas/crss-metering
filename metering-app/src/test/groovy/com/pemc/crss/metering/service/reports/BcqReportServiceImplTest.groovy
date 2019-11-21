@@ -55,7 +55,7 @@ class BcqReportServiceImplTest extends Specification {
         then:
         def stringArrayContent = outputStream.toString().split('\n')
         stringArrayContent[0].trim() == 'Interval,<Hourly/5mins/15mins>'.trim()
-        stringArrayContent[1].trim() == 'Selling MTN (Resource ID),Buying Participant (Load Participant Name),Reference MTN (Resource ID),Date,BCQ'.trim()
+        stringArrayContent[1].trim() == 'Seller MTN (Resource ID),Buying Participant (Load Participant Name),Reference MTN (Resource ID),Date,BCQ'.trim()
         stringArrayContent[2].trim() == '<text>,<text>,<text>,<date with format yyyy-mm-dd hh:mm>,<numeric>'.trim()
         stringArrayContent[3].trim() == 'MTN_TRADE_1,ares,MTN_TRADE_1,2017-02-15 01:00,10'.trim()
     }

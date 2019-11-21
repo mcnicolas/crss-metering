@@ -26,7 +26,8 @@ class BcqValidationHandlerImplTest extends Specification {
     def resubmissionValidator = Mock(ResubmissionValidator);
     def overrideValidator = Mock(OverrideValidator);
     def resourceTemplate = Mock(ResourceTemplate);
-    def configService = Mock(CacheConfigService );
+    def configService = Mock(CacheConfigService);
+    def maxBcqValidator = Mock(MaxBcqValidator);
     def sut
     def csv
     def headerList
@@ -45,7 +46,8 @@ class BcqValidationHandlerImplTest extends Specification {
                 resubmissionValidator,
                 overrideValidator,
                 resourceTemplate,
-                configService
+                configService,
+                maxBcqValidator
         )
         csv = readCsv('bcq_file_valid')
         headerList = new BcqPopulator().populate(csv)
@@ -83,6 +85,23 @@ class BcqValidationHandlerImplTest extends Specification {
         declaration.validationResult == validationResult
     }
 
+    def "process and validate with failed validation in max bcq validator"() {
+        given:
+        def errorMessage = new BcqValidationErrorMessage(INVALID_BCQ_VALUE, [])
+        def validationResult = new BcqValidationResult<>(status: REJECTED, errorMessage: errorMessage)
+
+        when:
+        def declaration = sut.processAndValidate(csv)
+
+        then:
+        1 * resourceTemplate.get(_ as String, ParticipantSellerDetails.class) >> sellerDetails
+        1 * csvValidator.validate(csv) >> acceptedValidationResult
+        1 * headerListValidator.validate(_ as List) >> acceptedValidationResult
+        1 * maxBcqValidator.validate(_ as List) >> validationResult
+        0 * billingIdValidator.validate(_ as List)
+        declaration.validationResult == validationResult
+    }
+
     def "process and validate with failed validation in billing id validator"() {
         given:
         def errorMessage = new BcqValidationErrorMessage(BILLING_ID_NOT_EXIST, [])
@@ -95,6 +114,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * resourceTemplate.get(_ as String, ParticipantSellerDetails.class) >> sellerDetails
         1 * csvValidator.validate(csv) >> acceptedValidationResult
         1 * headerListValidator.validate(_ as List) >> acceptedValidationResult
+        1 * maxBcqValidator.validate(_ as List) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> validationResult
         0 * crssSideValidator.validate(_ as List, sellerDetails)
         declaration.validationResult == validationResult
@@ -112,6 +132,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * resourceTemplate.get(_ as String, ParticipantSellerDetails.class) >> sellerDetails
         1 * csvValidator.validate(csv) >> acceptedValidationResult
         1 * headerListValidator.validate(_ as List) >> acceptedValidationResult
+        1 * maxBcqValidator.validate(_ as List) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validate(_ as List, sellerDetails) >> validationResult
         0 * prohibitedValidator.validate(_ as List)
@@ -130,6 +151,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * resourceTemplate.get(_ as String, ParticipantSellerDetails.class) >> sellerDetails
         1 * csvValidator.validate(csv) >> acceptedValidationResult
         1 * headerListValidator.validate(_ as List) >> acceptedValidationResult
+        1 * maxBcqValidator.validate(_ as List) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validate(_ as List, sellerDetails) >> acceptedValidationResult
         1 * prohibitedValidator.validate(_ as List) >> validationResult
@@ -149,6 +171,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * resourceTemplate.get(_ as String, ParticipantSellerDetails.class) >> sellerDetails
         1 * csvValidator.validate(csv) >> acceptedValidationResult
         1 * headerListValidator.validate(_ as List) >> acceptedValidationResult
+        1 * maxBcqValidator.validate(_ as List) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validate(_ as List, sellerDetails) >> acceptedValidationResult
         1 * prohibitedValidator.validate(_ as List) >> acceptedValidationResult
@@ -164,6 +187,7 @@ class BcqValidationHandlerImplTest extends Specification {
         1 * resourceTemplate.get(_ as String, ParticipantSellerDetails.class) >> sellerDetails
         1 * csvValidator.validate(csv) >> acceptedValidationResult
         1 * headerListValidator.validate(_ as List) >> acceptedValidationResult
+        1 * maxBcqValidator.validate(_ as List) >> acceptedValidationResult
         1 * billingIdValidator.validate(_ as List) >> acceptedValidationResult
         1 * crssSideValidator.validate(_ as List, sellerDetails) >> acceptedValidationResult
         1 * prohibitedValidator.validate(_ as List) >> acceptedValidationResult
