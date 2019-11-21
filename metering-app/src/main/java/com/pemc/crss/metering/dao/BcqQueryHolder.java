@@ -123,6 +123,28 @@ public final class BcqQueryHolder {
                 .build();
     }
 
+    public static QueryData headerBySellingParticipantAndTradingDate(String shortName, Date tradingDate) {
+        SelectQueryBuilder queryBuilder = new SelectQueryBuilder()
+                .column("HEADER_ID")
+                .column("SELLING_MTN")
+                .column("BILLING_ID")
+                .column("BUYING_PARTICIPANT_NAME")
+                .column("BUYING_PARTICIPANT_SHORT_NAME")
+                .column("SELLING_PARTICIPANT_NAME")
+                .column("SELLING_PARTICIPANT_SHORT_NAME")
+                .column("TRADING_DATE")
+                .column("DEADLINE_DATE")
+                .column("UPDATED_VIA")
+                .column("STATUS")
+                .column("TRANSACTION_ID")
+                .column("SUBMITTED_DATE")
+                .column("UPLOADED_BY")
+                .from(HEADER_JOIN_FILE);
+        queryBuilder = addSellingParticipantEqualsFilter(queryBuilder, shortName);
+        queryBuilder = addTradingDateFilter(queryBuilder, tradingDate);
+        return queryBuilder.build();
+    }
+
     public static QueryData sameHeaders(BcqHeader header, List<BcqStatus> statuses, ComparisonOperator operator) {
         return new SelectQueryBuilder()
                 .column("HEADER_ID")
@@ -316,6 +338,15 @@ public final class BcqQueryHolder {
                         "%" + sellingParticipant.toUpperCase() + "%", LIKE))
                 .or().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_SHORT_NAME)",
                         "%" + sellingParticipant.toUpperCase() + "%", LIKE))
+                .closeParenthesis();
+    }
+
+    private static SelectQueryBuilder addSellingParticipantEqualsFilter(SelectQueryBuilder queryBuilder, String sellingParticipant) {
+        return isBlank(sellingParticipant) ? queryBuilder : queryBuilder
+                .and().openParenthesis().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_NAME)",
+                        sellingParticipant.toUpperCase(), EQUALS))
+                .or().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_SHORT_NAME)",
+                        sellingParticipant.toUpperCase(), EQUALS))
                 .closeParenthesis();
     }
 

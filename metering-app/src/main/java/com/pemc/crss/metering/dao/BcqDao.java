@@ -60,4 +60,6 @@ public interface BcqDao {
 
     List<BcqProhibitedPair> findAllEnabledProhibitedPairs();
 
+    List<BcqHeader> findHeadersOfSellingParticipantByTradingDate(String sellingParticipant, Date tradingDate);
+
 }

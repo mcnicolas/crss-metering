@@ -158,6 +158,15 @@ public class JdbcBcqDao implements BcqDao {
         log.debug("Found {} headers", headerList.size());
         return headerList;
     }
+
+    public List<BcqHeader> findHeadersOfSellingParticipantByTradingDate(String sellingParticipant, Date tradingDate) {
+        QueryData data = BcqQueryHolder.headerBySellingParticipantAndTradingDate(sellingParticipant, tradingDate);
+        log.debug("Finding list of headers with query: {}, and args: {}", data.getSql(), data.getSource().getValues());
+        List<BcqHeader> headerList = jdbcTemplate.query(data.getSql(), data.getSource(), new BcqHeaderRowMapper());
+        log.debug("Found {} headers", headerList.size());
+        return headerList;
+    }
+
     @Override
     public List<BcqHeader> findSameHeaders(BcqHeader header, List<BcqStatus> statuses, ComparisonOperator operator) {
         QueryData data = BcqQueryHolder.sameHeaders(header, statuses, operator);

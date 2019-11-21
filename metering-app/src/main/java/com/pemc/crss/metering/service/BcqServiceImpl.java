@@ -166,9 +166,7 @@ public class BcqServiceImpl implements BcqService {
 
     @Override
     public List<BcqHeader> findHeadersOfParticipantByTradingDate(String shortName, Date tradingDate) {
-        return findAllHeaders(of(
-                "sellingParticipant", shortName,
-                "tradingDate", formatDate(tradingDate)));
+        return bcqDao.findHeadersOfSellingParticipantByTradingDate(shortName, tradingDate);
     }
 
     private List<BcqHeader> findHeadersOfParticipantByTradingDateAndStatus(String shortName, Date tradingDate, String status) {
