@@ -392,9 +392,9 @@ public final class BcqQueryHolder {
             } else {
                 return queryBuilder
                         .and().openParenthesis().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_SHORT_NAME)",
-                                "%" + participant.toUpperCase() + "%", LIKE))
+                                participant.toUpperCase(), EQUALS))
                         .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
-                                "%" + participant.toUpperCase() + "%", LIKE))
+                                participant.toUpperCase(), EQUALS))
                         .closeParenthesis();
             }
         }
