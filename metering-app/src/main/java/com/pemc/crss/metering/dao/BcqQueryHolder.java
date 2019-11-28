@@ -279,8 +279,8 @@ public final class BcqQueryHolder {
         queryBuilder = addTradingDateFilter(queryBuilder, getValue(mapParams, "tradingDate", Date.class));
         queryBuilder = addSellingMtnFilter(queryBuilder, getValue(mapParams, "sellingMtn"));
         queryBuilder = addBillingIdFilter(queryBuilder, getValue(mapParams, "billingId"));
-        queryBuilder = addSellingParticipantFilter(queryBuilder, getValue(mapParams, "sellingParticipant"));
-        queryBuilder = addBuyingParticipantFilter(queryBuilder, getValue(mapParams, "buyingParticipant"));
+        queryBuilder = addSellingParticipantEqualsFilter(queryBuilder, getValue(mapParams, "sellingParticipant"));
+        queryBuilder = addBuyingParticipantEqualsFilter(queryBuilder, getValue(mapParams, "buyingParticipant"));
         queryBuilder = addExpiredFilter(queryBuilder, getValue(mapParams, "expired") != null);
         queryBuilder = addParticipantFilter(queryBuilder,
                 getValue(mapParams, "sellingParticipant"),
@@ -332,15 +332,6 @@ public final class BcqQueryHolder {
                 .filter(new QueryFilter("UPPER(BILLING_ID)", "%" + billingId.toUpperCase() + "%", LIKE));
     }
 
-    private static SelectQueryBuilder addSellingParticipantFilter(SelectQueryBuilder queryBuilder, String sellingParticipant) {
-        return isBlank(sellingParticipant) ? queryBuilder : queryBuilder
-                .and().openParenthesis().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_NAME)",
-                        "%" + sellingParticipant.toUpperCase() + "%", LIKE))
-                .or().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_SHORT_NAME)",
-                        "%" + sellingParticipant.toUpperCase() + "%", LIKE))
-                .closeParenthesis();
-    }
-
     private static SelectQueryBuilder addSellingParticipantEqualsFilter(SelectQueryBuilder queryBuilder, String sellingParticipant) {
         return isBlank(sellingParticipant) ? queryBuilder : queryBuilder
                 .and().openParenthesis().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_NAME)",
@@ -359,12 +350,12 @@ public final class BcqQueryHolder {
                 .closeParenthesis();
     }
 
-    private static SelectQueryBuilder addBuyingParticipantFilter(SelectQueryBuilder queryBuilder, String buyingParticipant) {
+    private static SelectQueryBuilder addBuyingParticipantEqualsFilter(SelectQueryBuilder queryBuilder, String buyingParticipant) {
         return isBlank(buyingParticipant) ? queryBuilder : queryBuilder
                 .and().openParenthesis().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_NAME)",
-                        "%" + buyingParticipant.toUpperCase() + "%", LIKE))
+                        buyingParticipant.toUpperCase(), EQUALS))
                 .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
-                        "%" + buyingParticipant.toUpperCase() + "%", LIKE))
+                        buyingParticipant.toUpperCase(), EQUALS))
                 .closeParenthesis();
     }
 
