@@ -1,6 +1,7 @@
 package com.pemc.crss.metering.validator.bcq.helper.impl;
 
 import com.google.common.collect.Lists;
+import com.pemc.crss.metering.constants.BcqStatus;
 import com.pemc.crss.metering.dto.bcq.BcqHeader;
 import com.pemc.crss.metering.dto.bcq.BcqItem;
 import com.pemc.crss.metering.resource.template.ResourceTemplate;
@@ -39,7 +40,7 @@ public class ResubmissionValidationHelperImpl implements ResubmissionValidationH
         Predicate<List<BcqHeader>> predicate = headerList -> {
             List<BcqHeader> missingHeaderList = bcqService.findHeadersOfParticipantByTradingDate(sellingParticipant,
                     tradingDate).stream()
-                    .filter(header -> !bcqService.isHeaderInList(header, headerList))
+                    .filter(header -> !bcqService.isHeaderInList(header, headerList) && !BcqStatus.VOID.equals(header.getStatus()))
                     .collect(toList());
             List<BcqHeader> notValidHeader = Lists.newArrayList();
             if (missingHeaderList.size() > 0) {
