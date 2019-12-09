@@ -278,10 +278,11 @@ public class DefaultMeterService implements MeterService {
 
         List<MeterDataDetail> retVal = new ArrayList<>();
         meterDataDetails.forEach(meterDataDetail -> {
-            BigDecimal kwd = divide(meterDataDetail.getKwd(), 3);
+            // [196986] Only kwh_del, kwh_rec, kvarh_del, and kvarh_rec should be divided by 3.
+            BigDecimal kwd = meterDataDetail.getKwd();
+            BigDecimal kwr = meterDataDetail.getKwr();
             BigDecimal kwhd = divide(meterDataDetail.getKwhd(), 3);
             BigDecimal kvarhd = divide(meterDataDetail.getKvarhd(), 3);
-            BigDecimal kwr = divide(meterDataDetail.getKwr(), 3);
             BigDecimal kwhr = divide(meterDataDetail.getKwhr(), 3);
             BigDecimal kvarhr = divide(meterDataDetail.getKvarhr(), 3);
             Calendar newTime = Calendar.getInstance();
