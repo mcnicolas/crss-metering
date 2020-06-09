@@ -87,7 +87,7 @@ public class MeteringResource {
 
         UploadType uploadType = UploadType.valueOf(headerParam.getCategory().toUpperCase());
 
-        if (UploadType.DAILY.equals(uploadType) || UploadType.CORRECTED_DAILY.equals(uploadType)) {
+        if (UploadType.DAILY.equals(uploadType)) {
             if (now.isAfter(closureDateTime)) {
                 return ResponseEntity.badRequest()
                         .contentType(MediaType.TEXT_PLAIN)
