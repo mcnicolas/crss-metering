@@ -10,10 +10,13 @@ import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionMeterD
 import com.pemc.crss.metering.resource.mq_data.extraction.dto.MqExtractionMeterReading;
 import com.pemc.crss.metering.service.MeterService;
 import com.pemc.crss.metering.utils.SecurityUtils;
+import com.pemc.crss.shared.commons.util.reference.Function;
+import com.pemc.crss.shared.commons.util.reference.Module;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +36,7 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static com.pemc.crss.shared.commons.util.AuditUtil.*;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 
@@ -56,11 +60,13 @@ public class MqDataExtractionResource {
     private final ObjectMapper objectMapper;
     private final MeterService meterService;
     private final UserTpDao userTpDao;
+    private final RedisTemplate genericRedisTemplate;
 
-    public MqDataExtractionResource(MeterService meterService, UserTpDao userTpDao) {
+    public MqDataExtractionResource(MeterService meterService, UserTpDao userTpDao, RedisTemplate genericRedisTemplate) {
         this.objectMapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
         this.meterService = meterService;
         this.userTpDao = userTpDao;
+        this.genericRedisTemplate = genericRedisTemplate;
     }
 
     @GetMapping
@@ -195,6 +201,14 @@ public class MqDataExtractionResource {
         try (OutputStream os = response.getOutputStream()) {
             os.write(result);
         }
+
+        genericRedisTemplate.convertAndSend(AUDIT_TOPIC_NAME, buildAudit(
+                Module.METERING.getDescription(),
+                Function.MQ_DATA_EXTRACTION_WEB_SERVICE.getDescription(),
+                "Web Service MQ Data Extraction",
+                SecurityUtils.getUsername(),
+                buildAuditDetails(createKeyValue("Files", fileName)),
+                createDetails("Success", "")));
     }
 
     private MqExtractionHeader processMqReport(String category,
