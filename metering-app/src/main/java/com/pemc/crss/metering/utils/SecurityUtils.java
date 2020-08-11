@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 public class SecurityUtils {
     private static final String USERNAME = "username";
     private static final String ID = "id";
+    private static final String DEPARTMENT = "department";
 //    private static final ObjectMapper MAPPER = new ObjectMapper().configure(MapperFeature.USE_GETTERS_AS_SETTERS, false);
     private static final String USER_AUTHENTICATION = "userAuthentication";
     private static final String PRINCIPAL = "principal";
@@ -78,6 +79,13 @@ public class SecurityUtils {
         final LinkedHashMap<String, Object> principal = getPrincipalMap();
         return checkContainsKey(principal, ID) ? (Integer) principal.get(ID) : null;
     }
+
+    public static String getDepartment() {
+        final LinkedHashMap<String, Object> principal = getPrincipalMap();
+        return checkContainsKey(principal, DEPARTMENT)
+                ? (String) principal.get(DEPARTMENT) : null;
+    }
+
 //
 //    public static Set<String> getUserRoles() {
 //        final CRSSPrincipal principal = getPrincipal();

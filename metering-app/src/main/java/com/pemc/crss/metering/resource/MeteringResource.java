@@ -10,6 +10,7 @@ import com.pemc.crss.metering.exception.ConversionException;
 import com.pemc.crss.metering.resource.validator.FileUploadValidator;
 import com.pemc.crss.metering.service.CacheService;
 import com.pemc.crss.metering.service.MeterService;
+import com.pemc.crss.metering.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.Message;
@@ -55,6 +56,7 @@ public class MeteringResource {
     private static final String MQ_ALLOWABLE_TRADING_DATE = "MQ_ALLOWABLE_TRADING_DATE";
     private static final String DEFAULT_CLOSURE_TIME = "08:00";
     private static final DateTimeFormatter TIME_FORMATTER_12 = DateTimeFormatter.ofPattern("hh:mm a");
+    private static final String METERING_DEPARTMENT = "METERING";
 
     private final MeterService meterService;
     private final RabbitTemplate rabbitTemplate;
@@ -87,11 +89,15 @@ public class MeteringResource {
 
         UploadType uploadType = UploadType.valueOf(headerParam.getCategory().toUpperCase());
 
-        if (UploadType.DAILY.equals(uploadType)) {
-            if (now.isAfter(closureDateTime)) {
-                return ResponseEntity.badRequest()
-                        .contentType(MediaType.TEXT_PLAIN)
-                        .body("Unable to upload after gate closure time: " + TIME_FORMATTER_12.format(closureDateTime));
+        String userDepartment = SecurityUtils.getDepartment();
+        log.info("userDepartment: {}", userDepartment);
+        if (!METERING_DEPARTMENT.equalsIgnoreCase(userDepartment)) {
+            if (UploadType.DAILY.equals(uploadType)) {
+                if (now.isAfter(closureDateTime)) {
+                    return ResponseEntity.badRequest()
+                            .contentType(MediaType.TEXT_PLAIN)
+                            .body("Unable to upload after gate closure time: " + TIME_FORMATTER_12.format(closureDateTime));
+                }
             }
         }
 
