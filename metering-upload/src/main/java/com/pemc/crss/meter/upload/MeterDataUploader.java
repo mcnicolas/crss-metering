@@ -41,7 +41,7 @@ import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 public class MeterDataUploader extends JFrame {
 
     public static final int ONE_SECOND = 1000;
-    public static final int STALE_UPLOAD_TIMEOUT = 60000;
+    public static final int STALE_UPLOAD_TIMEOUT = 60000 * 5;
 
     private HttpHandler httpHandler;
     private String username;
@@ -517,7 +517,7 @@ public class MeterDataUploader extends JFrame {
         initializeProgressBar = new JProgressBar();
 
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        setTitle("Meter Quantity Uploader - Version 2.8.0.SNAPSHOT");
+        setTitle("Meter Quantity Uploader - Version 2.9.0.SNAPSHOT");
         setResizable(false);
         setSize(new Dimension(800, 505));
         addWindowListener(new WindowAdapter() {
