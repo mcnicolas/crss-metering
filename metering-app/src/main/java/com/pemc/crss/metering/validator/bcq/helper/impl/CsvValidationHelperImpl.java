@@ -9,10 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 import static com.pemc.crss.metering.constants.BcqInterval.*;
@@ -230,11 +227,12 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                     validation.setErrorMessage(errorMessage);
                                     return true;
                                 }
-                                if (StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))) {
-                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
-                                    validation.setErrorMessage(errorMessage);
-                                    return true;
-                                }
+                                //Bug [241959]: Buyer MTN is optional
+//                                if (StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))) {
+//                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+//                                    validation.setErrorMessage(errorMessage);
+//                                    return true;
+//                                }
                             } else {
                                 List<String> uniqueRow = asList(
                                         line.get(SELLING_MTN_INDEX).trim(),
@@ -246,12 +244,13 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                     validation.setErrorMessage(errorMessage);
                                     return true;
                                 }
-                                if (line.size() == BUYER_MTN_INDEX + 1
-                                        && !StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))) {
-                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
-                                    validation.setErrorMessage(errorMessage);
-                                    return true;
-                                }
+                                //Bug [241959]: Buyer MTN is optional
+//                                if (line.size() == BUYER_MTN_INDEX + 1
+//                                        && !StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))) {
+//                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+//                                    validation.setErrorMessage(errorMessage);
+//                                    return true;
+//                                }
                             }
                         } else {
                             sellerMtn[0] = line.get(SELLING_MTN_INDEX).trim();
