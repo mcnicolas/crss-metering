@@ -18,7 +18,7 @@ import static com.pemc.crss.metering.constants.BcqInterval.HOURLY;
 import static com.pemc.crss.metering.constants.BcqValidationError.CLOSED_TRADING_DATE;
 import static com.pemc.crss.metering.constants.BcqValidationError.NO_SPECIAL_EVENT_FOUND;
 import static com.pemc.crss.metering.constants.ValidationStatus.ACCEPTED;
-import static java.math.BigDecimal.ROUND_HALF_UP;
+import static java.math.BigDecimal.ROUND_HALF_EVEN;
 import static java.math.BigDecimal.valueOf;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -136,19 +136,38 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
         int totalCount = intervalConfig == 15 ? 4 : 12;
         List<BcqData> dividedDataList = new ArrayList<>();
 
-        BigDecimal dividedBcq = data.getBcq().divide(valueOf(totalCount), 9, ROUND_HALF_UP);
+        BigDecimal origBcq = data.getBcq();
+        BigDecimal totalCountDecimal = valueOf(totalCount);
+        BigDecimal dividedBcq = origBcq.divide(totalCountDecimal, 9, ROUND_HALF_EVEN);
         Date currentStartTime = data.getStartTime();
         while (totalCount > 0) {
             BcqData partialData = new BcqData();
             partialData.setReferenceMtn(data.getReferenceMtn());
             partialData.setStartTime(currentStartTime);
             partialData.setEndTime(new Date(currentStartTime.getTime() + MINUTES.toMillis(intervalConfig)));
-            partialData.setBcq(dividedBcq);
+            if (totalCount == 1) {
+                partialData.setBcq(getLastPartialAmount(origBcq, totalCountDecimal));
+            } else {
+                partialData.setBcq(dividedBcq);
+            }
             currentStartTime = partialData.getEndTime();
             dividedDataList.add(partialData);
             totalCount --;
         }
         return dividedDataList;
+    }
+
+    private BigDecimal getLastPartialAmount(BigDecimal fullAmount, BigDecimal totalCountDecimal) {
+        if (totalCountDecimal.compareTo(BigDecimal.ONE) <= 0) {
+            return fullAmount;
+        }
+
+        BigDecimal partialAmount = fullAmount.divide(totalCountDecimal, 9, ROUND_HALF_EVEN);
+        BigDecimal prevTotalCount = totalCountDecimal.subtract(BigDecimal.ONE);
+        BigDecimal prevPartialAmount = partialAmount.multiply(prevTotalCount);
+        BigDecimal lastPartialAmount = fullAmount.subtract(prevPartialAmount);
+
+        return lastPartialAmount;
     }
 
     private ParticipantSellerDetails getSellerDetails() {
