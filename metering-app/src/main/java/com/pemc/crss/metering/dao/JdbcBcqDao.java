@@ -439,7 +439,11 @@ public class JdbcBcqDao implements BcqDao {
             queryBuilder = queryBuilder
                     .and().openParenthesis().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_NAME)",
                             participant.toUpperCase()))
+                    .or().filter(new QueryFilter("UPPER(SELLING_PARTICIPANT_SHORT_NAME)",
+                            participant.toUpperCase()))
                     .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
+                            participant.toUpperCase()))
+                    .or().filter(new QueryFilter("UPPER(BUYING_SHORT_NAME)",
                             participant.toUpperCase()))
                     .closeParenthesis();
         }
