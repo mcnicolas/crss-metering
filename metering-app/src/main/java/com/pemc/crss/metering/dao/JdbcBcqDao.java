@@ -443,7 +443,7 @@ public class JdbcBcqDao implements BcqDao {
                             participant.toUpperCase()))
                     .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_SHORT_NAME)",
                             participant.toUpperCase()))
-                    .or().filter(new QueryFilter("UPPER(BUYING_SHORT_NAME)",
+                    .or().filter(new QueryFilter("UPPER(BUYING_PARTICIPANT_NAME)",
                             participant.toUpperCase()))
                     .closeParenthesis();
         }
