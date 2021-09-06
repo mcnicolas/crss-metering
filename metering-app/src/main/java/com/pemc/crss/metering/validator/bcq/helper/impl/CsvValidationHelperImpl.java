@@ -1,19 +1,19 @@
 package com.pemc.crss.metering.validator.bcq.helper.impl;
 
+import com.google.common.collect.Maps;
 import com.pemc.crss.metering.constants.BcqInterval;
 import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.helper.CsvValidationHelper;
 import com.pemc.crss.metering.validator.bcq.validation.CsvValidation;
 import com.pemc.crss.metering.validator.bcq.validation.Validation;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.pemc.crss.metering.constants.BcqInterval.*;
 import static com.pemc.crss.metering.constants.BcqValidationError.*;
@@ -58,7 +58,8 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                 .and(validBcq())
                 .and(positiveBcq())
                 .and(validBcqLength())
-                .and(noDuplicates());
+                .and(noDuplicates())
+                .and(buyerMtnIsEitherNullOrNotNull());
         //.and(validateBuyerMtn());
                 /*.and(sameTradingDate())*/
         // .and(buyerMtnIsSet());
@@ -122,6 +123,42 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
             BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
             validation.setErrorMessage(errorMessage);
             return (countEmpty == 0L || countNonEmpty == 0L);
+        };
+        validation.setPredicate(predicate);
+        return validation;
+    }
+
+    private CsvValidation buyerMtnIsEitherNullOrNotNull() {
+        CsvValidation validation = new CsvValidation();
+        Predicate<List<List<String>>> predicate = csv -> {
+            List<List<String>> data = getDataList(csv);
+
+            List<List<String>> emptyBuyerMtn =
+                    data.stream().filter(line -> isBlank(line.get(BUYER_MTN_INDEX))).collect(Collectors.toList());
+
+            if (CollectionUtils.isNotEmpty(emptyBuyerMtn)) {
+                List<List<String>> nonEmptyBuyerMtn =
+                        data.stream().filter(line -> isNoneBlank(line.get(BUYER_MTN_INDEX))).collect(Collectors.toList());
+
+                Map<String, Map<String, Map<String, List<List<String>>>>> nonEmptyBuyerMap =
+                        nonEmptyBuyerMtn.stream().collect(Collectors.groupingBy(o -> o.get(DATE_INDEX).trim(),
+                                Collectors.groupingBy(o -> o.get(BILLING_ID_INDEX).trim(),
+                                        Collectors.groupingBy(o -> o.get(SELLING_MTN_INDEX).trim()))));
+                BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+                validation.setErrorMessage(errorMessage);
+
+                for (List<String> emptyBuyerMtnLine : emptyBuyerMtn) {
+                    List<List<String>> result =
+                            nonEmptyBuyerMap.getOrDefault(emptyBuyerMtnLine.get(DATE_INDEX).trim(), Maps.newHashMap())
+                                    .getOrDefault(emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim(), Maps.newHashMap())
+                                    .get(emptyBuyerMtnLine.get(SELLING_MTN_INDEX).trim());
+
+                    if (CollectionUtils.isNotEmpty(result)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         };
         validation.setPredicate(predicate);
         return validation;
