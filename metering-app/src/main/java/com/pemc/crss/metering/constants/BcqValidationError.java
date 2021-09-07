@@ -24,6 +24,7 @@ public enum BcqValidationError {
     MISSING_INTERVAL("Missing interval."),
     MISSING_SELLING_MTN("Missing selling MTN."),
     MISSING_BUYER_MTN("Inconsistent buyer MTN."),
+    INCONSISTENT_BUYER_MTN("Inconsistent buyer MTN. Date <b>%s</b>, Seller MTN <b>%s</b>, Billing ID <b>%s</b>"),
     MISSING_BILLING_ID("Missing billing ID."),
     MISSING_REFERENCE_MTN("Missing reference MTN."),
     MISSING_DATE("Missing date."),

@@ -60,8 +60,8 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                 .and(validBcq())
                 .and(positiveBcq())
                 .and(validBcqLength())
-                .and(noDuplicates())
-                .and(buyerMtnIsEitherNullOrNotNull());
+                .and(buyerMtnIsEitherNullOrNotNull())
+                .and(noDuplicates());
         //.and(validateBuyerMtn());
                 /*.and(sameTradingDate())*/
         // .and(buyerMtnIsSet());
@@ -165,7 +165,11 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                     emptyBuyerMtnLine.get(DATE_INDEX).trim(),
                                     emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim(),
                                     emptyBuyerMtnLine.get(SELLING_MTN_INDEX).trim());
-                            BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+                            List<String> params = asList(
+                                    emptyBuyerMtnLine.get(DATE_INDEX).trim(),
+                                    emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim(),
+                                    emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim());
+                            BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INCONSISTENT_BUYER_MTN, params);
                             validation.setErrorMessage(errorMessage);
                             return false;
                         }
