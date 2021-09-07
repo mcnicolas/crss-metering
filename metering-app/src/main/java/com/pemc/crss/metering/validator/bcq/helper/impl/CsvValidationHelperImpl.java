@@ -143,30 +143,36 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                         data.stream().filter(line -> isNoneBlank(line.get(BUYER_MTN_INDEX))).collect(Collectors.toList());
                 log.info("nonEmptyBuyerMtn count: {}", CollectionUtils.isEmpty(nonEmptyBuyerMtn) ? 0 : nonEmptyBuyerMtn.size());
 
-                Map<String, Map<String, Map<String, List<List<String>>>>> nonEmptyBuyerMap =
-                        nonEmptyBuyerMtn.stream().collect(Collectors.groupingBy(o -> o.get(DATE_INDEX).trim(),
-                                Collectors.groupingBy(o -> o.get(BILLING_ID_INDEX).trim(),
-                                        Collectors.groupingBy(o -> o.get(SELLING_MTN_INDEX).trim()))));
+                if (CollectionUtils.isNotEmpty(nonEmptyBuyerMtn)) {
+                    Map<String, Map<String, Map<String, List<List<String>>>>> nonEmptyBuyerMap =
+                            nonEmptyBuyerMtn.stream().collect(Collectors.groupingBy(o -> o.get(DATE_INDEX).trim(),
+                                    Collectors.groupingBy(o -> o.get(BILLING_ID_INDEX).trim(),
+                                            Collectors.groupingBy(o -> o.get(SELLING_MTN_INDEX).trim()))));
 
-                for (List<String> emptyBuyerMtnLine : emptyBuyerMtn) {
-                    log.info("Null Buyer MTN: date: {}, billing_id: {}, selling_mtn: {}",
-                            emptyBuyerMtnLine.get(DATE_INDEX).trim(),
-                            emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim(),
-                            emptyBuyerMtnLine.get(SELLING_MTN_INDEX).trim());
-                    List<List<String>> result =
-                            nonEmptyBuyerMap.getOrDefault(emptyBuyerMtnLine.get(DATE_INDEX).trim(), Maps.newHashMap())
-                                    .getOrDefault(emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim(), Maps.newHashMap())
-                                    .get(emptyBuyerMtnLine.get(SELLING_MTN_INDEX).trim());
+                    for (List<String> emptyBuyerMtnLine : emptyBuyerMtn) {
+                        log.debug("Null Buyer MTN: date: {}, billing_id: {}, selling_mtn: {}",
+                                emptyBuyerMtnLine.get(DATE_INDEX).trim(),
+                                emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim(),
+                                emptyBuyerMtnLine.get(SELLING_MTN_INDEX).trim());
+                        List<List<String>> result =
+                                nonEmptyBuyerMap.getOrDefault(emptyBuyerMtnLine.get(DATE_INDEX).trim(), Maps.newHashMap())
+                                        .getOrDefault(emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim(), Maps.newHashMap())
+                                        .get(emptyBuyerMtnLine.get(SELLING_MTN_INDEX).trim());
 
-                    if (CollectionUtils.isNotEmpty(result)) {
-                        log.info("Entered Null Buyer MTN but have non-empty non-null Buyer MTN in the same date!");
-                        BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
-                        validation.setErrorMessage(errorMessage);
-                        return true;
+                        if (CollectionUtils.isNotEmpty(result)) {
+                            log.info("Entered Null Buyer MTN but have non-empty non-null Buyer MTN in the same date!"
+                                            + " date: {}, billing_id: {}, selling_mtn: {}",
+                                    emptyBuyerMtnLine.get(DATE_INDEX).trim(),
+                                    emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim(),
+                                    emptyBuyerMtnLine.get(SELLING_MTN_INDEX).trim());
+                            BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+                            validation.setErrorMessage(errorMessage);
+                            return false;
+                        }
                     }
                 }
             }
-            return false;
+            return true;
         };
         validation.setPredicate(predicate);
         return validation;
