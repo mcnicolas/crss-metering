@@ -285,11 +285,11 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                     validation.setErrorMessage(errorMessage);
                                     return true;
                                 }
-                                if (StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))) {
-                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
-                                    validation.setErrorMessage(errorMessage);
-                                    return true;
-                                }
+//                                if (StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))) {
+//                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+//                                    validation.setErrorMessage(errorMessage);
+//                                    return true;
+//                                }
                             } else {
                                 List<String> uniqueRow = asList(
                                         line.get(SELLING_MTN_INDEX).trim(),
@@ -301,12 +301,12 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                     validation.setErrorMessage(errorMessage);
                                     return true;
                                 }
-                                if (line.size() == BUYER_MTN_INDEX + 1
-                                        && !StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))) {
-                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
-                                    validation.setErrorMessage(errorMessage);
-                                    return true;
-                                }
+//                                if (line.size() == BUYER_MTN_INDEX + 1
+//                                        && !StringUtils.isEmpty(line.get(BUYER_MTN_INDEX))) {
+//                                    BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+//                                    validation.setErrorMessage(errorMessage);
+//                                    return true;
+//                                }
                             }
                         } else {
                             sellerMtn[0] = line.get(SELLING_MTN_INDEX).trim();
