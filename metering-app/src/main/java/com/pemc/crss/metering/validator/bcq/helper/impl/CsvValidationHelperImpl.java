@@ -6,6 +6,7 @@ import com.pemc.crss.metering.validator.bcq.BcqValidationErrorMessage;
 import com.pemc.crss.metering.validator.bcq.helper.CsvValidationHelper;
 import com.pemc.crss.metering.validator.bcq.validation.CsvValidation;
 import com.pemc.crss.metering.validator.bcq.validation.Validation;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,7 @@ import static org.apache.commons.lang3.StringUtils.*;
 import static org.apache.commons.lang3.math.NumberUtils.isParsable;
 import static org.apache.commons.lang3.time.DateUtils.addDays;
 
+@Slf4j
 @Component
 public class CsvValidationHelperImpl implements CsvValidationHelper {
 
@@ -139,21 +141,27 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
             if (CollectionUtils.isNotEmpty(emptyBuyerMtn)) {
                 List<List<String>> nonEmptyBuyerMtn =
                         data.stream().filter(line -> isNoneBlank(line.get(BUYER_MTN_INDEX))).collect(Collectors.toList());
+                log.info("nonEmptyBuyerMtn count: {}", CollectionUtils.isEmpty(nonEmptyBuyerMtn) ? 0 : nonEmptyBuyerMtn.size());
 
                 Map<String, Map<String, Map<String, List<List<String>>>>> nonEmptyBuyerMap =
                         nonEmptyBuyerMtn.stream().collect(Collectors.groupingBy(o -> o.get(DATE_INDEX).trim(),
                                 Collectors.groupingBy(o -> o.get(BILLING_ID_INDEX).trim(),
                                         Collectors.groupingBy(o -> o.get(SELLING_MTN_INDEX).trim()))));
-                BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
-                validation.setErrorMessage(errorMessage);
 
                 for (List<String> emptyBuyerMtnLine : emptyBuyerMtn) {
+                    log.info("Null Buyer MTN: date: {}, billing_id: {}, selling_mtn: {}",
+                            emptyBuyerMtnLine.get(DATE_INDEX).trim(),
+                            emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim(),
+                            emptyBuyerMtnLine.get(SELLING_MTN_INDEX).trim());
                     List<List<String>> result =
                             nonEmptyBuyerMap.getOrDefault(emptyBuyerMtnLine.get(DATE_INDEX).trim(), Maps.newHashMap())
                                     .getOrDefault(emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim(), Maps.newHashMap())
                                     .get(emptyBuyerMtnLine.get(SELLING_MTN_INDEX).trim());
 
                     if (CollectionUtils.isNotEmpty(result)) {
+                        log.info("Entered Null Buyer MTN but have non-empty non-null Buyer MTN in the same date!");
+                        BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(MISSING_BUYER_MTN);
+                        validation.setErrorMessage(errorMessage);
                         return true;
                     }
                 }
