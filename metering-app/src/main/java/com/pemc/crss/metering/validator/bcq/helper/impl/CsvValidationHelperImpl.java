@@ -167,7 +167,7 @@ public class CsvValidationHelperImpl implements CsvValidationHelper {
                                     emptyBuyerMtnLine.get(SELLING_MTN_INDEX).trim());
                             List<String> params = asList(
                                     emptyBuyerMtnLine.get(DATE_INDEX).trim(),
-                                    emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim(),
+                                    emptyBuyerMtnLine.get(SELLING_MTN_INDEX).trim(),
                                     emptyBuyerMtnLine.get(BILLING_ID_INDEX).trim());
                             BcqValidationErrorMessage errorMessage = new BcqValidationErrorMessage(INCONSISTENT_BUYER_MTN, params);
                             validation.setErrorMessage(errorMessage);
