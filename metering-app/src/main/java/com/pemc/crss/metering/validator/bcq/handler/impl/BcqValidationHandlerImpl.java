@@ -143,6 +143,7 @@ public class BcqValidationHandlerImpl implements BcqValidationHandler {
         while (totalCount > 0) {
             BcqData partialData = new BcqData();
             partialData.setReferenceMtn(data.getReferenceMtn());
+            partialData.setBuyerMtn(data.getBuyerMtn());
             partialData.setStartTime(currentStartTime);
             partialData.setEndTime(new Date(currentStartTime.getTime() + MINUTES.toMillis(intervalConfig)));
             if (totalCount == 1) {
