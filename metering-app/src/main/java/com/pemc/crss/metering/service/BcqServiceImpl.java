@@ -127,11 +127,6 @@ public class BcqServiceImpl implements BcqService {
             headerList = setUpdatedViaOfHeaders(headerList, declaration);
         }
         List<BcqHeader> savedHeaderList = bcqDao.saveHeaders(headerList, !isSettlement && declaration.isSpecialEvent());
-        if (isSettlement) {
-            bcqNotificationManager.sendSettlementUploadNotification(savedHeaderList);
-        } else {
-            bcqNotificationManager.sendUploadNotification(savedHeaderList);
-        }
         if (CollectionUtils.isNotEmpty(savedHeaderList)) {
             BcqHeader bcqHeader = savedHeaderList.get(0);
             Set<String> billingIds = new HashSet<>();
@@ -140,6 +135,11 @@ public class BcqServiceImpl implements BcqService {
             });
 
             buildActionAuditLog(bcqHeader, BCQ_SUBMIT, String.join(", ", billingIds), isSettlement);
+            if (isSettlement) {
+                bcqNotificationManager.sendSettlementUploadNotification(savedHeaderList);
+            } else {
+                bcqNotificationManager.sendUploadNotification(savedHeaderList);
+            }
         }
 
     }
