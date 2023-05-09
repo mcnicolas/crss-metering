@@ -465,7 +465,7 @@ public class HeaderPanel extends JPanel {
         settingsDialog.setVisible(true);
 
         if (settingsDialog.getReturnStatus() == RET_SAVE) {
-            parent.saveSettings(settingsDialog.getServerURL());
+            parent.saveSettings(settingsDialog.getServerURL(), settingsDialog.getDigiCertPath(), settingsDialog.getDigiCertPassPhrase());
         }
     }//GEN-LAST:event_settingsActionPerformed
 

@@ -63,7 +63,7 @@ public class MeterDataUploader extends JFrame {
         initComponents();
         initProperties();
 
-        httpHandler.initialize(properties.getProperty("URL"));
+        httpHandler.initialize(properties.getProperty("URL"), properties.getProperty("digiCert"), properties.getProperty("passPhrase"));
     }
 
     private void initProperties() {
@@ -71,7 +71,7 @@ public class MeterDataUploader extends JFrame {
 
         File config = new File("config.properties");
         if (!config.exists()) {
-            saveSettings("http://localhost:8080");
+            saveSettings("http://localhost:8080", "", "");
         }
 
         try (Reader reader = new FileReader("config.properties")) {
@@ -449,13 +449,15 @@ public class MeterDataUploader extends JFrame {
         return properties.getProperty(key);
     }
 
-    public void saveSettings(String serverURL) {
+    public void saveSettings(String serverURL, String digiCertPath, String digiCertPassPhrase) {
         properties.put("URL", serverURL);
+        properties.put("digiCert", digiCertPath);
+        properties.put("passPhrase", digiCertPassPhrase);
 
         try (Writer writer = new FileWriter("config.properties")) {
             properties.store(writer, "Saving updated server URL");
 
-            httpHandler.initialize(serverURL);
+            httpHandler.initialize(serverURL, digiCertPath, digiCertPassPhrase);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
@@ -517,7 +519,7 @@ public class MeterDataUploader extends JFrame {
         initializeProgressBar = new JProgressBar();
 
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        setTitle("Meter Quantity Uploader - Version 2.9.0.SNAPSHOT");
+        setTitle("Meter Quantity Uploader - Version 2.10.0.SNAPSHOT");
         setResizable(false);
         setSize(new Dimension(800, 505));
         addWindowListener(new WindowAdapter() {

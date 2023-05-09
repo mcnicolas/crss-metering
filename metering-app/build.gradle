@@ -107,7 +107,7 @@ dbUpdateSQL {
     doFirst {
         file("$buildDir/db").mkdirs()
     }
-    doLast {
+    doLast {s
         // re-write changelog file name to a relative path
         def source = file("$project.buildDir/db/update-scripts.sql")
         file("$project.buildDir/db/metering-update-scripts.sql") <<

@@ -5,12 +5,9 @@ import com.pemc.crss.meter.upload.http.HeaderStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
+import org.apache.http.*;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -29,6 +26,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultClientConnectionReuseStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.pool.PoolStats;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
@@ -37,24 +35,13 @@ import org.json.JSONObject;
 import org.json.JSONStringer;
 
 import javax.net.ssl.SSLContext;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.file.Files;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.util.*;
 
 import static com.pemc.crss.meter.upload.EndPoint.CHECK_STATUS;
 import static com.pemc.crss.meter.upload.EndPoint.GET_HEADER;
@@ -73,9 +60,7 @@ import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.conn.ssl.NoopHostnameVerifier.INSTANCE;
-import static org.apache.http.entity.ContentType.APPLICATION_FORM_URLENCODED;
-import static org.apache.http.entity.ContentType.APPLICATION_JSON;
-import static org.apache.http.entity.ContentType.MULTIPART_FORM_DATA;
+import static org.apache.http.entity.ContentType.*;
 import static org.apache.http.util.EntityUtils.consume;
 
 @Slf4j
@@ -94,6 +79,8 @@ public class HttpHandler {
     public static final String MARKET_OPERATOR = "MO";
     public static final String SYSTEM_OPERATOR = "SO";
 
+    public static final String CERT_PASS = "iemop";
+
     private CloseableHttpClient httpClient;
     private PoolingHttpClientConnectionManager connectionManager;
 
@@ -111,8 +98,8 @@ public class HttpHandler {
     }
 
 
-    public void initialize(String urlString) {
-        log.debug("Initializing HTTP Connection for {}", urlString);
+    public void initialize(String urlString, String digiCert, String passPhrase) {
+        log.debug("Initializing HTTP Connection for {}, digiCert = {}, passPhrase = {}", urlString, digiCert, passPhrase);
 
         try {
             if (httpClient != null) {
@@ -124,9 +111,20 @@ public class HttpHandler {
             hostname = url.getHost();
             port = url.getPort() != 80 ? url.getPort() : url.getDefaultPort();
 
-            SSLContext sslContext = new SSLContextBuilder()
-                    .loadTrustMaterial(null, new TrustSelfSignedStrategy())
-                    .build();
+            SSLContextBuilder sslContextBuilder = new SSLContextBuilder()
+                    .loadTrustMaterial(null, new TrustSelfSignedStrategy());
+
+            if (StringUtils.isNotBlank(digiCert) && StringUtils.isNotBlank(passPhrase)) {
+                final KeyStore store = KeyStore.getInstance("PKCS12");
+
+                try (InputStream stream = new FileInputStream(digiCert)) {
+                    store.load(stream, passPhrase.toCharArray());
+                }
+
+                sslContextBuilder.loadKeyMaterial(store, passPhrase.toCharArray());
+            }
+
+            SSLContext sslContext = sslContextBuilder.build();
             SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, INSTANCE);
 
             Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
@@ -143,6 +141,7 @@ public class HttpHandler {
 
             httpClient = HttpClients
                     .custom()
+                    .setSSLContext(sslContext)
                     .setSSLHostnameVerifier(new NoopHostnameVerifier())
                     .addInterceptorLast(
                             (HttpRequestInterceptor) (request, context) -> {
@@ -155,7 +154,7 @@ public class HttpHandler {
                     .setConnectionManager(connectionManager)
                     .build();
             log.debug("HTTP Connection initialized");
-        } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+        } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException | CertificateException | UnrecoverableKeyException e) {
             log.error(e.getMessage(), e);
         }
     }
@@ -164,10 +163,13 @@ public class HttpHandler {
         log.debug("Logging in user:{}", username);
 
         try {
+            final List<NameValuePair> credentialParams = new ArrayList<>();
+            credentialParams.add(new BasicNameValuePair("username", username));
+            credentialParams.add(new BasicNameValuePair("password", password));
+
             URIBuilder builder = new URIBuilder()
                     .setScheme(protocol).setHost(hostname).setPort(port).setPath(OAUTH_TOKEN)
-                    .addParameter("username", username)
-                    .addParameter("password", password)
+                    .addParameters(credentialParams)
                     .addParameter("device_id", deviceId)
                     .addParameter("client_id", CLIENT_ID)
                     .addParameter("client_secret", CLIENT_SECRET)
