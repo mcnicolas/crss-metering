@@ -20,7 +20,7 @@ public final class FileTypeUtils {
 
         if (equalsIgnoreCase(fileExt, "XLS") || equalsIgnoreCase(fileExt, "XLSX")) {
             retVal = XLS;
-        } else if (equalsIgnoreCase(fileExt, "MDE") || equalsIgnoreCase(fileExt, "MDEF")) {
+        } else if (equalsIgnoreCase(fileExt, "MDE") || equalsIgnoreCase(fileExt, "MDEF") || equalsIgnoreCase(fileExt, "MDF")) {
             retVal = MDEF;
         } else if (equalsIgnoreCase(fileExt, "CSV")) {
             retVal = CSV;

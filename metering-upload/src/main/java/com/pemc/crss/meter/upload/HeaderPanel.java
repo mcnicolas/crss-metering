@@ -53,7 +53,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 public class HeaderPanel extends JPanel {
 
     private FileFilter fileFilterXLS = new FileNameFilter("Excel Files (xls, xlsx)", "xls", "xlsx");
-    private FileFilter fileFilterMDEF = new FileNameFilter("MDEF Files (mde)", "mde");
+    private FileFilter fileFilterMDEF = new FileNameFilter("MDEF Files (mde, mdf)", "mde", "mdf");
     private FileFilter fileFilterCSV = new FileNameFilter("CSV Files (csv)", "csv");
 
     private MeterDataUploader parent;
