@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,13 +36,19 @@ public class MeteringDisplayResource {
     @PostMapping(value = "/list")
     @PreAuthorize("hasAuthority('MQ_VIEW_METERING_QUANTITY')")
     public ResponseEntity<DataTableResponse<MeterDataDisplay>> executeSearch(@RequestBody PageableRequest request) {
-        Page<MeterDataDisplay> meterDataPage = meterService.getMeterData(request);
 
-        DataTableResponse<MeterDataDisplay> response = new DataTableResponse<MeterDataDisplay>()
-                .withData(meterDataPage.getContent())
-                .withRecordsTotal(meterDataPage.getTotalElements());
+        if (validateParams(request)) {
 
-        return ok(response);
+            Page<MeterDataDisplay> meterDataPage = meterService.getMeterData(request);
+
+            DataTableResponse<MeterDataDisplay> response = new DataTableResponse<MeterDataDisplay>()
+                    .withData(meterDataPage.getContent())
+                    .withRecordsTotal(meterDataPage.getTotalElements());
+
+            return ok(response);
+        } else {
+            return ok(new DataTableResponse<MeterDataDisplay>());
+        }
     }
 
     @PostMapping(value = "/version")
@@ -50,6 +57,15 @@ public class MeteringDisplayResource {
         List<VersionData> versionData = meterService.getVersionedData(request);
 
         return ok(versionData);
+    }
+
+    private boolean validateParams(PageableRequest request) {
+        Map<String, String> params = request.getMapParams();
+
+        String readingDateFrom = StringUtils.trimAllWhitespace(params.get("readingDateFrom"));
+        String transactionID = StringUtils.trimAllWhitespace(params.get("transactionID"));
+
+        return (!StringUtils.isEmpty(readingDateFrom) || !StringUtils.isEmpty(transactionID));
     }
 
 }
