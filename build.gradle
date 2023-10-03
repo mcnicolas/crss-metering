@@ -6,7 +6,8 @@ buildscript {
             url "https://plugins.gradle.org/m2/"
         }
         maven {
-            url 'https://repo.spring.io/plugins-release'
+//            url 'https://repo.spring.io/plugins-release'
+            url "https://repo.spring.io/plugins-snapshot"
         }
 
         jcenter()
